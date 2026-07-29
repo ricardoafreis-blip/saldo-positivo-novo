@@ -183,9 +183,34 @@ const esc = s => String(s??"").replace(/[<>&"]/g, m => ({"<":"&lt;",">":"&gt;","
 const cor = v => v>=0 ? "alta" : "baixa";
 
 function aviso(t, erro){ return `<div class="msg${erro?" erro":""}">${esc(t)}</div>`; }
+// As quatro classes. Escolhidas no nascimento da carteira e imutáveis:
+// trocar de classe depois de ver o resultado seria escolher a régua com
+// o jogo já jogado. O banco recusa declaração que viole a classe
+// (valida_classe, banco11) — aqui é só rótulo e filtro.
+const CLASSE = {
+  all_in:        { nome:"All in",
+    regra:"Só compra, exposição bruta de 100% a 200% — sem caixa, pode alavancar." },
+  diversificada: { nome:"Diversificada",
+    regra:"Só compra, bruta abaixo de 100% e de 5 a 15 papéis." },
+  long_short:    { nome:"Long &amp; short",
+    regra:"Pelo menos uma compra e uma venda, bruta até 200%. É aqui que entra o hedge." },
+  vendida:       { nome:"Vendida",
+    regra:"Só venda a descoberto, bruta até 200%." },
+};
+
+// A view ranking não tem a coluna classe, então vem de carteira_classe.
+let CACHE_CLASSE = null;
+async function classes(){
+  if(CACHE_CLASSE) return CACHE_CLASSE;
+  const { data } = await sb.from("carteira_classe").select("id,classe,criada_em");
+  CACHE_CLASSE = {}; (data||[]).forEach(x=> CACHE_CLASSE[x.id] = x);
+  return CACHE_CLASSE;
+}
+
 function tags(c){
   const t=[];
-  if(c.liquida>=c.bruta-0.01) t.push("só comprada");
+  if(c.classe && CLASSE[c.classe]) t.push(CLASSE[c.classe].nome);
+  else if(c.liquida>=c.bruta-0.01) t.push("só comprada");
   else if(c.liquida<=-c.bruta+0.01) t.push("só vendida");
   else t.push("long &amp; short");
   if(c.bruta>105) t.push(`alavancada ${n2(c.bruta/100,1)}x`);
@@ -311,6 +336,7 @@ function metricas(serie){
 async function telaRanking(){
   const q = new URLSearchParams(location.hash.split("?")[1]||"");
   const ordem = q.get("ordem") || "acum";
+  const filtro = q.get("classe") || "";
   app().innerHTML = `<div class="carreg">carregando ranking…</div>`;
 
   const { data:cs, error } = await sb.from("ranking").select("*");
@@ -323,10 +349,21 @@ async function telaRanking(){
                                 .in("carteira_id", ids).order("data");
     (rs||[]).forEach(r=>{ (series[r.carteira_id] ||= []).push(r); });
   }
-  const lista = (cs||[]).map(c=>({c, m:metricas(series[c.id])}));
+  const cl = await classes();
+  (cs||[]).forEach(c=>{ const x = cl[c.id]; if(x){ c.classe = x.classe; c.criada_em = x.criada_em; } });
+
+  const conta = {};
+  (cs||[]).forEach(c=> conta[c.classe||"sem"] = (conta[c.classe||"sem"]||0) + 1);
+
+  let lista = (cs||[]).map(c=>({c, m:metricas(series[c.id])}));
+  if(filtro) lista = lista.filter(x=> (x.c.classe||"sem") === filtro);
+
   const chaves = { acum:x=>-x.m.acum, hoje:x=>-x.m.hoje, dd:x=>-x.m.dd,
                    sharpe:x=>-(x.m.sharpe ?? -9) };
-  lista.sort((a,b)=>chaves[ordem](a)-chaves[ordem](b));
+  // Desempate: a carteira mais antiga ganha. Importa no começo, quando
+  // todas estão em 0,00% e a ordem seria arbitrária.
+  lista.sort((a,b)=> chaves[ordem](a)-chaves[ordem](b)
+    || Date.parse(a.c.criada_em||"2100-01-01") - Date.parse(b.c.criada_em||"2100-01-01"));
 
   app().innerHTML = `
   <div style="padding:32px 0 4px">
@@ -339,8 +376,21 @@ async function telaRanking(){
   <div class="chips">
     <span style="font-size:10.5px;text-transform:uppercase;letter-spacing:.11em;color:var(--graf)">Ordenar</span>
     ${[["acum","Acumulado"],["hoje","Hoje"],["sharpe","Sharpe"],["dd","Menor queda"]]
-      .map(([k,r])=>`<a href="#/?ordem=${k}" class="chip${ordem===k?" on":""}">${r}</a>`).join("")}
+      .map(([k,r])=>`<a href="#/?ordem=${k}${filtro?"&classe="+filtro:""}"
+        class="chip${ordem===k?" on":""}">${r}</a>`).join("")}
   </div>
+  <div class="chips">
+    <span style="font-size:10.5px;text-transform:uppercase;letter-spacing:.11em;color:var(--graf)">Classe</span>
+    <a href="#/?ordem=${ordem}" class="chip${!filtro?" on":""}">Todas</a>
+    ${Object.entries(CLASSE).filter(([k])=>conta[k]).map(([k,v])=>
+      `<a href="#/?ordem=${ordem}&classe=${k}" class="chip${filtro===k?" on":""}">${v.nome}
+        <span style="opacity:.5">${conta[k]}</span></a>`).join("")}
+    ${conta.sem?`<a href="#/?ordem=${ordem}&classe=sem"
+      class="chip${filtro==="sem"?" on":""}">Sem classe <span style="opacity:.5">${conta.sem}</span></a>`:""}
+  </div>
+  ${filtro && CLASSE[filtro] ? `<p style="font-size:12.5px;color:var(--t2);max-width:60ch;margin:-2px 0 15px">
+      <b>${CLASSE[filtro].nome}.</b> ${CLASSE[filtro].regra}
+      Carteira só é comparada com outra da mesma classe — laranja com laranja.</p>` : ""}
   ${!eu ? `<div class="chamada">
       <div>
         <h3 style="font-size:18px;margin-bottom:5px">Os números são abertos. O que tem dentro, não.</h3>
@@ -450,14 +500,22 @@ async function telaPublicar(){
   app().innerHTML = `
   <h1 style="font-size:27px;margin:30px 0 6px">Publicar carteira</h1>
   <p style="color:var(--t2);max-width:58ch;margin-bottom:20px">
-    Informe o código, o peso em % e se está comprado ou vendido. A alavancagem e o
-    tipo de estratégia o site calcula sozinho — não são declarados.</p>
+    Escolha a classe, informe o código, o peso em % e se está comprado ou vendido.
+    A classe define contra quem esta carteira vai ser comparada, e não muda depois —
+    para outra estratégia, outra carteira. Alavancagem e caixa o site calcula sozinho.</p>
   ${!count ? aviso("O universo de papéis está vazio. Um admin precisa atualizar em Admin → Atualizar universo.") : ""}
   <div id="erro"></div>
   <div class="duplo">
     <form class="card" id="f">
       <label>Nome da carteira</label><input name="nome" required maxlength="40" value="Minha carteira">
       <label>O que você está estudando aqui</label><input name="descricao" maxlength="160">
+      <label>Classe</label>
+      <select name="classe" id="selClasse" required>
+        <option value="">escolha a classe…</option>
+        ${Object.entries(CLASSE).map(([k,v])=>`<option value="${k}">${v.nome}</option>`).join("")}
+      </select>
+      <p id="regraClasse" style="font-size:12px;color:var(--graf);margin:-3px 0 13px">
+        A classe não muda depois de criada.</p>
       <label>Posições</label>
       ${gradeHTML()}
       <label>Anotação desta mudança (opcional)</label><input name="nota" maxlength="200">
@@ -487,6 +545,13 @@ async function telaPublicar(){
 
   ligarGrade([["PETR4",25,"C"],["ITUB4",25,"C"],["VALE3",25,"C"],["BBAS3",25,"C"]]);
 
+  $("#selClasse").onchange = e => {
+    const v = CLASSE[e.target.value];
+    $("#regraClasse").innerHTML = v
+      ? `<b>${v.nome}.</b> ${v.regra} Não muda depois de criada.`
+      : "A classe não muda depois de criada.";
+  };
+
   $("#f").onsubmit = async e=>{
     e.preventDefault();
     const f = new FormData(e.target), bt = $("#bt");
@@ -503,8 +568,12 @@ async function telaPublicar(){
       aviso("Não achei no universo: "+fora.join(", ")+". Ou o código está errado, ou o papel não tem liquidez mínima, ou o universo ainda não foi atualizado.", true);
 
     bt.disabled=true; bt.textContent="salvando…";
+    if(!f.get("classe")) return $("#erro").innerHTML =
+      aviso("Escolha a classe da carteira. Ela define contra quem você é comparado e não muda depois.", true);
+
     const { data:c, error } = await sb.from("carteira").insert({
-      usuario_id: eu.id, nome: f.get("nome").trim(), descricao: f.get("descricao")||"" })
+      usuario_id: eu.id, nome: f.get("nome").trim(),
+      descricao: f.get("descricao")||"", classe: f.get("classe") })
       .select().single();
     if(error){ bt.disabled=false; bt.textContent="Registrar";
       const m = error.message.includes("carteira_nome_unico")
@@ -524,6 +593,8 @@ async function telaCarteira(id){
   app().innerHTML = `<div class="carreg">carregando…</div>`;
   const { data:c } = await sb.from("ranking").select("*").eq("id", id).single();
   if(!c) return app().innerHTML = aviso("Carteira não encontrada.", true);
+  const cl1 = (await classes())[id];
+  if(cl1){ c.classe = cl1.classe; c.criada_em = cl1.criada_em; }
 
   const { data:serie } = await sb.from("retorno_dia").select("data,retorno,indice")
                                  .eq("carteira_id", id).order("data");
