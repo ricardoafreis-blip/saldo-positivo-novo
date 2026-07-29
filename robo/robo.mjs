@@ -76,10 +76,14 @@ async function brapi(caminho) {
 // ─── Yahoo, a fonte reserva ────────────────────────────────────────
 // Um papel por chamada, e exige User-Agent de navegador: com o padrão
 // do Node ele recusa. Só entra onde a brapi não entregou.
+// Papel da B3 leva sufixo .SA; índice (^BVSP) não leva, e o ^ tem de
+// ser escapado na URL. Sem isso o Yahoo devolve 404 no índice.
+const simboloYahoo = a => a.startsWith("^") ? encodeURIComponent(a) : `${a}.SA`;
+
 async function yahoo(ativo) {
   const corta = AbortSignal.timeout(20000);
   const r = await fetch(
-    `https://query1.finance.yahoo.com/v8/finance/chart/${ativo}.SA?range=5d&interval=1d`,
+    `https://query1.finance.yahoo.com/v8/finance/chart/${simboloYahoo(ativo)}?range=5d&interval=1d`,
     { headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
                                "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36" },
       signal: corta });
@@ -166,7 +170,11 @@ async function recuperar() {
 
 // ─── fechar o dia ──────────────────────────────────────────────────
 async function fecharDia() {
-  const linhas = await sb("/rest/v1/peso_atual?select=ativo");
+  // papeis_do_dia = o que está valendo + o que este fechamento vai adotar
+  // + os índices de referência. Ler peso_atual direto travava tudo: com
+  // declaração pendente, peso_atual está vazio e a adoção mora dentro do
+  // fechar_dia, que o robô nem chegava a chamar.
+  const linhas = await sb("/rest/v1/papeis_do_dia?select=ativo");
   const lista = [...new Set(linhas.map(x => x.ativo))];
   if (!lista.length) {
     console.log("nenhuma carteira com posição em vigor — nada a fazer");
