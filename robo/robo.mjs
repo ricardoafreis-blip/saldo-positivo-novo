@@ -5,7 +5,10 @@
 //   node robo/robo.mjs recuperar  só age se algum dia ficou sem fechar
 //   node robo/robo.mjs universo   refaz a lista de papéis válidos
 //
-// Fonte: brapi.dev, com Yahoo Finance de reserva.
+// Fontes, nesta ordem: brapi.dev, bolsai, Yahoo Finance.
+// Cada uma cobre o que a anterior não entregou. O log diz quem
+// entregou quanto — é assim que se percebe uma fonte degradando ao
+// longo das semanas em vez de descobrir no dia da queda.
 // O Fundamentus recusa conexão de datacenter, então
 // raspar a página dele de dentro do GitHub não funciona — e parou de
 // funcionar pelo navegador também.
@@ -16,11 +19,13 @@
 const URL_SB = process.env.SUPABASE_URL;
 const CHAVE  = process.env.SUPABASE_SERVICE_KEY;
 const BRAPI  = process.env.BRAPI_TOKEN;
+const BOLSAI = process.env.BOLSAI_TOKEN || "";   // opcional, ver adaptador abaixo
 const RESEND = process.env.RESEND_API_KEY || "";
 const DE     = process.env.EMAIL_DE || "";
 
 if (!URL_SB || !CHAVE) { console.error("faltam SUPABASE_URL e SUPABASE_SERVICE_KEY"); process.exit(1); }
-if (!BRAPI) console.warn("aviso: sem BRAPI_TOKEN — vai direto para o Yahoo");
+if (!BRAPI)  console.warn("aviso: sem BRAPI_TOKEN — pula a brapi");
+if (!BOLSAI) console.warn("aviso: sem BOLSAI_TOKEN — pula a bolsai");
 
 const modo = process.argv[2] || "dia";
 const espera = ms => new Promise(r => setTimeout(r, ms));
@@ -47,6 +52,9 @@ const rpc = (fn, args = {}) =>
   sb(`/rest/v1/rpc/${fn}`, { method: "POST", body: JSON.stringify(args) });
 
 // ─── brapi ─────────────────────────────────────────────────────────
+// PETR4, MGLU3, VALE3 e ITUB4 respondem sem token, então continuam
+// vindo mesmo com a cota do mês zerada. Não confunda isso com "a
+// brapi está funcionando" — confira o painel em brapi.dev/dashboard.
 async function brapi(caminho) {
   const corta = AbortSignal.timeout(30000);
   let r;
@@ -91,6 +99,33 @@ async function yahoo(ativo) {
   };
 }
 
+// ─── bolsai, a segunda reserva ─────────────────────────────────────
+// ⚠️ ADAPTADOR NÃO VERIFICADO. Eu não testei a API da bolsai e não
+// invento formato de resposta. Antes de ligar: crie a conta grátis em
+// usebolsai.com, gere o token, e confira em /docs três coisas —
+//   1. o caminho do endpoint de cotação em lote
+//   2. como o token é enviado (header ou querystring)
+//   3. o nome do campo de variação percentual e o de data
+// Ajuste as três linhas marcadas e ponha BOLSAI_TOKEN nos secrets.
+// Sem o token, esta fonte é pulada e nada muda.
+async function bolsai(grupo) {
+  const corta = AbortSignal.timeout(25000);
+  const r = await fetch(
+    `https://api.usebolsai.com/v1/quotes?symbols=${grupo.join(",")}`,   // (1) conferir
+    { headers: { Authorization: `Bearer ${BOLSAI}` }, signal: corta }); // (2) conferir
+  if (!r.ok) throw new Error(`bolsai ${r.status}`);
+  const j = await r.json();
+  const saida = [];
+  for (const x of (j.results || j.data || [])) {                        // (3) conferir
+    const pct = x.change_percent ?? x.regularMarketChangePercent;
+    const dia = x.date ?? x.regularMarketTime;
+    if (pct == null || !dia) continue;
+    saida.push({ ativo: String(x.symbol || x.ticker).toUpperCase(),
+                 valor: pct / 100, data_cot: diaBR(dia) });
+  }
+  return saida;
+}
+
 const pedacos = (lista, n) => {
   const p = [];
   for (let i = 0; i < lista.length; i += n) p.push(lista.slice(i, i + n));
@@ -133,46 +168,72 @@ async function recuperar() {
 async function fecharDia() {
   const linhas = await sb("/rest/v1/peso_atual?select=ativo");
   const lista = [...new Set(linhas.map(x => x.ativo))];
-  if (!lista.length) { console.log("nenhuma carteira publicada — nada a fazer"); return; }
+  if (!lista.length) {
+    console.log("nenhuma carteira com posição em vigor — nada a fazer");
+    console.log("ATENÇÃO: se há declaração pendente esperando o pregão, ela NÃO será");
+    console.log("adotada, porque a adoção mora dentro do fechar_dia e o robô parou antes.");
+    return;
+  }
 
   console.log(`${lista.length} papéis para buscar`);
-  const osc = [], achados = new Set();
+  const osc = [], achados = new Set(), porFonte = {};
 
+  const registrar = (linha, fonte) => {
+    if (achados.has(linha.ativo)) return;
+    osc.push(linha);
+    achados.add(linha.ativo);
+    porFonte[fonte] = (porFonte[fonte] || 0) + 1;
+  };
+
+  const faltantes = () => lista.filter(a => !achados.has(a));
+
+  // ── 1ª fonte: brapi, 20 papéis por chamada ──
   if (BRAPI) {
-    for (const g of pedacos(lista, 20)) {
+    for (const g of pedacos(faltantes(), 20)) {
       try {
         const j = await brapi(`/quote/${g.join(",")}`);
         for (const r of (j.results || [])) {
           const pct = r.regularMarketChangePercent;
           if (pct == null || !r.regularMarketTime) continue;
-          osc.push({ ativo: r.symbol, valor: pct / 100, data_cot: diaBR(r.regularMarketTime) });
-          achados.add(r.symbol);
+          registrar({ ativo: r.symbol, valor: pct / 100,
+                      data_cot: diaBR(r.regularMarketTime) }, "brapi");
         }
       } catch (e) {
-        console.error(`brapi falhou neste lote (${e.message}) — o Yahoo assume`);
+        console.error(`brapi falhou neste lote (${e.message})`);
       }
       await espera(400);
     }
-    console.log(`brapi entregou ${achados.size} de ${lista.length}`);
   }
 
-  // O Yahoo tapa buraco: serve tanto para um papel que faltou quanto
-  // para a brapi inteira fora do ar. Um caminho só cobre os dois casos.
-  const buracos = lista.filter(a => !achados.has(a));
+  // ── 2ª fonte: bolsai, também em lote ──
+  if (BOLSAI && faltantes().length) {
+    for (const g of pedacos(faltantes(), 20)) {
+      try {
+        for (const linha of await bolsai(g)) registrar(linha, "bolsai");
+      } catch (e) {
+        console.error(`bolsai falhou neste lote (${e.message})`);
+      }
+      await espera(400);
+    }
+  }
+
+  // ── 3ª fonte: Yahoo, um papel por chamada ──
+  // Serve tanto para um papel que faltou quanto para as duas primeiras
+  // fontes inteiras fora do ar. Um caminho só cobre os dois casos.
+  const buracos = faltantes();
   if (buracos.length) {
     console.log(`tentando ${buracos.length} no Yahoo`);
     for (const a of buracos) {
-      try {
-        osc.push(await yahoo(a));
-        achados.add(a);
-      } catch (e) {
-        console.error(`  ${a}: ${e.message}`);
-      }
+      try { registrar(await yahoo(a), "yahoo"); }
+      catch (e) { console.error(`  ${a}: ${e.message}`); }
       await espera(250);
     }
   }
 
-  const faltando = lista.filter(a => !achados.has(a));
+  const resumo = Object.entries(porFonte).map(([f, n]) => `${f} ${n}`).join(" · ") || "ninguém";
+  console.log(`de ${lista.length} papéis: ${resumo}`);
+
+  const faltando = faltantes();
   // O robô antigo engolia falha em silêncio e dizia "pronto". Aqui não.
   if (faltando.length) console.error(`NÃO VIERAM ${faltando.length}: ${faltando.join(", ")}`);
 
@@ -183,7 +244,14 @@ async function fecharDia() {
   }
   if (!osc.length) throw new Error("nenhuma oscilação lida");
 
+  // Misturar fontes tem um custo escondido: se uma ajustar a variação
+  // por provento e a outra não, dois papéis do mesmo dia saem em
+  // réguas diferentes. Enquanto o teste do dia "ex" não for feito,
+  // o log acima é a única pista de quando isso aconteceu.
   const datas = [...new Set(osc.map(o => o.data_cot))];
+  if (datas.length > 1) {
+    console.error(`ATENÇÃO: veio mais de uma data no mesmo lote — ${datas.join(", ")}`);
+  }
   console.log(`pregão: ${datas.join(", ")}`);
 
   await rpc("robo_gravar_oscilacao", { dados: osc });
