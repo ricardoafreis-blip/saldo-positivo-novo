@@ -1,8 +1,7 @@
-[MEMORIAL.md](https://github.com/user-attachments/files/30511005/MEMORIAL.md)
-
 # Saldo Positivo — onde parou
 
-Abra num chat novo, anexe este arquivo e cole o parágrafo do fim.
+Abra um chat novo, anexe este arquivo e cole o parágrafo do fim.
+Última revisão: **29/07/2026, fim do dia.**
 
 ---
 
@@ -11,358 +10,566 @@ Abra num chat novo, anexe este arquivo e cole o parágrafo do fim.
 Site onde cada pessoa publica carteiras de estudo de ações da B3. Desempenho e
 risco são públicos; os papéis e os pesos são de quem assina. Publicar é grátis.
 
-**No ar:** ainda não, mas o repositório existe e o robô roda.
-**Banco:** Supabase, projeto "Saldo Positivo", plano grátis, região ca-central-1.
+**O site tem duas metades**, e a separação é deliberada:
+
+| Metade | Quem | O que mede | Placar |
+|---|---|---|---|
+| **Investidores** | quem publica carteira | retorno apurado de fechamento a fechamento, por classe | ranking de carteiras |
+| **Especuladores** | quem aposta em papel do dia | acerto de direção em um pregão, com stop e alvo | ranking de pontos |
+
+**A ponte entre os dois placares não existe, e é para continuar assim.** O valor
+do site está em o número apurado ser confiável. Misturar placar de jogo com
+placar de carteira contamina os dois.
+
+---
+
+## Estado em 29/07/2026
+
+**No ar:** `https://ricardoafreis-blip.github.io/saldo-positivo-novo/`
+**Domínio:** `saldopositivo.com.br` ainda serve o **Duelo B3**, em Cloudflare
+Workers (`duelo-b3` e `duelo-b3-proxy`). DNS na Cloudflare. O site novo ainda
+não aponta para lá.
+**Banco:** Supabase, projeto "Saldo Positivo", plano grátis, ca-central-1.
+**Sem migrations e sem backups** — o SQL só existe no banco vivo e em `sql/`.
 **Repositório:** `ricardoafreis-blip/saldo-positivo-novo` (público).
-**Fonte de cotação:** Yahoo Finance na prática, brapi.dev no desenho — veja
-"Quem está entregando o dado hoje". O Fundamentus **morreu**.
 
----
+### Arquivos
 
-## Arquivos
-
-| Arquivo | O que é |
+| Onde | O que é |
 |---|---|
-| `MEMORIAL.md` | este arquivo — **commitar no repo**, ele é o mecanismo de recuperação |
-| `index.html` | o site inteiro — um arquivo, já com a chave publishable dentro |
-| `robo/robo.mjs` | o robô diário, roda no GitHub Actions |
-| `.github/workflows/*.yml` | agenda do robô |
-| `banco.sql` … `banco7.sql` | **PERDIDOS.** Já rodados, o efeito está vivo no banco. Recuperáveis — veja "Como recuperar o SQL perdido" |
-| `carteira.py` | motor de referência em Python (o site usa a versão em SQL) |
+| `MEMORIAL.md` | este arquivo |
+| `index.html` | o site inteiro, um arquivo, com a chave publishable dentro |
+| `robo/robo.mjs` | robô diário: busca cotação e fecha o dia |
+| `robo/historico.mjs` | **laboratório**: carrega meses de pregão real do Yahoo |
+| `.github/workflows/` | `fechar-dia.yml` (19h BRT), `recuperar.yml` (**desligado**), `historico.yml` (manual) |
+| `sql/funcoes.sql` | dump das funções às 11h de 29/07 — **já desatualizado** |
+| `sql/banco8..17.sql` | as migrações do dia, na ordem |
+| `sql/simular.sql` | gerador de dado falso — distorce renda fixa e índice, ver abaixo |
+
+Os `banco.sql` a `banco7.sql` originais **se perderam**. Não peça por eles: o SQL
+está vivo no Postgres e as consultas para extraí-lo estão na seção
+"Como recuperar o SQL".
 
 ---
 
-## Como recuperar o SQL perdido
+## ⚠️ O banco está com DADO DE LABORATÓRIO
 
-Os `banco*.sql` sumiram, mas o código que eles criaram está de pé dentro do
-Postgres e ele devolve o fonte. **Nenhum item deste memorial está bloqueado por
-falta desses arquivos.** No SQL Editor do Supabase:
+`retorno_dia`, `oscilacao`, `barra` e `peso_atual` têm **64 pregões reais de
+29/04 a 29/07/2026**, carregados retroativamente pelo `historico.mjs`. As
+carteiras não existiam nessas datas. Isso viola de propósito a regra "sem
+histórico retroativo" e serviu para provar o motor.
+
+**Apagar antes de entrar gente:**
 
 ```sql
--- todas as funções, corpo inteiro
-select p.proname, pg_get_functiondef(p.oid)
-from pg_proc p join pg_namespace n on n.oid = p.pronamespace
-where n.nspname = 'public' order by 1;
-
--- uma função específica
-select pg_get_functiondef(oid) from pg_proc where proname = 'declarar';
-
--- uma view
-select pg_get_viewdef('ranking'::regclass, true);
-
--- colunas de todas as tabelas
-select table_name, ordinal_position, column_name, data_type, is_nullable, column_default
-from information_schema.columns where table_schema = 'public' order by 1, 2;
-
--- políticas RLS
-select tablename, policyname, cmd, qual, with_check
-from pg_policies where schemaname = 'public';
-
--- gatilhos
-select event_object_table, trigger_name, action_timing, event_manipulation, action_statement
-from information_schema.triggers where trigger_schema = 'public';
+delete from retorno_dia;
+delete from oscilacao;
+delete from barra;
+delete from peso_atual;
+update posicao set valida_de = proximo_pregao();
 ```
 
-**Salvar a saída como `sql/schema.sql` e commitar.** O painel do Supabase mostra
-*No migrations* e *No backups*, e o plano é o gratuito: hoje o SQL existe num
-lugar só, que é o banco vivo.
+O `simular.sql` gera dado aleatório e é pior que isso: ele trata todo papel
+igual, então distorce justamente renda fixa e índice (deu Sharpe 13,69 e ETF de
+Selic oscilando 2% ao dia). O `historico.mjs` com dado real substituiu ele.
 
 ---
 
 ## Decisões que não se discutem mais
 
-**Oscilação, nunca preço.** O retorno de cada ativo vem da variação diária da
-fonte. Split e grupamento já vêm resolvidos.
+**Oscilação, nunca preço** (no motor de carteira). Split e grupamento já vêm
+resolvidos pela fonte. Preço só existe no jogo de especulação, em `barra`.
 
-**Caixa = 100 − líquida.** Venda a descoberto entra dinheiro: 130 comprado e
-40 vendido dá caixa de +10%, não −30%. Caixa positivo rende CDI até 100%.
-Caixa negativo é margem e custa CDI sempre.
+**Caixa = 100 − líquida.** Venda a descoberto entra dinheiro: 130 comprado e 40
+vendido dá caixa de +10%, não −30%. Caixa positivo rende CDI até 100%; negativo
+é margem e custa CDI. Confirmado funcionando: a alavancada com caixa −59% paga
+o arrasto.
 
-**Peso anda sozinho.** Depois de declarado, `peso × (1+osc) / (1+retorno)` todo
-dia. Só volta ao declarado quando o dono declara de novo.
+**Peso anda sozinho.** `peso × (1+osc) / (1+retorno)` todo dia. Só volta ao
+declarado quando o dono declara de novo. É por isso que `peso_atual` não pode
+ser recalculado de `posicao` — perderia a deriva. Daí a coluna `marco`.
 
-**Estratégia e alavancagem são derivadas dos pesos**, nunca declaradas.
-O `tags()` no `index.html` faz isso.
+**Declaração vale a partir do próximo pregão, sempre.** Sem relógio, sem corte,
+sem caso de borda. Era o furo mais grave do projeto: quem declarava às 17h30 já
+sabendo o resultado do dia entrava no cálculo dele. Consertado no `banco8`
+(`declarar()`), no `banco9` (adoção no fechamento) e no `banco11` (default da
+coluna, que fechava a estreia de carteira nova).
 
 **Teto de 200%** na soma de compras e vendas.
 
-**Sem histórico retroativo.** A carteira começa a contar no dia da publicação.
+**Sem histórico retroativo.** A carteira começa a contar no pregão seguinte à
+publicação.
 
 **O lacre é do banco, não da tela.** A regra `pos_le` só devolve posição para o
-dono ou para assinante.
+dono ou para assinante. Vale igual para aposta de especulação (`aposta_le`).
 
-**O e-mail de aviso é sino, não entrega.** Ele diz que mudou e dá o link. Nunca
-leva peso no corpo — posição lacrada não pode ficar em caixa de entrada, nem de
-quem cancelou depois.
+**O e-mail de aviso é sino, não entrega.** Diz que mudou e dá o link, nunca leva
+peso no corpo.
 
-**Etiqueta que o site exibe é etiqueta que o site atesta.** Por isso nada de
-credencial não verificada em destaque.
+**Atributo se deriva, nunca se declara** — com **uma exceção justificada: a
+classe da carteira.** "Sou long only" quer dizer "eu me proíbo de vender", e isso
+é compromisso, não característica. Se fosse deduzido dos pesos de hoje, a
+carteira migraria de ranking conforme o resultado — a declaração retroativa com
+outra roupa. Por isso: escolhida no nascimento, imutável, e o banco recusa
+declaração que a viole.
 
----
-
-## O Fundamentus morreu como fonte
-
-Evidência dos dois lados:
-
-- Pelo navegador: os quatro intermediários de CORS falharam juntos
-  ("nenhum intermediário funcionou"). O `thingproxy` está morto; os outros
-  saem de datacenter.
-- Pelo GitHub Actions: primeiro devolveu página que não era a do Fundamentus
-  (nem a palavra "Dia" aparecia), depois passou a aceitar a conexão e não
-  responder, e por fim `fetch failed` nos 7 papéis, ~11s cada.
-
-Diagnóstico: ele recusa conexão de IP de datacenter. Nenhum cabeçalho resolve.
-**Não tente voltar a raspar o Fundamentus.** Já foi tentado com User-Agent de
-navegador, Referer, Accept-Language e redirect follow.
-
-Efeito colateral bom: sumiu a corrente de quatro intermediários gratuitos, que
-era a peça mais frágil do projeto.
-
-⚠️ **O painel admin do `index.html` ainda tem a versão antiga**, que raspa o
-Fundamentus pelo navegador (`rodarDia()`, `atualizarUniverso()`). Está morta.
-Ou apagar, ou apontar para as mesmas RPCs que o robô usa.
+**Identidade autodeclarada saiu da tela** (29/07). `identidade`, `credencial` e
+`anos_mercado` continuam no banco mas não aparecem em lugar nenhum: o site não
+tem como atestar, e etiqueta profissional espanta quem tem mais a perder com um
+mês ruim.
 
 ---
 
-## Como o dado entra
+## As quatro classes de carteira
 
-O robô tenta a **brapi** em lotes de 20 papéis; o que não vier — um papel ou a
-API inteira — cai no **Yahoo**, um papel por chamada. Um caminho só cobre os
-dois casos, então a resiliência não depende de qual vem primeiro.
+Escolhidas na criação, imutáveis, validadas pelo banco (`valida_classe`).
 
-**brapi.dev**, plano grátis, 15.000 requisições/mês. Token em `BRAPI_TOKEN`.
+| Classe | O que o banco impõe |
+|---|---|
+| `all_in` | só compra · bruta de 100% a 200% — sem caixa, pode alavancar |
+| `diversificada` | só compra · bruta abaixo de 100% · 5 a 15 papéis |
+| `long_short` | ao menos uma compra e uma venda · bruta até 200% · é aqui que entra o hedge |
+| `vendida` | só venda · bruta até 200% |
 
-- Fechamento: `GET /api/quote/{até 20 tickers}` → `regularMarketChangePercent`
-  e `regularMarketTime`.
-- Universo: `GET /api/quote/list?type=stock&limit=500&page=N`, filtrando
-  `subType === "stock"`, ticker `AAAA9`, e `close × volume >= 200000`.
+As quatro não se sobrepõem: o divisor entre `all_in` e `diversificada` é o
+caixa. All in é estar todo dentro.
 
-**Yahoo Finance**, sem token:
-`query1.finance.yahoo.com/v8/finance/chart/PETR4.SA?range=5d&interval=1d`.
-**Exige User-Agent de navegador**: com o padrão do Node ele recusa. Não devolve
-variação pronta; sai de `meta.regularMarketPrice / meta.previousClose − 1`.
-Data de `meta.regularMarketTime`, unix em segundos.
+**Vão conhecido:** comprada com caixa e menos de 5 ou mais de 15 papéis não tem
+classe. Quem quiser 3 papéis a 30% cada precisa ir a 100% ou abrir para 5 nomes.
+Se isso aparecer com frequência, a saída é baixar o mínimo da diversificada de 5
+para 2. Hoje uma carteira está sem classe: "Minha carteira 2", 4 papéis, bruta 99.
 
-Nos dois casos a data do pregão é convertida para America/Sao_Paulo.
-
-`BRAPI_TOKEN` é opcional — sem ele o robô pula a brapi e vai direto de Yahoo.
-
-### Quem está entregando o dado hoje
-
-O robô fecha o dia **verde no GitHub Actions puxando do Yahoo**. Isso significa
-que a brapi entregou zero: ou o `BRAPI_TOKEN` saiu dos secrets, ou o token está
-lá e a API não responde.
-
-**A conferir no log da rodada verde:** se aparecer `brapi entregou 0 de N`, o
-token existe e a brapi está fora; se a linha não aparecer, o token sumiu e o
-robô nem tentou. O log imprime `brapi entregou X de Y` toda rodada — é por ali
-que se acompanha degradação ao longo das semanas em vez de descobrir no dia da
-queda.
-
-**Se a brapi seguir entregando zero, inverter a ordem é só oficializar o que já
-acontece.** Custo hoje: N/20 requisições que falham antes de o Yahoo assumir.
-Contra: o Yahoo às vezes devolve 429 para IP de datacenter, que é exatamente o
-que o Actions é — manter a brapi na frente é o seguro contra isso.
+**Neutra saiu** — long & short já cobre o hedge. **Ampla saiu.** Day trade **não
+é classe de carteira**: virou a metade de especulação.
 
 ---
 
-## Estado do GitHub
+## O jogo de especulação
 
-Repositório `saldo-positivo-novo`, público, 13 commits. Três pastas/arquivos:
-`.github/workflows`, `robo`, `index.html`.
+**Como funciona.** O jogador escolhe **papel e direção** para o próximo pregão,
+até 10 papéis por dia, sem obrigação de jogar todo dia. Entrada na abertura.
+Stop e alvo o sistema propõe. Saída por stop, por alvo ou pelo fechamento.
 
-Secrets configurados: `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `BRAPI_TOKEN`
-(**confirmar se ainda está lá** — veja acima).
+**Por que a entrada é na abertura e não às 10h30:** o candle diário não tem o
+preço das 10h30. Apurar por um preço que não se conhece seria chute.
 
-Workflows: `fechar-dia.yml` (19h BRT = 22h UTC, dias úteis) e `recuperar.yml`
-(8h, 9h, 10h BRT, dias úteis). O `atualizar-universo.yml` foi escrito mas
-**ainda não foi criado no repositório**.
+**Stop e alvo em múltiplos da amplitude média do papel**, não em porcentagem
+fixa. Sem isso, 2% em MGLU3 é dia comum e em VALE3 é dia grande — o volátil bate
+alvo por ruído e o parado não bate nem quando o jogador acerta. Padrão: 0,6 de
+amplitude para cada lado, **equidistante**.
 
-O robô roda verde. As quatro falhas antigas foram todas da versão Fundamentus.
+**Três convenções da apuração**, e elas precisam ser públicas:
+
+1. **Stop e alvo tocados no mesmo dia → AMBÍGUO, sai no fechamento.** O candle
+   não diz o que veio primeiro, então usa o único preço que se conhece.
+2. **Gap além do limite → preenche na abertura.** Stop não é promessa de preço.
+3. **Entrada sempre na abertura.**
+
+**Pontuação:**
+
+| Desfecho | Pontos |
+|---|---|
+| `alvo`, `gap_favor` | +2 |
+| `fechamento` positivo, `ambiguo` positivo | +1 |
+| zero a zero | 0 |
+| `fechamento` negativo, `ambiguo` negativo | −1 |
+| `stop`, `gap_contra` | −2 |
+
+**A unidade do placar é o DIA, não a operação.** Nota do dia = média dos pontos
+dos papéis daquele dia, sempre entre −2 e +2, para quem entrou com 1 ou com 10.
+Motivo: soma de pontos rankearia quem joga mais; média por operação trataria 10
+apostas correlacionadas (cinco bancos) como 10 evidências independentes.
+Diversificar reduz a variância do dia — o que é bom — mas não infla a amostra.
+
+**Nota final = média das notas diárias × dias/(dias+20).** O encolhimento é a
+mesma ideia do termômetro de palpites: três dias bons não passam na frente de um
+ano de consistência.
+
+**Lacre da aposta:** aposta de outra pessoa só aparece quando o prazo fecha, na
+abertura do pregão (`banco17`). Durante o dia todos veem o campo montado e nada
+pode mudar. Sem isso, quem entra por último copia quem entrou primeiro.
+
+**Não há arbitragem em apostar nos dois lados do mesmo papel** — conferido:
++2 e −2, ou +1 e −1. Sempre zero.
 
 ---
 
-## Como o robô entra no banco
+## Os três vieses encontrados e corrigidos no jogo
 
-As funções `robo_gravar_oscilacao`, `robo_fechar_dia` e `robo_gravar_universo`
-são casquinhas `security definer` que fazem
-`set_config('request.jwt.claims', ...)` com o id do primeiro perfil admin e
-chamam as originais `gravar_oscilacao`, `fechar_dia`, `gravar_universo`. O robô
-entra por elas com a service key; o front chama as antigas direto.
+Todos achados do mesmo jeito: olhando um número que não fechava.
 
-⚠️ **Conferir privilégio.** Função nova em `public` nasce com EXECUTE liberado
-para `anon` e `authenticated`. Como as `robo_*` se autopromovem a admin e a
-chave publishable está dentro do `index.html`, isso seria um buraco aberto:
+**1. Imposto sobre volatilidade.** A convenção "empate conta stop" parecia
+conservadora e era um imposto. Medido em 64 pregões:
 
-```sql
-select p.proname,
-       has_function_privilege('anon', p.oid, 'execute')         as anon_pode,
-       has_function_privilege('authenticated', p.oid, 'execute') as logado_pode
-from pg_proc p join pg_namespace n on n.oid = p.pronamespace
-where n.nspname = 'public' and p.proname like 'robo\_%';
-```
+| Papel | Dias de empate | Média por operação |
+|---|---|---|
+| MGLU3 | 25 de 64 | −0,564% |
+| CVCB3 | 23 | −0,570% |
+| VALE3 | 0 | −0,103% |
+| LFTS11 | 0 | +0,026% (único positivo) |
 
-Se vier `true`, o conserto não afeta a `service_role`:
+O ranking de "melhor papel para operar" saía ordenado por volatilidade
+invertida: a estratégia vencedora era escolher o papel que menos anda.
+Corrigido no `banco14` — de 292 punições indevidas para 18 casos honestos, e a
+média do `ambiguo` passou a **+1,096%**, o que mede o tamanho do imposto.
 
-```sql
-revoke execute on function
-  robo_gravar_oscilacao(jsonb), robo_fechar_dia(), robo_gravar_universo(jsonb)
-from anon, authenticated;
-```
+**2. Alvo em porcentagem fixa.** Corrigido com múltiplos da amplitude
+(`faixa_papel`, `banco14`).
+
+**3. Assimetria da pontuação.** Com stop a meia amplitude e alvo a três quartos,
+o stop é atingido quase o dobro das vezes (500 contra 254). Pontos simétricos de
+±2 com frequência de 2 para 1 dão expectativa negativa para **todos**. Daí o
+padrão equidistante 0,6/0,6 no `banco15`. **O teste C do `banco15` ainda não foi
+rodado** — é ele que confirma.
+
+---
+
+## O que foi medido, e prova que o motor está certo
+
+**Neutralidade da apuração** (64 pregões, 19 papéis, 2.432 operações):
+
+| Lado | Média por operação |
+|---|---|
+| comprado | −0,114% |
+| vendido | +0,139% |
+| **soma** | **+0,025% ≈ zero** |
+
+A apuração não favorece direção nenhuma. A expectativa negativa do comprado é
+mercado, não regra: **todos os 19 papéis fecharam o trimestre no negativo** —
+MGLU3 −44,2%, CVCB3 −34,7%, RENT3 −20,6%, BOVA11 −7,3%, ITUB4 −4,6%.
+
+**Volatilidade das classes** (mesmos 64 pregões, anualizada):
+
+| Carteira | Vol | Leitura |
+|---|---|---|
+| Ações e Selic (40% LFTS11) | 8,55% | piso, como esperado |
+| Hedge de índice | 9,48% | 36% menos que a comprada — o hedge funciona |
+| Diversificada (12 papéis) | 14,12% | menos que a concentrada |
+| Concentrada (4 papéis) | 14,81% | |
+| Alavancada 1,5x | 23,15% | maior retorno, Sharpe pior, queda máxima maior |
+
+**Determinismo:** "Minha carteira" e "[teste] Concentrada" têm os mesmos quatro
+papéis e deram retorno e volatilidade idênticos (−1,44% e 14,81%) por caminhos
+independentes.
+
+---
+
+## De onde vem a cotação
+
+O robô tenta em cascata; cada fonte cobre o que a anterior não entregou. O log
+diz quem entregou quanto — é assim que se percebe uma fonte degradando ao longo
+das semanas em vez de descobrir no dia da queda.
+
+**1. brapi.dev** — lotes de 20 papéis. **COTA ZERADA: 15.000 de 15.000,
+renova 16/08/2026.** Última chamada que passou foi 21/07. Todos os fechamentos
+verdes até hoje foram Yahoo puro.
+Causa medida: o **duelo** chama a brapi do navegador de cada visitante, **um
+papel por requisição**. Pico de ~9.000 requisições num domingo (19/07),
+provavelmente laço de retentativa em dia sem pregão.
+PETR4, MGLU3, VALE3 e ITUB4 respondem **sem token** — não confunda isso com "a
+brapi voltou".
+
+**2. bolsai** (`usebolsai.com`) — adaptador escrito no `robo.mjs` e **NÃO
+VERIFICADO**. Três linhas marcadas para conferir na documentação: caminho do
+endpoint, forma de enviar o token, nome do campo de variação. Sem
+`BOLSAI_TOKEN`, é pulada em silêncio.
+
+**3. Yahoo Finance** — `query1.finance.yahoo.com/v8/finance/chart/PETR4.SA`, um
+papel por chamada, sem token. **Exige User-Agent de navegador.** Índice não leva
+`.SA` e o `^` precisa ser escapado: `simboloYahoo()` faz isso.
+
+**Fundamentus está morto** e não volta: recusa IP de datacenter, e falhou também
+pelo navegador com os quatro intermediários de CORS. Já tentado com User-Agent,
+Referer, Accept-Language e redirect follow. **Não tente de novo.**
+
+**MetaTrader 5 não serve** para o robô: o acesso é por biblioteca Python que
+conversa com o terminal aberto, precisa de Windows com o programa rodando. Não
+há endpoint HTTP. Serve como fonte manual, nunca como cron.
+
+**Intradiário é inviável por ora.** Pela brapi não há cota; pelo Yahoo, um papel
+por chamada de IP de datacenter, dá 429. Quando a cota voltar, o desenho é
+Actions busca e grava numa tabela, o site lê do Supabase — **nunca** o navegador
+do visitante chamando a fonte.
+
+**Índice de referência: `^BVSP` (Ibovespa), só ele.** BOVA11 e SMAL11 são papéis
+que uma carteira pode ter, não régua — e sendo ETF, distribuem provento, o que
+contaminaria a comparação. O Ibovespa é índice de retorno total por construção.
+
+---
+
+## A pergunta do provento, e o detector que já está de pé
+
+A variação diária das fontes é bruta ou ajustada por provento? Se for bruta, a
+carteira de dividendo afunda no dia "ex" sem ter perdido nada — e no modelo de
+peso o dinheiro **não tem para onde ir**, porque o caixa é derivado (`100 −
+líquida`), não uma conta que recebe depósito.
+
+**O que se sabe:** no Brasil a série de preços é ajustada retroativamente pela
+bolsa — o caso Petrobras 2022 é explícito (fechamento de quinta passou de R$
+36,25 para R$ 29,58 no dia seguinte). Então **depende de qual fechamento
+anterior a fonte usa na conta**, e isso muda de fonte para fonte. O Yahoo mantém
+`Close` e `Adj Close` separados, o que sugere que o principal não é ajustado — e
+é do principal que sai o `previousClose` que o robô usa.
+
+**O detector que já está funcionando sem custo:** `^BVSP` e `BOVA11` são
+gravados lado a lado todo dia. Em 29/07 a diferença foi 0,32 ponto (−2,06% contra
+−2,38%), que é erro de rastreamento normal. No dia em que o BOVA11 ficar "ex", se
+a fonte for bruta, **essa diferença salta pelo valor do provento**. Não precisa
+de teste armado: é só olhar quando o par descolar.
+
+**Cuidado ao montar teste manual:** o preço cai na **data ex**, que é o dia
+seguinte à "data com" — não na data de pagamento. Provento pequeno (0,6%) se
+perde no ruído diário de 2%; serve JCP acima de 2%, e serve muito melhor
+distribuição gorda.
 
 ---
 
 ## Armadilhas já pagas — não repita
 
-**`carteira.id` é `bigint`, não `uuid`.** `perfil.id` é `uuid` (vem do
-`auth.users`). Errar isso quebra chave estrangeira e assinatura de função.
-Já custou um `banco6` inteiro rolando para trás.
+**No Supabase, função nova nasce ABERTA.** O privilégio vem de `PUBLIC`, não de
+`anon` — revogar de `anon` não faz nada e o `has_function_privilege` continua
+`true`. Em 29/07 as 36 funções estavam liberadas, incluindo as `robo_*`, que se
+autopromovem a admin. Como a chave publishable está no `index.html` de um
+repositório público, qualquer um podia fechar o dia. Corrigido com
+`revoke ... from public` + `grant` para quem precisa. **Todo arquivo novo tem de
+terminar com esse bloco.**
 
-**RLS do Postgres não restringe coluna, só linha.** Sem o gatilho
-`trava_privilegio`, qualquer pessoa se marcaria `assinante = true` pelo console
-e o lacre abriria de graça. O gatilho veio no `banco5.sql`.
+**`carteira.id` é `bigint`, `perfil.id` é `uuid`.** Errar isso quebra chave
+estrangeira e assinatura de função. Já custou um `banco6` inteiro.
 
-**`sou_admin()` precisa ser SECURITY DEFINER.** Ela lê `perfil`, que tem RLS.
-Sem DEFINER, qualquer policy que a chame entra em recursão infinita.
+**RLS não restringe coluna, só linha.** Sem `trava_privilegio`, qualquer um se
+marcaria `assinante = true` pelo console.
 
-**E-mail repetido não dá erro no Supabase.** Ele devolve usuário falso com
-`identities` vazio, de propósito, contra enumeração. O `index.html` já trata.
+**`sou_admin()` precisa ser SECURITY DEFINER**, senão policy que a chame entra em
+recursão infinita. Não revogue `sou_admin`, `eh_assinante`, `pode_mexer` nem
+`apelido_livre` de `anon` — o ranking para de abrir para visitante deslogado.
 
-**O editor do GitHub não apaga com Ctrl+A confiável.** Colar por cima duplica o
-arquivo. Para trocar arquivo: Delete file, depois Create new file.
+**E-mail repetido não dá erro no Supabase**: devolve usuário falso com
+`identities` vazio, contra enumeração. O `index.html` já trata.
 
-**Arquivo que mora só na pasta de Downloads é arquivo perdido.** Foi assim com
-os `banco*.sql`. Um `robo__6_.mjs` na mão não prova o que está no repo — o nome
-com sufixo é sinal de cópia velha. Conferir sempre pelo GitHub.
+**`round(x, 2)` não existe para `double precision`.** Erro `42883`. Sempre
+`round((x)::numeric, 2)`.
+
+**O SQL Editor do Supabase mostra só o resultado da ÚLTIMA consulta**, e se
+houver texto selecionado executa **só a seleção**. Duas horas de 29/07 se foram
+achando que um arquivo tinha rodado quando não tinha. Rode uma consulta por vez.
+
+**O editor do GitHub não apaga com Ctrl+A confiável.** Para trocar arquivo:
+Delete file, depois Create new file. E se o campo do nome já tiver um caminho
+(`sql/`), ele fica — foi assim que nasceu uma pasta com nome de frase inteira.
+
+**Arquivo que mora só em Downloads é arquivo perdido.** Foi assim com os
+`banco*.sql`. Nome com sufixo (`robo__6_.mjs`) é sinal de cópia velha: confira
+sempre pelo GitHub.
+
+**Papel que morre é peso fantasma.** `AZUL4` virou `AZUL532`, depois `AZUL54`, e
+hoje não existe. O `fechar_dia` trata papel sem cotação como **variação zero**
+via `coalesce(o.valor, 0)`, silenciosamente e para sempre. A carteira
+"[teste] Só vendida" está sendo apurada com dois terços dos papéis. Caçar zumbis:
+
+```sql
+select distinct pa.ativo from peso_atual pa
+ where not exists (select 1 from oscilacao o where o.ativo = pa.ativo);
+```
+
+**O robô tolera 10% de falha** — uma perna faltando em 21 papéis passa sem
+barrar nada.
+
+---
+
+## Como recuperar o SQL
+
+Os `banco*.sql` antigos se perderam, mas o Postgres devolve o fonte:
+
+```sql
+select p.proname, pg_get_functiondef(p.oid)
+from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+where n.nspname = 'public' order by 1;
+
+select pg_get_viewdef('ranking'::regclass, true);
+
+select table_name, ordinal_position, column_name, data_type, is_nullable, column_default
+from information_schema.columns where table_schema = 'public' order by 1, 2;
+
+select conrelid::regclass, conname, pg_get_constraintdef(oid)
+from pg_constraint where connamespace = 'public'::regnamespace order by 1;
+
+select tablename, policyname, cmd, qual, with_check
+from pg_policies where schemaname = 'public' order by 1;
+
+select event_object_table, trigger_name, action_timing, event_manipulation, action_statement
+from information_schema.triggers order by 1;
+
+select p.proname,
+       has_function_privilege('anon', p.oid, 'execute')          as anon,
+       has_function_privilege('authenticated', p.oid, 'execute') as logado,
+       has_function_privilege('service_role', p.oid, 'execute')  as robo
+from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+where n.nspname = 'public' order by 1;
+```
+
+**Exportar em CSV e commitar em `sql/`.** O `funcoes.sql` no repositório é das
+11h de 29/07 e já não tem nada do `banco10` em diante.
+
+---
+
+## As migrações de 29/07/2026
+
+| Arquivo | O que fez |
+|---|---|
+| `banco8` | `hoje_br()`, `proximo_pregao()`; `declarar()` grava `valida_de` = próximo pregão |
+| `banco9` | coluna `marco` em `peso_atual`; gatilho ignora declaração futura; `fechar_dia` adota a pendente **antes** de calcular |
+| `banco10` | view `papeis_do_dia`; `gravar_oscilacao` arquiva pela data real; `fechar_dia` recusa dia já fechado; `robo_fechar_dia(d)` |
+| `banco11` | classes, `valida_classe`, `trava_classe`, view `carteira_classe`, **default de `valida_de`** |
+| `banco12` | `declarada_em`; tabela `referencia` (`^BVSP`); `indice_referencia`; `carteira_contra_referencia` |
+| `banco13` | tabela `barra` (OHLC), `robo_gravar_barra`, `apurar_operacao` |
+| `banco14` | empate → `ambiguo` no fechamento; view `faixa_papel` |
+| `banco15` | `pontos()`, `limites_sugeridos()`, `apurar_aposta()` |
+| `banco16` | tabela `aposta`, travas, `aposta_apurada`, `dt_dia`, `ranking_dt` |
+| `banco17` | lacre da aposta abre na abertura, não no fechamento |
+
+Dois bugs graves que o dia revelou e consertou:
+
+**`gravar_oscilacao` arquivava por `CURRENT_DATE`.** Provado no próprio banco:
+`data = 2026-07-29` com `data_cot = 2026-07-28`. No modo `recuperar`, que roda de
+manhã para salvar o pregão de ontem, o dado de ontem era arquivado como de hoje —
+o dia perdido continuava perdido e o robô tentaria de novo toda manhã, para
+sempre.
+
+**`fechar_dia` não era idempotente.** `retorno_dia` tem upsert e dava a impressão
+de que era, mas a deriva de `peso_atual` era reaplicada a cada chamada. O
+`recuperar` rodou duas vezes em 29/07 e deformou os pesos.
 
 ---
 
 ## O que funciona hoje
 
-Cadastro com nome e telefone · apelido único conferido antes de criar ·
-login · recuperação de senha · publicar quantas carteiras quiser · grade de
-posições com escolha de ativo, peso e compra/venda, com resumo vivo de
-bruta/líquida/caixa · editar · histórico dia a dia · histórico de declarações ·
-ranking ordenável · lacre · duelo · comparador · indicação · seguir carteira
-com aviso na fila · contador de seguidores · admin com apagar/renomear
-carteira, trocar apelido, bloquear conta e ver a fila de e-mail · apagar a
-própria carteira em um clique · robô fechando o dia sozinho no Actions.
-
----
-
-## URGENTE: declaração retroativa
-
-Hoje `declarar()` grava `valida_de = hoje`. Quem declara depois do fechamento
-entra no cálculo do dia que já viu acontecer. É acertar sabendo o resultado, e
-invalida o ranking inteiro. Uma pessoa esperta descobre isso na primeira semana.
-
-Horário de corte (16h, 17h) **não resolve** — só encolhe: quem declara às 15h já
-viu cinco horas de pregão, e ainda cria caso de borda às 16h59.
-
-**Regra correta: declaração vale a partir do próximo pregão, sempre.** Sem
-relógio, sem borda. Quem declarou de manhã e quem declarou à noite entram
-juntos amanhã — o mesmo "todo mundo parte junto" que já valia para publicação.
-
-Trocar `valida_de` em `declarar()` de hoje para o próximo dia útil.
-**Não depende de arquivo perdido:**
-`select pg_get_functiondef(oid) from pg_proc where proname = 'declarar';`
-
-Consequência boa: com isso, atualizar cotação de hora em hora vira enfeite de
-tela, sem risco de contaminar o apurado.
-
----
-
-## A CONFIRMAR: fonte devolvendo dado velho
-
-A brapi já entregou o pregão de anteontem em vez do de ontem. O risco é real e
-está registrado.
-
-**A proteção pode não existir.** No `robo.mjs`, a checagem contra `retorno_dia`
-está só dentro de `recuperar()`. No modo `dia` — o das 19h, o que fecha de
-verdade — o código junta as datas distintas, **imprime** (`pregão: ...`) e grava
-assim mesmo. Nenhuma recusa, nenhum grito.
-
-Ou a recusa está dentro da `gravar_oscilacao` no SQL, ou não existe em lugar
-nenhum. Conferir antes de confiar:
-`select pg_get_functiondef(oid) from pg_proc where proname = 'gravar_oscilacao';`
-
-Se não estiver lá, o conserto é no `robo.mjs`: comparar `data_cot` com o último
-`retorno_dia` e abortar se já estiver fechado, e abortar se o lote trouxer mais
-de uma data.
+Cadastro (sem os campos de identidade) · apelido único · login · recuperação de
+senha · publicar carteira **com classe obrigatória** · grade de posições com
+resumo vivo de bruta/líquida/caixa · editar · histórico dia a dia · histórico de
+declarações · **ranking filtrado por classe, com desempate por carteira mais
+antiga** · lacre · duelo · comparador · indicação · seguir carteira · admin com
+seções recolhíveis e ordenação por recente/nome/dono/acumulado · robô fechando o
+dia sozinho pelo Yahoo · comparação contra Ibovespa na janela de cada carteira ·
+apuração e pontuação de aposta de um pregão.
 
 ---
 
 ## O que falta
 
-1. ~~Testar o robô.~~ Feito: roda verde no Actions pelo Yahoo.
-2. ~~Fonte reserva.~~ Feita: Yahoo tapando buraco da brapi, escrita e em
-   produção.
-3. **Commitar `MEMORIAL.md` e `sql/schema.sql` no repo.** Enquanto isso não for
-   feito, a recuperação do projeto depende da pasta de Downloads.
-4. **Publicar.** Settings → Pages → branch `main`, pasta root.
-5. **URLs no Supabase.** Authentication → URL Configuration: pôr o endereço
-   real em *Site URL* e em *Redirect URLs*. Sem isso, recuperar senha por
-   e-mail não volta para lugar nenhum. Aberto desde o começo do projeto.
-6. **Trocar `SEU-DOMINIO`** dentro de `avisar_seguidores()` — rodar o bloco
-   daquela função com o endereço real. (Vinha do `banco7.sql`; recuperável pelo
-   `pg_get_functiondef`.)
-7. **`and not p.bloqueado`** na view `ranking`. Destravado:
-   `select pg_get_viewdef('ranking'::regclass, true);`
-8. **Conferir privilégio das `robo_*`** — veja "Como o robô entra no banco".
-9. **Criar `atualizar-universo.yml`** no repositório.
-10. **Limpar o admin do `index.html`**, que ainda raspa Fundamentus.
-11. **Envio de e-mail.** Falta conta na Resend e os secrets `RESEND_API_KEY` e
+**Com prazo**
+
+1. **Apagar o dado de laboratório** antes de qualquer usuário real.
+2. **Rodar o teste C do `banco15`** — confirma se a pontuação equidistante é
+   justa. Se pender para um lado, o placar nasce torto.
+3. **Consumo da brapi antes de 16/08**, quando a cota renova: cache no Worker
+   (feito), **20 papéis por chamada em vez de 1** (falta, é no front do duelo), e
+   um **teto diário** no Worker — o pico de domingo mostrou que a causa pode ser
+   desconhecida, e só teto protege contra isso.
+
+**Tela (o maior pedaço)**
+
+4. **Formulário de aposta:** papel, direção, limites sugeridos, até 10 por
+   pregão, lista das pendentes com botão de desistir, e a tela do placar lendo
+   `ranking_dt`.
+5. **Dividir a navegação nas duas metades** — Investidores e Especuladores.
+6. **Carteira sem posição em vigor mostra "0 ativos · só comprada"**, rótulo
+   errado por acidente aritmético (`liquida >= bruta - 0.01` com tudo zero).
+   Precisa dizer "estreia no próximo pregão".
+7. Aviso na declaração de que ela vale a partir do próximo pregão.
+
+**Banco**
+
+8. `fechar_dia` **recusar** papel sem cotação em vez de assumir zero, e um jeito
+   de aposentar papel que morreu.
+9. Guardar **qual fonte** entregou cada cotação (coluna `fonte` em `oscilacao`).
+   Se uma fonte ajustar provento e a outra não, dois papéis do mesmo dia saem em
+   réguas diferentes e nada avisa.
+10. `and not p.bloqueado` na view `ranking`.
+11. Religar o `recuperar.yml` — o `banco10` consertou os dois bugs que o tornavam
+    perigoso. Conferir também o cron: os runs saíram às 11h, e o memorial dizia
+    8h, 9h e 10h BRT.
+12. Criar `atualizar-universo.yml` (escrito, nunca criado). Depende da brapi.
+13. **ETFs no universo**: BOVA11 e SMAL11 só entram em carteira se estiverem em
+    `universo`, e o filtro corta tudo que não é `AAAA9`. Regex não serve —
+    `AAAA11` pega ETF, FII, unit e BDR juntos.
+
+**Produto**
+
+14. **Domínio.** Worker do duelo atende por rota: dá para dividir
+    (`/duelo*` no Worker, o resto no site novo) sem tocar no jogo. Conferir se a
+    rota é curinga (`saldopositivo.com.br/*`), que engoliria tudo.
+15. **URLs no Supabase**: já configuradas para o endereço do Pages; acrescentar
+    `https://www.saldopositivo.com.br/**` quando o domínio entrar.
+16. **`SEU-DOMINIO`** dentro de `avisar_seguidores()`.
+17. **`avisar_seguidores` não aparece sendo chamada por nenhum gatilho.** Se
+    nenhum a chamar, o sino nunca toca. Conferir na lista de gatilhos.
+18. **Envio de e-mail**: falta conta na Resend e os secrets `RESEND_API_KEY` e
     `EMAIL_DE`. Sem eles a fila enche e não esvazia — nada quebra.
-12. **Pagamento.** `/assinar` é só a tela. Kiwify ou Asaas; o webhook só precisa
-    fazer `assinante = true` e gravar o lead com `origem = 'assinatura'`.
-13. **ETFs.** A brapi cobre. Falta decidir a lista (regex não serve: `AAAA11`
-    pega ETF, FII, unit e BDR juntos) e ampliar o filtro do universo.
-14. **Termômetro de palpites.** Desenhado, nunca construído. Todo palpite tem
-    prazo e é apurado; duas agulhas (multidão e quem vem acertando, peso
-    `[n/(n+20)] × máx(0, acerto−0,45)`); consenso escondido até votar; alvo é
-    mediana com faixa interquartil à mostra.
+19. **Pagamento**: `/assinar` é só tela. O webhook precisa fazer
+    `assinante = true` e gravar o lead com `origem = 'assinatura'`.
+20. **Painel admin do `index.html`** já não tem os botões do Fundamentus, mas
+    `fechar_dia` e `gravar_oscilacao` continuam com grant explícito para
+    `authenticated` (a checagem interna de admin as protege).
 
 ---
 
-## Decisões em aberto, esperando o dono
+## Ideias desenhadas, não construídas
 
-**Variação em tempo real.** Atualizar a cotação de meia em meia hora ou de hora
-em hora durante o pregão, e parar em algum momento. Com a regra do próximo
-pregão em vigor, isso é puro enfeite de tela e não contamina o apurado — vira
-decisão de produto. Antes dela, não. Pontos por decidir: frequência, hora de
-encerrar, e se o número ao vivo aparece no ranking ou só na carteira.
-Custo: cada rodada intradiária é mais uma passada na cota da fonte.
+**Ranking de pessoa.** Derivável do que existe, sem coletar nada novo. O furo a
+evitar: publicar é grátis e ilimitado, então alguém cria vinte carteiras e é
+reconhecido pela melhor — sorte, não habilidade. O conserto é contar **todas** as
+carteiras da pessoa, com o mesmo encolhimento `n/(n+k)`. Ponto **não pode vir de
+atividade**: se declarar der ponto, declara-se sem motivo.
 
-**A variação é ajustada por provento?** Se for variação crua de fechamento,
-carteira de dividendo afunda no dia "ex" sem ter perdido nada. Vale tanto para
-o `regularMarketChangePercent` da brapi quanto para o cálculo por
-`previousClose` do Yahoo. Teste barato que ninguém fez: no dia em que um papel
-ficar "ex", comparar a variação marcada com o dividendo pago. Se não for
-ajustada, ou se aceita o viés contra carteira de dividendo, ou se soma o
-provento por fora — e aí falta fonte de proventos.
+**Termômetro de palpites.** Todo palpite tem prazo e é apurado; duas agulhas
+(multidão e quem vem acertando, peso `[n/(n+20)] × máx(0, acerto−0,45)`);
+consenso escondido até votar; alvo é mediana com faixa interquartil à mostra.
 
-**As etiquetas de identidade.** `identidade`, `credencial` e `anos_mercado` são
-autodeclarados e contradizem a regra de que atributo se deriva, nunca se
-declara. Argumento levantado e não fechado: etiqueta profissional espanta
-justamente quem tem mais a perder com um mês ruim, enviesando quem aparece no
-ranking. Proposta em pé: apagar as três da tela, derivar ritmo de declaração,
-concentração e tempo de estrada, e criar ranking por vários eixos em vez de
-classificar gente. Os campos continuam no banco.
+**Eixo de giro.** Frequência de re-declaração separa quem mexe todo dia de quem
+mexe por trimestre, sem o site afirmar o que não consegue provar. "Day trader"
+como classe de carteira **não é mensurável** neste motor: quem fecha o dia zerado
+tem peso zero, e o motor mede fechamento a fechamento. Foi por isso que virou a
+metade de especulação.
 
-**Quando pedir CPF e endereço.** Hoje o cadastro pede só nome e telefone, e a
-ficha completa fica para o `/assinar` — Kiwify e Asaas já coletam no checkout e
-devolvem por webhook. A tabela `lead` aceita os dois caminhos pelo campo
-`origem`.
+**Concentração como filtro, não classe.** Cruzar classe com faixa de
+concentração daria baldes de uma carteira cada. Vira classe quando houver gente.
+
+---
+
+## Decisões em aberto
+
+**O placar do jogo aparece junto do ranking de carteiras ou separado?** Minha
+opinião: separado, e é o que o desenho atual faz.
+
+**Quando pedir CPF e endereço.** Hoje o cadastro pede nome e telefone; a ficha
+completa fica para `/assinar`. Kiwify e Asaas coletam no checkout e devolvem por
+webhook. A tabela `lead` aceita os dois caminhos pelo campo `origem`.
+
+**Sharpe encolhido.** A `metricas()` agora exige 20 pregões, anualiza por média
+aritmética (a versão composta transformava +9% em 21 dias em +183% ao ano e o
+Sharpe ia a 13,69) e encolhe por `n/(n+40)`. Isso **não é o Sharpe de livro** — é
+Sharpe para ordenar. A alternativa é o valor cheio com a coluna escondida até 60
+dias.
+
+**Estado da brapi:** existe uma segunda conta. Eu não escrevi nada que gerencie
+rodízio de contas e não vou; o robô lê o `BRAPI_TOKEN` que estiver nos secrets,
+seja qual for. Um token foi exposto em conversa e **precisa ser substituído** no
+painel da brapi.
 
 ---
 
 ## Parágrafo para colar no chat novo
 
-> Estou construindo o Saldo Positivo, site onde cada pessoa publica carteiras de
-> estudo de ações da B3 — desempenho público, papéis e pesos só para assinantes,
-> publicar é grátis. Banco no Supabase, site num HTML único, robô diário em
-> GitHub Actions que já roda verde puxando do Yahoo. O MEMORIAL.md anexado tem
-> todas as decisões tomadas, as armadilhas já pagas e o que falta — leia antes
-> de responder. Os `banco*.sql` se perderam, mas **não peça por eles**: o SQL
-> está vivo no banco e o memorial traz as consultas que o devolvem. Nesta
-> conversa quero trabalhar em [X].
+> Estou construindo o Saldo Positivo, site com duas metades: **investidores**
+> publicam carteiras de estudo de ações da B3 (desempenho público, papéis e pesos
+> só para assinantes, ranking por classe) e **especuladores** apostam em papel e
+> direção para o próximo pregão, com stop e alvo sugeridos pela volatilidade e
+> placar por pontos. Banco no Supabase, site num HTML único já publicado no
+> GitHub Pages, robô diário em GitHub Actions puxando cotação do Yahoo. O
+> MEMORIAL.md anexado tem todas as decisões tomadas, as armadilhas já pagas, os
+> números que provaram o motor e o que falta — **leia antes de responder**. Os
+> `banco*.sql` de 1 a 7 se perderam; **não peça por eles**, o SQL está vivo no
+> banco e o memorial traz as consultas que o devolvem. Atenção: o banco está com
+> 64 pregões de dado retroativo de laboratório que precisam ser apagados antes de
+> entrar gente. Nesta conversa quero trabalhar em [X].
