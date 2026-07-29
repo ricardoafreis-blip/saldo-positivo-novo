@@ -389,16 +389,7 @@ function telaEntrar(){
       <label>Nome completo</label><input name="nome" required maxlength="80">
       <label>Telefone com DDD</label>
       <input name="telefone" required inputmode="tel" maxlength="20" placeholder="31 98888-7777">
-      <label>Como você estuda</label>
-      <select name="identidade">
-        <option value="estudante">Estudante — sem credencial</option>
-        <option value="graficos">Estuda gráficos</option>
-        <option value="fundamentos">Estuda fundamentos</option>
-        <option value="cnpi">CNPI</option>
-        <option value="grupo">Grupo de estudo</option></select>
-      <label>Credencial ou descrição (opcional)</label><input name="credencial" maxlength="60">
-      <label>Anos de mercado que você declara</label>
-      <input name="anos" type="number" min="0" max="70" value="0">`:""}
+`:""}
       <label>E-mail</label><input name="email" type="email" required>
       <label>Senha</label><input name="senha" type="password" required minlength="6">
       <button class="bt cheio" style="width:100%" id="bt">${novo?"Criar conta":"Entrar"}</button>
@@ -422,8 +413,10 @@ function telaEntrar(){
         bt.disabled=false; bt.textContent="Criar conta"; return;
       }
       r = await sb.auth.signUp({ email, password:senha, options:{ data:{
-        apelido: ap, identidade: f.get("identidade"),
-        credencial: f.get("credencial")||"", anos: f.get("anos")||"0", ref,
+        // identidade/credencial/anos saíram da tela em 29/07/2026: eram
+        // autodeclarados e o site não tem como atestar. As colunas continuam
+        // no banco; novo_usuario() põe 'estudante' por padrão.
+        apelido: ap, ref,
         nome: f.get("nome").trim(), telefone: f.get("telefone") } } });
     } else {
       r = await sb.auth.signInWithPassword({ email, password:senha });
@@ -565,9 +558,7 @@ async function telaCarteira(id){
              : podeSeguir ? "acompanhar mudanças"
                           : "acompanhar mudanças · assinante"}</button>` : ""}
     ${c.descricao?`<p style="color:var(--t2);font-style:italic;max-width:60ch">“${esc(c.descricao)}”</p>`:""}
-    <p style="font-size:12px;color:var(--graf)">${esc(c.apelido)} · ${esc(c.identidade)}
-      ${c.credencial?"· "+esc(c.credencial):""}
-      ${c.anos_mercado?"· declara "+c.anos_mercado+" anos de mercado":""}
+    <p style="font-size:12px;color:var(--graf)">${esc(c.apelido)}
       · publicada em ${c.criada_em}</p>
   </div>
   <div class="grade">
@@ -925,7 +916,7 @@ async function telaConta(){
   }
   app().innerHTML = `
   <h1 style="font-size:27px;margin:30px 0 6px">Minha conta</h1>
-  <p style="color:var(--t2);margin-bottom:20px">${esc(eu.apelido)} · ${esc(eu.identidade)}
+  <p style="color:var(--t2);margin-bottom:20px">${esc(eu.apelido)}
     ${eu.assinante?'<span class="pill">assinante</span>':""}</p>
   <div id="erro"></div>
 
