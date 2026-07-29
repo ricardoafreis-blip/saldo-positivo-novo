@@ -1,0 +1,31 @@
+name: Recuperar dia perdido
+
+# Rede de segurança da manhã. Não coleta nada por conta própria:
+# sonda um papel, e só age se o pregão anterior tiver ficado sem fechar.
+# Se o pregão do dia já começou, ela sai sem gravar — variação parcial
+# não pode entrar no lugar de um fechamento.
+
+on:
+  schedule:
+    # 11:00 UTC = 08:00 em Brasília
+    - cron: "0 11 * * 1-5"
+    # 12:00 UTC = 09:00 em Brasília
+    - cron: "0 12 * * 1-5"
+    # 13:00 UTC = 10:00 em Brasília
+    - cron: "0 13 * * 1-5"
+  workflow_dispatch:
+
+jobs:
+  recuperar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: node robo/robo.mjs recuperar
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          EMAIL_DE: ${{ secrets.EMAIL_DE }}
