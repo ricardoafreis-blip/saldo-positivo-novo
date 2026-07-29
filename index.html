@@ -768,6 +768,9 @@ async function telaAdmin(){
   const { data:cts }  = await sb.from("carteira").select("*").order("criada_em",{ascending:false});
   const { count:nu }  = await sb.from("universo").select("*",{count:"exact",head:true});
   const { data:dias } = await sb.from("oscilacao").select("data").order("data",{ascending:false}).limit(1);
+  // índice acumulado de cada carteira: vem em ordem de data, a última grava por cima
+  const { data:rets } = await sb.from("retorno_dia").select("carteira_id,indice,data").order("data");
+  const acum = {}; (rets||[]).forEach(r=> acum[r.carteira_id] = r.indice/100 - 1);
   let fila = [];
   try{ const { data:fq } = await sb.rpc("admin_fila", { so_pendente:true }); fila = fq||[]; }catch(e){}
   const apelidoDe = {}; (us||[]).forEach(u=> apelidoDe[u.id]=u.apelido);
@@ -785,32 +788,31 @@ async function telaAdmin(){
   </div>
 
   <div class="card" style="margin-bottom:16px">
-    <h3 style="font-size:15px;margin-bottom:10px">Robô diário</h3>
-    <button class="bt" id="btUni">1 · Atualizar universo de papéis</button>
-    <button class="bt cheio" id="btDia" style="margin-left:7px">2 · Buscar cotação e fechar o dia</button>
-    <p style="font-size:11.5px;color:var(--graf);margin:10px 0 0">
-      Se o GitHub Actions já estiver ligado, estes botões são só para emergência.</p>
+    <h3 style="font-size:15px;margin-bottom:6px">Robô diário</h3>
+    <p style="font-size:11.5px;color:var(--graf);margin:0">
+      Roda sozinho no GitHub Actions, 19h em dias úteis. Os botões que ficavam aqui
+      raspavam o Fundamentus, que recusa conexão de datacenter desde julho/2026.
+      Para rodar à mão: Actions &rarr; Fechar o dia &rarr; Run workflow.</p>
   </div>
 
-  <div class="card" style="margin-bottom:16px">
-    <h3 style="font-size:15px;margin-bottom:10px">Carteiras</h3>
-    <table><thead><tr><th>Nome</th><th>Dono</th><th class="d">Ações</th></tr></thead><tbody>
-    ${(cts||[]).map(c=>`<tr style="${c.ativa?"":"opacity:.45"}">
-      <td><a href="#/carteira/${c.id}">${esc(c.nome)}</a>
-        ${c.ativa?"":' <span class="tag">apagada</span>'}</td>
-      <td style="font-size:12px">${esc(apelidoDe[c.usuario_id]||"—")}</td>
-      <td class="d">
-        <button class="bt ac-ren" data-cid="${c.id}" data-nome="${esc(c.nome)}"
-          style="padding:4px 10px;font-size:12px">renomear</button>
-        ${c.ativa?`<button class="bt ac-del" data-cid="${c.id}" data-nome="${esc(c.nome)}"
-          style="padding:4px 10px;font-size:12px;margin-left:5px;border-color:var(--baixa);color:var(--baixa)">apagar</button>`:""}
-      </td></tr>`).join("")}
-    </tbody></table>
-  </div>
+  <details class="card" style="margin-bottom:16px" open>
+    <summary style="cursor:pointer;font-size:15px;font-weight:600">
+      Carteiras <span style="color:var(--graf);font-weight:400">· ${(cts||[]).length}</span></summary>
+    <div style="margin:12px 0 10px">
+      <span style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--graf);margin-right:8px">ordenar</span>
+      <button class="bt ord" data-ord="recente" style="padding:3px 10px;font-size:12px">recente</button>
+      <button class="bt ord" data-ord="nome"    style="padding:3px 10px;font-size:12px;margin-left:5px">nome</button>
+      <button class="bt ord" data-ord="dono"    style="padding:3px 10px;font-size:12px;margin-left:5px">dono</button>
+      <button class="bt ord" data-ord="total"   style="padding:3px 10px;font-size:12px;margin-left:5px">acumulado</button>
+    </div>
+    <table><thead><tr><th>Nome</th><th>Dono</th><th class="d">Acum.</th><th class="d">Ações</th></tr></thead>
+    <tbody id="tbCart"></tbody></table>
+  </details>
 
-  <div class="card">
-    <h3 style="font-size:15px;margin-bottom:10px">Contas</h3>
-    <table><thead><tr><th>Apelido</th><th>E-mail</th><th class="d">Assinatura</th><th class="d">Ações</th></tr></thead><tbody>
+  <details class="card">
+    <summary style="cursor:pointer;font-size:15px;font-weight:600">
+      Contas <span style="color:var(--graf);font-weight:400">· ${(us||[]).length}</span></summary>
+    <table style="margin-top:12px"><thead><tr><th>Apelido</th><th>E-mail</th><th class="d">Assinatura</th><th class="d">Ações</th></tr></thead><tbody>
     ${(us||[]).map(x=>`<tr style="${x.bloqueado?"opacity:.45":""}">
       <td><b>${esc(x.apelido)}</b>${x.admin?' <span class="tag al">admin</span>':""}
         ${x.bloqueado?' <span class="tag">bloqueada</span>':""}
@@ -826,7 +828,7 @@ async function telaAdmin(){
           style="padding:4px 10px;font-size:12px;margin-left:5px">${x.bloqueado?"liberar":"bloquear"}</button>`:""}
       </td></tr>`).join("")}
     </tbody></table>
-  </div>`;
+  </details>`;
 
   const chamar = async (fn, args, msg) => {
     const { error } = await sb.rpc(fn, args);
@@ -845,18 +847,6 @@ async function telaAdmin(){
     };
   });
 
-  document.querySelectorAll(".ac-del").forEach(b=> b.onclick = ()=>{
-    if(!confirm(`Apagar "${b.dataset.nome}"? Ela sai do ranking. O histórico fica guardado.`)) return;
-    chamar("admin_apagar_carteira", { cid:Number(b.dataset.cid) }, "Carteira apagada.");
-  });
-
-  document.querySelectorAll(".ac-ren").forEach(b=> b.onclick = ()=>{
-    const n = prompt("Novo nome da carteira:", b.dataset.nome);
-    if(n===null || !n.trim()) return;
-    chamar("admin_renomear_carteira",
-      { cid:Number(b.dataset.cid), novo_nome:n.trim(), nova_desc:null }, "Nome trocado.");
-  });
-
   document.querySelectorAll(".ac-ape").forEach(b=> b.onclick = ()=>{
     const n = prompt("Novo apelido:", b.dataset.ape);
     if(n===null || !n.trim()) return;
@@ -870,107 +860,56 @@ async function telaAdmin(){
       bloquear?"Conta bloqueada.":"Conta liberada.");
   });
 
-  $("#btUni").onclick = () => atualizarUniverso();
-  $("#btDia").onclick = () => rodarDia();
+  // ── carteiras: desenha, ordena, e religa os botões a cada desenho ──
+  const linhaCart = c => `<tr style="${c.ativa?"":"opacity:.45"}">
+    <td><a href="#/carteira/${c.id}">${esc(c.nome)}</a>
+      ${c.ativa?"":' <span class="tag">apagada</span>'}</td>
+    <td style="font-size:12px">${esc(apelidoDe[c.usuario_id]||"—")}</td>
+    <td class="d ${acum[c.id]==null?"":cor(acum[c.id])}" style="font-size:12px">
+      ${acum[c.id]==null?"—":pct(acum[c.id])}</td>
+    <td class="d">
+      <button class="bt ac-ren" data-cid="${c.id}" data-nome="${esc(c.nome)}"
+        style="padding:4px 10px;font-size:12px">renomear</button>
+      ${c.ativa?`<button class="bt ac-del" data-cid="${c.id}" data-nome="${esc(c.nome)}"
+        style="padding:4px 10px;font-size:12px;margin-left:5px;border-color:var(--baixa);color:var(--baixa)">apagar</button>`:""}
+    </td></tr>`;
+
+  const ligarCart = () => {
+    document.querySelectorAll(".ac-del").forEach(b=> b.onclick = ()=>{
+      if(!confirm(`Apagar "${b.dataset.nome}"? Ela sai do ranking. O histórico fica guardado.`)) return;
+      chamar("admin_apagar_carteira", { cid:Number(b.dataset.cid) }, "Carteira apagada.");
+    });
+    document.querySelectorAll(".ac-ren").forEach(b=> b.onclick = ()=>{
+      const n = prompt("Novo nome da carteira:", b.dataset.nome);
+      if(n===null || !n.trim()) return;
+      chamar("admin_renomear_carteira",
+        { cid:Number(b.dataset.cid), novo_nome:n.trim(), nova_desc:null }, "Nome trocado.");
+    });
+  };
+
+  const pintarCart = (o="recente") => {
+    const l = [...(cts||[])];   // "recente" já vem ordenado da consulta
+    if(o==="nome")  l.sort((a,b)=> a.nome.localeCompare(b.nome,"pt-BR"));
+    if(o==="dono")  l.sort((a,b)=>
+      (apelidoDe[a.usuario_id]||"").localeCompare(apelidoDe[b.usuario_id]||"","pt-BR")
+      || a.nome.localeCompare(b.nome,"pt-BR"));
+    if(o==="total") l.sort((a,b)=> (acum[b.id]??-Infinity) - (acum[a.id]??-Infinity));
+    $("#tbCart").innerHTML = l.map(linhaCart).join("");
+    document.querySelectorAll(".ord").forEach(x=>
+      x.classList.toggle("cheio", x.dataset.ord===o));
+    ligarCart();
+  };
+
+  document.querySelectorAll(".ord").forEach(b=>
+    b.onclick = ()=> pintarCart(b.dataset.ord));
+  pintarCart();
 }
 
 const log = t => { const l=$("#log"); if(l) l.innerHTML = aviso(t); };
 
-const PROXIES = [
-  u => "https://api.allorigins.win/raw?url=" + encodeURIComponent(u),
-  u => "https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent(u),
-  u => "https://corsproxy.io/?url=" + encodeURIComponent(u),
-  u => "https://thingproxy.freeboard.io/fetch/" + u
-];
-
-// devolve o texto e diz por qual intermediário veio e quantos bytes
-async function buscar(url, minimo){
-  let ultimo = "";
-  for(const p of PROXIES){
-    try{
-      const r = await fetch(p(url));
-      if(!r.ok){ ultimo = "resposta "+r.status; continue; }
-      const b = await r.arrayBuffer();
-      const txt = new TextDecoder("iso-8859-1").decode(b);  // o Fundamentus é Latin-1
-      if(minimo && b.byteLength < minimo){
-        ultimo = `veio cortado (${(b.byteLength/1024).toFixed(0)} KB)`;
-        continue;                       // tenta o próximo
-      }
-      buscar.bytes = b.byteLength;
-      return txt;
-    }catch(e){ ultimo = e.message; }
-  }
-  throw new Error("nenhum intermediário funcionou — último: "+ultimo);
-}
-const num = s => {
-  if(s==null) return null;
-  s = String(s).replace("%","").replace(/\./g,"").replace(",",".").trim();
-  return s===""||s==="-" ? null : (isFinite(parseFloat(s)) ? parseFloat(s) : null);
-};
-
-async function atualizarUniverso(){
-  log("baixando a lista de papéis do Fundamentus…");
-  try{
-    const html = await buscar("https://www.fundamentus.com.br/resultado.php", 300000);
-    const linhas = html.match(/<tr[^>]*>[\s\S]*?<\/tr>/g) || [];
-    log(`recebi ${(buscar.bytes/1024).toFixed(0)} KB, ${linhas.length} linhas na tabela...`);
-    const lista = [];
-    for(const ln of linhas){
-      const cel = (ln.match(/<td[^>]*>[\s\S]*?<\/td>/g)||[]).map(c=>c.replace(/<[^>]+>/g,"").trim());
-      if(cel.length<19) continue;
-      const p = cel[0].toUpperCase();
-      if(!/^[A-Z]{4}\d{1,2}$/.test(p)) continue;
-      const cot = num(cel[1]), liq = num(cel[18]);
-      if(!cot || cot<=0 || (liq||0) < 200000) continue;
-      lista.push({ ativo:p, cotacao:cot, liquidez:liq });
-    }
-    if(!lista.length) throw new Error("não consegui ler a tabela do Fundamentus");
-    log(`li ${lista.length} papéis, gravando...`);
-    let gravados = 0;
-    for(let i=0;i<lista.length;i+=400){
-      const { data, error } = await sb.rpc("gravar_universo", { dados: lista.slice(i,i+400) });
-      if(error) throw error;
-      gravados += data || 0;
-    }
-    const { count } = await sb.from("universo").select("*",{count:"exact",head:true});
-    const teste = ["PETR4","VALE3","ITUB4","BBAS3","WEGE3","BBDC4","PRIO3"];
-    const { data:achou } = await sb.from("universo").select("ativo").in("ativo", teste);
-    const tem = new Set((achou||[]).map(x=>x.ativo));
-    const faltam = teste.filter(t=>!tem.has(t));
-    log(`${count} papéis no banco (${(buscar.bytes/1024).toFixed(0)} KB lidos).` +
-        (faltam.length ? ` FALTANDO: ${faltam.join(", ")} — a lista veio incompleta.`
-                       : ` Conferência ok: as blue chips estão lá.`));
-    setTimeout(telaAdmin, 3000);
-  }catch(e){ log("falhou: "+e.message); }
-}
-
-async function rodarDia(){
-  try{
-    const { data:ativos } = await sb.from("peso_atual").select("ativo");
-    const lista = [...new Set((ativos||[]).map(x=>x.ativo))];
-    if(!lista.length) return log("nenhuma carteira publicada ainda.");
-    const osc = [];
-    for(let i=0;i<lista.length;i++){
-      log(`buscando ${i+1} de ${lista.length}: ${lista[i]}…`);
-      try{
-        const html = await buscar("https://www.fundamentus.com.br/detalhes.php?papel="+lista[i], 8000);
-        const txt = html.replace(/<[^>]+>/g,"|").replace(/\|+/g,"|");
-        const g = (rot,pad) => { const m = txt.match(new RegExp(rot+"\\s*\\|\\s*"+pad)); return m?m[1]:null; };
-        const dia = num(g("Dia","([-\\d.,]+%?)"));
-        const dc  = g("Data últ cot","(\\d{2}/\\d{2}/\\d{4})");
-        osc.push({ ativo:lista[i], valor:(dia||0)/100,
-                   data_cot: dc ? dc.split("/").reverse().join("-") : null });
-      }catch(e){ /* segue sem esse papel */ }
-    }
-    log(`gravando ${osc.length} oscilações…`);
-    const { error:e1 } = await sb.rpc("gravar_oscilacao", { dados: osc });
-    if(e1) throw e1;
-    const { data:n, error:e2 } = await sb.rpc("fechar_dia");
-    if(e2) throw e2;
-    log(`pronto: ${osc.length} papéis, ${n} carteiras fechadas.`);
-    setTimeout(telaAdmin, 1800);
-  }catch(e){ log("falhou: "+(e.message||e)); }
-}
+// O raspador do Fundamentus foi removido em 29/07/2026: ele recusa conexão
+// de IP de datacenter e parou de funcionar também pelo navegador. Quem busca
+// cotação agora é o robô (robo/robo.mjs), pelo Yahoo, com a brapi de reserva.
 
 
 // ═══════════════════════════════════════════ minha conta
