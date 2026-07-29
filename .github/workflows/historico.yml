@@ -1,0 +1,26 @@
+name: Carregar histórico (laboratório)
+
+# Só manual. Nunca em cron: isto reescreve o histórico inteiro.
+on:
+  workflow_dispatch:
+    inputs:
+      faixa:
+        description: "Janela do Yahoo (1mo, 3mo, 6mo, 1y)"
+        required: true
+        default: "3mo"
+
+jobs:
+  historico:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Carregar pregões reais e fechar em ordem
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: node robo/historico.mjs ${{ inputs.faixa }}
