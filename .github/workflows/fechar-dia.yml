@@ -1,0 +1,23 @@
+name: Fechar o dia
+
+on:
+  schedule:
+    # O cron do GitHub é sempre UTC. Brasília = UTC-3, sem horário de verão.
+    # 22:00 UTC = 19:00 em Brasília — a rodada de verdade, depois do pregão.
+    - cron: "0 22 * * 1-5"
+  workflow_dispatch:
+
+jobs:
+  fechar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: node robo/robo.mjs dia
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          EMAIL_DE: ${{ secrets.EMAIL_DE }}
