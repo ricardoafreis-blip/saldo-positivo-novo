@@ -70,20 +70,28 @@ async function serie(ativo) {
   if (!res) throw new Error("yahoo sem resultado");
 
   const t = res.timestamp || [];
-  const f = res.indicators?.quote?.[0]?.close || [];
+  const q = res.indicators?.quote?.[0] || {};
+  const f = q.close || [];
   let ante = res.meta?.chartPreviousClose ?? null;
 
-  const saida = [];
+  const osc = [], barras = [];
   for (let i = 0; i < t.length; i++) {
     const p = f[i];
     // dia sem negócio vem null; pula sem quebrar a corrente
     if (p == null) continue;
-    if (ante != null && ante > 0) {
-      saida.push({ ativo, valor: p / ante - 1, data_cot: diaBR(t[i]) });
-    }
+    const dia = diaBR(t[i]);
+
+    if (ante != null && ante > 0) osc.push({ ativo, valor: p / ante - 1, data_cot: dia });
     ante = p;
+
+    // candle: só serve completo. Faltando qualquer perna, não grava —
+    // apurar stop com máxima ausente daria resultado inventado.
+    const [a, hi, lo] = [q.open?.[i], q.high?.[i], q.low?.[i]];
+    if (a != null && hi != null && lo != null) {
+      barras.push({ ativo, data: dia, abertura: a, maxima: hi, minima: lo, fechamento: p });
+    }
   }
-  return saida;
+  return { osc, barras };
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -94,13 +102,14 @@ try {
 
   console.log(`${lista.length} papéis · janela ${FAIXA}`);
 
-  const tudo = [];
+  const tudo = [], candles = [];
   const falhou = [];
   for (const a of lista) {
     try {
       const s = await serie(a);
-      tudo.push(...s);
-      console.log(`  ${a}: ${s.length} pregões`);
+      tudo.push(...s.osc);
+      candles.push(...s.barras);
+      console.log(`  ${a}: ${s.osc.length} pregões · ${s.barras.length} candles`);
     } catch (e) {
       falhou.push(a);
       console.error(`  ${a}: ${e.message}`);
@@ -115,6 +124,17 @@ try {
   // gravar_oscilacao do banco10 arquiva cada uma na data certa.
   console.log(`gravando ${tudo.length} oscilações…`);
   await rpc("robo_gravar_oscilacao", { dados: tudo });
+
+  // Candles: alimentam a apuração de stop/alvo (banco13). Se a tabela
+  // barra ainda não existir, avisa e segue — o resto não depende dela.
+  if (candles.length) {
+    try {
+      const n = await rpc("robo_gravar_barra", { dados: candles });
+      console.log(`gravados ${n} candles`);
+    } catch (e) {
+      console.error(`candles não gravados (rode o banco13): ${e.message}`);
+    }
+  }
 
   // Fechar em ORDEM: a deriva de cada dia entra em cima da do anterior
   // e o índice acumulado depende do valor de ontem.
