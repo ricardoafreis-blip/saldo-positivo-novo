@@ -186,8 +186,8 @@ async function fecharDia() {
   const datas = [...new Set(osc.map(o => o.data_cot))];
   console.log(`pregão: ${datas.join(", ")}`);
 
-  await rpc("gravar_oscilacao", { dados: osc });
-  const n = await rpc("fechar_dia");
+  await rpc("robo_gravar_oscilacao", { dados: osc });
+  const n = await rpc("robo_fechar_dia");
   console.log(`gravadas ${osc.length} oscilações · ${n} carteiras fechadas`);
 }
 
@@ -218,7 +218,7 @@ async function atualizarUniverso() {
                     `Não vou regravar o universo com lista incompleta.`);
   }
 
-  for (const g of pedacos(lista, 400)) await rpc("gravar_universo", { dados: g });
+  for (const g of pedacos(lista, 400)) await rpc("robo_gravar_universo", { dados: g });
   console.log(`universo regravado com ${lista.length} papéis`);
 }
 
