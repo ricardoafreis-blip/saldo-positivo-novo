@@ -202,7 +202,7 @@ const CLASSE = {
 let CACHE_CLASSE = null;
 async function classes(){
   if(CACHE_CLASSE) return CACHE_CLASSE;
-  const { data } = await sb.from("carteira_classe").select("id,classe,criada_em");
+  const { data } = await sb.from("carteira_classe").select("id,classe,criada_em,autor");
   CACHE_CLASSE = {}; (data||[]).forEach(x=> CACHE_CLASSE[x.id] = x);
   return CACHE_CLASSE;
 }
@@ -304,8 +304,10 @@ async function carregarEu(){
 }
 function pintarNav(){
   $("#navPriv").innerHTML = eu
-    ? `<a href="#/publicar">Publicar</a> <a href="#/conta">Minha conta</a> <a href="#/indicar">Indicar</a>` +
-      (eu.admin ? ` <a href="#/admin">Admin</a>` : "")
+    ? `<a href="#/publicar" style="margin-right:18px">Publicar</a>` +
+      `<a href="#/conta" style="margin-right:18px">Minha conta</a>` +
+      `<a href="#/indicar" style="margin-right:18px">Indicar</a>` +
+      (eu.admin ? `<a href="#/admin">Admin</a>` : "")
     : "";
   $("#navDir").innerHTML = eu
     ? `<span>${esc(eu.apelido)}</span>${eu.assinante?'<span class="pill">assinante</span>':""}
@@ -322,10 +324,21 @@ function metricas(serie){
   const r = serie.map(x=>x.retorno), n = r.length;
   const acum = serie[serie.length-1].indice/100 - 1;
   let vol=null, sharpe=null;
-  if(n>=5){
+  // Sharpe só com 20 pregões. Com 5 dias, qualquer sequência de sorte
+  // vira número grande e o ranking premia quem acabou de chegar.
+  if(n>=20){
     const m = r.reduce((a,b)=>a+b,0)/n;
     vol = Math.sqrt(r.reduce((a,b)=>a+(b-m)**2,0)/(n-1))*Math.sqrt(252);
-    if(vol>0){ const ann = Math.pow(1+acum, 252/n)-1; sharpe = (ann-CDI_ANO)/vol; }
+    if(vol>0){
+      // Média aritmética × 252, não (1+acum)^(252/n). A versão composta
+      // extrapola: +9% em 21 dias virava +183% ao ano e o Sharpe ia a 13.
+      const ann = m * 252;
+      // Encolhimento por histórico curto, mesma ideia do termômetro de
+      // palpites: n/(n+40). Com 21 dias vale 34% do valor cheio; com um
+      // ano, 86%. Não é o Sharpe de livro — é Sharpe para ordenar, que
+      // não pode deixar três semanas boas passarem na frente de um ano.
+      sharpe = ((ann - CDI_ANO) / vol) * (n / (n + 40));
+    }
   }
   let pico=0, dd=0;
   serie.forEach(x=>{ pico=Math.max(pico,x.indice); dd=Math.min(dd, x.indice/pico-1); });
@@ -350,7 +363,8 @@ async function telaRanking(){
     (rs||[]).forEach(r=>{ (series[r.carteira_id] ||= []).push(r); });
   }
   const cl = await classes();
-  (cs||[]).forEach(c=>{ const x = cl[c.id]; if(x){ c.classe = x.classe; c.criada_em = x.criada_em; } });
+  (cs||[]).forEach(c=>{ const x = cl[c.id];
+    if(x){ c.classe = x.classe; c.criada_em = x.criada_em; if(x.autor) c.apelido = x.autor; } });
 
   const conta = {};
   (cs||[]).forEach(c=> conta[c.classe||"sem"] = (conta[c.classe||"sem"]||0) + 1);
@@ -449,6 +463,16 @@ function telaEntrar(){
             :'Não tem conta? <a href="#/entrar?novo=1">Criar</a> &nbsp;·&nbsp; <a href="#/senha">Esqueci a senha</a>'}</p>
   </div>`;
 
+  // vira true no primeiro clique, para o segundo publicar
+  let confirmado = false;
+  $("#f").oninput = () => {
+    if(confirmado){                       // mexeu depois de conferir: confere de novo
+      confirmado = false;
+      $("#bt").textContent = "Registrar";
+      $("#erro").innerHTML = "";
+    }
+  };
+
   $("#f").onsubmit = async e=>{
     e.preventDefault();
     const f = new FormData(e.target), bt = $("#bt");
@@ -507,7 +531,8 @@ async function telaPublicar(){
   <div id="erro"></div>
   <div class="duplo">
     <form class="card" id="f">
-      <label>Nome da carteira</label><input name="nome" required maxlength="40" value="Minha carteira">
+      <label>Nome da carteira</label><input name="nome" required maxlength="40"
+        placeholder="ex.: Dividendos que eu seguiria">
       <label>O que você está estudando aqui</label><input name="descricao" maxlength="160">
       <label>Classe</label>
       <select name="classe" id="selClasse" required>
@@ -523,7 +548,8 @@ async function telaPublicar(){
     </form>
     <div>
       <div class="card">
-        <h3 style="font-size:15px;margin-bottom:9px">Como o peso funciona</h3>
+        <h3 style="font-size:15px;margin-bottom:9px" id="tituloAjuda">Como o peso funciona</h3>
+        <div id="ajudaClasse"></div>
         <p style="font-size:12.5px;color:var(--t2);margin:0 0 9px">
           O que não somar 100% nos comprados é caixa, e caixa rende CDI. Venda a
           descoberto entra dinheiro: 130 comprado e 40 vendido dá 10% de caixa,
@@ -534,8 +560,10 @@ async function telaPublicar(){
           Depois de registrado, o peso <b>anda sozinho</b> com o mercado até você
           declarar mudança.</p>
       </div>
-      ${minhas?.length?`<div class="card" style="margin-top:13px">
-        <h3 style="font-size:15px;margin-bottom:9px">Suas carteiras</h3>
+      ${minhas?.length?`<details class="card" style="margin-top:13px">
+        <summary style="cursor:pointer;font-size:15px;font-weight:600">Suas carteiras
+          <span style="color:var(--graf);font-weight:400">· ${minhas.length}</span></summary>
+        <div style="height:9px"></div>
         ${minhas.map(c=>`<div style="padding:6px 0;border-bottom:1px solid var(--p3)">
           <a href="#/carteira/${c.id}">${esc(c.nome)}</a>
           <span style="font-size:11px;color:var(--graf)">· desde ${c.criada_em}</span></div>`).join("")}
@@ -550,6 +578,13 @@ async function telaPublicar(){
     $("#regraClasse").innerHTML = v
       ? `<b>${v.nome}.</b> ${v.regra} Não muda depois de criada.`
       : "A classe não muda depois de criada.";
+    // o painel lateral fala da classe escolhida, não de regra genérica
+    $("#tituloAjuda").textContent = v ? `Classe ${v.nome}` : "Como o peso funciona";
+    $("#ajudaClasse").innerHTML = v
+      ? `<p style="font-size:12.5px;color:var(--t2);margin:0 0 9px">${v.regra}
+         O banco recusa declaração que fuja disso — e a classe não muda depois,
+         nem por você, nem por admin. Para outra estratégia, outra carteira.</p>`
+      : "";
   };
 
   $("#f").onsubmit = async e=>{
@@ -567,9 +602,44 @@ async function telaPublicar(){
     if(fora.length) return $("#erro").innerHTML =
       aviso("Não achei no universo: "+fora.join(", ")+". Ou o código está errado, ou o papel não tem liquidez mínima, ou o universo ainda não foi atualizado.", true);
 
-    bt.disabled=true; bt.textContent="salvando…";
     if(!f.get("classe")) return $("#erro").innerHTML =
       aviso("Escolha a classe da carteira. Ela define contra quem você é comparado e não muda depois.", true);
+
+    // ── confirmação antes de publicar ──
+    // A classe não muda depois de criada e o histórico começa aqui, então
+    // vale um segundo olhar. O primeiro clique mostra o resumo; o segundo
+    // publica de verdade.
+    if(!confirmado){
+      const cl = CLASSE[f.get("classe")];
+      const lista = Object.entries(pesos).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]));
+      const liq = Object.values(pesos).reduce((a,b)=>a+b,0);
+      $("#erro").innerHTML = `
+      <div class="card" style="border-color:var(--ouro);margin-bottom:16px">
+        <div style="font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--graf);margin-bottom:10px">
+          Confira antes de publicar</div>
+        <div style="font-size:19px;font-weight:600;margin-bottom:2px">${esc(f.get("nome").trim())}</div>
+        <div style="font-size:12.5px;color:var(--t2);margin-bottom:12px">
+          ${esc(f.get("descricao")||"sem descrição")}</div>
+        <div style="margin-bottom:12px"><span class="tag">${cl.nome}</span></div>
+        <table><tbody>${lista.map(([a,p])=>`<tr>
+          <td class="mono" style="font-weight:500">${esc(a)}</td>
+          <td class="d mono ${p<0?"baixa":""}">${p<0?"vendido":"comprado"} ${n2(Math.abs(p))}%</td>
+        </tr>`).join("")}</tbody></table>
+        <div style="font-size:12.5px;color:var(--t2);margin-top:11px">
+          bruta <b>${n2(bruta,0)}%</b> · líquida <b>${n2(liq,0)}%</b> ·
+          caixa <b>${n2(100-liq,0)}%</b> · ${lista.length} ${lista.length===1?"papel":"papéis"}</div>
+        <p style="font-size:11.5px;color:var(--graf);margin:11px 0 0">
+          A classe <b>não muda</b> depois de criada, e a carteira passa a valer
+          a partir do próximo pregão. Publicar de novo com outro nome é sempre
+          possível; mudar esta, não.</p>
+      </div>`;
+      confirmado = true;
+      bt.textContent = "Confirmar e publicar";
+      $("#erro").scrollIntoView({ behavior:"smooth", block:"nearest" });
+      return;
+    }
+
+    bt.disabled=true; bt.textContent="salvando…";
 
     const { data:c, error } = await sb.from("carteira").insert({
       usuario_id: eu.id, nome: f.get("nome").trim(),
@@ -581,8 +651,19 @@ async function telaPublicar(){
         : error.message;
       return $("#erro").innerHTML = aviso(m, true); }
 
-    await sb.from("posicao").insert(
+    // Este insert é o que passa pelo porteiro da classe (valida_classe).
+    // Antes o erro era engolido e a carteira ficava criada e VAZIA — foi
+    // assim que nasceu uma "vendida" com quatro papéis comprados.
+    const { error: errPos } = await sb.from("posicao").insert(
       Object.entries(pesos).map(([ativo,peso])=>({ carteira_id:c.id, ativo, peso })));
+
+    if(errPos){
+      // desfaz a carteira órfã, senão fica lixo na lista da pessoa
+      await sb.from("carteira").delete().eq("id", c.id);
+      bt.disabled=false; bt.textContent="Registrar"; confirmado=false;
+      return $("#erro").innerHTML = aviso(errPos.message, true);
+    }
+
     if(f.get("nota")) await sb.from("nota").insert({ carteira_id:c.id, texto:f.get("nota") });
     location.hash = "#/carteira/"+c.id; rotear();
   };
@@ -594,13 +675,23 @@ async function telaCarteira(id){
   const { data:c } = await sb.from("ranking").select("*").eq("id", id).single();
   if(!c) return app().innerHTML = aviso("Carteira não encontrada.", true);
   const cl1 = (await classes())[id];
-  if(cl1){ c.classe = cl1.classe; c.criada_em = cl1.criada_em; }
+  if(cl1){ c.classe = cl1.classe; c.criada_em = cl1.criada_em;
+           if(cl1.autor) c.apelido = cl1.autor; }
 
   const { data:serie } = await sb.from("retorno_dia").select("data,retorno,indice")
                                  .eq("carteira_id", id).order("data");
   const m = metricas(serie);
   // se as regras do banco liberarem, vem; senão volta vazio — é o lacre funcionando
-  const { data:pesos } = await sb.from("peso_atual").select("ativo,peso").eq("carteira_id", id);
+  const { data:pesos } = await sb.from("peso_atual").select("ativo,peso,marco").eq("carteira_id", id);
+  // o declarado da mesma data que está carregada: é a referência de
+  // como a carteira começou, antes de o peso andar com o mercado
+  const marcoAtual = pesos?.[0]?.marco;
+  let declarado = {};
+  if(marcoAtual){
+    const { data:dec } = await sb.from("posicao").select("ativo,peso")
+      .eq("carteira_id", id).eq("valida_de", marcoAtual);
+    (dec||[]).forEach(d=> declarado[d.ativo] = d.peso);
+  }
   const { data:notas } = await sb.from("nota").select("data,texto")
                                  .eq("carteira_id", id).order("data",{ascending:false}).limit(8);
   let sigo=false, nSeg=0;
@@ -660,13 +751,30 @@ async function telaCarteira(id){
   </div>
   ${abre ? `<div class="card">
     <div style="font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--graf);margin-bottom:10px">
-      Papéis e pesos de hoje</div>
-    <table><tbody>${pesos.sort((a,b)=>Math.abs(b.peso)-Math.abs(a.peso)).map(p=>`
-      <tr><td class="mono" style="font-weight:500">${esc(p.ativo)}</td>
+      Papéis e pesos${marcoAtual?` · declarado em ${marcoAtual}`:""}</div>
+    <table><thead><tr><th></th><th></th>
+      <th class="d" style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--graf)">declarado</th>
+      <th class="d" style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--graf)">hoje</th>
+      <th class="d" style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--graf)">deriva</th></tr></thead>
+    <tbody>${pesos.sort((a,b)=>Math.abs(b.peso)-Math.abs(a.peso)).map(p=>{
+      const d = declarado[p.ativo];
+      // Tamanho da posição, não diferença com sinal: para uma posição
+      // vendida, ir de -40 para -48 é a posição CRESCER. Comparar
+      // módulos funciona igual nos dois lados.
+      const dif = d==null ? null : Math.abs(p.peso) - Math.abs(d);
+      return `<tr><td class="mono" style="font-weight:500">${esc(p.ativo)}</td>
       <td><span style="display:block;height:5px;width:${(Math.abs(p.peso)/maxp*100).toFixed(0)}%;
         background:${p.peso<0?"var(--baixa)":"var(--alta)"}"></span></td>
-      <td class="d mono ${p.peso<0?"baixa":""}">${n2(p.peso)}%</td></tr>`).join("")}
+      <td class="d mono" style="color:var(--graf);font-size:12px">${d==null?"—":n2(d)+"%"}</td>
+      <td class="d mono ${p.peso<0?"baixa":""}">${n2(p.peso)}%</td>
+      <td class="d mono" style="font-size:11.5px;color:var(--graf)">
+        ${dif==null?"—":(dif>0?"+":"")+n2(dif)}</td></tr>`}).join("")}
     </tbody></table>
+    <p style="font-size:11.5px;color:var(--graf);margin:9px 0 0">
+      O peso anda sozinho: quem sobe mais que a carteira ganha espaço. A coluna
+      <b>deriva</b> é quanto a posição cresceu ou encolheu em relação ao
+      declarado — vale igual para comprado e para vendido, porque compara o
+      tamanho da posição, não o sinal.</p>
     ${notas?.length?`<div style="margin-top:18px">
       <div style="font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--graf);margin-bottom:8px">Anotações</div>
       ${notas.map(n=>`<div style="padding:7px 0;border-bottom:1px solid var(--p3)">
@@ -807,6 +915,19 @@ async function telaIndicar(){
 }
 
 function telaAssinar(){
+  // Assinante e admin já têm o lacre aberto: oferecer plano a quem já
+  // paga é o tipo de detalhe que faz o site parecer desatento.
+  if(eu && (eu.assinante || eu.admin)){
+    return app().innerHTML = `
+    <div style="max-width:460px;margin:46px auto;text-align:center">
+      <h1 style="font-size:29px;margin-bottom:9px">Você já tem acesso</h1>
+      <p style="color:var(--t2);margin-bottom:20px">
+        ${eu.admin ? "Sua conta é de administração, então o lacre já vem aberto."
+                   : "Sua assinatura está ativa: os papéis e os pesos de todas as carteiras aparecem para você."}</p>
+      <a href="#/" class="bt cheio">Ver o ranking</a>
+      <a href="#/conta" class="bt" style="margin-left:8px">Minha conta</a>
+    </div>`;
+  }
   app().innerHTML = `
   <div style="max-width:450px;margin:46px auto;text-align:center">
     <h1 style="font-size:29px;margin-bottom:9px">Assinar</h1>
@@ -988,8 +1109,35 @@ async function telaConta(){
   app().innerHTML = `
   <h1 style="font-size:27px;margin:30px 0 6px">Minha conta</h1>
   <p style="color:var(--t2);margin-bottom:20px">${esc(eu.apelido)}
-    ${eu.assinante?'<span class="pill">assinante</span>':""}</p>
+    ${eu.admin ? '<span class="pill">admin</span>'
+               : eu.assinante ? '<span class="pill">assinante</span>'
+                              : '<span class="pill">grátis</span>'}</p>
   <div id="erro"></div>
+
+  <h2 style="font-size:19px;margin:26px 0 12px">Como você aparece</h2>
+  <div class="card" style="max-width:560px">
+    <p style="font-size:12.5px;color:var(--t2);margin:0 0 13px">
+      Vale para o ranking, a página da carteira e o comparador. O desempenho é
+      público de qualquer forma — o que muda é o nome em cima dele.</p>
+
+    <label>Exibição</label>
+    <select id="selExibir">
+      <option value="apelido">Meu apelido — ${esc(eu.apelido)}</option>
+      <option value="nome">Um nome que eu escolho</option>
+      <option value="anonimo">Anônimo — sem nome nenhum</option>
+    </select>
+
+    <div id="campoNome" style="display:none">
+      <label>Nome público</label>
+      <input id="nomePublico" maxlength="40" placeholder="como você quer ser chamado">
+    </div>
+
+    <p style="font-size:11.5px;color:var(--graf);margin:10px 0 13px">
+      Anônimo esconde na tela, não no banco: sua conta continua identificada
+      para efeito de bloqueio e de suporte.</p>
+
+    <button class="bt cheio" id="btExibir">Salvar</button>
+  </div>
 
   <h2 style="font-size:19px;margin:26px 0 12px">Suas carteiras</h2>
   ${!cs?.length?`<div class="card">Nenhuma carteira ainda.
@@ -1015,6 +1163,31 @@ async function telaConta(){
     <label>Repita a senha nova</label><input type="password" id="s2" minlength="6">
     <button class="bt cheio" id="btSenha">Trocar senha</button>
   </div>`;
+
+  // ── como você aparece ──
+  $("#selExibir").value = eu.exibir || "apelido";
+  $("#nomePublico").value = eu.nome_publico || "";
+  const mostraCampo = () => {
+    $("#campoNome").style.display = $("#selExibir").value === "nome" ? "" : "none";
+  };
+  mostraCampo();
+  $("#selExibir").onchange = mostraCampo;
+
+  $("#btExibir").onclick = async () => {
+    const modo = $("#selExibir").value;
+    const nome = $("#nomePublico").value.trim();
+    if(modo === "nome" && !nome)
+      return $("#erro").innerHTML = aviso("Escreva o nome que você quer que apareça.", true);
+
+    const { error } = await sb.from("perfil")
+      .update({ exibir: modo, nome_publico: nome || null }).eq("id", eu.id);
+    if(error) return $("#erro").innerHTML = aviso(error.message, true);
+
+    eu.exibir = modo; eu.nome_publico = nome || null;
+    CACHE_CLASSE = null;              // o autor mudou: refaz o cache
+    $("#erro").innerHTML = aviso("Pronto. É assim que você aparece agora.");
+  };
+
 
   $("#btSenha").onclick = async()=>{
     const a=$("#s1").value, b=$("#s2").value;
