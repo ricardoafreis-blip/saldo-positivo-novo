@@ -495,6 +495,46 @@ async function pintarFaixa(){
   el.style.display = "block";
 }
 
+// ═══════════════════════════════════════════ extrato
+// Compara cada declaracao com a anterior e descreve em portugues o que
+// mudou. Nao precisa de tabela nova: a posicao ja guarda toda declaracao
+// separada por valida_de — o historico sempre esteve la, so nao aparecia.
+function montarExtrato(todas){
+  const porData = {};
+  (todas||[]).forEach(x => { (porData[x.valida_de] ||= {})[x.ativo] = x.peso; });
+  const datas = Object.keys(porData).sort();
+
+  const tam  = v => n2(Math.abs(v),0) + "%";
+  const lado = v => v < 0 ? "vendido" : "comprado";
+
+  const eventos = datas.map((d,i) => {
+    const agora = porData[d], antes = i ? porData[datas[i-1]] : null;
+    const acoes = [];
+
+    if(!antes){
+      Object.entries(agora)
+        .sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]))
+        .forEach(([a,v]) => acoes.push(`abriu ${a} ${lado(v)} ${tam(v)}`));
+      return { data:d, abertura:true, acoes };
+    }
+
+    const ativos = [...new Set([...Object.keys(antes), ...Object.keys(agora)])].sort();
+    ativos.forEach(a => {
+      const de = antes[a], para = agora[a];
+      if(de == null)        acoes.push(`entrou ${a} ${lado(para)} ${tam(para)}`);
+      else if(para == null) acoes.push(`saiu ${a}`);
+      else if(Math.sign(de) !== Math.sign(para))
+        acoes.push(`${a} virou de ${lado(de)} para ${lado(para)} ${tam(para)}`);
+      else if(Math.round(Math.abs(de)) !== Math.round(Math.abs(para)))
+        acoes.push(`${Math.abs(para) > Math.abs(de) ? "aumentou" : "reduziu"} ${a}`
+                 + ` de ${tam(de)} para ${tam(para)}`);
+    });
+    return { data:d, abertura:false, acoes };
+  });
+
+  return eventos.reverse();          // mais recente em cima
+}
+
 // ═══════════════════════════════════════════ ranking
 async function telaRanking(){
   const q = new URLSearchParams(location.hash.split("?")[1]||"");
@@ -919,6 +959,11 @@ async function telaCarteira(id){
   }
   const { data:notas } = await sb.from("nota").select("data,texto")
                                  .eq("carteira_id", id).order("data",{ascending:false}).limit(8);
+  // todas as declaracoes, para o extrato. Vem vazio para quem nao tem
+  // acesso: a RLS que protege o peso protege isto tambem.
+  const { data:todasPos } = await sb.from("posicao").select("ativo,peso,valida_de")
+                                    .eq("carteira_id", id).order("valida_de");
+  const extrato = montarExtrato(todasPos);
   let sigo=false, nSeg=0;
   if(eu){
     const { data:sg } = await sb.from("seguidor").select("carteira_id")
@@ -993,8 +1038,8 @@ async function telaCarteira(id){
       Papéis e pesos${marcoAtual?` · declarado em ${marcoAtual}`:""}</div>
     <table><thead><tr><th></th><th></th>
       <th class="d" style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--graf)">declarado</th>
-      <th class="d" style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--graf)">hoje</th>
-      <th class="d" style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--graf)">deriva</th></tr></thead>
+      <th class="d" style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--graf)">atual</th>
+      <th class="d" style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--graf)">diferença</th></tr></thead>
     <tbody>${pesos.sort((a,b)=>Math.abs(b.peso)-Math.abs(a.peso)).map(p=>{
       const d = declarado[p.ativo];
       // Tamanho da posição, não diferença com sinal: para uma posição
@@ -1010,10 +1055,26 @@ async function telaCarteira(id){
         ${dif==null?"—":(dif>0?"+":"")+n2(dif)}</td></tr>`}).join("")}
     </tbody></table>
     <p style="font-size:11.5px;color:var(--graf);margin:9px 0 0">
-      O peso anda sozinho: quem sobe mais que a carteira ganha espaço. A coluna
-      <b>deriva</b> é quanto a posição cresceu ou encolheu em relação ao
-      declarado — vale igual para comprado e para vendido, porque compara o
-      tamanho da posição, não o sinal.</p>
+      O peso anda sozinho: quem sobe mais que a carteira ganha espaço.
+      <b>Declarado</b> é o que foi registrado na data acima, <b>atual</b> é onde
+      o mercado colocou a posição, e <b>diferença</b> é o quanto ela cresceu ou
+      encolheu, em pontos percentuais. Vale igual para comprado e para vendido,
+      porque compara o tamanho da posição, não o sinal.</p>
+
+    ${extrato.length > 1 ? `<div style="margin-top:20px">
+      <div style="font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--graf);margin-bottom:9px">
+        Extrato · ${extrato.length} ${extrato.length===1?"declaração":"declarações"}</div>
+      ${extrato.map(e=>`<div style="padding:9px 0;border-bottom:1px solid var(--p3)">
+        <span class="mono" style="font-size:11.5px;color:var(--graf)">${e.data}</span>
+        ${e.abertura?`<span class="tag" style="margin-left:7px">abertura</span>`:""}
+        <div style="font-size:12.5px;color:var(--t2);margin-top:4px">
+          ${e.acoes.length ? e.acoes.map(esc).join(" · ")
+                           : "declarou de novo sem mudar peso nenhum"}</div>
+      </div>`).join("")}
+      <p style="font-size:11.5px;color:var(--graf);margin:9px 0 0">
+        Cada linha é uma declaração, com a data em que passou a valer. O que
+        está aqui não pode ser reescrito depois.</p>
+    </div>` : ""}
     ${notas?.length?`<div style="margin-top:18px">
       <div style="font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--graf);margin-bottom:8px">Anotações</div>
       ${notas.map(n=>`<div style="padding:7px 0;border-bottom:1px solid var(--p3)">
