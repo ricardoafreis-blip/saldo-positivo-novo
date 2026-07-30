@@ -146,7 +146,11 @@ async function bolsai(grupo) {
 // no plano gratuito. Em vez de adivinhar o teto, o robô descobre:
 // começa em 20 e vai cortando pela metade até passar. Um papel que
 // falhe sozinho fica de fora sozinho, sem derrubar os outros.
-let tamanhoOk = 20;
+// Medido em 30/07/2026: o plano gratuito aceita UM ticker por chamada.
+// Começar em 20 desperdiçava 4 requisições por rodada só redescobrindo
+// isso. Se um dia o plano mudar, é só pôr BRAPI_LOTE=20 nos secrets —
+// o corte pela metade continua valendo como rede de proteção.
+let tamanhoOk = Number(process.env.BRAPI_LOTE || 1);
 
 async function buscarBrapi(alvos, guardar) {
   let i = 0, maior = 0, falharam = [];
