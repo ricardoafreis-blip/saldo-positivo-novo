@@ -45,21 +45,40 @@ try {
   if (!lista.length) { console.log("nenhum papel em jogo — nada a fazer"); process.exit(0); }
 
   const viva = [];
-  for (const g of pedacos(lista, 20)) {
-    // O ^ do índice precisa ser escapado na URL
-    const alvo = g.map(encodeURIComponent).join(",");
-    try {
-      const r = await fetch(`https://brapi.dev/api/quote/${alvo}`,
-        { headers: { Authorization: `Bearer ${BRAPI}` }, signal: AbortSignal.timeout(20000) });
-      if (!r.ok) { console.error(`brapi ${r.status} neste lote`); continue; }
-      const j = await r.json();
-      for (const x of (j.results || [])) {
-        const pct = x.regularMarketChangePercent;
-        if (pct == null) continue;
-        viva.push({ ativo: x.symbol, valor: pct / 100, preco: x.regularMarketPrice ?? null });
-      }
-    } catch (e) { console.error(`lote falhou: ${e.message}`); }
+
+  // Uma chamada da brapi, um ou vários papéis. Devolve quantos vieram.
+  async function puxar(grupo) {
+    const alvo = grupo.map(encodeURIComponent).join(",");
+    const r = await fetch(`https://brapi.dev/api/quote/${alvo}`,
+      { headers: { Authorization: `Bearer ${BRAPI}` }, signal: AbortSignal.timeout(20000) });
+    if (!r.ok) throw new Error(`brapi ${r.status}`);
+    const j = await r.json();
+    let n = 0;
+    for (const x of (j.results || [])) {
+      const pct = x.regularMarketChangePercent;
+      if (pct == null) continue;
+      viva.push({ ativo: x.symbol, valor: pct / 100, preco: x.regularMarketPrice ?? null });
+      n++;
+    }
+    return n;
+  }
+
+  // Índice vai SEPARADO. Medido em 30/07/2026: um ^BVSP no meio do lote
+  // faz a brapi devolver 400 e derrubar os outros vinte papéis junto.
+  const indices = lista.filter(a => a.startsWith("^"));
+  const papeis  = lista.filter(a => !a.startsWith("^"));
+
+  for (const g of pedacos(papeis, 20)) {
+    try { await puxar(g); }
+    catch (e) { console.error(`${e.message} neste lote de ${g.length}`); }
     await espera(400);
+  }
+
+  // Um por vez, para um índice recusado não levar os outros embora
+  for (const a of indices) {
+    try { await puxar([a]); }
+    catch (e) { console.error(`${a}: ${e.message}`); }
+    await espera(300);
   }
 
   if (!viva.length) { console.log("nada veio da brapi — cotacao_viva intocada"); process.exit(0); }
