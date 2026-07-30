@@ -203,15 +203,18 @@ function aviso(t, erro){ return `<div class="msg${erro?" erro":""}">${esc(t)}</d
 // trocar de classe depois de ver o resultado seria escolher a régua com
 // o jogo já jogado. O banco recusa declaração que viole a classe
 // (valida_classe, banco11) — aqui é só rótulo e filtro.
+// A chave 'diversificada' virou a classe Comprada e 'all_in' foi
+// aposentada (as carteiras existentes foram encerradas). Os limites de
+// 100% e 200% são sempre INCLUSIVE.
 const CLASSE = {
-  all_in:        { nome:"All in",
-    regra:"Só compra, exposição bruta de 100% a 200% — sem caixa, pode alavancar." },
-  diversificada: { nome:"Diversificada",
-    regra:"Só compra, bruta abaixo de 100% e de 5 a 15 papéis." },
-  long_short:    { nome:"Long &amp; short",
-    regra:"Pelo menos uma compra e uma venda, bruta até 200%. É aqui que entra o hedge." },
-  vendida:       { nome:"Vendida",
-    regra:"Só venda a descoberto, bruta até 200%." },
+  diversificada:     { nome:"Comprada",
+    regra:"Só compra, exatamente 10 papéis. A soma dos pesos pode ir até 100% do dinheiro." },
+  sessenta_quarenta: { nome:"60/40",
+    regra:"Só compra, com 50% a 80% do dinheiro em renda fixa e o resto em ações — 100% na montagem." },
+  long_short:        { nome:"Long × short",
+    regra:"Compra e venda ao mesmo tempo. A soma vai até 200% e a diferença entre elas até 100%." },
+  vendida:           { nome:"Vendida",
+    regra:"Só venda a descoberto, até 100% do patrimônio. A carteira encerra se perder tudo." },
 };
 
 // A view ranking não tem a coluna classe, então vem de carteira_classe.
@@ -295,7 +298,7 @@ function gradeHTML(){
 // aceitava qualquer lado e quem recusava era o banco, depois do clique.
 let CLASSE_ATUAL = "";
 function ladosDaClasse(k){
-  if(k === "all_in" || k === "diversificada") return "C";
+  if(k === "diversificada" || k === "sessenta_quarenta") return "C";
   if(k === "vendida") return "V";
   return "CV";
 }
@@ -345,23 +348,33 @@ function pendenciasClasse(k, pesos){
   if(!k || !CLASSE[k]) return [];
   const v = Object.values(pesos), n = v.length;
   const bruta = v.reduce((a,b)=>a+Math.abs(b),0);
+  const liq   = v.reduce((a,b)=>a+b,0);
   const temC = v.some(x=>x>0), temV = v.some(x=>x<0);
   const f = [];
   if(!n) return ["nenhuma posição preenchida"];
-  if(k==="all_in"){
-    if(temV) f.push("All in não aceita venda");
-    if(bruta<100) f.push(`bruta ${Math.round(bruta)}% — All in exige de 100% a 200%`);
+
+  if(k==="diversificada"){                       // Comprada
+    if(temV)   f.push("Comprada não aceita venda");
+    if(n!==10) f.push(`${n} ${n===1?"papel":"papéis"} — Comprada exige exatamente 10`);
+    if(bruta>100) f.push(`soma ${Math.round(bruta)}% — o limite é 100%`);
   }
-  if(k==="diversificada"){
-    if(temV) f.push("Diversificada não aceita venda");
-    if(n<5)  f.push(`${n} ${n===1?"papel":"papéis"} — Diversificada pede de 5 a 15`);
-    if(n>15) f.push(`${n} papéis — Diversificada aceita no máximo 15`);
-    if(bruta>=100) f.push(`bruta ${Math.round(bruta)}% — Diversificada exige abaixo de 100%`);
+  if(k==="sessenta_quarenta"){
+    const rf = 100 - bruta;                      // só compra: caixa = renda fixa
+    if(temV) f.push("60/40 não aceita venda");
+    if(bruta>100) f.push(`soma ${Math.round(bruta)}% — o limite é 100%`);
+    else if(rf<50 || rf>80)
+      f.push(`${Math.round(rf)}% em renda fixa — a faixa é de 50% a 80%`);
   }
-  if(k==="vendida" && temC) f.push("Vendida não aceita compra");
-  if(k==="long_short" && !(temC && temV))
-    f.push("Long & short exige ao menos uma compra e uma venda");
-  if(bruta>200) f.push(`bruta ${Math.round(bruta)}% — passa do teto de 200%`);
+  if(k==="long_short"){
+    if(!(temC && temV)) f.push("Long × short exige ao menos uma compra e uma venda");
+    if(bruta>200) f.push(`soma ${Math.round(bruta)}% — o teto é 200%`);
+    if(Math.abs(liq)>100)
+      f.push(`diferença ${Math.round(Math.abs(liq))}% — o limite é 100%`);
+  }
+  if(k==="vendida"){
+    if(temC) f.push("Vendida não aceita compra");
+    if(bruta>100) f.push(`soma ${Math.round(bruta)}% — o limite é 100% do patrimônio`);
+  }
   return f;
 }
 function resumoGrade(){
@@ -687,9 +700,10 @@ async function telaPublicar(){
   app().innerHTML = `
   <h1 style="font-size:27px;margin:30px 0 6px">Publicar carteira</h1>
   <p style="color:var(--t2);max-width:58ch;margin-bottom:20px">
-    Escolha a classe, informe o código, o peso em % e se está comprado ou vendido.
-    A classe define contra quem esta carteira vai ser comparada, e não muda depois —
-    para outra estratégia, outra carteira. Alavancagem e caixa o site calcula sozinho.</p>
+    Escolha a classe primeiro: ela monta a grade no formato certo e define
+    contra quem esta carteira vai ser comparada. A classe não muda depois —
+    para outra estratégia, outra carteira. Os pesos são números inteiros, em
+    porcentagem do dinheiro; o que sobra é caixa e rende CDI.</p>
   ${!count ? aviso("O universo de papéis está vazio. Um admin precisa atualizar em Admin → Atualizar universo.") : ""}
   <div id="erro"></div>
   <div class="duplo">
@@ -703,7 +717,7 @@ async function telaPublicar(){
         ${Object.entries(CLASSE).map(([k,v])=>`<option value="${k}">${v.nome}</option>`).join("")}
       </select>
       <p id="regraClasse" style="font-size:12px;color:var(--graf);margin:-3px 0 13px">
-        A classe não muda depois de criada.</p>
+        A classe não muda depois de criada. A regra fica no quadro ao lado.</p>
       <label>Posições</label>
       ${gradeHTML()}
       <label>Anotação desta mudança (opcional)</label><input name="nota" maxlength="200">
@@ -718,7 +732,12 @@ async function telaPublicar(){
           descoberto entra dinheiro: 130 comprado e 40 vendido dá 10% de caixa,
           não −30%.</p>
         <p style="font-size:12.5px;color:var(--t2);margin:0 0 9px">
-          Teto de 200% na soma de compras e vendas.</p>
+          Cada classe tem o seu próprio limite — o de cima vale para a que
+          você escolheu. Onde se fala em 100% ou 200%, o limite entra:
+          exatamente 100% é aceito.</p>
+        <p style="font-size:12.5px;color:var(--t2);margin:0 0 9px">
+          Se a carteira perder tudo, ela é encerrada e sai do ranking.
+          O histórico fica guardado.</p>
         <p style="font-size:12.5px;color:var(--t2);margin:0">
           Depois de registrado, o peso <b>anda sozinho</b> com o mercado até você
           declarar mudança.</p>
@@ -734,7 +753,7 @@ async function telaPublicar(){
     </div>
   </div>`;
 
-  ligarGrade([["PETR4",25,"C"],["ITUB4",25,"C"],["VALE3",25,"C"],["BBAS3",25,"C"]], "");
+  ligarGrade([["","","C"]], "");
 
   // Vira true no primeiro clique, para o segundo publicar de verdade.
   // Mora AQUI, na tela que usa. Estava em telaEntrar, e por isso o
@@ -760,8 +779,8 @@ async function telaPublicar(){
   $("#selClasse").onchange = e => {
     const v = CLASSE[e.target.value];
     $("#regraClasse").innerHTML = v
-      ? `<b>${v.nome}.</b> ${v.regra} Não muda depois de criada.`
-      : "A classe não muda depois de criada.";
+      ? `Classe <b>${v.nome}</b> — não muda depois de criada. A regra está no quadro ao lado.`
+      : "A classe não muda depois de criada. A regra fica no quadro ao lado.";
     // o painel lateral fala da classe escolhida, não de regra genérica
     $("#tituloAjuda").textContent = v ? `Classe ${v.nome}` : "Como o peso funciona";
     $("#ajudaClasse").innerHTML = v
@@ -769,9 +788,21 @@ async function telaPublicar(){
          O banco recusa declaração que fuja disso — e a classe não muda depois,
          nem por você, nem por admin. Para outra estratégia, outra carteira.</p>`
       : "";
-    // a grade passa a oferecer só os lados que a classe aceita
+    // A grade passa a oferecer só os lados que a classe aceita. Se ainda
+    // não há nenhum código digitado, ela também já vem montada no formato
+    // da classe — 10 linhas de 10% na Comprada, por exemplo. Se a pessoa
+    // já digitou algo, não mexemos: apagar o trabalho dela seria pior.
     CLASSE_ATUAL = e.target.value || "";
-    aplicarLados();
+    const vazia = ![...document.querySelectorAll("#linhas .pa")]
+      .some(i => (i.value||"").trim());
+    const molde = {
+      diversificada:     Array.from({length:10}, ()=>["",10,"C"]),
+      sessenta_quarenta: Array.from({length:4},  ()=>["",10,"C"]),
+      long_short:        [["",50,"C"],["",50,"C"],["",50,"V"]],
+      vendida:           [["",50,"V"],["",50,"V"]],
+    }[CLASSE_ATUAL];
+    if(vazia && molde) ligarGrade(molde, CLASSE_ATUAL);
+    else aplicarLados();
   };
 
   $("#f").onsubmit = async e=>{
