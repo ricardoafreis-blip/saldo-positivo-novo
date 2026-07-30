@@ -1,11 +1,11 @@
 name: Cotação ao vivo
 
-# De meia em meia hora durante o pregão. O cron do GitHub é UTC e
+# De hora em hora durante o pregão. O cron do GitHub é UTC e
 # atrasa alguns minutos com frequência — 13h às 21h UTC cobre das 10h
 # às 18h de Brasília, com folga nas pontas.
 on:
   schedule:
-    - cron: "*/30 13-21 * * 1-5"
+    - cron: "0 13-21 * * 1-5"
   workflow_dispatch:
 
 jobs:
