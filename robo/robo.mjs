@@ -130,6 +130,54 @@ async function bolsai(grupo) {
   return saida;
 }
 
+
+// ─── busca adaptativa ──────────────────────────────────────────────
+// A brapi devolve 400 para o LOTE INTEIRO quando algo nele não serve —
+// pode ser um ticker que não existe mais, ou o próprio tamanho do lote
+// no plano gratuito. Em vez de adivinhar o teto, o robô descobre:
+// começa em 20 e vai cortando pela metade até passar. Um papel que
+// falhe sozinho fica de fora sozinho, sem derrubar os outros.
+let tamanhoOk = 20;
+
+async function buscarBrapi(alvos, guardar) {
+  let i = 0, maior = 0, falharam = [];
+  while (i < alvos.length) {
+    let n = Math.min(tamanhoOk, alvos.length - i);
+    for (;;) {
+      const g = alvos.slice(i, i + n);
+      try {
+        const j = await brapiQuote(g);
+        for (const x of (j.results || [])) guardar(x);
+        maior = Math.max(maior, n);
+        i += n;
+        break;
+      } catch (e) {
+        if (n === 1) {
+          console.error(`  ${g[0]}: ${e.message}`);
+          falharam.push(g[0]);
+          i += 1;
+          break;
+        }
+        n = Math.floor(n / 2);
+        tamanhoOk = n;
+        console.error(`  ${e.message} — reduzindo lote para ${n}`);
+      }
+      await espera(350);
+    }
+    await espera(400);
+  }
+  if (maior) console.log(`maior lote que a brapi aceitou: ${maior}`);
+  if (falharam.length) console.log(`recusados um a um: ${falharam.join(", ")}`);
+}
+
+async function brapiQuote(grupo) {
+  const alvo = grupo.map(encodeURIComponent).join(",");
+  const r = await fetch(`https://brapi.dev/api/quote/${alvo}`,
+    { headers: { Authorization: `Bearer ${BRAPI}` }, signal: AbortSignal.timeout(20000) });
+  if (!r.ok) throw new Error(`brapi ${r.status}`);
+  return r.json();
+}
+
 const pedacos = (lista, n) => {
   const p = [];
   for (let i = 0; i < lista.length; i += n) p.push(lista.slice(i, i + n));
@@ -197,20 +245,14 @@ async function fecharDia() {
 
   // ── 1ª fonte: brapi, 20 papéis por chamada ──
   if (BRAPI) {
-    for (const g of pedacos(faltantes(), 20)) {
-      try {
-        const j = await brapi(`/quote/${g.join(",")}`);
-        for (const r of (j.results || [])) {
-          const pct = r.regularMarketChangePercent;
-          if (pct == null || !r.regularMarketTime) continue;
-          registrar({ ativo: r.symbol, valor: pct / 100,
-                      data_cot: diaBR(r.regularMarketTime) }, "brapi");
-        }
-      } catch (e) {
-        console.error(`brapi falhou neste lote (${e.message})`);
-      }
-      await espera(400);
-    }
+    const guardar = x => {
+      const pct = x.regularMarketChangePercent;
+      if (pct == null || !x.regularMarketTime) return;
+      registrar({ ativo: x.symbol, valor: pct / 100,
+                  data_cot: diaBR(x.regularMarketTime) }, "brapi");
+    };
+    await buscarBrapi(faltantes().filter(a => !a.startsWith("^")), guardar);
+    await buscarBrapi(faltantes().filter(a =>  a.startsWith("^")), guardar);
   }
 
   // ── 2ª fonte: bolsai, também em lote ──
