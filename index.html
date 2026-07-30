@@ -290,15 +290,36 @@ function gradeHTML(){
   <button type="button" class="bt" id="btAdd" style="margin-top:9px">Adicionar</button>
   <div id="resumo" style="margin-top:11px;font-size:12px;color:var(--t2)"></div>`;
 }
+// Qual classe a grade esta montando. Define quais lados o select oferece:
+// All in e Diversificada so compram; Vendida so vende. Antes a tela
+// aceitava qualquer lado e quem recusava era o banco, depois do clique.
+let CLASSE_ATUAL = "";
+function ladosDaClasse(k){
+  if(k === "all_in" || k === "diversificada") return "C";
+  if(k === "vendida") return "V";
+  return "CV";
+}
+function opcoesLado(lado){
+  const ok = ladosDaClasse(CLASSE_ATUAL);
+  const sel = ok.includes(lado) ? lado : ok[0];
+  let h = "";
+  if(ok.includes("C")) h += `<option value="C"${sel==="C"?" selected":""}>compra</option>`;
+  if(ok.includes("V")) h += `<option value="V"${sel==="V"?" selected":""}>venda</option>`;
+  return h;
+}
+function aplicarLados(){
+  document.querySelectorAll("#linhas .pl").forEach(sel=>{
+    sel.innerHTML = opcoesLado(sel.value);
+  });
+  resumoGrade();
+}
 function linhaHTML(a,p,lado){
   return `<tr>
     <td style="padding:3px 7px 3px 0"><input list="uni" class="pa" value="${a||""}"
       placeholder="PETR4" maxlength="6" style="width:100%;text-transform:uppercase;margin:0"></td>
-    <td style="padding:3px 7px"><input class="pp" type="number" step="0.01" min="0"
+    <td style="padding:3px 7px"><input class="pp" type="number" step="1" min="0" max="200"
       value="${p??""}" style="width:100%;text-align:right;margin:0"></td>
-    <td style="padding:3px 7px"><select class="pl" style="width:100%;margin:0">
-      <option value="C"${lado!=="V"?" selected":""}>compra</option>
-      <option value="V"${lado==="V"?" selected":""}>venda</option></select></td>
+    <td style="padding:3px 7px"><select class="pl" style="width:100%;margin:0">${opcoesLado(lado)}</select></td>
     <td style="padding:3px 0"><button type="button" class="px bt" title="remover"
       style="padding:4px 9px;margin:0">×</button></td></tr>`;
 }
@@ -306,26 +327,64 @@ function lerGrade(){
   const pesos={};
   document.querySelectorAll("#linhas tr").forEach(tr=>{
     const a=(tr.querySelector(".pa").value||"").trim().toUpperCase();
-    let w=parseFloat(String(tr.querySelector(".pp").value||"").replace(",","."));
+    // peso e sempre inteiro: 1% de precisao ja e mais fino do que
+    // qualquer carteira de estudo consegue sustentar na pratica
+    let w=Math.round(parseFloat(String(tr.querySelector(".pp").value||"").replace(",",".")));
     if(!a||!isFinite(w)||w===0) return;
     w = tr.querySelector(".pl").value==="V" ? -Math.abs(w) : Math.abs(w);
     pesos[a]=(pesos[a]||0)+w;
   });
   return pesos;
 }
+// O que falta para a carteira caber na classe escolhida. Devolve lista
+// de pendencias em portugues — vazia quer dizer que passa.
+// ATENCAO: estas regras sao a leitura do texto de CLASSE. Quem manda de
+// verdade e valida_classe() no banco. Se as duas discordarem, o banco
+// ganha e esta funcao precisa ser corrigida para bater com ele.
+function pendenciasClasse(k, pesos){
+  if(!k || !CLASSE[k]) return [];
+  const v = Object.values(pesos), n = v.length;
+  const bruta = v.reduce((a,b)=>a+Math.abs(b),0);
+  const temC = v.some(x=>x>0), temV = v.some(x=>x<0);
+  const f = [];
+  if(!n) return ["nenhuma posição preenchida"];
+  if(k==="all_in"){
+    if(temV) f.push("All in não aceita venda");
+    if(bruta<100) f.push(`bruta ${Math.round(bruta)}% — All in exige de 100% a 200%`);
+  }
+  if(k==="diversificada"){
+    if(temV) f.push("Diversificada não aceita venda");
+    if(n<5)  f.push(`${n} ${n===1?"papel":"papéis"} — Diversificada pede de 5 a 15`);
+    if(n>15) f.push(`${n} papéis — Diversificada aceita no máximo 15`);
+    if(bruta>=100) f.push(`bruta ${Math.round(bruta)}% — Diversificada exige abaixo de 100%`);
+  }
+  if(k==="vendida" && temC) f.push("Vendida não aceita compra");
+  if(k==="long_short" && !(temC && temV))
+    f.push("Long & short exige ao menos uma compra e uma venda");
+  if(bruta>200) f.push(`bruta ${Math.round(bruta)}% — passa do teto de 200%`);
+  return f;
+}
 function resumoGrade(){
-  const v=Object.values(lerGrade());
+  const pesos = lerGrade(), v = Object.values(pesos);
   const bruta=v.reduce((a,b)=>a+Math.abs(b),0), liq=v.reduce((a,b)=>a+b,0);
-  $("#resumo").innerHTML =
+  const falta = pendenciasClasse(CLASSE_ATUAL, pesos);
+  const nome = CLASSE[CLASSE_ATUAL]?.nome;
+  const linha =
     `bruta <b>${n2(bruta,0)}%</b> · líquida <b>${n2(liq,0)}%</b> · caixa ${n2(100-liq,0)}%`
-    + (bruta>105?` · alavancada ${n2(bruta/100,1)}x`:"")
-    + (bruta>200.01?` <b style="color:var(--baixa)">— passa do teto de 200%</b>`:"");
+    + (bruta>105?` · alavancada ${n2(bruta/100,1)}x`:"");
+  const veredito = !CLASSE_ATUAL ? ""
+    : falta.length
+      ? `<div style="color:var(--baixa);margin-top:5px">Falta para ${nome}:
+         ${falta.join(" · ")}</div>`
+      : `<div style="color:var(--alta);margin-top:5px">Atende a ${nome}.</div>`;
+  $("#resumo").innerHTML = linha + veredito;
 }
 function conferirLinha(inp){
   const v=(inp.value||"").trim().toUpperCase();
   inp.style.borderColor = (!v||!UNISET||UNISET.has(v)) ? "" : "var(--baixa)";
 }
-function ligarGrade(iniciais){
+function ligarGrade(iniciais, classe){
+  CLASSE_ATUAL = classe || "";
   const tb=$("#linhas"); if(!tb) return;
   function religar(){
     tb.querySelectorAll(".px").forEach(b=> b.onclick=()=>{
@@ -577,16 +636,6 @@ function telaEntrar(){
             :'Não tem conta? <a href="#/entrar?novo=1">Criar</a> &nbsp;·&nbsp; <a href="#/senha">Esqueci a senha</a>'}</p>
   </div>`;
 
-  // vira true no primeiro clique, para o segundo publicar
-  let confirmado = false;
-  $("#f").oninput = () => {
-    if(confirmado){                       // mexeu depois de conferir: confere de novo
-      confirmado = false;
-      $("#bt").textContent = "Registrar";
-      $("#erro").innerHTML = "";
-    }
-  };
-
   $("#f").onsubmit = async e=>{
     e.preventDefault();
     const f = new FormData(e.target), bt = $("#bt");
@@ -685,7 +734,28 @@ async function telaPublicar(){
     </div>
   </div>`;
 
-  ligarGrade([["PETR4",25,"C"],["ITUB4",25,"C"],["VALE3",25,"C"],["BBAS3",25,"C"]]);
+  ligarGrade([["PETR4",25,"C"],["ITUB4",25,"C"],["VALE3",25,"C"],["BBAS3",25,"C"]], "");
+
+  // Vira true no primeiro clique, para o segundo publicar de verdade.
+  // Mora AQUI, na tela que usa. Estava em telaEntrar, e por isso o
+  // botao Registrar morria calado num ReferenceError.
+  let confirmado = false;
+  $("#f").oninput = () => {
+    if(confirmado){                       // mexeu depois de conferir: confere de novo
+      confirmado = false;
+      $("#bt").textContent = "Registrar";
+      $("#erro").innerHTML = "";
+    }
+  };
+
+  // Mensagem de erro rola ate a vista. O #erro fica no topo de um
+  // formulario longo: sem isto, o aviso aparece fora da tela e o clique
+  // parece nao ter feito nada.
+  const erroPub = t => {
+    const el = $("#erro");
+    el.innerHTML = aviso(t, true);
+    el.scrollIntoView({ behavior:"smooth", block:"center" });
+  };
 
   $("#selClasse").onchange = e => {
     const v = CLASSE[e.target.value];
@@ -699,25 +769,33 @@ async function telaPublicar(){
          O banco recusa declaração que fuja disso — e a classe não muda depois,
          nem por você, nem por admin. Para outra estratégia, outra carteira.</p>`
       : "";
+    // a grade passa a oferecer só os lados que a classe aceita
+    CLASSE_ATUAL = e.target.value || "";
+    aplicarLados();
   };
 
   $("#f").onsubmit = async e=>{
     e.preventDefault();
     const f = new FormData(e.target), bt = $("#bt");
     const pesos = lerGrade();
-    if(!Object.keys(pesos).length) return $("#erro").innerHTML = aviso("Nenhuma posição válida.", true);
+    if(!Object.keys(pesos).length) return erroPub("Nenhuma posição válida — preencha código e peso.");
+
+    if(!f.get("classe")) return erroPub(
+      "Escolha a classe da carteira. Ela define contra quem você é comparado e não muda depois.");
+
+    // As regras da classe conferidas AQUI, antes de ir ao banco, para o
+    // motivo chegar em portugues e nao como excecao do Postgres.
+    const falta = pendenciasClasse(f.get("classe"), pesos);
+    if(falta.length) return erroPub(
+      `Esta carteira ainda não cabe na classe ${CLASSE[f.get("classe")].nome}: ` + falta.join("; ") + ".");
+
     const bruta = Object.values(pesos).reduce((a,b)=>a+Math.abs(b),0);
-    if(bruta>200.01) return $("#erro").innerHTML =
-      aviso(`Exposição bruta de ${n2(bruta,0)}% passa do teto de 200%.`, true);
 
     const { data:uni } = await sb.from("universo").select("ativo").in("ativo", Object.keys(pesos));
     const ok = new Set((uni||[]).map(x=>x.ativo));
     const fora = Object.keys(pesos).filter(a=>!ok.has(a));
-    if(fora.length) return $("#erro").innerHTML =
-      aviso("Não achei no universo: "+fora.join(", ")+". Ou o código está errado, ou o papel não tem liquidez mínima, ou o universo ainda não foi atualizado.", true);
-
-    if(!f.get("classe")) return $("#erro").innerHTML =
-      aviso("Escolha a classe da carteira. Ela define contra quem você é comparado e não muda depois.", true);
+    if(fora.length) return erroPub(
+      "Não achei no universo: "+fora.join(", ")+". Ou o código está errado, ou o papel não tem liquidez mínima, ou o universo ainda não foi atualizado.");
 
     // ── confirmação antes de publicar ──
     // A classe não muda depois de criada e o histórico começa aqui, então
@@ -728,7 +806,7 @@ async function telaPublicar(){
       const lista = Object.entries(pesos).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]));
       const liq = Object.values(pesos).reduce((a,b)=>a+b,0);
       $("#erro").innerHTML = `
-      <div class="card" style="border-color:var(--ouro);margin-bottom:16px">
+      <div class="card" style="border-color:var(--lacre);margin-bottom:16px">
         <div style="font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--graf);margin-bottom:10px">
           Confira antes de publicar</div>
         <div style="font-size:19px;font-weight:600;margin-bottom:2px">${esc(f.get("nome").trim())}</div>
@@ -737,7 +815,7 @@ async function telaPublicar(){
         <div style="margin-bottom:12px"><span class="tag">${cl.nome}</span></div>
         <table><tbody>${lista.map(([a,p])=>`<tr>
           <td class="mono" style="font-weight:500">${esc(a)}</td>
-          <td class="d mono ${p<0?"baixa":""}">${p<0?"vendido":"comprado"} ${n2(Math.abs(p))}%</td>
+          <td class="d mono ${p<0?"baixa":""}">${p<0?"vendido":"comprado"} ${n2(Math.abs(p),0)}%</td>
         </tr>`).join("")}</tbody></table>
         <div style="font-size:12.5px;color:var(--t2);margin-top:11px">
           bruta <b>${n2(bruta,0)}%</b> · líquida <b>${n2(liq,0)}%</b> ·
@@ -763,7 +841,7 @@ async function telaPublicar(){
       const m = error.message.includes("carteira_nome_unico")
         ? "Você já tem uma carteira com esse nome. Escolha outro."
         : error.message;
-      return $("#erro").innerHTML = aviso(m, true); }
+      return erroPub(m); }
 
     // Este insert é o que passa pelo porteiro da classe (valida_classe).
     // Antes o erro era engolido e a carteira ficava criada e VAZIA — foi
@@ -775,7 +853,9 @@ async function telaPublicar(){
       // desfaz a carteira órfã, senão fica lixo na lista da pessoa
       await sb.from("carteira").delete().eq("id", c.id);
       bt.disabled=false; bt.textContent="Registrar"; confirmado=false;
-      return $("#erro").innerHTML = aviso(errPos.message, true);
+      // se chegou aqui, valida_classe() do banco recusou algo que a tela
+      // deixou passar — as duas listas de regra estao fora de sincronia
+      return erroPub("O banco recusou as posições: " + errPos.message);
     }
 
     if(f.get("nota")) await sb.from("nota").insert({ carteira_id:c.id, texto:f.get("nota") });
@@ -1431,7 +1511,7 @@ async function telaEditar(id){
     </div>
   </div>`;
 
-  ligarGrade((atual||[]).map(p=>[p.ativo, Math.abs(p.peso), p.peso<0?"V":"C"]));
+  ligarGrade((atual||[]).map(p=>[p.ativo, Math.round(Math.abs(p.peso)), p.peso<0?"V":"C"]), c.classe);
 
   $("#btNome").onclick = async()=>{
     const { error } = await sb.rpc("renomear_carteira",
