@@ -426,7 +426,7 @@ async function carregarEu(){
 function pintarNav(){
   // Publicar pertence ao bloco de investidor; conta, indicacao e admin
   // sao do usuario, nao do site — ficam agrupados a direita.
-  $("#navPub").innerHTML = eu ? `<a href="#/publicar">Publicar</a>` : "";
+  $("#navPub").innerHTML = eu ? `<a href="#/publicar">Criar</a>` : "";
   $("#navDir").innerHTML = eu
     ? `<a href="#/conta">${esc(eu.apelido)}</a>${eu.assinante?'<span class="pill">assinante</span>':""}
        <a href="#/indicar" title="Indicar">indicar</a>
@@ -624,7 +624,7 @@ async function telaRanking(){
   ${!lista.length ? `<div class="card" style="text-align:center;padding:38px">
       <h3 style="margin-bottom:8px">Nenhuma carteira ainda</h3>
       <p style="color:var(--t2)">Publique a primeira — o ranking começa a contar a partir de hoje.</p>
-      <a href="#/publicar" class="bt cheio" style="margin-top:12px">Publicar carteira</a></div>`
+      <a href="#/publicar" class="bt cheio" style="margin-top:12px">Criar carteira</a></div>`
   : `<table><thead><tr><th></th><th>Carteira</th><th class="d">Hoje</th>
       <th class="d">Acumulado</th><th class="d">Sharpe</th><th class="d">Queda máx</th>
       <th class="d">Dias</th></tr></thead><tbody>
@@ -738,7 +738,7 @@ async function telaPublicar(){
   await universo();
 
   app().innerHTML = `
-  <h1 style="font-size:27px;margin:30px 0 6px">Publicar carteira</h1>
+  <h1 style="font-size:27px;margin:30px 0 6px">Criar carteira</h1>
   <p style="color:var(--t2);max-width:58ch;margin-bottom:20px">
     Escolha a classe primeiro: ela monta a grade no formato certo e define
     contra quem esta carteira vai ser comparada. A classe não muda depois —
@@ -776,7 +776,7 @@ async function telaPublicar(){
       <label>Posições</label>
       ${gradeHTML()}
       <label>Anotação desta mudança (opcional)</label><input name="nota" maxlength="200">
-      <button class="bt cheio" id="bt">Registrar</button>
+      <button class="bt cheio" id="bt">Criar carteira</button>
     </form>
     <div>
       <div class="card">
@@ -823,7 +823,7 @@ async function telaPublicar(){
   $("#f").oninput = () => {
     if(confirmado){                       // mexeu depois de conferir: confere de novo
       confirmado = false;
-      $("#bt").textContent = "Registrar";
+      $("#bt").textContent = "Criar carteira";
       $("#erro").innerHTML = "";
     }
   };
@@ -926,7 +926,7 @@ async function telaPublicar(){
           possível; mudar esta, não.</p>
       </div>`;
       confirmado = true;
-      bt.textContent = "Confirmar e publicar";
+      bt.textContent = "Confirmar e criar";
       $("#erro").scrollIntoView({ behavior:"smooth", block:"nearest" });
       return;
     }
@@ -941,7 +941,7 @@ async function telaPublicar(){
       rebalancear: f.get("rebalancear") || "nunca",
       banda_pct: Math.min(100, Math.max(1, Math.round(Number(f.get("banda_pct")) || 5))) })
       .select().single();
-    if(error){ bt.disabled=false; bt.textContent="Registrar";
+    if(error){ bt.disabled=false; bt.textContent="Criar carteira";
       const m = error.message.includes("carteira_nome_unico")
         ? "Você já tem uma carteira com esse nome. Escolha outro."
         : error.message;
@@ -956,7 +956,7 @@ async function telaPublicar(){
     if(errPos){
       // desfaz a carteira órfã, senão fica lixo na lista da pessoa
       await sb.from("carteira").delete().eq("id", c.id);
-      bt.disabled=false; bt.textContent="Registrar"; confirmado=false;
+      bt.disabled=false; bt.textContent="Criar carteira"; confirmado=false;
       // se chegou aqui, valida_classe() do banco recusou algo que a tela
       // deixou passar — as duas listas de regra estao fora de sincronia
       return erroPub("O banco recusou as posições: " + errPos.message);
@@ -1483,7 +1483,7 @@ async function telaConta(){
 
   <h2 style="font-size:19px;margin:26px 0 12px">Suas carteiras</h2>
   ${!cs?.length?`<div class="card">Nenhuma carteira ainda.
-    <a href="#/publicar" class="bt" style="margin-left:10px">Publicar</a></div>`
+    <a href="#/publicar" class="bt" style="margin-left:10px">Criar carteira</a></div>`
   :`<table><thead><tr><th>Carteira</th><th class="d">Desde</th><th class="d">Dias</th>
       <th class="d">Acumulado</th><th class="d"></th></tr></thead><tbody>
     ${cs.map(c=>{const s=dias[c.id]||[];const ac=s.length?s[s.length-1].indice/100-1:0;
