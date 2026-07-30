@@ -213,6 +213,35 @@ async function classes(){
 // data de hoje no fuso de São Paulo, igual ao hoje_br() do banco
 const HOJE_BR = () => new Date().toLocaleDateString("sv-SE", { timeZone:"America/Sao_Paulo" });
 
+// ── quando a cotação foi e quando será ──
+// O robô roda de hora em hora, na virada, das 10h às 18h em dia útil.
+// O cron do GitHub costuma atrasar alguns minutos, então a previsão é
+// "por volta de", nunca cravada.
+const partesBR = d => {
+  const f = new Intl.DateTimeFormat("pt-BR", { timeZone:"America/Sao_Paulo",
+    hour:"2-digit", minute:"2-digit", weekday:"short", hour12:false }).formatToParts(d);
+  const g = t => f.find(p=>p.type===t)?.value || "";
+  return { hora:Number(g("hour")), minuto:Number(g("minute")), dia:g("weekday") };
+};
+
+function haQuantoTempo(iso){
+  const min = Math.max(0, Math.round((Date.now() - new Date(iso)) / 60000));
+  if(min < 1)  return "agora mesmo";
+  if(min === 1) return "há 1 minuto";
+  if(min < 60) return `há ${min} minutos`;
+  const h = Math.floor(min/60);
+  return h === 1 ? "há 1 hora" : `há ${h} horas`;
+}
+
+function proximaCotacao(){
+  const p = partesBR(new Date());
+  const fimDeSemana = /^(sáb|dom)/i.test(p.dia);
+  if(fimDeSemana || p.hora < 10 || p.hora >= 18) return null;   // fora do pregão
+  const faltam = 60 - p.minuto;
+  return faltam <= 1 ? "a próxima sai a qualquer momento"
+                     : `a próxima por volta de ${String((p.hora+1)%24).padStart(2,"0")}:00, em ${faltam} min`;
+}
+
 function tags(c){
   const t=[];
   if(c.classe && CLASSE[c.classe]) t.push(CLASSE[c.classe].nome);
@@ -417,11 +446,7 @@ async function telaRanking(){
       .map(([k,r])=>`<a href="#/?ordem=${k}${filtro?"&classe="+filtro:""}"
         class="chip${ordem===k?" on":""}">${r}</a>`).join("")}
   </div>
-  ${quando?`<p style="font-size:11.5px;color:var(--graf);margin:-2px 0 12px">
-      <span style="color:var(--alta)">&#9679;</span> Cotação de
-      ${new Date(quando).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit",timeZone:"America/Sao_Paulo"})}
-      — a coluna <b>Hoje</b> marcada com • é parcial e muda até o fechamento das 19h.
-      Acumulado, Sharpe e queda máxima só contam pregão fechado.</p>`:""}
+  ${quando?`<p id="linhaViva" style="font-size:11.5px;color:var(--graf);margin:-2px 0 12px"></p>`:""}
   <div class="chips">
     <span style="font-size:10.5px;text-transform:uppercase;letter-spacing:.11em;color:var(--graf)">Classe</span>
     <a href="#/?ordem=${ordem}" class="chip${!filtro?" on":""}">Todas</a>
@@ -697,6 +722,25 @@ async function telaPublicar(){
     if(f.get("nota")) await sb.from("nota").insert({ carteira_id:c.id, texto:f.get("nota") });
     location.hash = "#/carteira/"+c.id; rotear();
   };
+  // ── legenda da cotação, com contagem viva ──
+  if(quando){
+    const pintarLinha = () => {
+      const el = $("#linhaViva");
+      if(!el) return;                       // saiu do ranking: para de mexer
+      const prox = proximaCotacao();
+      el.innerHTML = `<span style="color:var(--alta)">&#9679;</span>
+        Cotação atualizada <b>${haQuantoTempo(quando)}</b>, às
+        ${new Date(quando).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit",timeZone:"America/Sao_Paulo"})}.
+        ${prox ? "Atualiza de hora em hora durante o pregão — " + prox + "."
+               : "Fora do horário de pregão: o próximo movimento é na abertura."}
+        <br>A coluna <b>Hoje</b> marcada com • é parcial e muda até o fechamento das 19h.
+        Acumulado, Sharpe e queda máxima só contam pregão fechado.`;
+    };
+    pintarLinha();
+    clearInterval(window.__timerViva);
+    window.__timerViva = setInterval(pintarLinha, 30000);
+  }
+
 }
 
 // ═══════════════════════════════════════════ carteira
