@@ -151,6 +151,9 @@ Nada aqui é recomendação — cada carteira é anotação pessoal de quem publ
 <header><div class="w"><nav>
   <a href="#/" class="marca" style="margin-right:12px">Saldo Positivo</a>
   <a href="#/">Ranking</a><a href="#/duelo">Duelo</a><a href="#/comparar">Comparar</a>
+      <span style="color:var(--linha2);margin:0 4px">·</span>
+      <a href="#/apostar">Palpitar</a>
+      <a href="#/placar" style="margin-left:14px">Placar</a>
   <span id="navPriv"></span>
   <span class="dir" id="navDir"></span>
 </nav></div></header>
@@ -206,6 +209,9 @@ async function classes(){
   CACHE_CLASSE = {}; (data||[]).forEach(x=> CACHE_CLASSE[x.id] = x);
   return CACHE_CLASSE;
 }
+
+// data de hoje no fuso de São Paulo, igual ao hoje_br() do banco
+const HOJE_BR = () => new Date().toLocaleDateString("sv-SE", { timeZone:"America/Sao_Paulo" });
 
 function tags(c){
   const t=[];
@@ -362,6 +368,16 @@ async function telaRanking(){
                                 .in("carteira_id", ids).order("data");
     (rs||[]).forEach(r=>{ (series[r.carteira_id] ||= []).push(r); });
   }
+  // parcial do pregão em curso: número agregado, calculado no banco,
+  // para o lacre continuar valendo
+  const { data:parc } = await sb.from("retorno_parcial")
+    .select("carteira_id,retorno,atualizado_em,com_cotacao,papeis");
+  const vivo = {}; let quando = null;
+  (parc||[]).forEach(p=>{
+    vivo[p.carteira_id] = p;
+    if(p.atualizado_em && (!quando || p.atualizado_em > quando)) quando = p.atualizado_em;
+  });
+
   const cl = await classes();
   (cs||[]).forEach(c=>{ const x = cl[c.id];
     if(x){ c.classe = x.classe; c.criada_em = x.criada_em; if(x.autor) c.apelido = x.autor; } });
@@ -369,7 +385,15 @@ async function telaRanking(){
   const conta = {};
   (cs||[]).forEach(c=> conta[c.classe||"sem"] = (conta[c.classe||"sem"]||0) + 1);
 
-  let lista = (cs||[]).map(c=>({c, m:metricas(series[c.id])}));
+  let lista = (cs||[]).map(c=>{
+    const m = metricas(series[c.id]);
+    const s = series[c.id] || [];
+    const ultimo = s.length ? s[s.length-1].data : null;
+    const v = vivo[c.id];
+    // se o pregão de hoje ainda não foi fechado, "Hoje" mostra o parcial
+    if(v && ultimo !== HOJE_BR()){ m.hoje = v.retorno; m.parcial = true; }
+    return { c, m };
+  });
   if(filtro) lista = lista.filter(x=> (x.c.classe||"sem") === filtro);
 
   const chaves = { acum:x=>-x.m.acum, hoje:x=>-x.m.hoje, dd:x=>-x.m.dd,
@@ -393,6 +417,11 @@ async function telaRanking(){
       .map(([k,r])=>`<a href="#/?ordem=${k}${filtro?"&classe="+filtro:""}"
         class="chip${ordem===k?" on":""}">${r}</a>`).join("")}
   </div>
+  ${quando?`<p style="font-size:11.5px;color:var(--graf);margin:-2px 0 12px">
+      <span style="color:var(--alta)">&#9679;</span> Cotação de
+      ${new Date(quando).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit",timeZone:"America/Sao_Paulo"})}
+      — a coluna <b>Hoje</b> marcada com • é parcial e muda até o fechamento das 19h.
+      Acumulado, Sharpe e queda máxima só contam pregão fechado.</p>`:""}
   <div class="chips">
     <span style="font-size:10.5px;text-transform:uppercase;letter-spacing:.11em;color:var(--graf)">Classe</span>
     <a href="#/?ordem=${ordem}" class="chip${!filtro?" on":""}">Todas</a>
@@ -429,7 +458,8 @@ async function telaRanking(){
       <td><span style="font-family:Newsreader,serif;font-weight:500;font-size:15px">${esc(x.c.nome)}</span>
         <div style="font-size:11px;color:var(--graf);margin-top:3px">
           ${esc(x.c.apelido)} · ${x.c.n_ativos} ativos · ${tags(x.c)}</div></td>
-      <td class="d mono ${cor(x.m.hoje)}">${pct(x.m.hoje)}</td>
+      <td class="d mono ${cor(x.m.hoje)}" style="${x.m.parcial?"opacity:.82":""}"
+      title="${x.m.parcial?"parcial — o pregão ainda não fechou":"fechado"}">${pct(x.m.hoje)}${x.m.parcial?'<span style="font-size:9px;vertical-align:super;opacity:.7">•</span>':""}</td>
       <td class="d mono ${cor(x.m.acum)}">${pct(x.m.acum)}</td>
       <td class="d mono">${n2(x.m.sharpe)}</td>
       <td class="d mono baixa">${pct(x.m.dd)}</td>
@@ -1153,7 +1183,9 @@ async function telaConta(){
       <td class="d"><a href="#/editar/${c.id}" class="bt" style="padding:5px 12px;font-size:12px">editar</a>
         <a href="#/carteira/${c.id}" class="bt" style="padding:5px 12px;font-size:12px;margin-left:5px">ver</a>
         <button class="bt del-minha" data-cid="${c.id}" data-nome="${esc(c.nome)}"
-          style="padding:5px 12px;font-size:12px;margin-left:5px;border-color:var(--baixa);color:var(--baixa)">apagar</button></td>
+          data-dias="${(dias[c.id]||[]).length}"
+          style="padding:5px 12px;font-size:12px;margin-left:5px;border-color:var(--baixa);color:var(--baixa)">
+          ${(dias[c.id]||[]).length ? "encerrar" : "apagar"}</button></td>
       </tr>`}).join("")}
     </tbody></table>`}
 
@@ -1202,10 +1234,21 @@ async function telaConta(){
 
 function ligarApagarMinhas(){
   document.querySelectorAll(".del-minha").forEach(b=> b.onclick = async()=>{
-    if(!confirm(`Apagar "${b.dataset.nome}"? Ela sai do ranking. O histórico fica guardado.`)) return;
+    // O front já sabe se a carteira tem dias apurados, então dá para
+    // dizer a verdade ANTES de a pessoa confirmar — apagar de vez e
+    // encerrar são coisas diferentes.
+    const temDias = Number(b.dataset.dias||0) > 0;
+    const texto = temDias
+      ? `Encerrar "${b.dataset.nome}"?\n\nEla já tem ${b.dataset.dias} pregão(ões) apurado(s), `
+        + `então o histórico NÃO é apagado: ela sai do ranking, para de contar e a `
+        + `curva fica congelada, visível por link.\n\nNão dá para reabrir depois.`
+      : `Apagar "${b.dataset.nome}" de vez?\n\nEla nunca foi apurada, então some por `
+        + `inteiro: posições, anotações e seguidores. Não fica nada.`;
+    if(!confirm(texto)) return;
     b.disabled = true;
-    const { error } = await sb.rpc("apagar_carteira", { cid:Number(b.dataset.cid) });
+    const { data:oque, error } = await sb.rpc("apagar_carteira", { cid:Number(b.dataset.cid) });
     if(error){ b.disabled=false; return alert(error.message); }
+    if(oque === "encerrada") alert("Encerrada. A página dela continua acessível por link.");
     telaConta();
   });
 }
@@ -1303,7 +1346,10 @@ async function telaEditar(id){
     $("#erro").innerHTML=aviso("Declarado. Vale a partir de hoje."); telaEditar(id);
   };
   $("#btDel").onclick = async()=>{
-    if(!confirm("Apagar \"" + c.nome + "\"? Ela sai do ranking.")) return;
+    const temDias = (dias||[]).length > 0;
+    if(!confirm(temDias
+      ? `Encerrar "${c.nome}"?\n\nO histórico fica: ela sai do ranking e a curva congela. Sem reabrir.`
+      : `Apagar "${c.nome}" de vez?\n\nNunca foi apurada, então some por inteiro.`)) return;
     const { error } = await sb.rpc("apagar_carteira", { cid:id });
     if(error) return $("#erro").innerHTML=aviso(error.message,true);
     location.hash="#/conta"; rotear();
@@ -1361,6 +1407,176 @@ function telaNovaSenha(){
 }
 
 // ═══════════════════════════════════════════ rotas
+
+// ═══════════════════════════════════════════ especuladores
+// A outra metade do site. Aqui a pessoa escolhe papel e direção para o
+// PRÓXIMO pregão; stop e alvo o sistema propõe pela volatilidade do
+// próprio papel. Entrada na abertura, saída por stop, alvo ou
+// fechamento. O placar é por DIA, não por operação — quem entra com 10
+// papéis não leva vantagem sobre quem entra com 1.
+
+async function telaApostar(){
+  if(!eu){ location.hash="#/entrar"; return rotear(); }
+  app().innerHTML = `<div class="carreg">carregando…</div>`;
+
+  const { data:prox } = await sb.rpc("proximo_pregao");
+  const [uni, mins] = await Promise.all([
+    universo(),
+    sb.from("aposta").select("id,ativo,direcao").eq("data", prox).order("id"),
+  ]);
+  const pend = mins.data || [];
+
+  app().innerHTML = `
+  <h1 style="font-size:31px;margin-bottom:6px">Palpite do pregão</h1>
+  <p style="color:var(--t2);max-width:62ch;margin-bottom:22px">
+    Escolha o papel e o lado para o pregão de <b>${prox}</b>. Você entra na
+    abertura e sai no stop, no alvo ou no fechamento — o que vier primeiro.
+    Até 10 papéis por pregão, e ninguém vê o seu palpite antes de o prazo
+    fechar.</p>
+
+  <div class="grid2">
+    <div>
+      <div class="card">
+        <h3 style="font-size:15px;margin-bottom:12px">Novo palpite</h3>
+        <div id="erro"></div>
+
+        <label>Papel</label>
+        <input id="apAtivo" list="uni" maxlength="8" placeholder="PETR4"
+               style="text-transform:uppercase">
+        <datalist id="uni">${uni.map(a=>`<option value="${a}">`).join("")}</datalist>
+
+        <label>Lado</label>
+        <select id="apDir">
+          <option value="C">Compra — aposto que sobe</option>
+          <option value="V">Venda — aposto que cai</option>
+        </select>
+
+        <div id="apLimites" style="font-size:12.5px;color:var(--t2);margin:4px 0 14px"></div>
+
+        <button class="bt cheio" id="apBt" ${pend.length>=10?"disabled":""}>
+          ${pend.length>=10?"limite de 10 atingido":"Registrar palpite"}</button>
+      </div>
+
+      <div class="card" style="margin-top:14px">
+        <h3 style="font-size:15px;margin-bottom:5px">Como é apurado</h3>
+        <p style="font-size:12.5px;color:var(--t2);margin:0 0 8px">
+          Stop e alvo saem da <b>amplitude média do próprio papel</b>, não de uma
+          porcentagem fixa. Sem isso, papel agitado bateria alvo por ruído e papel
+          parado não bateria nem quando você acertasse a direção.</p>
+        <p style="font-size:12.5px;color:var(--t2);margin:0 0 8px">
+          <b>alvo +2 · fechamento a favor +1 · fechamento contra −1 · stop −2.</b>
+          Se stop e alvo forem tocados no mesmo dia, o candle não diz qual veio
+          primeiro: conta o fechamento, e vale ±1.</p>
+        <p style="font-size:12.5px;color:var(--t2);margin:0">
+          Se o papel abrir além do seu stop, você sai na abertura. Stop não é
+          promessa de preço.</p>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <h3 style="font-size:15px;margin-bottom:4px">Seus palpites para ${prox}
+          <span style="color:var(--graf);font-weight:400">· ${pend.length}/10</span></h3>
+        <p style="font-size:11.5px;color:var(--graf);margin:0 0 12px">
+          Dá para desistir enquanto o pregão não chegar.</p>
+        ${pend.length ? `<table><tbody>${pend.map(p=>`<tr>
+          <td class="mono" style="font-weight:500">${esc(p.ativo)}</td>
+          <td class="${p.direcao==="V"?"baixa":"alta"}" style="font-size:12.5px">
+            ${p.direcao==="V"?"venda":"compra"}</td>
+          <td class="d"><button class="bt ap-del" data-id="${p.id}"
+            style="padding:3px 9px;font-size:11.5px;border-color:var(--baixa);color:var(--baixa)">
+            desistir</button></td></tr>`).join("")}</tbody></table>`
+        : `<p style="font-size:12.5px;color:var(--graf);margin:0">Nenhum ainda.</p>`}
+      </div>
+      <div style="margin-top:14px"><a href="#/placar" class="bt">Ver o placar &rarr;</a></div>
+    </div>
+  </div>`;
+
+  const mostrarLimites = async () => {
+    const a = $("#apAtivo").value.trim().toUpperCase();
+    const cx = $("#apLimites");
+    if(!a || !UNISET.has(a)){ cx.innerHTML = ""; return; }
+    const { data:l } = await sb.rpc("limites_sugeridos", { p_ativo: a });
+    const r = l && l[0];
+    if(!r){ cx.innerHTML = `<span style="color:var(--graf)">sem histórico deste papel ainda</span>`; return; }
+    const dir = $("#apDir").value;
+    cx.innerHTML = `Amplitude média de <b>${esc(a)}</b>: ${n2(r.amplitude*100)}% ao dia.
+      Stop e alvo a <b>${n2(r.stop_pct*100)}%</b> da abertura, para
+      ${dir==="V"?"cima e para baixo":"baixo e para cima"}.`;
+  };
+  $("#apAtivo").oninput = mostrarLimites;
+  $("#apDir").onchange  = mostrarLimites;
+
+  $("#apBt").onclick = async () => {
+    const a = $("#apAtivo").value.trim().toUpperCase();
+    if(!a) return $("#erro").innerHTML = aviso("Escolha um papel.", true);
+    if(!UNISET.has(a)) return $("#erro").innerHTML = aviso(`${a} não está no universo.`, true);
+    const { error } = await sb.from("aposta")
+      .insert({ data: prox, ativo: a, direcao: $("#apDir").value });
+    if(error) return $("#erro").innerHTML = aviso(error.message, true);
+    telaApostar();
+  };
+
+  document.querySelectorAll(".ap-del").forEach(b => b.onclick = async () => {
+    await sb.from("aposta").delete().eq("id", Number(b.dataset.id));
+    telaApostar();
+  });
+}
+
+async function telaPlacar(){
+  app().innerHTML = `<div class="carreg">carregando…</div>`;
+  const [rk, meu] = await Promise.all([
+    sb.from("ranking_dt").select("*").limit(100),
+    eu ? sb.from("aposta_apurada").select("*").eq("usuario_id", eu.id)
+           .order("data",{ascending:false}).limit(40)
+       : Promise.resolve({ data: [] }),
+  ]);
+  const lista = rk.data || [], minhas = meu.data || [];
+  const rotulo = { alvo:"alvo", stop:"stop", fechamento:"fechamento",
+                   ambiguo:"tocou os dois", gap_favor:"abriu no alvo",
+                   gap_contra:"abriu no stop" };
+
+  app().innerHTML = `
+  <h1 style="font-size:31px;margin-bottom:6px">Placar dos especuladores</h1>
+  <p style="color:var(--t2);max-width:64ch;margin-bottom:20px">
+    A unidade é o <b>dia</b>, não a operação: a nota do dia é a média dos pontos
+    dos papéis daquele dia. Entrar com dez papéis reduz a variância, não aumenta a
+    nota. A nota final encolhe por <b>dias/(dias+20)</b> — três dias bons não passam
+    na frente de um ano de consistência.</p>
+
+  ${lista.length ? `<table>
+    <thead><tr><th></th><th>Quem</th><th class="d">Nota</th><th class="d">Média/dia</th>
+    <th class="d">Dias</th><th class="d">Palpites</th></tr></thead>
+    <tbody>${lista.map((x,i)=>`<tr>
+      <td class="mono" style="color:var(--graf)">${String(i+1).padStart(2,"0")}</td>
+      <td style="font-weight:500">${esc(x.apelido)}</td>
+      <td class="d mono ${cor(x.nota)}"><b>${n2(x.nota)}</b></td>
+      <td class="d mono ${cor(x.media_dia)}">${n2(x.media_dia)}</td>
+      <td class="d mono">${x.dias}</td>
+      <td class="d mono" style="color:var(--graf)">${x.operacoes}</td></tr>`).join("")}
+    </tbody></table>`
+  : `<div class="card"><p style="margin:0;color:var(--t2)">
+      Ninguém pontuou ainda. O placar aparece depois do primeiro pregão apurado.</p></div>`}
+
+  ${eu ? `<h2 style="font-size:19px;margin:32px 0 12px">Seus palpites apurados</h2>
+    ${minhas.length ? `<table>
+      <thead><tr><th>Pregão</th><th>Papel</th><th>Lado</th><th>Desfecho</th>
+      <th class="d">Retorno</th><th class="d">Pontos</th></tr></thead>
+      <tbody>${minhas.map(p=>`<tr>
+        <td class="mono" style="font-size:12px;color:var(--graf)">${p.data}</td>
+        <td class="mono" style="font-weight:500">${esc(p.ativo)}</td>
+        <td style="font-size:12.5px" class="${p.direcao==="V"?"baixa":"alta"}">
+          ${p.direcao==="V"?"venda":"compra"}</td>
+        <td style="font-size:12.5px;color:var(--t2)">${rotulo[p.tipo]||p.tipo}</td>
+        <td class="d mono ${cor(p.retorno)}">${pct(p.retorno)}</td>
+        <td class="d mono ${cor(p.pts)}"><b>${p.pts>0?"+":""}${p.pts}</b></td></tr>`).join("")}
+      </tbody></table>`
+    : `<div class="card"><p style="margin:0;color:var(--t2)">
+        Nenhum palpite apurado ainda. <a href="#/apostar">Faça o primeiro</a>.</p></div>`}`
+  : `<div class="card" style="margin-top:24px"><p style="margin:0;color:var(--t2)">
+      <a href="#/entrar">Entre</a> para palpitar.</p></div>`}`;
+}
+
 function rotear(){
   const h = (location.hash||"#/").split("?")[0];
   const m = h.match(/^#\/carteira\/(\d+)$/);
@@ -1369,6 +1585,8 @@ function rotear(){
   if(h==="#/entrar")          return telaEntrar();
   if(h==="#/publicar")        return telaPublicar();
   if(h==="#/duelo")           return telaDuelo();
+  if(h==="#/apostar")         return telaApostar();
+  if(h==="#/placar")          return telaPlacar();
   if(h==="#/comparar")        return telaComparar();
   if(h==="#/indicar")         return telaIndicar();
   if(h==="#/assinar")         return telaAssinar();
