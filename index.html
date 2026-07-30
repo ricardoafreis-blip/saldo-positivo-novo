@@ -780,6 +780,20 @@ async function telaCarteira(id){
   }catch(e){ nSeg = 0; }
   const podeSeguir = !!eu?.assinante;
   const meu = eu && c.apelido === eu.apelido;
+  // Quem pode ver: dono, assinante ou admin. A consulta só devolve
+  // linha se for o dono, então ela não revela autor de carteira
+  // anônima para mais ninguém.
+  let souDono = false;
+  if(eu){
+    const { data:d } = await sb.from("carteira").select("id")
+      .eq("id", id).eq("usuario_id", eu.id).maybeSingle();
+    souDono = !!d;
+  }
+  const podeVer = !!(eu && (souDono || eu.assinante || eu.admin));
+
+  // "Sem posição" e "sem permissão" são coisas diferentes. Antes as
+  // duas caíam no cadeado, e o dono era convidado a assinar a própria
+  // carteira.
   const abre = pesos && pesos.length;
   const maxp = abre ? Math.max(...pesos.map(p=>Math.abs(p.peso))) : 1;
   const esc100 = Math.max(c.bruta,100)*1.06;
@@ -856,6 +870,15 @@ async function telaCarteira(id){
         <div style="font-size:12.5px;color:var(--t2);font-style:italic">“${esc(n.texto)}”</div></div>`).join("")}
     </div>`:""}
   </div>`
+  : podeVer ? `<div class="card" style="text-align:center;padding:30px 20px">
+      <div style="font-size:26px;margin-bottom:8px">&#128338;</div>
+      <h3 style="font-size:19px;margin-bottom:7px">Ainda sem posição em vigor</h3>
+      <p style="color:var(--t2);max-width:46ch;margin:0 auto 16px">
+        ${souDono
+          ? "Sua declaração está registrada e passa a valer no próximo pregão — o peso só entra depois do fechamento. Não é preciso fazer nada."
+          : "Esta carteira ainda não teve posição apurada. Ela estreia no próximo pregão."}</p>
+      ${souDono?`<a href="#/editar/${id}" class="bt">Ver o que foi declarado</a>`:""}
+    </div>`
   : `<div class="trancado"><div class="selo">&#128274;</div>
       <h3 style="font-size:19px;margin-bottom:7px">Papéis e pesos fechados</h3>
       <p style="color:var(--t2);max-width:36ch;margin:0 auto 16px">
