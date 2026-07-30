@@ -5,7 +5,16 @@
 //   node robo/robo.mjs recuperar  só age se algum dia ficou sem fechar
 //   node robo/robo.mjs universo   refaz a lista de papéis válidos
 //
-// Fontes, nesta ordem: brapi.dev, bolsai, Yahoo Finance.
+// Fontes, nesta ordem: Yahoo Finance, bolsai, brapi.dev.
+//
+// Por que o Yahoo vem primeiro (medido em 30/07/2026): o plano
+// gratuito da brapi aceita UM ticker por chamada — o robô descobriu
+// sozinho, descendo de 20 para 1. Ou seja, no fechamento diário as
+// duas custam o mesmo número de requisições, mas o Yahoo é ilimitado
+// e a brapi tem cota de 15.000 no mês. E o intradiário SÓ funciona
+// pela brapi, porque o Yahoo devolve 429 para IP de datacenter em
+// volume. Então a cota fica reservada para onde ela é insubstituível,
+// e o fechamento usa a fonte que não acaba.
 // Cada uma cobre o que a anterior não entregou. O log diz quem
 // entregou quanto — é assim que se percebe uma fonte degradando ao
 // longo das semanas em vez de descobrir no dia da queda.
@@ -243,41 +252,27 @@ async function fecharDia() {
 
   const faltantes = () => lista.filter(a => !achados.has(a));
 
-  // ── 1ª fonte: brapi, 20 papéis por chamada ──
-  if (BRAPI) {
+  // ── 1ª fonte: Yahoo, um papel por chamada, sem cota ──
+  for (const a of faltantes()) {
+    try { registrar(await yahoo(a), "yahoo"); }
+    catch (e) { console.error(`  ${a}: ${e.message}`); }
+    await espera(250);
+  }
+
+  // ── 3ª fonte: brapi, reserva ──
+  // Só entra no que o Yahoo não entregou. Gasta cota, então quanto
+  // menos vier parar aqui, melhor para o intradiário.
+  const buracos = faltantes();
+  if (BRAPI && buracos.length) {
+    console.log(`tentando ${buracos.length} na brapi`);
     const guardar = x => {
       const pct = x.regularMarketChangePercent;
       if (pct == null || !x.regularMarketTime) return;
       registrar({ ativo: x.symbol, valor: pct / 100,
                   data_cot: diaBR(x.regularMarketTime) }, "brapi");
     };
-    await buscarBrapi(faltantes().filter(a => !a.startsWith("^")), guardar);
-    await buscarBrapi(faltantes().filter(a =>  a.startsWith("^")), guardar);
-  }
-
-  // ── 2ª fonte: bolsai, também em lote ──
-  if (BOLSAI && faltantes().length) {
-    for (const g of pedacos(faltantes(), 20)) {
-      try {
-        for (const linha of await bolsai(g)) registrar(linha, "bolsai");
-      } catch (e) {
-        console.error(`bolsai falhou neste lote (${e.message})`);
-      }
-      await espera(400);
-    }
-  }
-
-  // ── 3ª fonte: Yahoo, um papel por chamada ──
-  // Serve tanto para um papel que faltou quanto para as duas primeiras
-  // fontes inteiras fora do ar. Um caminho só cobre os dois casos.
-  const buracos = faltantes();
-  if (buracos.length) {
-    console.log(`tentando ${buracos.length} no Yahoo`);
-    for (const a of buracos) {
-      try { registrar(await yahoo(a), "yahoo"); }
-      catch (e) { console.error(`  ${a}: ${e.message}`); }
-      await espera(250);
-    }
+    await buscarBrapi(buracos.filter(a => !a.startsWith("^")), guardar);
+    await buscarBrapi(buracos.filter(a =>  a.startsWith("^")), guardar);
   }
 
   const resumo = Object.entries(porFonte).map(([f, n]) => `${f} ${n}`).join(" · ") || "ninguém";
