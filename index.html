@@ -758,6 +758,21 @@ async function telaPublicar(){
       </select>
       <p id="regraClasse" style="font-size:12px;color:var(--graf);margin:-3px 0 13px">
         A classe não muda depois de criada. A regra fica no quadro ao lado.</p>
+      <label>Rebalanceamento</label>
+      <select name="rebalancear" id="selReb">
+        <option value="nunca">nunca — o peso corre solto</option>
+        <option value="banda">por banda — volta quando um peso se afastar demais</option>
+        <option value="mensal">mensal</option>
+        <option value="semanal">semanal</option>
+        <option value="anual">anual</option>
+      </select>
+      <div id="campoBanda" style="display:none">
+        <label>Banda, em pontos percentuais</label>
+        <input name="banda_pct" type="number" step="1" min="1" max="100" value="5">
+      </div>
+      <p style="font-size:12px;color:var(--graf);margin:-3px 0 13px">
+        Assim como a classe, <b>não muda depois de criada</b> — poder ligar e
+        desligar seria escolher a régua depois de ver o resultado.</p>
       <label>Posições</label>
       ${gradeHTML()}
       <label>Anotação desta mudança (opcional)</label><input name="nota" maxlength="200">
@@ -778,6 +793,12 @@ async function telaPublicar(){
         <p style="font-size:12.5px;color:var(--t2);margin:0 0 9px">
           Se a carteira perder tudo, ela é encerrada e sai do ranking.
           O histórico fica guardado.</p>
+        <p style="font-size:12.5px;color:var(--t2);margin:0 0 9px">
+          <b>Rebalancear</b> é devolver os pesos ao que você declarou, desfazendo
+          a deriva do mercado. Em <b>nunca</b>, quem sobe vai ocupando mais espaço
+          sozinho. Em <b>banda</b>, isso só acontece quando algum papel se afasta
+          mais do que a banda escolhida — é o modo que mais combina com a 60/40,
+          porque ela sai da faixa de renda fixa sem ninguém fazer nada.</p>
         <p style="font-size:12.5px;color:var(--t2);margin:0">
           Depois de registrado, o peso <b>anda sozinho</b> com o mercado até você
           declarar mudança.</p>
@@ -845,6 +866,11 @@ async function telaPublicar(){
     else aplicarLados();
   };
 
+  // a banda so faz sentido na modalidade banda
+  $("#selReb").onchange = e => {
+    $("#campoBanda").style.display = e.target.value === "banda" ? "block" : "none";
+  };
+
   $("#f").onsubmit = async e=>{
     e.preventDefault();
     const f = new FormData(e.target), bt = $("#bt");
@@ -883,7 +909,10 @@ async function telaPublicar(){
         <div style="font-size:19px;font-weight:600;margin-bottom:2px">${esc(f.get("nome").trim())}</div>
         <div style="font-size:12.5px;color:var(--t2);margin-bottom:12px">
           ${esc(f.get("descricao")||"sem descrição")}</div>
-        <div style="margin-bottom:12px"><span class="tag">${cl.nome}</span></div>
+        <div style="margin-bottom:12px"><span class="tag">${cl.nome}</span>
+          <span class="tag">${f.get("rebalancear")==="banda"
+            ? `rebalanceia por banda de ${n2(Number(f.get("banda_pct")||5),0)} p.p.`
+            : `rebalanceamento ${f.get("rebalancear")||"nunca"}`}</span></div>
         <table><tbody>${lista.map(([a,p])=>`<tr>
           <td class="mono" style="font-weight:500">${esc(a)}</td>
           <td class="d mono ${p<0?"baixa":""}">${p<0?"vendido":"comprado"} ${n2(Math.abs(p),0)}%</td>
@@ -904,9 +933,13 @@ async function telaPublicar(){
 
     bt.disabled=true; bt.textContent="salvando…";
 
+    // rebalancear e banda_pct sao imutaveis (trigger trava_classe), entao
+    // este insert e a unica chance de defini-los
     const { data:c, error } = await sb.from("carteira").insert({
       usuario_id: eu.id, nome: f.get("nome").trim(),
-      descricao: f.get("descricao")||"", classe: f.get("classe") })
+      descricao: f.get("descricao")||"", classe: f.get("classe"),
+      rebalancear: f.get("rebalancear") || "nunca",
+      banda_pct: Math.min(100, Math.max(1, Math.round(Number(f.get("banda_pct")) || 5))) })
       .select().single();
     if(error){ bt.disabled=false; bt.textContent="Registrar";
       const m = error.message.includes("carteira_nome_unico")
