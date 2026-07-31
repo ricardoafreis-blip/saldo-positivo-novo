@@ -809,6 +809,13 @@ async function telaPublicar(){
       </select>
       <p id="regraClasse" style="font-size:12px;color:var(--graf);margin:-3px 0 13px">
         A classe não muda depois de criada. A regra fica no quadro ao lado.</p>
+      <div id="campoRF" style="display:none">
+        <label>Renda fixa, em % do dinheiro</label>
+        <input id="rendaFixa" type="number" step="1" min="50" max="80" value="60">
+        <p style="font-size:12px;color:var(--graf);margin:-11px 0 13px">
+          De 50% a 80%. O que sobra vai para ações — e na grade abaixo você
+          distribui <b>essa parte</b>, somando 100%.</p>
+      </div>
       <label>Rebalanceamento</label>
       <select name="rebalancear" id="selReb">
         <option value="nunca">nunca — o peso corre solto</option>
@@ -817,13 +824,6 @@ async function telaPublicar(){
         <option value="semanal">semanal</option>
         <option value="anual">anual</option>
       </select>
-      <div id="campoRF" style="display:none">
-        <label>Renda fixa, em % do dinheiro</label>
-        <input id="rendaFixa" type="number" step="1" min="50" max="80" value="60">
-        <p style="font-size:12px;color:var(--graf);margin:-11px 0 13px">
-          De 50% a 80%. O que sobra vai para ações — e na grade abaixo você
-          distribui <b>essa parte</b>, somando 100%.</p>
-      </div>
       <div id="campoBanda" style="display:none">
         <label>Banda, em pontos percentuais</label>
         <input name="banda_pct" type="number" step="1" min="1" max="100" value="5">
@@ -1646,6 +1646,11 @@ async function telaEditar(id){
   const atual=datas.length?decl[datas[0]]:[];
   const texto=atual.map(p=>`${p.ativo} ${n2(Math.abs(p.peso))} ${p.peso<0?"V":"C"}`).join("\n");
 
+  // Na 60/40 a grade da tela de editar tambem passa a valer DENTRO da parte
+  // de acoes. A renda fixa vigente e o que sobra da soma declarada.
+  const brutaAtual = atual.reduce((a,p)=>a+Math.abs(p.peso), 0);
+  const rfAtual = Math.min(80, Math.max(50, Math.round(100 - brutaAtual)));
+
   app().innerHTML = `
   <h1 style="font-size:27px;margin:30px 0 4px">Editar carteira</h1>
   <p style="color:var(--t2);margin-bottom:18px">${esc(c.nome)}</p>
@@ -1663,6 +1668,12 @@ async function telaEditar(id){
         <p style="font-size:12px;color:var(--t2);margin:0 0 14px">
           Isso cria uma declaração de hoje. As de dias anteriores ficam guardadas —
           é o histórico que mostra quando você mudou de ideia.</p>
+        ${c.classe === "sessenta_quarenta" ? `
+        <label>Renda fixa, em % do dinheiro</label>
+        <input id="rendaFixa" type="number" step="1" min="50" max="80" value="${rfAtual}">
+        <p style="font-size:12px;color:var(--graf);margin:-11px 0 13px">
+          De 50% a 80%. Na grade abaixo você distribui <b>a parte de ações</b>,
+          somando 100%.</p>` : ""}
         <label>Posições</label>
         ${gradeHTML()}
         <label>Por que você mudou (fica visível para assinantes)</label>
@@ -1699,7 +1710,16 @@ async function telaEditar(id){
     </div>
   </div>`;
 
-  ligarGrade((atual||[]).map(p=>[p.ativo, Math.round(Math.abs(p.peso)), p.peso<0?"V":"C"]), c.classe);
+  // para a 60/40, mostra os pesos como fatia da parte de acoes (somando 100)
+  const fatia = 100 - rfAtual;
+  ligarGrade((atual||[]).map(p=>[
+    p.ativo,
+    c.classe === "sessenta_quarenta" && fatia > 0
+      ? Math.round(Math.abs(p.peso) * 100 / fatia)
+      : Math.round(Math.abs(p.peso)),
+    p.peso<0?"V":"C"]), c.classe);
+  const elRF = $("#rendaFixa");
+  if(elRF) elRF.oninput = resumoGrade;
 
   $("#btNome").onclick = async()=>{
     const { error } = await sb.rpc("renomear_carteira",
@@ -1708,8 +1728,15 @@ async function telaEditar(id){
     $("#erro").innerHTML=aviso("Salvo."); telaEditar(id);
   };
   $("#btPos").onclick = async()=>{
-    const pesos = Object.entries(lerGrade()).map(([ativo,peso])=>({ ativo, peso }));
-    if(!pesos.length) return $("#erro").innerHTML=aviso("Nenhuma posição válida.",true);
+    let brutos = lerGrade();
+    if(!Object.keys(brutos).length) return $("#erro").innerHTML=aviso("Nenhuma posição válida.",true);
+    // mesma checagem da tela de criar, antes de ir ao banco
+    const falta = pendenciasClasse(c.classe, brutos);
+    if(falta.length) return $("#erro").innerHTML=aviso(
+      `Ainda não cabe na classe ${CLASSE[c.classe]?.nome||c.classe}: `+falta.join("; ")+".", true);
+    if(c.classe === "sessenta_quarenta" && modoSleeve())
+      brutos = converterSleeve(brutos, rendaFixaAtual());
+    const pesos = Object.entries(brutos).map(([ativo,peso])=>({ ativo, peso }));
     const { data:uni } = await sb.from("universo").select("ativo")
         .in("ativo", pesos.map(p=>p.ativo));
     const ok=new Set((uni||[]).map(x=>x.ativo));
