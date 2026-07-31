@@ -260,7 +260,10 @@ function proximaCotacao(){
 
 function tags(c){
   const t=[];
+  // Sem classe E sem posicao adotada nao da para deduzir nada: chutar
+  // "so comprada" para uma long & short recem-criada e pior que calar.
   if(c.classe && CLASSE[c.classe]) t.push(CLASSE[c.classe].nome);
+  else if(!c.bruta) return "";
   else if(c.liquida>=c.bruta-0.01) t.push("só comprada");
   else if(c.liquida<=-c.bruta+0.01) t.push("só vendida");
   else t.push("long &amp; short");
@@ -297,6 +300,27 @@ function gradeHTML(){
 // All in e Diversificada so compram; Vendida so vende. Antes a tela
 // aceitava qualquer lado e quem recusava era o banco, depois do clique.
 let CLASSE_ATUAL = "";
+// Na 60/40 a grade vale DENTRO da parte de acoes e soma 100%. Quem
+// converte para % do dinheiro e o site, na hora de salvar. So a tela de
+// criar tem esse campo; na de editar a grade continua em % do dinheiro.
+const modoSleeve = () => CLASSE_ATUAL === "sessenta_quarenta" && !!document.querySelector("#rendaFixa");
+function rendaFixaAtual(){
+  const el = document.querySelector("#rendaFixa");
+  return el ? Math.min(80, Math.max(50, Math.round(Number(el.value) || 60))) : 60;
+}
+// Converte % da parte de acoes em % do dinheiro, com sobra distribuida
+// para as maiores posicoes — assim a soma bate exata, sem casa decimal.
+function converterSleeve(pesos, rf){
+  const parte = 100 - rf;
+  const ent = Object.entries(pesos);
+  const exato = ent.map(([a,p]) => [a, p * parte / 100]);
+  const base  = exato.map(([a,v]) => [a, Math.floor(v)]);
+  let sobra = parte - base.reduce((s,[,v]) => s + v, 0);
+  exato.map((x,i) => [i, x[1] - Math.floor(x[1])])
+       .sort((x,y) => y[1] - x[1])
+       .forEach(([i]) => { if(sobra > 0){ base[i][1] += 1; sobra--; } });
+  return Object.fromEntries(base);
+}
 function ladosDaClasse(k){
   if(k === "diversificada" || k === "sessenta_quarenta") return "C";
   if(k === "vendida") return "V";
@@ -326,8 +350,13 @@ function linhaHTML(a,p,lado){
     <td style="padding:3px 0"><button type="button" class="px bt" title="remover"
       style="padding:4px 9px;margin:0">×</button></td></tr>`;
 }
+// Codigo repetido soma num so ativo. Isso e util (da para lancar duas
+// pernas do mesmo papel), mas confunde a contagem: dez linhas com um
+// codigo repetido sao nove papeis. LINHAS_REPETIDAS guarda quais foram,
+// para o conferidor avisar em vez de a pessoa recontar na mao.
+let LINHAS_REPETIDAS = [];
 function lerGrade(){
-  const pesos={};
+  const pesos={}, vezes={};
   document.querySelectorAll("#linhas tr").forEach(tr=>{
     const a=(tr.querySelector(".pa").value||"").trim().toUpperCase();
     // peso e sempre inteiro: 1% de precisao ja e mais fino do que
@@ -336,7 +365,9 @@ function lerGrade(){
     if(!a||!isFinite(w)||w===0) return;
     w = tr.querySelector(".pl").value==="V" ? -Math.abs(w) : Math.abs(w);
     pesos[a]=(pesos[a]||0)+w;
+    vezes[a]=(vezes[a]||0)+1;
   });
+  LINHAS_REPETIDAS = Object.keys(vezes).filter(a=>vezes[a]>1);
   return pesos;
 }
 // O que falta para a carteira caber na classe escolhida. Devolve lista
@@ -352,6 +383,9 @@ function pendenciasClasse(k, pesos){
   const temC = v.some(x=>x>0), temV = v.some(x=>x<0);
   const f = [];
   if(!n) return ["nenhuma posição preenchida"];
+  if(LINHAS_REPETIDAS.length)
+    f.push(`${LINHAS_REPETIDAS.join(" e ")} ${LINHAS_REPETIDAS.length>1?"aparecem":"aparece"}`
+         + ` em mais de uma linha e ${LINHAS_REPETIDAS.length>1?"contam":"conta"} como um papel só`);
 
   if(k==="diversificada"){                       // Comprada
     if(temV)   f.push("Comprada não aceita venda");
@@ -359,11 +393,19 @@ function pendenciasClasse(k, pesos){
     if(bruta>100) f.push(`soma ${Math.round(bruta)}% — o limite é 100%`);
   }
   if(k==="sessenta_quarenta"){
-    const rf = 100 - bruta;                      // só compra: caixa = renda fixa
     if(temV) f.push("60/40 não aceita venda");
-    if(bruta>100) f.push(`soma ${Math.round(bruta)}% — o limite é 100%`);
-    else if(rf<50 || rf>80)
-      f.push(`${Math.round(rf)}% em renda fixa — a faixa é de 50% a 80%`);
+    if(modoSleeve()){
+      const rf = rendaFixaAtual();
+      if(Math.round(bruta) !== 100)
+        f.push(`a parte de ações soma ${Math.round(bruta)}% — precisa somar 100%`);
+      else if(Object.values(converterSleeve(pesos, rf)).some(v => v === 0))
+        f.push("algum papel ficou pequeno demais e zerou na conversão — use menos papéis ou pesos maiores");
+    } else {
+      const rf = 100 - bruta;                    // tela de editar: % do dinheiro
+      if(bruta>100) f.push(`soma ${Math.round(bruta)}% — o limite é 100%`);
+      else if(rf<50 || rf>80)
+        f.push(`${Math.round(rf)}% em renda fixa — a faixa é de 50% a 80%`);
+    }
   }
   if(k==="long_short"){
     if(!(temC && temV)) f.push("Long × short exige ao menos uma compra e uma venda");
@@ -382,9 +424,15 @@ function resumoGrade(){
   const bruta=v.reduce((a,b)=>a+Math.abs(b),0), liq=v.reduce((a,b)=>a+b,0);
   const falta = pendenciasClasse(CLASSE_ATUAL, pesos);
   const nome = CLASSE[CLASSE_ATUAL]?.nome;
-  const linha =
-    `bruta <b>${n2(bruta,0)}%</b> · líquida <b>${n2(liq,0)}%</b> · caixa ${n2(100-liq,0)}%`
-    + (bruta>105?` · alavancada ${n2(bruta/100,1)}x`:"");
+  let linha;
+  if(modoSleeve()){
+    const rf = rendaFixaAtual();
+    linha = `renda fixa <b>${rf}%</b> · ações <b>${100-rf}%</b>`
+          + ` · a parte de ações soma <b>${n2(bruta,0)}%</b> de 100%`;
+  } else {
+    linha = `bruta <b>${n2(bruta,0)}%</b> · líquida <b>${n2(liq,0)}%</b> · caixa ${n2(100-liq,0)}%`
+          + (bruta>105?` · alavancada ${n2(bruta/100,1)}x`:"");
+  }
   const veredito = !CLASSE_ATUAL ? ""
     : falta.length
       ? `<div style="color:var(--baixa);margin-top:5px">Falta para ${nome}:
@@ -634,7 +682,9 @@ async function telaRanking(){
     ${lista.map((x,i)=>`<tr class="clicavel" onclick="location.hash='#/carteira/${x.c.id}'">
       <td class="mono pos">${String(i+1).padStart(2,"0")}</td>
       <td><span style="font-family:Newsreader,serif;font-weight:500;font-size:15px">${esc(x.c.nome)}</span>
-        <div class="meta">${esc(x.c.apelido)} · ${x.c.n_ativos} ativos · ${tags(x.c)}</div></td>
+        <div class="meta">${esc(x.c.apelido)} · ${x.c.n_ativos
+          ? `${x.c.n_ativos} ativos · ${tags(x.c)}`
+          : `estreia no próximo pregão${x.c.classe&&CLASSE[x.c.classe]?" · "+CLASSE[x.c.classe].nome:""}`}</div></td>
       <td class="d mono ${cor(x.m.hoje)}" style="${x.m.parcial?"opacity:.82":""}"
       title="${x.m.parcial?"parcial — o pregão ainda não fechou":"fechado"}">${pct(x.m.hoje)}${x.m.parcial?'<span style="font-size:9px;vertical-align:super;opacity:.7">•</span>':""}</td>
       <td class="d mono ${x.m.dias?cor(x.m.acum):"nulo"}">${x.m.dias?pct(x.m.acum):"estreia"}</td>
@@ -743,10 +793,8 @@ async function telaPublicar(){
   app().innerHTML = `
   <h1 style="font-size:27px;margin:30px 0 6px">Criar carteira</h1>
   <p style="color:var(--t2);max-width:58ch;margin-bottom:20px">
-    Escolha a classe primeiro: ela monta a grade no formato certo e define
-    contra quem esta carteira vai ser comparada. A classe não muda depois —
-    para outra estratégia, outra carteira. Os pesos são números inteiros, em
-    porcentagem do dinheiro; o que sobra é caixa e rende CDI.</p>
+    Escolha a classe primeiro — ela monta a grade no formato certo.
+    Pesos em números inteiros; o que sobra é caixa.</p>
   ${!count ? aviso("O universo de papéis está vazio. Um admin precisa atualizar em Admin → Atualizar universo.") : ""}
   <div id="erro"></div>
   <div class="duplo">
@@ -764,11 +812,18 @@ async function telaPublicar(){
       <label>Rebalanceamento</label>
       <select name="rebalancear" id="selReb">
         <option value="nunca">nunca — o peso corre solto</option>
-        <option value="banda">por banda — volta quando um peso se afastar demais</option>
+        <option value="banda">por banda — refaz a carteira toda quando um papel se afastar</option>
         <option value="mensal">mensal</option>
         <option value="semanal">semanal</option>
         <option value="anual">anual</option>
       </select>
+      <div id="campoRF" style="display:none">
+        <label>Renda fixa, em % do dinheiro</label>
+        <input id="rendaFixa" type="number" step="1" min="50" max="80" value="60">
+        <p style="font-size:12px;color:var(--graf);margin:-11px 0 13px">
+          De 50% a 80%. O que sobra vai para ações — e na grade abaixo você
+          distribui <b>essa parte</b>, somando 100%.</p>
+      </div>
       <div id="campoBanda" style="display:none">
         <label>Banda, em pontos percentuais</label>
         <input name="banda_pct" type="number" step="1" min="1" max="100" value="5">
@@ -785,26 +840,23 @@ async function telaPublicar(){
       <div class="card">
         <h3 style="font-size:15px;margin-bottom:9px" id="tituloAjuda">Como o peso funciona</h3>
         <div id="ajudaClasse"></div>
-        <p style="font-size:12.5px;color:var(--t2);margin:0 0 9px">
-          O que não somar 100% nos comprados é caixa, e caixa rende CDI. Venda a
-          descoberto entra dinheiro: 130 comprado e 40 vendido dá 10% de caixa,
-          não −30%.</p>
-        <p style="font-size:12.5px;color:var(--t2);margin:0 0 9px">
-          Cada classe tem o seu próprio limite — o de cima vale para a que
-          você escolheu. Onde se fala em 100% ou 200%, o limite entra:
-          exatamente 100% é aceito.</p>
-        <p style="font-size:12.5px;color:var(--t2);margin:0 0 9px">
-          Se a carteira perder tudo, ela é encerrada e sai do ranking.
-          O histórico fica guardado.</p>
-        <p style="font-size:12.5px;color:var(--t2);margin:0 0 9px">
-          <b>Rebalancear</b> é devolver os pesos ao que você declarou, desfazendo
-          a deriva do mercado. Em <b>nunca</b>, quem sobe vai ocupando mais espaço
-          sozinho. Em <b>banda</b>, isso só acontece quando algum papel se afasta
-          mais do que a banda escolhida — é o modo que mais combina com a 60/40,
-          porque ela sai da faixa de renda fixa sem ninguém fazer nada.</p>
         <p style="font-size:12.5px;color:var(--t2);margin:0">
-          Depois de registrado, o peso <b>anda sozinho</b> com o mercado até você
+          Depois de criada, o peso <b>anda sozinho</b> com o mercado até você
           declarar mudança.</p>
+        <details style="margin-top:12px">
+          <summary style="cursor:pointer;font-size:12.5px;color:var(--graf)">Detalhes</summary>
+          <p style="font-size:12.5px;color:var(--t2);margin:9px 0 0">
+            O que não somar 100% nos comprados é caixa, e caixa rende CDI. Venda a
+            descoberto entra dinheiro: 130 comprado e 40 vendido dá 10% de caixa,
+            não −30%. Os limites entram: exatamente 100% é aceito.</p>
+          <p style="font-size:12.5px;color:var(--t2);margin:9px 0 0">
+            <b>Rebalancear</b> devolve os pesos ao que você declarou. Na banda, basta
+            <b>um</b> papel se afastar mais que o limite para a carteira <b>inteira</b>
+            voltar ao declarado. A banda é em pontos: 3 pontos numa posição de 10%
+            dispara com alguma frequência; 5 pontos, quase nunca.</p>
+          <p style="font-size:12.5px;color:var(--t2);margin:9px 0 0">
+            Se a carteira perder tudo, ela é encerrada e sai do ranking.</p>
+        </details>
       </div>
       ${minhas?.length?`<details class="card" style="margin-top:13px">
         <summary style="cursor:pointer;font-size:15px;font-weight:600">Suas carteiras
@@ -848,9 +900,7 @@ async function telaPublicar(){
     // o painel lateral fala da classe escolhida, não de regra genérica
     $("#tituloAjuda").textContent = v ? `Classe ${v.nome}` : "Como o peso funciona";
     $("#ajudaClasse").innerHTML = v
-      ? `<p style="font-size:12.5px;color:var(--t2);margin:0 0 9px">${v.regra}
-         O banco recusa declaração que fuja disso — e a classe não muda depois,
-         nem por você, nem por admin. Para outra estratégia, outra carteira.</p>`
+      ? `<p style="font-size:12.5px;color:var(--t2);margin:0 0 9px">${v.regra}</p>`
       : "";
     // A grade passa a oferecer só os lados que a classe aceita. Se ainda
     // não há nenhum código digitado, ela também já vem montada no formato
@@ -861,13 +911,16 @@ async function telaPublicar(){
       .some(i => (i.value||"").trim());
     const molde = {
       diversificada:     Array.from({length:10}, ()=>["",10,"C"]),
-      sessenta_quarenta: Array.from({length:4},  ()=>["",10,"C"]),
+      sessenta_quarenta: Array.from({length:4},  ()=>["",25,"C"]),
       long_short:        [["",50,"C"],["",50,"C"],["",50,"V"]],
       vendida:           [["",50,"V"],["",50,"V"]],
     }[CLASSE_ATUAL];
+    $("#campoRF").style.display = CLASSE_ATUAL === "sessenta_quarenta" ? "block" : "none";
     if(vazia && molde) ligarGrade(molde, CLASSE_ATUAL);
     else aplicarLados();
+    resumoGrade();
   };
+  $("#rendaFixa").oninput = resumoGrade;
 
   // a banda so faz sentido na modalidade banda
   $("#selReb").onchange = e => {
@@ -877,7 +930,7 @@ async function telaPublicar(){
   $("#f").onsubmit = async e=>{
     e.preventDefault();
     const f = new FormData(e.target), bt = $("#bt");
-    const pesos = lerGrade();
+    let pesos = lerGrade();
     if(!Object.keys(pesos).length) return erroPub("Nenhuma posição válida — preencha código e peso.");
 
     if(!f.get("classe")) return erroPub(
@@ -888,6 +941,12 @@ async function telaPublicar(){
     const falta = pendenciasClasse(f.get("classe"), pesos);
     if(falta.length) return erroPub(
       `Esta carteira ainda não cabe na classe ${CLASSE[f.get("classe")].nome}: ` + falta.join("; ") + ".");
+
+    // na 60/40 o que foi digitado e % da parte de acoes: converte para
+    // % do dinheiro antes de qualquer coisa que va ao banco
+    const rfEscolhida = rendaFixaAtual();
+    if(f.get("classe") === "sessenta_quarenta" && modoSleeve())
+      pesos = converterSleeve(pesos, rfEscolhida);
 
     const bruta = Object.values(pesos).reduce((a,b)=>a+Math.abs(b),0);
 
@@ -966,6 +1025,7 @@ async function telaPublicar(){
     }
 
     if(f.get("nota")) await sb.from("nota").insert({ carteira_id:c.id, texto:f.get("nota") });
+    CACHE_CLASSE = null;        // carteira nova: o cache de classes envelheceu
     location.hash = "#/carteira/"+c.id; rotear();
   };
 }
@@ -1658,7 +1718,7 @@ async function telaEditar(id){
     const { error } = await sb.rpc("declarar",
       { cid:id, pesos, nota_txt:$("#nota").value||null });
     if(error) return $("#erro").innerHTML=aviso(error.message,true);
-    $("#erro").innerHTML=aviso("Declarado. Vale a partir de hoje."); telaEditar(id);
+    $("#erro").innerHTML=aviso("Declarado. Passa a valer no próximo pregão."); telaEditar(id);
   };
   $("#btDel").onclick = async()=>{
     const temDias = (dias||[]).length > 0;
