@@ -215,13 +215,13 @@ function aviso(t, erro){ return `<div class="msg${erro?" erro":""}">${esc(t)}</d
 // 100% e 200% são sempre INCLUSIVE.
 const CLASSE = {
   diversificada:     { nome:"Comprada",
-    regra:"Só compra, exatamente 10 papéis. A soma dos pesos pode ir até 100% do dinheiro." },
+    regra:"Só compra, exatamente 10 papéis somando 100% do dinheiro. Não deixa caixa." },
   sessenta_quarenta: { nome:"60/40",
     regra:"Só compra, com 50% a 80% do dinheiro em renda fixa e o resto em ações — 100% na montagem." },
   long_short:        { nome:"Long × short",
     regra:"Compra e venda ao mesmo tempo. A soma vai até 200% e a diferença entre elas até 100%." },
   vendida:           { nome:"Vendida",
-    regra:"Só venda a descoberto, até 100% do patrimônio. A carteira encerra se perder tudo." },
+    regra:"Só venda a descoberto, até 100% do patrimônio." },
 };
 
 // A view ranking não tem a coluna classe, então vem de carteira_classe.
@@ -397,7 +397,8 @@ function pendenciasClasse(k, pesos){
   if(k==="diversificada"){                       // Comprada
     if(temV)   f.push("Comprada não aceita venda");
     if(n!==10) f.push(`${n} ${n===1?"papel":"papéis"} — Comprada exige exatamente 10`);
-    if(bruta>100) f.push(`soma ${Math.round(bruta)}% — o limite é 100%`);
+    if(Math.round(bruta)!==100)
+      f.push(`soma ${Math.round(bruta)}% — Comprada não deixa caixa: tem que somar 100%`);
   }
   if(k==="sessenta_quarenta"){
     if(temV) f.push("60/40 não aceita venda");
@@ -922,17 +923,9 @@ async function telaPublicar(){
           <summary style="cursor:pointer;font-size:12.5px;color:var(--graf)">Detalhes</summary>
           <div id="detalhesClasse"></div>
           <p style="font-size:12.5px;color:var(--t2);margin:9px 0 0">
-            <b>Rebalancear</b> devolve os pesos ao que você declarou. Na banda, basta
-            <b>um</b> papel se afastar mais que o limite para a carteira <b>inteira</b>
-            voltar ao declarado. A banda é em pontos: 3 pontos numa posição de 10%
-            dispara com alguma frequência; 5 pontos, quase nunca.</p>
-          <p style="font-size:12.5px;color:var(--t2);margin:9px 0 0">
             Depois de criada você muda o que quiser — nome, papéis, pesos,
             renda fixa e o próprio rebalanceamento. <b>Só a classe não muda</b>,
             porque ela define contra quem a carteira é comparada.</p>
-          <p style="font-size:12.5px;color:var(--t2);margin:9px 0 0">
-            Na 60/40, a grade vale <b>dentro da parte de ações</b> e soma 100%.
-            O site converte para porcentagem do dinheiro ao salvar.</p>
           <p style="font-size:12.5px;color:var(--t2);margin:9px 0 0">
             Se a carteira perder tudo, ela é encerrada e sai do ranking.</p>
         </details>
@@ -993,12 +986,23 @@ async function telaPublicar(){
     }[CLASSE_ATUAL];
     $("#campoRF").style.display = CLASSE_ATUAL === "sessenta_quarenta" ? "block" : "none";
     // detalhe de caixa so faz sentido conforme a classe compre ou venda
-    const soCompra = ladosDaClasse(CLASSE_ATUAL) === "C";
-    $("#detalhesClasse").innerHTML = !CLASSE_ATUAL ? "" :
-      `<p style="font-size:12.5px;color:var(--t2);margin:9px 0 0">${soCompra
-        ? "O que não vai para papéis fica em caixa e rende CDI."
-        : "Venda a descoberto entra dinheiro: 130 comprado e 40 vendido dá 10% de caixa, não −30%."
-      } Os limites entram: exatamente 100% é aceito.</p>`;
+    const P = t => `<p style="font-size:12.5px;color:var(--t2);margin:9px 0 0">${t}</p>`;
+    const detalhe = {
+      diversificada: P("Não há caixa: os dez papéis somam 100% do dinheiro.")
+        + P("O rebalanceamento devolve os dez pesos ao declarado. Na banda, basta "
+          + "<b>um</b> papel se afastar mais que o limite para a carteira <b>inteira</b> "
+          + "voltar. A banda é em pontos: 3 pontos numa posição de 10% dispara com alguma "
+          + "frequência; 5 pontos, quase nunca."),
+      sessenta_quarenta: P("A grade vale <b>dentro da parte de ações</b> e soma 100%. "
+          + "O site converte para porcentagem do dinheiro ao salvar.")
+        + P("Aqui o rebalanceamento olha a <b>proporção</b> entre renda fixa e ações, não "
+          + "papel a papel: uma 60/40 que virar 65/35 estourou uma banda de 5 pontos."),
+      long_short: P("Venda a descoberto entra dinheiro: 130 comprado e 40 vendido dá 10% "
+          + "de caixa, não −30%. Os limites entram: exatamente 100% é aceito."),
+      vendida: P("A venda a descoberto entra como caixa, que rende. Os limites entram: "
+          + "exatamente 100% é aceito."),
+    };
+    $("#detalhesClasse").innerHTML = detalhe[CLASSE_ATUAL] || "";
     if(vazia && molde) ligarGrade(molde, CLASSE_ATUAL);
     else aplicarLados();
     resumoGrade();
