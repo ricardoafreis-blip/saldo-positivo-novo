@@ -163,7 +163,7 @@ Nada aqui é recomendação — cada carteira é anotação pessoal de quem publ
 
 <header><div class="w"><nav>
   <a href="#/" class="marca" style="margin-right:8px">Saldo Positivo</a>
-  <span class="bloco"><a href="#/">Ranking</a><a href="#/comparar">Comparar</a><span id="navPub"></span></span>
+  <span class="bloco"><a href="#/">Ranking</a><span id="navPub"></span></span>
   <span class="divisor"></span>
   <span class="bloco"><a href="#/apostar">Palpitar</a><a href="#/placar">Placar</a><a href="#/duelo">Duelo</a></span>
   <span class="dir" id="navDir"></span>
@@ -460,7 +460,10 @@ function metricas(serie){
       sharpe = ((ann - CDI_ANO) / vol) * (n / (n + 40));
     }
   }
-  let pico=0, dd=0;
+  // O pico parte de 100, que e a base do indice. Comecando em zero, o
+  // primeiro pregao virava o proprio pico e a carteira nunca aparecia
+  // abaixo dele: quem caiu no primeiro dia marcava drawdown 0.
+  let pico=100, dd=0;
   serie.forEach(x=>{ pico=Math.max(pico,x.indice); dd=Math.min(dd, x.indice/pico-1); });
   return {dias:n, acum, vol, sharpe, dd, hoje:r[n-1]};
 }
@@ -595,7 +598,7 @@ async function telaRanking(){
       alavancagem ficam abertas a todos. Os papéis e os pesos, não.</p>
   </div>
   <div class="chips">
-    ${[["acum","Acumulado"],["hoje","Hoje"],["sharpe","Sharpe"],["dd","Menor queda"]]
+    ${[["acum","Acumulado"],["hoje","Hoje"],["sharpe","Sharpe"],["dd","Menor drawdown"]]
       .map(([k,r])=>`<a href="#/?ordem=${k}${filtro?"&classe="+filtro:""}"
         class="chip${ordem===k?" on":""}">${r}</a>`).join("")}
     <span class="divisor"></span>
@@ -626,7 +629,7 @@ async function telaRanking(){
       <p style="color:var(--t2)">Publique a primeira — o ranking começa a contar a partir de hoje.</p>
       <a href="#/publicar" class="bt cheio" style="margin-top:12px">Criar carteira</a></div>`
   : `<table><thead><tr><th></th><th>Carteira</th><th class="d">Hoje</th>
-      <th class="d">Acumulado</th><th class="d">Sharpe</th><th class="d">Queda máx</th>
+      <th class="d">Acumulado</th><th class="d">Sharpe</th><th class="d">Drawdown</th>
       <th class="d">Dias</th></tr></thead><tbody>
     ${lista.map((x,i)=>`<tr class="clicavel" onclick="location.hash='#/carteira/${x.c.id}'">
       <td class="mono pos">${String(i+1).padStart(2,"0")}</td>
@@ -1215,7 +1218,7 @@ async function telaComparar(){
     oscilação alta não é a mesma coisa que retorno estável.</p>
   ${!l.length?`<div class="card" style="text-align:center;padding:34px">Nenhuma carteira ainda.</div>`
   :`<table><thead><tr><th>Carteira</th><th>Perfil</th><th class="d">Hoje</th>
-    <th class="d">Acumulado</th><th class="d">Oscilação</th><th class="d">Queda máx</th>
+    <th class="d">Acumulado</th><th class="d">Oscilação</th><th class="d">Drawdown</th>
     <th class="d">Sharpe</th><th class="d">Bruta</th><th class="d">Líquida</th></tr></thead><tbody>
     ${l.sort((a,b)=>b.m.acum-a.m.acum).map(x=>`<tr class="clicavel"
       onclick="location.hash='#/carteira/${x.c.id}'">
