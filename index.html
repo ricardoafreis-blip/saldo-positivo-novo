@@ -197,6 +197,7 @@ const pct = (v,c=2) => v==null ? "—" : (v>=0?"+":"") + (v*100).toFixed(c).repl
 const n2  = (v,c=2) => v==null ? "—" : v.toFixed(c).replace(".",",");
 const esc = s => String(s??"").replace(/[<>&"]/g, m => ({"<":"&lt;",">":"&gt;","&":"&amp;",'"':"&quot;"}[m]));
 const cor = v => v>=0 ? "alta" : "baixa";
+const dataBR = d => d ? String(d).slice(0,10).split("-").reverse().join("/") : "";
 
 function aviso(t, erro){ return `<div class="msg${erro?" erro":""}">${esc(t)}</div>`; }
 // As quatro classes. Escolhidas no nascimento da carteira e imutáveis:
@@ -546,6 +547,78 @@ async function pintarFaixa(){
   el.style.display = "block";
 }
 
+// ═══════════════════════════════════════════ grafico
+// Tres curvas em base 100 a partir do primeiro pregao da carteira:
+// a propria carteira, o Ibovespa e o CDI. O CDI e a MESMA taxa que o
+// fechar_dia usa — se um dia ela mudar la, tem que mudar aqui tambem.
+// A renda fixa e o LFTS11, ETF de LFT: acompanha a Selic e o robo ja
+// busca cotacao dele como qualquer papel. Melhor que constante editavel,
+// porque constante depende de alguem lembrar de editar quando a Selic
+// mudar. So cai na taxa fixa se o papel nao estiver no universo.
+const REFERENCIAS = ["^BVSP", "LFTS11"];
+const CDI_DIA = Math.pow(1.105, 1/252) - 1;
+function grafico(serie, refs){
+  if(!serie || serie.length < 2) return "";
+
+  const dias  = serie.map(x => x.data);
+  const cart  = serie.map(x => x.indice);
+
+  const oscDe = tk => {
+    const m = {};
+    (refs||[]).filter(x => x.ativo === tk).forEach(x => { m[x.data] = x.valor; });
+    return m;
+  };
+  const oIbov = oscDe("^BVSP"), oRF = oscDe("LFTS11");
+  const temIbov = Object.keys(oIbov).length > 0;
+  const temRF   = Object.keys(oRF).length   > 0;
+
+  let iv = 100, ic = 100;
+  const ibov = [], cdi = [];
+  dias.forEach(d => {
+    iv *= 1 + (oIbov[d] ?? 0);   // pregão sem cotação não move a curva
+    ic *= 1 + (temRF ? (oRF[d] ?? 0) : CDI_DIA);
+    ibov.push(iv); cdi.push(ic);
+  });
+  const nomeRF = temRF ? "LFTS11" : "CDI estimado";
+
+  const L=44, R=10, T=10, B=22, W=560, H=190;
+  const todos = cart.concat(cdi, temIbov ? ibov : []);
+  let lo = Math.min(...todos), hi = Math.max(...todos);
+  const folga = (hi - lo) * .12 || 1; lo -= folga; hi += folga;
+  const px = i => L + (W-L-R) * (dias.length===1 ? 0 : i/(dias.length-1));
+  const py = v => T + (H-T-B) * (1 - (v-lo)/(hi-lo));
+  const linha = arr => arr.map((v,i)=>`${i?"L":"M"}${px(i).toFixed(1)},${py(v).toFixed(1)}`).join("");
+  const fim = arr => arr[arr.length-1]/100 - 1;
+
+  // quatro linhas de grade, com o 100 sempre marcado
+  const marcas = [lo, (lo+hi)/2, hi, 100].filter(v => v>=lo && v<=hi);
+
+  return `<div class="card" style="margin-top:16px">
+    <h3 style="font-size:16px;margin-bottom:4px">Contra o mercado</h3>
+    <p style="font-size:11.5px;color:var(--graf);margin:0 0 10px">
+      Base 100 no primeiro pregão da carteira.
+      <span style="color:var(--tinta)">━ carteira ${pct(fim(cart))}</span>
+      ${temIbov?` · <span style="color:var(--graf)">━ Ibovespa ${pct(fim(ibov))}</span>`:""}
+      · <span style="color:var(--lacre)">━ ${nomeRF} ${pct(fim(cdi))}</span></p>
+    <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;overflow:visible">
+      ${marcas.map(v=>`<g><line x1="${L}" x2="${W-R}" y1="${py(v).toFixed(1)}" y2="${py(v).toFixed(1)}"
+        stroke="var(--linha2)" stroke-width=".5"${Math.abs(v-100)<.01?' stroke-dasharray="3 3"':""}/>
+        <text x="${L-6}" y="${(py(v)+3).toFixed(1)}" text-anchor="end"
+          style="font-size:9px;fill:var(--graf)">${n2(v,0)}</text></g>`).join("")}
+      ${temIbov?`<path d="${linha(ibov)}" fill="none" stroke="var(--graf)" stroke-width="1"/>`:""}
+      <path d="${linha(cdi)}" fill="none" stroke="var(--lacre)" stroke-width="1" stroke-dasharray="4 3"/>
+      <path d="${linha(cart)}" fill="none" stroke="var(--tinta)" stroke-width="1.8"/>
+      <text x="${L}" y="${H-6}" style="font-size:9px;fill:var(--graf)">${dataBR(dias[0])}</text>
+      <text x="${W-R}" y="${H-6}" text-anchor="end"
+        style="font-size:9px;fill:var(--graf)">${dataBR(dias[dias.length-1])}</text>
+    </svg>
+    ${!temIbov||!temRF?`<p style="font-size:11.5px;color:var(--graf);margin:8px 0 0">
+      ${!temIbov?"Sem cotação do Ibovespa no período. ":""}${!temRF
+        ? "LFTS11 fora do universo: a linha de renda fixa está estimada em 10,5% ao ano, não medida."
+        : ""}</p>`:""}
+  </div>`;
+}
+
 // ═══════════════════════════════════════════ extrato
 // Compara cada declaracao com a anterior e descreve em portugues o que
 // mudou. Nao precisa de tabela nova: a posicao ja guarda toda declaracao
@@ -813,8 +886,7 @@ async function telaPublicar(){
         <label>Renda fixa, em % do dinheiro</label>
         <input id="rendaFixa" type="number" step="1" min="50" max="80" value="60">
         <p style="font-size:12px;color:var(--graf);margin:-11px 0 13px">
-          De 50% a 80%. O que sobra vai para ações — e na grade abaixo você
-          distribui <b>essa parte</b>, somando 100%.</p>
+          Na grade abaixo você distribui <b>a parte de ações</b>, somando 100%.</p>
       </div>
       <label>Rebalanceamento</label>
       <select name="rebalancear" id="selReb">
@@ -829,8 +901,9 @@ async function telaPublicar(){
         <input name="banda_pct" type="number" step="1" min="1" max="100" value="5">
       </div>
       <p style="font-size:12px;color:var(--graf);margin:-3px 0 13px">
-        Assim como a classe, <b>não muda depois de criada</b> — poder ligar e
-        desligar seria escolher a régua depois de ver o resultado.</p>
+        O rebalanceamento, como a classe, <b>não muda depois de criada</b> —
+        ligar e desligar seria escolher a régua vendo o resultado. Os papéis,
+        os pesos e a renda fixa você altera quando quiser.</p>
       <label>Posições</label>
       ${gradeHTML()}
       <label>Anotação desta mudança (opcional)</label><input name="nota" maxlength="200">
@@ -845,15 +918,16 @@ async function telaPublicar(){
           declarar mudança.</p>
         <details style="margin-top:12px">
           <summary style="cursor:pointer;font-size:12.5px;color:var(--graf)">Detalhes</summary>
-          <p style="font-size:12.5px;color:var(--t2);margin:9px 0 0">
-            O que não somar 100% nos comprados é caixa, e caixa rende CDI. Venda a
-            descoberto entra dinheiro: 130 comprado e 40 vendido dá 10% de caixa,
-            não −30%. Os limites entram: exatamente 100% é aceito.</p>
+          <div id="detalhesClasse"></div>
           <p style="font-size:12.5px;color:var(--t2);margin:9px 0 0">
             <b>Rebalancear</b> devolve os pesos ao que você declarou. Na banda, basta
             <b>um</b> papel se afastar mais que o limite para a carteira <b>inteira</b>
             voltar ao declarado. A banda é em pontos: 3 pontos numa posição de 10%
             dispara com alguma frequência; 5 pontos, quase nunca.</p>
+          <p style="font-size:12.5px;color:var(--t2);margin:9px 0 0">
+            O que muda depois de criada: nome, descrição, papéis e pesos — e, na
+            60/40, a proporção de renda fixa. O que não muda: a classe e o
+            rebalanceamento.</p>
           <p style="font-size:12.5px;color:var(--t2);margin:9px 0 0">
             Se a carteira perder tudo, ela é encerrada e sai do ranking.</p>
         </details>
@@ -916,6 +990,13 @@ async function telaPublicar(){
       vendida:           [["",50,"V"],["",50,"V"]],
     }[CLASSE_ATUAL];
     $("#campoRF").style.display = CLASSE_ATUAL === "sessenta_quarenta" ? "block" : "none";
+    // detalhe de caixa so faz sentido conforme a classe compre ou venda
+    const soCompra = ladosDaClasse(CLASSE_ATUAL) === "C";
+    $("#detalhesClasse").innerHTML = !CLASSE_ATUAL ? "" :
+      `<p style="font-size:12.5px;color:var(--t2);margin:9px 0 0">${soCompra
+        ? "O que não vai para papéis fica em caixa e rende CDI."
+        : "Venda a descoberto entra dinheiro: 130 comprado e 40 vendido dá 10% de caixa, não −30%."
+      } Os limites entram: exatamente 100% é aceito.</p>`;
     if(vazia && molde) ligarGrade(molde, CLASSE_ATUAL);
     else aplicarLados();
     resumoGrade();
@@ -1042,6 +1123,12 @@ async function telaCarteira(id){
   const { data:serie } = await sb.from("retorno_dia").select("data,retorno,indice")
                                  .eq("carteira_id", id).order("data");
   const m = metricas(serie);
+  // Ibovespa do mesmo periodo, do ^BVSP que o robo ja grava. Nao custa
+  // chamada de API: e a mesma tabela que alimenta o fechamento.
+  const { data:refs } = serie?.length
+    ? await sb.from("oscilacao").select("ativo,data,valor").in("ativo", REFERENCIAS)
+              .gte("data", serie[0].data).order("data")
+    : { data: [] };
   // se as regras do banco liberarem, vem; senão volta vazio — é o lacre funcionando
   const { data:pesos } = await sb.from("peso_atual").select("ativo,peso,marco").eq("carteira_id", id);
   // o declarado da mesma data que está carregada: é a referência de
@@ -1129,9 +1216,11 @@ async function telaCarteira(id){
       <b>bruta ${n2(c.bruta,0)}%</b> · <b>líquida ${n2(c.liquida,0)}%</b> ·
       caixa ${n2(c.caixa,0)}%</div>
   </div>
+  ${grafico(serie, refs)}
   ${abre ? `<div class="card">
     <div style="font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--graf);margin-bottom:10px">
-      Papéis e pesos${marcoAtual?` · declarado em ${marcoAtual}`:""}</div>
+      Papéis e pesos${extrato.length?` · desde ${dataBR(extrato[extrato.length-1].data)}`:""}
+      ${extrato.length>1?` · última mudança em ${dataBR(marcoAtual)}`:""}</div>
     <table><thead><tr><th></th><th></th>
       <th class="d" style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--graf)">declarado</th>
       <th class="d" style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--graf)">atual</th>
@@ -1161,7 +1250,7 @@ async function telaCarteira(id){
       <div style="font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--graf);margin-bottom:9px">
         Extrato · ${extrato.length} ${extrato.length===1?"declaração":"declarações"}</div>
       ${extrato.map(e=>`<div style="padding:9px 0;border-bottom:1px solid var(--p3)">
-        <span class="mono" style="font-size:11.5px;color:var(--graf)">${e.data}</span>
+        <span class="mono" style="font-size:11.5px;color:var(--graf)">${dataBR(e.data)}</span>
         ${e.abertura?`<span class="tag" style="margin-left:7px">abertura</span>`:""}
         <div style="font-size:12.5px;color:var(--t2);margin-top:4px">
           ${e.acoes.length ? e.acoes.map(esc).join(" · ")
