@@ -170,8 +170,8 @@ Nada aqui é recomendação — cada carteira é anotação pessoal de quem publ
   <span class="bloco"><span class="rot">carteiras</span>
     <span class="itens"><a href="#/">Ranking</a><span id="navPub"></span></span></span>
   <span class="divisor"></span>
-  <span class="bloco"><span class="rot">tiro curto</span>
-    <span class="itens"><a href="#/apostar">Palpitar</a><a href="#/placar">Placar</a><a href="#/duelo">Duelo</a></span></span>
+  <span class="bloco"><span class="rot">diversão</span>
+    <span class="itens"><a href="#/tiro-curto">Tiro curto</a><a href="#/placar">Placar</a><a href="#/duelo">Duelo</a></span></span>
   <span class="dir" id="navDir"></span>
 </nav></div></header>
 
@@ -1906,7 +1906,7 @@ function telaNovaSenha(){
 // fechamento. O placar é por DIA, não por operação — quem entra com 10
 // papéis não leva vantagem sobre quem entra com 1.
 
-async function telaApostar(){
+async function telaTiroCurto(){
   if(!eu){ location.hash="#/entrar"; return rotear(); }
   app().innerHTML = `<div class="carreg">carregando…</div>`;
 
@@ -2005,12 +2005,12 @@ async function telaApostar(){
     const { error } = await sb.from("aposta")
       .insert({ data: prox, ativo: a, direcao: $("#apDir").value });
     if(error) return $("#erro").innerHTML = aviso(error.message, true);
-    telaApostar();
+    telaTiroCurto();
   };
 
   document.querySelectorAll(".ap-del").forEach(b => b.onclick = async () => {
     await sb.from("aposta").delete().eq("id", Number(b.dataset.id));
-    telaApostar();
+    telaTiroCurto();
   });
 }
 
@@ -2063,9 +2063,9 @@ async function telaPlacar(){
         <td class="d mono ${cor(p.pts)}"><b>${p.pts>0?"+":""}${p.pts}</b></td></tr>`).join("")}
       </tbody></table>`
     : `<div class="card"><p style="margin:0;color:var(--t2)">
-        Nenhum palpite apurado ainda. <a href="#/apostar">Faça o primeiro</a>.</p></div>`}`
+        Nenhum tiro apurado ainda. <a href="#/tiro-curto">Dê o primeiro</a>.</p></div>`}`
   : `<div class="card" style="margin-top:24px"><p style="margin:0;color:var(--t2)">
-      <a href="#/entrar">Entre</a> para palpitar.</p></div>`}`;
+      <a href="#/entrar">Entre</a> para dar o seu.</p></div>`}`;
 }
 
 function rotear(){
@@ -2076,7 +2076,8 @@ function rotear(){
   if(h==="#/entrar")          return telaEntrar();
   if(h==="#/publicar")        return telaPublicar();
   if(h==="#/duelo")           return telaDuelo();
-  if(h==="#/apostar")         return telaApostar();
+  // rota antiga continua valendo: link já compartilhado não pode quebrar
+  if(h==="#/tiro-curto" || h==="#/apostar") return telaTiroCurto();
   if(h==="#/placar")          return telaPlacar();
   if(h==="#/indicar")         return telaIndicar();
   if(h==="#/assinar")         return telaAssinar();
