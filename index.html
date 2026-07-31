@@ -880,13 +880,10 @@ async function telaPublicar(){
         <option value="">escolha a classe…</option>
         ${Object.entries(CLASSE).map(([k,v])=>`<option value="${k}">${v.nome}</option>`).join("")}
       </select>
-      <p id="regraClasse" style="font-size:12px;color:var(--graf);margin:-3px 0 13px">
-        A classe não muda depois de criada. A regra fica no quadro ao lado.</p>
+      <p id="regraClasse" style="font-size:12px;color:var(--graf);margin:-3px 0 13px"></p>
       <div id="campoRF" style="display:none">
-        <label>Renda fixa, em % do dinheiro</label>
+        <label>Renda fixa · entre 50% e 80%</label>
         <input id="rendaFixa" type="number" step="1" min="50" max="80" value="60">
-        <p style="font-size:12px;color:var(--graf);margin:-11px 0 13px">
-          Na grade abaixo você distribui <b>a parte de ações</b>, somando 100%.</p>
       </div>
       <label>Rebalanceamento</label>
       <select name="rebalancear" id="selReb">
@@ -900,10 +897,7 @@ async function telaPublicar(){
         <label>Banda, em pontos percentuais</label>
         <input name="banda_pct" type="number" step="1" min="1" max="100" value="5">
       </div>
-      <p style="font-size:12px;color:var(--graf);margin:-3px 0 13px">
-        O rebalanceamento, como a classe, <b>não muda depois de criada</b> —
-        ligar e desligar seria escolher a régua vendo o resultado. Os papéis,
-        os pesos e a renda fixa você altera quando quiser.</p>
+
       <label>Posições</label>
       ${gradeHTML()}
       <label>Anotação desta mudança (opcional)</label><input name="nota" maxlength="200">
@@ -925,9 +919,12 @@ async function telaPublicar(){
             voltar ao declarado. A banda é em pontos: 3 pontos numa posição de 10%
             dispara com alguma frequência; 5 pontos, quase nunca.</p>
           <p style="font-size:12.5px;color:var(--t2);margin:9px 0 0">
-            O que muda depois de criada: nome, descrição, papéis e pesos — e, na
-            60/40, a proporção de renda fixa. O que não muda: a classe e o
-            rebalanceamento.</p>
+            Depois de criada você muda o que quiser — nome, papéis, pesos,
+            renda fixa e o próprio rebalanceamento. <b>Só a classe não muda</b>,
+            porque ela define contra quem a carteira é comparada.</p>
+          <p style="font-size:12.5px;color:var(--t2);margin:9px 0 0">
+            Na 60/40, a grade vale <b>dentro da parte de ações</b> e soma 100%.
+            O site converte para porcentagem do dinheiro ao salvar.</p>
           <p style="font-size:12.5px;color:var(--t2);margin:9px 0 0">
             Se a carteira perder tudo, ela é encerrada e sai do ranking.</p>
         </details>
@@ -968,9 +965,7 @@ async function telaPublicar(){
 
   $("#selClasse").onchange = e => {
     const v = CLASSE[e.target.value];
-    $("#regraClasse").innerHTML = v
-      ? `Classe <b>${v.nome}</b> — não muda depois de criada. A regra está no quadro ao lado.`
-      : "A classe não muda depois de criada. A regra fica no quadro ao lado.";
+    $("#regraClasse").innerHTML = v ? "" : "";
     // o painel lateral fala da classe escolhida, não de regra genérica
     $("#tituloAjuda").textContent = v ? `Classe ${v.nome}` : "Como o peso funciona";
     $("#ajudaClasse").innerHTML = v
@@ -1750,6 +1745,17 @@ async function telaEditar(id){
         <h3 style="font-size:16px;margin-bottom:14px">Nome e descrição</h3>
         <label>Nome</label><input id="nome" maxlength="40" value="${esc(c.nome)}">
         <label>Descrição</label><input id="desc" maxlength="160" value="${esc(c.descricao||"")}">
+        <label>Rebalanceamento</label>
+        <select id="selRebEd">
+          ${[["nunca","nunca — o peso corre solto"],
+             ["banda","por banda — refaz a carteira toda quando um papel se afastar"],
+             ["mensal","mensal"],["semanal","semanal"],["anual","anual"]]
+            .map(([k,r])=>`<option value="${k}"${c.rebalancear===k?" selected":""}>${r}</option>`).join("")}
+        </select>
+        <div id="campoBandaEd" style="display:${c.rebalancear==="banda"?"block":"none"}">
+          <label>Banda, em pontos percentuais</label>
+          <input id="bandaEd" type="number" step="1" min="1" max="100" value="${Math.round(c.banda_pct||5)}">
+        </div>
         <button class="bt cheio" id="btNome">Salvar</button>
       </div>
       <div class="card" style="margin-top:16px">
@@ -1810,10 +1816,26 @@ async function telaEditar(id){
   const elRF = $("#rendaFixa");
   if(elRF) elRF.oninput = resumoGrade;
 
+  $("#selRebEd").onchange = e =>
+    $("#campoBandaEd").style.display = e.target.value === "banda" ? "block" : "none";
+
   $("#btNome").onclick = async()=>{
     const { error } = await sb.rpc("renomear_carteira",
       { cid:id, novo_nome:$("#nome").value, nova_desc:$("#desc").value });
     if(error) return $("#erro").innerHTML=aviso(error.message,true);
+
+    // rebalanceamento agora pode mudar. A troca fica registrada como nota,
+    // para o extrato mostrar que a regra mudou e quando.
+    const novoReb = $("#selRebEd").value;
+    const novaBanda = Math.min(100, Math.max(1, Math.round(Number($("#bandaEd")?.value) || 5)));
+    if(novoReb !== c.rebalancear || (novoReb === "banda" && novaBanda !== Math.round(c.banda_pct||5))){
+      const { error:e2 } = await sb.from("carteira")
+        .update({ rebalancear: novoReb, banda_pct: novaBanda }).eq("id", id);
+      if(e2) return $("#erro").innerHTML=aviso(e2.message,true);
+      await sb.from("nota").insert({ carteira_id:id,
+        texto:`Rebalanceamento alterado de ${c.rebalancear} para ${novoReb}`
+            + (novoReb==="banda"?` (banda de ${novaBanda} p.p.)`:"") });
+    }
     $("#erro").innerHTML=aviso("Salvo."); telaEditar(id);
   };
   $("#btPos").onclick = async()=>{
