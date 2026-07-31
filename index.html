@@ -53,8 +53,12 @@ nav .marca{font-family:Newsreader,serif;font-weight:500;font-size:21px;letter-sp
 nav a,nav button.lnk{font-size:13px;color:var(--t2);background:none;transition:color .15s}
 nav a:hover,nav button.lnk:hover{color:var(--ouro2)}
 nav .marca:hover{color:var(--tinta)}
-nav .dir{margin-left:auto;display:flex;gap:14px;align-items:center;font-size:13px}
-nav .bloco{display:flex;gap:16px;align-items:center}
+nav .dir{margin-left:auto;display:flex;gap:14px;align-items:center;font-size:13px;align-self:flex-end}
+nav .divisor{align-self:stretch;margin:4px 0}
+nav .bloco{display:flex;flex-direction:column;gap:1px}
+nav .bloco .itens{display:flex;gap:16px;align-items:center}
+nav .rot{font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--graf);opacity:.75;line-height:1.4}
 .pill{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;padding:3px 9px;
   border:1px solid var(--lacre);color:var(--ouro2);border-radius:99px;background:var(--ouro-fraco)}
 
@@ -163,9 +167,11 @@ Nada aqui é recomendação — cada carteira é anotação pessoal de quem publ
 
 <header><div class="w"><nav>
   <a href="#/" class="marca" style="margin-right:8px">Saldo Positivo</a>
-  <span class="bloco"><a href="#/">Ranking</a><span id="navPub"></span></span>
+  <span class="bloco"><span class="rot">carteiras</span>
+    <span class="itens"><a href="#/">Ranking</a><span id="navPub"></span></span></span>
   <span class="divisor"></span>
-  <span class="bloco"><a href="#/apostar">Palpitar</a><a href="#/placar">Placar</a><a href="#/duelo">Duelo</a></span>
+  <span class="bloco"><span class="rot">tiro curto</span>
+    <span class="itens"><a href="#/apostar">Palpitar</a><a href="#/placar">Placar</a><a href="#/duelo">Duelo</a></span></span>
   <span class="dir" id="navDir"></span>
 </nav></div></header>
 
@@ -556,7 +562,10 @@ async function pintarFaixa(){
 // porque constante depende de alguem lembrar de editar quando a Selic
 // mudar. So cai na taxa fixa se o papel nao estiver no universo.
 const REFERENCIAS = ["^BVSP", "LFTS11"];
-const CDI_DIA = Math.pow(1.105, 1/252) - 1;
+// Derivado do CDI_ANO, nao redigitado: duas copias do mesmo numero um dia
+// divergem. Continua havendo uma terceira copia no fechar_dia, no banco —
+// e essa e a que precisa ser unificada com o LFTS11.
+const CDI_DIA = Math.pow(1 + CDI_ANO, 1/252) - 1;
 function grafico(serie, refs){
   if(!serie || serie.length < 2) return "";
 
@@ -880,7 +889,6 @@ async function telaPublicar(){
         <option value="">escolha a classe…</option>
         ${Object.entries(CLASSE).map(([k,v])=>`<option value="${k}">${v.nome}</option>`).join("")}
       </select>
-      <p id="regraClasse" style="font-size:12px;color:var(--graf);margin:-3px 0 13px"></p>
       <div id="campoRF" style="display:none">
         <label>Renda fixa · entre 50% e 80%</label>
         <input id="rendaFixa" type="number" step="1" min="50" max="80" value="60">
@@ -965,7 +973,6 @@ async function telaPublicar(){
 
   $("#selClasse").onchange = e => {
     const v = CLASSE[e.target.value];
-    $("#regraClasse").innerHTML = v ? "" : "";
     // o painel lateral fala da classe escolhida, não de regra genérica
     $("#tituloAjuda").textContent = v ? `Classe ${v.nome}` : "Como o peso funciona";
     $("#ajudaClasse").innerHTML = v
@@ -1343,39 +1350,6 @@ async function telaDuelo(){
     <b>${esc(l[Math.floor(l.length/2)].c.nome)}</b> ficou sem par \u2014 n\u00famero \u00edmpar de carteiras.</p>`:""}
   ${l.length>=2 ? `<p style="color:var(--graf);font-size:12.5px;margin-top:16px">
     ${l.length} carteiras no p\u00e1reo. Os pares mudam todo dia conforme o resultado.</p>`:""}`;
-}
-
-// ═══════════════════════════════════════════ comparar
-async function telaComparar(){
-  const { data:cs } = await sb.from("ranking").select("*");
-  const ids=(cs||[]).map(c=>c.id); let series={};
-  if(ids.length){
-    const { data:rs } = await sb.from("retorno_dia").select("carteira_id,data,retorno,indice")
-                                .in("carteira_id", ids).order("data");
-    (rs||[]).forEach(r=>{ (series[r.carteira_id] ||= []).push(r); });
-  }
-  const l=(cs||[]).map(c=>({c,m:metricas(series[c.id])}));
-  app().innerHTML = `
-  <h1 style="font-size:27px;margin:30px 0 6px">Comparar carteiras</h1>
-  <p style="color:var(--t2);max-width:58ch;margin-bottom:18px">
-    Lado a lado. Repare que trocar o critério troca o pódio — retorno alto com
-    oscilação alta não é a mesma coisa que retorno estável.</p>
-  ${!l.length?`<div class="card" style="text-align:center;padding:34px">Nenhuma carteira ainda.</div>`
-  :`<table><thead><tr><th>Carteira</th><th>Perfil</th><th class="d">Hoje</th>
-    <th class="d">Acumulado</th><th class="d">Oscilação</th><th class="d">Drawdown</th>
-    <th class="d">Sharpe</th><th class="d">Bruta</th><th class="d">Líquida</th></tr></thead><tbody>
-    ${l.sort((a,b)=>b.m.acum-a.m.acum).map(x=>`<tr class="clicavel"
-      onclick="location.hash='#/carteira/${x.c.id}'">
-      <td><b>${esc(x.c.nome)}</b><div style="font-size:11px;color:var(--graf)">${esc(x.c.apelido)}</div></td>
-      <td>${tags(x.c)}</td>
-      <td class="d mono ${cor(x.m.hoje)}">${pct(x.m.hoje)}</td>
-      <td class="d mono ${cor(x.m.acum)}">${pct(x.m.acum)}</td>
-      <td class="d mono">${pct(x.m.vol,1)}</td>
-      <td class="d mono baixa">${pct(x.m.dd)}</td>
-      <td class="d mono">${n2(x.m.sharpe)}</td>
-      <td class="d mono">${n2(x.c.bruta,0)}%</td>
-      <td class="d mono">${n2(x.c.liquida,0)}%</td></tr>`).join("")}
-  </tbody></table>`}`;
 }
 
 // ═══════════════════════════════════════════ indicar
@@ -2100,7 +2074,6 @@ function rotear(){
   if(h==="#/duelo")           return telaDuelo();
   if(h==="#/apostar")         return telaApostar();
   if(h==="#/placar")          return telaPlacar();
-  if(h==="#/comparar")        return telaComparar();
   if(h==="#/indicar")         return telaIndicar();
   if(h==="#/assinar")         return telaAssinar();
   if(h==="#/admin")           return telaAdmin();
