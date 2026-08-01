@@ -1,4 +1,3 @@
-// ═══════════════════════════════════════════════════════════════════
 // Saldo Positivo — robô diário
 //
 //   node robo/robo.mjs dia        busca oscilação, fecha o dia, manda e-mail
@@ -82,9 +81,9 @@ async function brapi(caminho) {
   return j;
 }
 
-// ─── Yahoo, a fonte reserva ────────────────────────────────────────
+// ─── Yahoo, a fonte principal ──────────────────────────────────────
 // Um papel por chamada, e exige User-Agent de navegador: com o padrão
-// do Node ele recusa. Só entra onde a brapi não entregou.
+// do Node ele recusa.
 // Papel da B3 leva sufixo .SA; índice (^BVSP) não leva, e o ^ tem de
 // ser escapado na URL. Sem isso o Yahoo devolve 404 no índice.
 const simboloYahoo = a => a.startsWith("^") ? encodeURIComponent(a) : `${a}.SA`;
@@ -92,24 +91,30 @@ const simboloYahoo = a => a.startsWith("^") ? encodeURIComponent(a) : `${a}.SA`;
 async function yahoo(ativo) {
   const corta = AbortSignal.timeout(20000);
   const r = await fetch(
-    `https://query1.finance.yahoo.com/v8/finance/chart/${simboloYahoo(ativo)}?range=5d&interval=1d`,
+    `https://query1.finance.yahoo.com/v8/finance/chart/${simboloYahoo(ativo)}?range=10d&interval=1d`,
     { headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
                                "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36" },
       signal: corta });
   if (!r.ok) throw new Error(`yahoo ${r.status}`);
-  const m = (await r.json())?.chart?.result?.[0]?.meta;
-  if (!m) throw new Error("yahoo sem meta");
+  const res = (await r.json())?.chart?.result?.[0];
+  if (!res) throw new Error("yahoo sem resultado");
 
-  const preco = m.regularMarketPrice;
-  const ante  = m.previousClose ?? m.chartPreviousClose;
-  if (!preco || !ante) throw new Error("yahoo sem preço ou fechamento anterior");
-  if (!m.regularMarketTime) throw new Error("yahoo sem horário");
+  // ⚠️ NÃO volte a usar meta.previousClose. Ele vem UNDEFINED neste
+  // endpoint — medido em 01/08/2026 para AUAU3, ALLD3 e PETR4. Era daí
+  // que saíam as oscilações erradas: AUAU3 gravou 7,055% num pregão que
+  // foi de 2,95%, e TODOS os papéis estavam contaminados, não só os
+  // ilíquidos. Os candles vêm na mesma resposta e batem com o terminal
+  // na terceira casa. Fechamento de hoje sobre o de ontem, e pronto:
+  // assim a variação é sempre de UM pregão, por construção.
+  const ts = res.timestamp || [];
+  const cl = res.indicators?.quote?.[0]?.close || [];
+  const dias = ts.map((t, i) => ({ dia: diaBR(t * 1000), fech: cl[i] }))
+                 .filter(x => x.fech != null);
+  if (dias.length < 2) throw new Error("yahoo sem dois pregões para comparar");
 
-  return {
-    ativo,
-    valor: preco / ante - 1,
-    data_cot: diaBR(new Date(m.regularMarketTime * 1000).toISOString())
-  };
+  const hoje  = dias[dias.length - 1];
+  const ontem = dias[dias.length - 2];
+  return { ativo, valor: hoje.fech / ontem.fech - 1, data_cot: hoje.dia };
 }
 
 // ─── bolsai, a segunda reserva ─────────────────────────────────────
@@ -266,6 +271,10 @@ async function fecharDia() {
   // ── 3ª fonte: brapi, reserva ──
   // Só entra no que o Yahoo não entregou. Gasta cota, então quanto
   // menos vier parar aqui, melhor para o intradiário.
+  // ⚠️ Aqui a variação vem do regularMarketChangePercent da brapi, que
+  // é calculado contra o previousClose DELA. Se um dia a brapi entregar
+  // muitos papéis, vale conferir se ela sofre do mesmo problema que o
+  // Yahoo tinha — o teste está em robo/teste-yahoo.mjs e serve de molde.
   const buracos = faltantes();
   if (BRAPI && buracos.length) {
     console.log(`tentando ${buracos.length} na brapi`);
@@ -302,6 +311,15 @@ async function fecharDia() {
     console.error(`ATENÇÃO: veio mais de uma data no mesmo lote — ${datas.join(", ")}`);
   }
   console.log(`pregão: ${datas.join(", ")}`);
+
+  // Sanidade: variação diária acima de 25% em papel líquido é quase
+  // sempre erro de fonte, não pregão. Não trava nada — só marca no log,
+  // para nunca mais um número absurdo passar despercebido.
+  const suspeitos = osc.filter(o => Math.abs(o.valor) > 0.25);
+  if (suspeitos.length) {
+    console.error("SUSPEITO — variação acima de 25% no dia:");
+    for (const s of suspeitos) console.error(`  ${s.ativo}: ${(s.valor * 100).toFixed(2)}%`);
+  }
 
   await rpc("robo_gravar_oscilacao", { dados: osc });
   const n = await rpc("robo_fechar_dia");
