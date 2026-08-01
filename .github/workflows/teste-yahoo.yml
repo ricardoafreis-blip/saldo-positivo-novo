@@ -1,0 +1,15 @@
+name: Testar Yahoo
+on:
+  workflow_dispatch:
+    inputs:
+      papeis:
+        description: "Papéis separados por espaço"
+        default: "AUAU3 ALLD3 PETR4"
+jobs:
+  testar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "20" }
+      - run: node robo/teste-yahoo.mjs ${{ inputs.papeis }}
