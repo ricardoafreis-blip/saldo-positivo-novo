@@ -253,13 +253,19 @@ function haQuantoTempo(iso){
   if(min === 1) return "há 1 minuto";
   if(min < 60) return `há ${min} minutos`;
   const h = Math.floor(min/60);
-  return h === 1 ? "há 1 hora" : `há ${h} horas`;
+  if(h < 36) return h === 1 ? "há 1 hora" : `há ${h} horas`;
+  const d = Math.round(h/24);
+  return `há ${d} dias`;
 }
+
+// Sabado e domingo nao tem pregao. Feriado da B3 nao esta aqui: para o
+// site, feriado parece dia util sem cotacao nova — a legenda continua
+// correta porque diz a hora do dado, mas a coluna do dia fica vazia.
+const ehDiaUtil = () => !/^(sáb|dom)/i.test(partesBR(new Date()).dia);
 
 function proximaCotacao(){
   const p = partesBR(new Date());
-  const fimDeSemana = /^(sáb|dom)/i.test(p.dia);
-  if(fimDeSemana || p.hora < 10 || p.hora >= 18) return null;   // fora do pregão
+  if(!ehDiaUtil() || p.hora < 10 || p.hora >= 18) return null;   // fora do pregão
   const faltam = 60 - p.minuto;
   return faltam <= 1 ? "a próxima sai a qualquer momento"
                      : `a próxima por volta de ${String((p.hora+1)%24).padStart(2,"0")}:00, em ${faltam} min`;
@@ -274,8 +280,15 @@ function tags(c){
   else if(c.liquida>=c.bruta-0.01) t.push("só comprada");
   else if(c.liquida<=-c.bruta+0.01) t.push("só vendida");
   else t.push("long &amp; short");
-  if(c.bruta>105) t.push(`alavancada ${n2(c.bruta/100,1)}x`);
-  if(c.caixa>1)       t.push(`${n2(c.caixa,0)}% em caixa`);
+  // Alavancagem e caixa so fazem sentido em carteira que compra. Numa
+  // vendida a "liquida" e negativa e a conta 100-liquida passa de 200,
+  // produzindo "209% em caixa" e "alavancada 1,1x" — ambos sem sentido.
+  if(c.classe !== "vendida"){
+    if(c.bruta>105) t.push(`alavancada ${n2(c.bruta/100,1)}x`);
+    if(c.caixa>1)   t.push(`${n2(c.caixa,0)}% em caixa`);
+  } else if(c.bruta>0){
+    t.push(`${n2(c.bruta,0)}% vendido`);
+  }
   else if(c.caixa<-1) t.push(`${n2(-c.caixa,0)}% de margem`);
   // Texto miudo, nao pilula: metadado nao pode competir com o numero.
   return t.join(" · ");
@@ -495,8 +508,16 @@ function pintarNav(){
 }
 
 // ═══════════════════════════════════════════ métricas
+// Retorno composto dos ultimos k pregoes. Nao usa o indice (que e base
+// 100 desde o inicio): multiplica os retornos diarios do recorte.
+function retornoDe(serie, k){
+  if(!serie || !serie.length) return null;
+  const jan = serie.slice(-k);
+  if(jan.length < 1) return null;
+  return jan.reduce((a,x) => a * (1 + x.retorno), 1) - 1;
+}
 function metricas(serie){
-  if(!serie || !serie.length) return {dias:0,acum:0,vol:null,sharpe:null,dd:0,hoje:0};
+  if(!serie || !serie.length) return {dias:0,acum:0,vol:null,sharpe:null,dd:0,hoje:0,sem:null,mes:null};
   const r = serie.map(x=>x.retorno), n = r.length;
   const acum = serie[serie.length-1].indice/100 - 1;
   let vol=null, sharpe=null;
@@ -521,7 +542,24 @@ function metricas(serie){
   // abaixo dele: quem caiu no primeiro dia marcava drawdown 0.
   let pico=100, dd=0;
   serie.forEach(x=>{ pico=Math.max(pico,x.indice); dd=Math.min(dd, x.indice/pico-1); });
-  return {dias:n, acum, vol, sharpe, dd, hoje:r[n-1]};
+  // semana = 5 pregoes, mes = 21. Com serie curta, devolve o que existe.
+  return {dias:n, acum, vol, sharpe, dd, hoje:r[n-1],
+          sem: retornoDe(serie,5), mes: retornoDe(serie,21)};
+}
+
+// Separa a lista em blocos por classe, na ordem em que CLASSE foi
+// declarada. Cada classe vira um podio proprio: comparar uma 60/40 com
+// uma alavancada pelo mesmo numero e a mesma confusao que a classe
+// imutavel existe para evitar.
+function agrupar(lista){
+  const blocos = [];
+  Object.entries(CLASSE).forEach(([k,v])=>{
+    const g = lista.filter(x => x.c.classe === k);
+    if(g.length) blocos.push([v.nome, g]);
+  });
+  const sem = lista.filter(x => !x.c.classe || !CLASSE[x.c.classe]);
+  if(sem.length) blocos.push(["Sem classe", sem]);
+  return blocos;
 }
 
 // ═══════════════════════════════════════════ faixa de cotação
@@ -709,7 +747,17 @@ async function telaRanking(){
     const ultimo = s.length ? s[s.length-1].data : null;
     const v = vivo[c.id];
     // se o pregão de hoje ainda não foi fechado, "Hoje" mostra o parcial
-    if(v && ultimo !== HOJE_BR()){ m.hoje = v.retorno; m.parcial = true; }
+    // Parcial exige TRES coisas: ser dia util, existir cotacao viva, e essa
+    // cotacao ser de hoje. Sem a terceira, no sabado o site mostrava o
+    // parcial de sexta como se o pregao de sabado estivesse em andamento.
+    // converte para o fuso de Sao Paulo antes de comparar: o carimbo vem em
+    // UTC, e cortar os 10 primeiros caracteres erra a partir das 21h locais
+    const vivoEhDeHoje = v && v.atualizado_em &&
+      new Date(v.atualizado_em).toLocaleDateString("sv-SE",
+        { timeZone:"America/Sao_Paulo" }) === HOJE_BR();
+    if(v && vivoEhDeHoje && ehDiaUtil() && ultimo !== HOJE_BR()){
+      m.hoje = v.retorno; m.parcial = true;
+    }
     return { c, m };
   });
   if(filtro) lista = lista.filter(x=> (x.c.classe||"sem") === filtro);
@@ -759,10 +807,16 @@ async function telaRanking(){
       <h3 style="margin-bottom:8px">Nenhuma carteira ainda</h3>
       <p style="color:var(--t2)">Publique a primeira — o ranking começa a contar a partir de hoje.</p>
       <a href="#/publicar" class="bt cheio" style="margin-top:12px">Criar carteira</a></div>`
-  : `<table><thead><tr><th></th><th>Carteira</th><th class="d">Hoje</th>
-      <th class="d">Acumulado</th><th class="d">Sharpe</th><th class="d">Drawdown</th>
+  : `<table><thead><tr><th></th><th>Carteira</th><th class="d">Dia</th>
+      <th class="d">Semana</th><th class="d">Mês</th><th class="d">Desde o início</th>
+      <th class="d">Sharpe</th><th class="d">Drawdown</th>
       <th class="d">Dias</th></tr></thead><tbody>
-    ${lista.map((x,i)=>`<tr class="clicavel" onclick="location.hash='#/carteira/${x.c.id}'">
+    ${(filtro ? [["", lista]] : agrupar(lista)).map(([titulo, grupo]) => (titulo
+      ? `<tr><td colspan="9" style="padding:16px 0 6px">
+          <span style="font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--ouro2)">${titulo}</span>
+          <span style="font-size:11px;color:var(--graf);margin-left:7px">${grupo.length}
+            ${grupo.length===1?"carteira":"carteiras"}</span></td></tr>` : "")
+      + grupo.map((x,i)=>`<tr class="clicavel" onclick="location.hash='#/carteira/${x.c.id}'">
       <td class="mono pos">${String(i+1).padStart(2,"0")}</td>
       <td><span style="font-family:Newsreader,serif;font-weight:500;font-size:15px">${esc(x.c.nome)}</span>
         <div class="meta">${esc(x.c.apelido)} · ${x.c.n_ativos
@@ -770,10 +824,12 @@ async function telaRanking(){
           : `estreia no próximo pregão${x.c.classe&&CLASSE[x.c.classe]?" · "+CLASSE[x.c.classe].nome:""}`}</div></td>
       <td class="d mono ${cor(x.m.hoje)}" style="${x.m.parcial?"opacity:.82":""}"
       title="${x.m.parcial?"parcial — o pregão ainda não fechou":"fechado"}">${pct(x.m.hoje)}${x.m.parcial?'<span style="font-size:9px;vertical-align:super;opacity:.7">•</span>':""}</td>
+      <td class="d mono ${x.m.sem==null?"nulo":cor(x.m.sem)}">${x.m.sem==null?"—":pct(x.m.sem)}</td>
+      <td class="d mono ${x.m.mes==null?"nulo":cor(x.m.mes)}">${x.m.mes==null?"—":pct(x.m.mes)}</td>
       <td class="d mono ${x.m.dias?cor(x.m.acum):"nulo"}">${x.m.dias?pct(x.m.acum):"estreia"}</td>
       <td class="d mono ${x.m.sharpe==null?"nulo":""}">${n2(x.m.sharpe)}</td>
       <td class="d mono ${x.m.dd<0?"baixa":"nulo"}">${!x.m.dias?"—":(x.m.dd<0?pct(x.m.dd):"0,00%")}</td>
-      <td class="d mono nulo">${x.m.dias}</td></tr>`).join("")}
+      <td class="d mono nulo">${x.m.dias}</td></tr>`).join("")).join("")}
     </tbody></table>`}`;
 
   // ── legenda da cotação ──
@@ -789,7 +845,8 @@ async function telaRanking(){
         <b>${new Date(quando).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit",timeZone:"America/Sao_Paulo"})}</b>
         (${haQuantoTempo(quando)}).
         ${prox ? "Atualiza de hora em hora durante o pregão — " + prox + "."
-               : "Fora do pregão: o próximo movimento é na abertura."}
+               : (ehDiaUtil() ? "Fora do horário de pregão: o próximo movimento é na abertura."
+                              : "Sem pregão hoje: o próximo movimento é no próximo dia útil.")}
         A coluna <b>Hoje</b> marcada com • é parcial e muda até o fechamento das 19h;
         acumulado, Sharpe e queda máxima só contam pregão fechado.`;
     };
@@ -1916,19 +1973,26 @@ async function telaTiroCurto(){
     sb.from("aposta").select("id,ativo,direcao").eq("data", prox).order("id"),
   ]);
   const pend = mins.data || [];
+  // Os limites de cada tiro ja registrado. Sem isto a pessoa registra e
+  // nunca mais ve qual e o seu stop — que e a informacao que mais importa.
+  const lim = {};
+  await Promise.all(pend.map(async p => {
+    const { data } = await sb.rpc("limites_sugeridos", { p_ativo: p.ativo });
+    if(data && data[0]) lim[p.ativo] = data[0];
+  }));
 
   app().innerHTML = `
-  <h1 style="font-size:31px;margin-bottom:6px">Palpite do pregão</h1>
+  <h1 style="font-size:31px;margin-bottom:6px">Tiro curto</h1>
   <p style="color:var(--t2);max-width:62ch;margin-bottom:22px">
     Escolha o papel e o lado para o pregão de <b>${prox}</b>. Você entra na
     abertura e sai no stop, no alvo ou no fechamento — o que vier primeiro.
-    Até 10 papéis por pregão, e ninguém vê o seu palpite antes de o prazo
+    Até 10 papéis por pregão, e ninguém vê o seu tiro antes de o prazo
     fechar.</p>
 
   <div class="grid2">
     <div>
       <div class="card">
-        <h3 style="font-size:15px;margin-bottom:12px">Novo palpite</h3>
+        <h3 style="font-size:15px;margin-bottom:12px">Novo tiro</h3>
         <div id="erro"></div>
 
         <label>Papel</label>
@@ -1945,7 +2009,7 @@ async function telaTiroCurto(){
         <div id="apLimites" style="font-size:12.5px;color:var(--t2);margin:4px 0 14px"></div>
 
         <button class="bt cheio" id="apBt" ${pend.length>=10?"disabled":""}>
-          ${pend.length>=10?"limite de 10 atingido":"Registrar palpite"}</button>
+          ${pend.length>=10?"limite de 10 atingido":"Registrar tiro"}</button>
       </div>
 
       <div class="card" style="margin-top:14px">
@@ -1966,14 +2030,19 @@ async function telaTiroCurto(){
 
     <div>
       <div class="card">
-        <h3 style="font-size:15px;margin-bottom:4px">Seus palpites para ${prox}
+        <h3 style="font-size:15px;margin-bottom:4px">Seus tiros para ${prox}
           <span style="color:var(--graf);font-weight:400">· ${pend.length}/10</span></h3>
         <p style="font-size:11.5px;color:var(--graf);margin:0 0 12px">
           Dá para desistir enquanto o pregão não chegar.</p>
         ${pend.length ? `<table><tbody>${pend.map(p=>`<tr>
-          <td class="mono" style="font-weight:500">${esc(p.ativo)}</td>
-          <td class="${p.direcao==="V"?"baixa":"alta"}" style="font-size:12.5px">
-            ${p.direcao==="V"?"venda":"compra"}</td>
+          <td>
+            <span class="mono" style="font-weight:500">${esc(p.ativo)}</span>
+            <span class="${p.direcao==="V"?"baixa":"alta"}" style="font-size:12.5px;margin-left:7px">
+              ${p.direcao==="V"?"venda":"compra"}</span>
+            <div style="font-size:11px;color:var(--graf);margin-top:2px">${lim[p.ativo]
+              ? `stop e alvo a ${n2(lim[p.ativo].stop_pct*100)}% da abertura`
+              : "sem histórico deste papel — apura só pelo fechamento"}</div>
+          </td>
           <td class="d"><button class="bt ap-del" data-id="${p.id}"
             style="padding:3px 9px;font-size:11.5px;border-color:var(--baixa);color:var(--baixa)">
             desistir</button></td></tr>`).join("")}</tbody></table>`
@@ -2037,7 +2106,7 @@ async function telaPlacar(){
 
   ${lista.length ? `<table>
     <thead><tr><th></th><th>Quem</th><th class="d">Nota</th><th class="d">Média/dia</th>
-    <th class="d">Dias</th><th class="d">Palpites</th></tr></thead>
+    <th class="d">Dias</th><th class="d">Tiros</th></tr></thead>
     <tbody>${lista.map((x,i)=>`<tr>
       <td class="mono" style="color:var(--graf)">${String(i+1).padStart(2,"0")}</td>
       <td style="font-weight:500">${esc(x.apelido)}</td>
@@ -2049,7 +2118,7 @@ async function telaPlacar(){
   : `<div class="card"><p style="margin:0;color:var(--t2)">
       Ninguém pontuou ainda. O placar aparece depois do primeiro pregão apurado.</p></div>`}
 
-  ${eu ? `<h2 style="font-size:19px;margin:32px 0 12px">Seus palpites apurados</h2>
+  ${eu ? `<h2 style="font-size:19px;margin:32px 0 12px">Seus tiros apurados</h2>
     ${minhas.length ? `<table>
       <thead><tr><th>Pregão</th><th>Papel</th><th>Lado</th><th>Desfecho</th>
       <th class="d">Retorno</th><th class="d">Pontos</th></tr></thead>
