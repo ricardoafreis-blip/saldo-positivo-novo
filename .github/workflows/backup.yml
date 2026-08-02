@@ -1,0 +1,57 @@
+name: Backup
+
+# Guarda o banco inteiro dentro do próprio repositório: o SQL de todas
+# as funções, views e tabelas, mais os dados. O plano gratuito do
+# Supabase NÃO tem backup — sem isto, um acidente leva junto o histórico
+# de retorno, que é a única coisa do projeto que não pode ser refeita.
+#
+# Roda sozinho toda madrugada e também pelo botão.
+# Os arquivos ficam em backup/ e podem ser editados e reaplicados.
+
+on:
+  schedule:
+    - cron: "0 6 * * *"        # 3h da manhã em Brasília
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  salvar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar o cliente do Postgres
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y postgresql-client-16
+
+      - name: Baixar estrutura e dados
+        env:
+          URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          mkdir -p backup
+          # estrutura: tabelas, views, funções, gatilhos, políticas de RLS
+          pg_dump "$URL" --schema-only --no-owner --no-privileges \
+                  --schema=public > backup/estrutura.sql
+          # dados: só o schema public, em INSERTs para dar para ler e editar
+          pg_dump "$URL" --data-only --no-owner --column-inserts \
+                  --schema=public > backup/dados.sql
+          # um resumo legível de quanto tem em cada tabela
+          psql "$URL" -A -F' | ' -c "
+            select relname as tabela, n_live_tup as linhas
+              from pg_stat_user_tables order by relname;" > backup/resumo.txt
+          ls -lh backup/
+
+      - name: Guardar no repositório
+        run: |
+          git config user.name  "robô de backup"
+          git config user.email "acoes@users.noreply.github.com"
+          git add backup/
+          if git diff --staged --quiet; then
+            echo "nada mudou desde o último backup"
+          else
+            git commit -m "backup $(date -u +%Y-%m-%d)"
+            git push
+          fi
