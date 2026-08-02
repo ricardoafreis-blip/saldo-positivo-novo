@@ -890,6 +890,21 @@ async function telaRanking(){
       <td class="d mono nulo">${x.m.dias}</td></tr>`).join("")).join("")}
     </tbody></table>`)}`;
 
+  // ── repinta sozinho enquanto o pregão corre ──
+  // Sem isso a pessoa precisa recarregar para ver o número mexer. Só
+  // roda em dia útil e só enquanto a tela do ranking estiver aberta —
+  // ficar buscando de madrugada não muda nada e gasta o banco à toa.
+  clearInterval(window.__timerRank);
+  if(ehDiaUtil() && proximaCotacao()){
+    window.__timerRank = setInterval(() => {
+      // saiu do ranking ou a aba está escondida: não faz nada
+      if((location.hash||"#/").split("?")[0] !== "#/" ) { clearInterval(window.__timerRank); return; }
+      if(document.hidden) return;
+      const y = window.scrollY;
+      telaRanking().then(() => window.scrollTo(0, y));
+    }, 60000);
+  }
+
   // ── legenda da cotação ──
   // Diz a HORA DO DADO que está na tela. A previsão da próxima é sempre
   // "por volta de": o cron do GitHub atrasa, e legenda que crava horário
@@ -905,8 +920,8 @@ async function telaRanking(){
         ${prox ? "Atualiza de hora em hora durante o pregão — " + prox + "."
                : (ehDiaUtil() ? "Fora do horário de pregão: o próximo movimento é na abertura."
                               : "Sem pregão hoje: o próximo movimento é no próximo dia útil.")}
-        A coluna <b>Hoje</b> marcada com • é parcial e muda até o fechamento das 19h;
-        acumulado, Sharpe e queda máxima só contam pregão fechado.`;
+        A coluna <b>No dia</b> marcada com • é parcial e muda até o fechamento
+        das 19h.${proximaCotacao() ? " Esta página se atualiza sozinha." : ""}`;
     };
     pintarLinha();
     clearInterval(window.__timerViva);
