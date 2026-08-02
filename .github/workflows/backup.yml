@@ -1,16 +1,22 @@
 name: Backup
 
-# ESTE REPOSITÓRIO É PÚBLICO.
+# ⚠️ ESTE REPOSITÓRIO É PÚBLICO.
+#
 # Por isso os DADOS nunca são gravados dentro dele: eles têm e-mail,
 # telefone e os pesos das carteiras, que é justamente o que o assinante
-# paga para ver. Os dados viram um arquivo privado do Actions.
-# A ESTRUTURA (tabelas, views, funções, gatilhos, RLS) vai para a pasta
-# sql/, essa sim no repositório: não tem segredo e é a única cópia que
-# existe fora do banco.
+# paga para ver. Os dados viram um arquivo privado do Actions, que só
+# quem tem acesso ao repositório consegue baixar.
+#
+# A ESTRUTURA (tabelas, views, funções, gatilhos, políticas de RLS) vai
+# para a pasta sql/, essa sim dentro do repositório: não tem segredo
+# nenhum e é a única cópia que existe fora do banco. Se o projeto do
+# Supabase sumir, é ela que permite reconstruir tudo.
+#
+# Roda toda madrugada e também pelo botão Run workflow.
 
 on:
   schedule:
-    - cron: "0 6 * * *"
+    - cron: "0 6 * * *"        # 3h da manhã em Brasília
   workflow_dispatch:
 
 permissions:
@@ -22,10 +28,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Instalar o cliente do Postgres
+      - name: Instalar o cliente do Postgres 17
         run: |
+          # O banco do Supabase é Postgres 17 e o pg_dump se recusa a
+          # exportar servidor mais novo que ele. O Ubuntu do runner só
+          # traz o 16, então o 17 vem do repositório oficial.
+          sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/pgdg.gpg
           sudo apt-get update -qq
-          sudo apt-get install -y postgresql-client-16
+          sudo apt-get install -y postgresql-client-17
+          pg_dump --version
 
       - name: Baixar estrutura e dados
         env:
@@ -41,6 +53,8 @@ jobs:
               from pg_stat_user_tables order by relname;" > sql/resumo.txt
           ls -lh sql/ privado/
 
+      # Os dados ficam aqui, fora do repositório público. Para baixar:
+      # Actions → a execução → seção Artifacts, no rodapé da página.
       - name: Guardar os dados como arquivo privado
         uses: actions/upload-artifact@v4
         with:
