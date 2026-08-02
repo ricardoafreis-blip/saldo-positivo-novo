@@ -596,6 +596,8 @@ function colunasPorClasse(lista, ordem, rotulo){
     <h3>${b.nome}</h3>
     <div class="qtd">${b.total} ${b.total===1?"carteira":"carteiras"}</div>
     <div class="regra">${b.regra}</div>
+    <div style="font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;
+      color:var(--graf);text-align:right;padding-bottom:2px">${rotulo}</div>
     ${b.g.length ? b.g.map((x,i)=>{
       const v = x.m[chave];
       const txt = v==null ? "—" : (chave==="sharpe" ? n2(v) : pct(v));
@@ -610,9 +612,7 @@ function colunasPorClasse(lista, ordem, rotulo){
       <a href="#/?ordem=${ordem}&classe=${b.k}" style="font-size:11.5px;color:var(--ouro2)">
         ver todas as ${b.total} &rarr;</a></div>` : ""}
   </div>`).join("")}</div>
-  <p style="font-size:11.5px;color:var(--graf);margin:12px 0 0">
-    Ordenado por <b>${rotulo}</b>. Cada classe tem o seu próprio pódio —
-    carteira só é comparada com outra da mesma régua.</p>`;
+`;
 }
 
 // ═══════════════════════════════════════════ faixa de cotação
@@ -816,6 +816,7 @@ async function telaRanking(){
   if(filtro) lista = lista.filter(x=> (x.c.classe||"sem") === filtro);
 
   const chaves = { acum:x=>-x.m.acum, hoje:x=>-x.m.hoje, dd:x=>-x.m.dd,
+                   sem:x=>-(x.m.sem ?? -9), mes:x=>-(x.m.mes ?? -9),
                    sharpe:x=>-(x.m.sharpe ?? -9) };
   // Desempate: a carteira mais antiga ganha. Importa no começo, quando
   // todas estão em 0,00% e a ordem seria arbitrária.
@@ -830,7 +831,8 @@ async function telaRanking(){
       alavancagem ficam abertas a todos. Os papéis e os pesos, não.</p>
   </div>
   <div class="chips">
-    ${[["acum","Acumulado"],["hoje","Hoje"],["sharpe","Sharpe"],["dd","Menor drawdown"]]
+    ${[["hoje","No dia"],["sem","Na semana"],["mes","No mês"],
+       ["acum","Desde o início"],["sharpe","Sharpe"],["dd","Menor drawdown"]]
       .map(([k,r])=>`<a href="#/?ordem=${k}${filtro?"&classe="+filtro:""}"
         class="chip${ordem===k?" on":""}">${r}</a>`).join("")}
     <span class="divisor"></span>
@@ -857,8 +859,8 @@ async function telaRanking(){
       </div>
     </div>` : ""}
   ${!filtro && lista.length ? colunasPorClasse(lista, ordem,
-      {hoje:"dia",sem:"semana",mes:"mês",acum:"desde o início",
-       sharpe:"Sharpe",dd:"menor drawdown"}[ordem] || "acumulado") : ""}
+      {hoje:"no dia",sem:"na semana",mes:"no mês",acum:"desde o início",
+       sharpe:"Sharpe",dd:"menor drawdown"}[ordem] || "desde o início") : ""}
   ${!filtro && lista.length ? "" : (!lista.length ? `<div class="card" style="text-align:center;padding:38px">
       <h3 style="margin-bottom:8px">Nenhuma carteira ainda</h3>
       <p style="color:var(--t2)">Publique a primeira — o ranking começa a contar a partir de hoje.</p>
