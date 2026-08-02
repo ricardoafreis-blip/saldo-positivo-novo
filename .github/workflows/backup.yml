@@ -37,18 +37,23 @@ jobs:
           curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/pgdg.gpg
           sudo apt-get update -qq
           sudo apt-get install -y postgresql-client-17
-          pg_dump --version
 
       - name: Baixar estrutura e dados
         env:
           URL: ${{ secrets.SUPABASE_DB_URL }}
         run: |
+          # Chamar pelo CAMINHO COMPLETO: o Ubuntu mantém o 16 e o 17
+          # instalados lado a lado, e o "pg_dump" solto aponta para o
+          # antigo — foi assim que a primeira tentativa falhou mesmo
+          # depois de instalar o 17.
+          PGB=/usr/lib/postgresql/17/bin
+          $PGB/pg_dump --version
           mkdir -p sql privado
-          pg_dump "$URL" --schema-only --no-owner --no-privileges \
+          $PGB/pg_dump "$URL" --schema-only --no-owner --no-privileges \
                   --schema=public > sql/estrutura.sql
-          pg_dump "$URL" --data-only --no-owner --column-inserts \
+          $PGB/pg_dump "$URL" --data-only --no-owner --column-inserts \
                   --schema=public > privado/dados.sql
-          psql "$URL" -A -F' | ' -c "
+          $PGB/psql "$URL" -A -F' | ' -c "
             select relname as tabela, n_live_tup as linhas
               from pg_stat_user_tables order by relname;" > sql/resumo.txt
           ls -lh sql/ privado/
