@@ -146,6 +146,24 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
 
 /* posição no ranking em ouro */
 .pos{font-family:'IBM Plex Mono';font-size:12px;color:var(--graf);letter-spacing:.02em}
+
+/* quatro colunas, uma por classe — a regra do laranja com laranja
+   virando desenho: cada classe tem o seu proprio podio */
+.colunas{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:16px}
+@media(max-width:1000px){.colunas{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:620px){.colunas{grid-template-columns:1fr}}
+.coluna{background:var(--p2);border:1px solid var(--linha);border-radius:4px;padding:14px 15px}
+.coluna h3{font-family:Newsreader,serif;font-size:15px;margin:0 0 2px}
+.coluna .qtd{font-size:10.5px;color:var(--graf);letter-spacing:.06em;text-transform:uppercase}
+.coluna .regra{font-size:11px;color:var(--graf);margin:6px 0 10px;line-height:1.45}
+.linhaC{display:flex;align-items:baseline;gap:8px;padding:7px 0;border-top:1px solid var(--linha)}
+.linhaC:hover{background:var(--p3);cursor:pointer}
+.linhaC .n{font-family:'IBM Plex Mono';font-size:10.5px;color:var(--graf);flex:none;width:15px}
+.linhaC .quem{flex:1;min-width:0}
+.linhaC .nome{font-size:13px;color:var(--tinta);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.linhaC .autor{font-size:10.5px;color:var(--graf)}
+.linhaC .num{font-family:'IBM Plex Mono';font-size:13px;flex:none}
+.vazio{font-size:11.5px;color:var(--graf);padding:10px 0 2px}
 .meta{font-size:11.5px;color:var(--graf);margin-top:3px}
 .nulo{color:var(--graf)}
 
@@ -562,6 +580,41 @@ function agrupar(lista){
   return blocos;
 }
 
+// Quatro colunas, uma por classe, dez primeiros de cada. E a visao de
+// capa: com muitas carteiras, uma tabela unica de sete colunas fica
+// ilegivel e — pior — sugere que uma vendida e comparavel com uma
+// alavancada. Aqui a separacao e visual, ninguem precisa ler regra.
+function colunasPorClasse(lista, ordem, rotulo){
+  const chave = { hoje:"hoje", sem:"sem", mes:"mes", acum:"acum",
+                  sharpe:"sharpe", dd:"dd" }[ordem] || "acum";
+  const blocos = Object.entries(CLASSE).map(([k,v])=>{
+    const g = lista.filter(x => x.c.classe === k).slice(0, 10);
+    return { k, nome:v.nome, regra:v.regra, total: lista.filter(x=>x.c.classe===k).length, g };
+  });
+
+  return `<div class="colunas">${blocos.map(b=>`<div class="coluna">
+    <h3>${b.nome}</h3>
+    <div class="qtd">${b.total} ${b.total===1?"carteira":"carteiras"}</div>
+    <div class="regra">${b.regra}</div>
+    ${b.g.length ? b.g.map((x,i)=>{
+      const v = x.m[chave];
+      const txt = v==null ? "—" : (chave==="sharpe" ? n2(v) : pct(v));
+      return `<div class="linhaC" onclick="location.hash='#/carteira/${x.c.id}'">
+        <span class="n">${String(i+1).padStart(2,"0")}</span>
+        <span class="quem"><div class="nome">${esc(x.c.nome)}</div>
+          <div class="autor">${esc(x.c.apelido)} · ${x.c.n_ativos||0} ativos</div></span>
+        <span class="num ${v==null?"nulo":cor(v)}">${txt}</span></div>`;
+    }).join("")
+    : `<div class="vazio">Nenhuma carteira nesta classe ainda.</div>`}
+    ${b.total > 10 ? `<div style="padding-top:9px">
+      <a href="#/?ordem=${ordem}&classe=${b.k}" style="font-size:11.5px;color:var(--ouro2)">
+        ver todas as ${b.total} &rarr;</a></div>` : ""}
+  </div>`).join("")}</div>
+  <p style="font-size:11.5px;color:var(--graf);margin:12px 0 0">
+    Ordenado por <b>${rotulo}</b>. Cada classe tem o seu próprio pódio —
+    carteira só é comparada com outra da mesma régua.</p>`;
+}
+
 // ═══════════════════════════════════════════ faixa de cotação
 // Lê a view faixa_cotacao (índice + maiores altas e baixas do último
 // retrato da cotacao_viva). Não gasta nenhuma chamada de API: o robô já
@@ -803,7 +856,10 @@ async function telaRanking(){
         <a href="#/assinar" class="bt lacre">Assinar</a>
       </div>
     </div>` : ""}
-  ${!lista.length ? `<div class="card" style="text-align:center;padding:38px">
+  ${!filtro && lista.length ? colunasPorClasse(lista, ordem,
+      {hoje:"dia",sem:"semana",mes:"mês",acum:"desde o início",
+       sharpe:"Sharpe",dd:"menor drawdown"}[ordem] || "acumulado") : ""}
+  ${!filtro && lista.length ? "" : (!lista.length ? `<div class="card" style="text-align:center;padding:38px">
       <h3 style="margin-bottom:8px">Nenhuma carteira ainda</h3>
       <p style="color:var(--t2)">Publique a primeira — o ranking começa a contar a partir de hoje.</p>
       <a href="#/publicar" class="bt cheio" style="margin-top:12px">Criar carteira</a></div>`
@@ -830,7 +886,7 @@ async function telaRanking(){
       <td class="d mono ${x.m.sharpe==null?"nulo":""}">${n2(x.m.sharpe)}</td>
       <td class="d mono ${x.m.dd<0?"baixa":"nulo"}">${!x.m.dias?"—":(x.m.dd<0?pct(x.m.dd):"0,00%")}</td>
       <td class="d mono nulo">${x.m.dias}</td></tr>`).join("")).join("")}
-    </tbody></table>`}`;
+    </tbody></table>`)}`;
 
   // ── legenda da cotação ──
   // Diz a HORA DO DADO que está na tela. A previsão da próxima é sempre
@@ -1968,11 +2024,31 @@ async function telaTiroCurto(){
   app().innerHTML = `<div class="carreg">carregando…</div>`;
 
   const { data:prox } = await sb.rpc("proximo_pregao");
-  const [uni, mins] = await Promise.all([
+  const [uni, mins, hj] = await Promise.all([
     universo(),
     sb.from("aposta").select("id,ativo,direcao").eq("data", prox).order("id"),
+    // os tiros de HOJE, que ja estao valendo — o pregao esta correndo
+    sb.from("aposta").select("id,ativo,direcao").eq("data", HOJE_BR()).order("id"),
   ]);
   const pend = mins.data || [];
+  const emJogo = hj.data || [];
+
+  // cotacao ao vivo dos papeis em jogo, para acompanhar durante o dia
+  let viva = {};
+  if(emJogo.length){
+    const { data:cv } = await sb.from("cotacao_viva")
+      .select("ativo,preco,abertura,atualizado_em")
+      .in("ativo", [...new Set(emJogo.map(x=>x.ativo))]);
+    (cv||[]).forEach(x => { viva[x.ativo] = x; });
+  }
+  // Entrada e na ABERTURA, entao o resultado ao vivo e preco sobre
+  // abertura. Sem a abertura nao da para dizer nada — melhor calar do
+  // que mostrar a variacao do dia como se fosse o resultado do tiro.
+  const aoVivo = emJogo.map(t => {
+    const c = viva[t.ativo];
+    const r = (c && c.abertura > 0) ? (c.preco/c.abertura - 1) * (t.direcao==="V" ? -1 : 1) : null;
+    return { ...t, r, quando: c?.atualizado_em };
+  }).sort((a,b) => (b.r ?? -9) - (a.r ?? -9));
   // Os limites de cada tiro ja registrado. Sem isto a pessoa registra e
   // nunca mais ve qual e o seu stop — que e a informacao que mais importa.
   const lim = {};
@@ -1988,6 +2064,27 @@ async function telaTiroCurto(){
     abertura e sai no stop, no alvo ou no fechamento — o que vier primeiro.
     Até 10 papéis por pregão, e ninguém vê o seu tiro antes de o prazo
     fechar.</p>
+
+  ${aoVivo.length ? `<div class="card" style="margin-bottom:18px;border-color:var(--linha2)">
+    <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:4px">
+      <h3 style="font-size:16px;margin:0">Valendo agora</h3>
+      <span style="font-size:11.5px;color:var(--graf)">${aoVivo.length}
+        ${aoVivo.length===1?"tiro":"tiros"} no pregão de hoje</span>
+      <span id="tcHora" style="margin-left:auto;font-size:11.5px;color:var(--graf)"></span>
+    </div>
+    <p style="font-size:11.5px;color:var(--graf);margin:0 0 10px">
+      Entrada na abertura. O número muda enquanto o pregão corre e só
+      vira ponto no fechamento.</p>
+    <table><tbody>${aoVivo.map(t=>`<tr>
+      <td class="mono" style="font-weight:500">${esc(t.ativo)}</td>
+      <td class="${t.direcao==="V"?"baixa":"alta"}" style="font-size:12.5px">
+        ${t.direcao==="V"?"venda":"compra"}</td>
+      <td class="d mono ${t.r==null?"nulo":cor(t.r)}" style="font-size:15px">
+        ${t.r==null?"—":pct(t.r)}</td></tr>`).join("")}
+    </tbody></table>
+    ${aoVivo.some(t=>t.r==null)?`<p style="font-size:11.5px;color:var(--graf);margin:9px 0 0">
+      Traço quer dizer que ainda não chegou a abertura desse papel.</p>`:""}
+  </div>` : ""}
 
   <div class="grid2">
     <div>
@@ -2051,6 +2148,24 @@ async function telaTiroCurto(){
       <div style="margin-top:14px"><a href="#/placar" class="bt">Ver o placar &rarr;</a></div>
     </div>
   </div>`;
+
+  // enquanto o pregao corre, repinta sozinho: a graca e acompanhar
+  if(aoVivo.length){
+    const carimbo = () => {
+      const el = $("#tcHora");
+      if(!el) return false;
+      const q = aoVivo.find(t=>t.quando)?.quando;
+      el.textContent = q ? "cotação de " + new Date(q).toLocaleTimeString("pt-BR",
+        {hour:"2-digit",minute:"2-digit",timeZone:"America/Sao_Paulo"}) : "";
+      return true;
+    };
+    carimbo();
+    clearInterval(window.__timerTC);
+    window.__timerTC = setInterval(() => {
+      if(!$("#tcHora")) { clearInterval(window.__timerTC); return; }
+      telaTiroCurto();
+    }, 60000);
+  }
 
   const mostrarLimites = async () => {
     const a = $("#apAtivo").value.trim().toUpperCase();
