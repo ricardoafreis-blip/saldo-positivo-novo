@@ -149,16 +149,29 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
 .chip .n{color:var(--graf);font-size:11px;margin-left:3px}
 .divisor{width:1px;height:13px;background:var(--linha2);flex:none}
 
-/* ── filtros agrupados ──────────────────────────────────────────
-   Sete opções em fila única viravam uma sopa: "No dia" e "Sharpe"
-   são perguntas diferentes. Período responde QUANDO; qualidade
-   responde SE VALEU A PENA; classe é recorte, não ordenação. */
-.filtros{display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start;margin:20px 0 14px;
-  padding-bottom:14px;border-bottom:1px solid var(--linha)}
-.fgrupo{display:flex;flex-direction:column;gap:5px}
-.fgrupo .rot{font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;
-  color:var(--graf);opacity:.7;line-height:1.4}
-.fgrupo .itens{display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+
+/* ── recorte e ordenação são hierarquias diferentes ──────────────
+   A classe diz O QUE você está olhando; a ordem diz COMO está
+   listado. Lado a lado, em três grupos, viravam sete opções soltas
+   competindo entre si. Agora a classe é aba (nível de cima) e a
+   ordem é uma linha só, com divisória entre período e qualidade. */
+.abas{display:flex;gap:2px;flex-wrap:wrap;margin:18px 0 0;
+  border-bottom:1px solid var(--linha)}
+.aba{padding:9px 15px;font-size:13px;color:var(--t2);border:1px solid transparent;
+  border-bottom:none;border-radius:4px 4px 0 0;margin-bottom:-1px;transition:.15s;white-space:nowrap}
+.aba:hover{color:var(--tinta);background:var(--p2)}
+.aba.on{color:var(--ouro2);background:var(--p2);border-color:var(--linha);
+  border-bottom:1px solid var(--p2)}
+.aba .n{font-family:'IBM Plex Mono';font-size:10.5px;color:var(--graf);margin-left:5px}
+.aba.on .n{color:var(--lacre)}
+
+.ordena{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:13px 0 4px}
+.selOrdem{width:auto;min-width:190px;margin:0;padding:7px 11px;font-size:13px;
+  background:var(--p2);border-color:var(--linha2);cursor:pointer}
+.selOrdem:hover{border-color:var(--graf)}
+.ordena .rot{font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--graf);opacity:.7;margin-right:2px}
+.ordena .divisor{margin:0 4px}
 
 /* ── janela de confirmação ──────────────────────────────────────
    Estava injetada no topo de um formulário longo: o resumo aparecia
@@ -228,16 +241,18 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
 <body>
 
 <div class="aviso"><div class="w"><b>Caderno de estudo.</b>
-Nada aqui é recomendação — cada carteira é anotação pessoal de quem publica.
-<a href="#/como-funciona" style="color:var(--ouro2);margin-left:6px">Entenda o site &rarr;</a></div></div>
+Nada aqui é recomendação — cada carteira é anotação pessoal de quem publica.</div></div>
 
 <header><div class="w"><nav>
   <a href="#/" class="marca" style="margin-right:8px">Saldo Positivo</a>
   <span class="bloco"><span class="rot">carteiras</span>
-    <span class="itens"><a href="#/">Ranking</a><span id="navPub"></span><a href="#/como-funciona">Como funciona</a></span></span>
+    <span class="itens"><a href="#/">Ranking</a><span id="navPub"></span></span></span>
   <span class="divisor"></span>
   <span class="bloco"><span class="rot">diversão</span>
     <span class="itens"><a href="#/tiro-curto">Tiro curto</a><a href="#/placar">Placar</a><a href="#/duelo">Duelo</a></span></span>
+  <span class="divisor"></span>
+  <span class="bloco"><span class="rot">o site</span>
+    <span class="itens"><a href="#/como-funciona">Como funciona</a></span></span>
   <span class="dir" id="navDir"></span>
 </nav></div></header>
 
@@ -354,13 +369,21 @@ function haQuantoTempo(iso){
 // correta porque diz a hora do dado, mas a coluna do dia fica vazia.
 const ehDiaUtil = () => !/^(sáb|dom)/i.test(partesBR(new Date()).dia);
 
-function proximaCotacao(){
+// Dentro do horário de pregão? O EA manda cotação a cada 60 segundos
+// enquanto o MetaTrader estiver aberto. Não há mais previsão de "próxima
+// atualização": isso era do tempo do cron do GitHub, que rodava de hora
+// em hora. Hoje, se o número está velho, é porque parou de chegar.
+function emPregao(){
   const p = partesBR(new Date());
-  if(!ehDiaUtil() || p.hora < 10 || p.hora >= 18) return null;   // fora do pregão
-  const faltam = 60 - p.minuto;
-  return faltam <= 1 ? "a próxima sai a qualquer momento"
-                     : `a próxima por volta de ${String((p.hora+1)%24).padStart(2,"0")}:00, em ${faltam} min`;
+  return ehDiaUtil() && p.hora >= 10 && p.hora < 18;
 }
+
+// Quantos minutos tem o dado. Serve de alarme: durante o pregão, cotação
+// parada há mais de alguns minutos quer dizer MetaTrader fechado, EA
+// desanexado ou internet caída — e antes isso passava despercebido,
+// porque a legenda prometia "de hora em hora" e nada parecia errado.
+const ATRASO_ALERTA = 6;      // minutos
+const minutosDe = iso => Math.max(0, Math.round((Date.now() - new Date(iso)) / 60000));
 
 // Decide se o parcial do pregao em curso vale para esta carteira.
 // Exige TRES coisas: ser dia util, existir cotacao viva, e essa cotacao
@@ -1027,24 +1050,34 @@ async function telaRanking(){
       Cada um publica quantas carteiras quiser. Rentabilidade, queda máxima e
       alavancagem ficam abertas a todos. Os papéis e os pesos, não.</p>
   </div>
-  <div class="filtros">
-    <div class="fgrupo"><span class="rot">período</span><span class="itens">
-      ${[["hoje","No dia"],["sem","Na semana"],["mes","No mês"],["acum","Desde o início"]]
-        .map(([k,r])=>`<a href="#/?ordem=${k}${filtro?"&classe="+filtro:""}"
-          class="chip${ordem===k?" on":""}">${r}</a>`).join("")}
-    </span></div>
-    <div class="fgrupo"><span class="rot">qualidade</span><span class="itens">
-      ${[["vsibov","Contra o Ibovespa"],["sharpe","Sharpe"],["dd","Menor drawdown"]]
-        .map(([k,r])=>`<a href="#/?ordem=${k}${filtro?"&classe="+filtro:""}"
-          class="chip${ordem===k?" on":""}">${r}</a>`).join("")}
-    </span></div>
-    <div class="fgrupo"><span class="rot">classe</span><span class="itens">
-      <a href="#/?ordem=${ordem}" class="chip${!filtro?" on":""}">Todas</a>
-      ${Object.entries(CLASSE).filter(([k])=>conta[k]).map(([k,v])=>
-        `<a href="#/?ordem=${ordem}&classe=${k}" class="chip${filtro===k?" on":""}">${v.nome}<span class="n">${conta[k]}</span></a>`).join("")}
-      ${conta.sem?`<a href="#/?ordem=${ordem}&classe=sem"
-        class="chip${filtro==="sem"?" on":""}">Sem classe<span class="n">${conta.sem}</span></a>`:""}
-    </span></div>
+  <div class="abas">
+    <a href="#/?ordem=${ordem}" class="aba${!filtro?" on":""}">Todas<span class="n">${(cs||[]).length}</span></a>
+    ${Object.entries(CLASSE).filter(([k])=>conta[k]).map(([k,v])=>
+      `<a href="#/?ordem=${ordem}&classe=${k}"
+        class="aba${filtro===k?" on":""}">${v.nome}<span class="n">${conta[k]}</span></a>`).join("")}
+    ${conta.sem?`<a href="#/?ordem=${ordem}&classe=sem"
+      class="aba${filtro==="sem"?" on":""}">Sem classe<span class="n">${conta.sem}</span></a>`:""}
+  </div>
+  <div class="ordena">
+    <span class="rot">ordenar por</span>
+    <select id="selOrdem" class="selOrdem">
+      <optgroup label="Período">
+        ${[["hoje","No dia"],["sem","Na semana"],["mes","No mês"],["acum","Desde o início"]]
+          .map(([k,r])=>`<option value="${k}"${ordem===k?" selected":""}>${r}</option>`).join("")}
+      </optgroup>
+      <optgroup label="Qualidade">
+        ${[["vsibov","Contra o Ibovespa"],["sharpe","Sharpe"],["dd","Menor drawdown"]]
+          .map(([k,r])=>`<option value="${k}"${ordem===k?" selected":""}>${r}</option>`).join("")}
+      </optgroup>
+    </select>
+    <span style="font-size:11.5px;color:var(--graf)">${
+      {hoje:"resultado do pregão de hoje",
+       sem:"últimos 5 pregões",
+       mes:"últimos 21 pregões",
+       acum:"desde a publicação de cada carteira",
+       vsibov:"quanto ganhou do índice, em pontos",
+       sharpe:"retorno por unidade de risco · a partir de 20 pregões",
+       dd:"maior queda desde o topo"}[ordem] || ""}</span>
   </div>
   ${quando?`<p id="linhaViva" style="font-size:11.5px;color:var(--graf);margin:0 0 12px"></p>`:""}
   ${filtro && CLASSE[filtro] ? `<p style="font-size:12.5px;color:var(--t2);max-width:60ch;margin:-2px 0 15px">
@@ -1101,12 +1134,17 @@ async function telaRanking(){
       <td class="d mono nulo">${x.m.dias}</td></tr>`).join("")).join("")}
     </tbody></table>`)}`;
 
+  // seletor de ordem: navega pela hash, para o link continuar compartilhável
+  const so = $("#selOrdem");
+  if(so) so.onchange = e =>
+    location.hash = `#/?ordem=${e.target.value}${filtro ? "&classe="+filtro : ""}`;
+
   // ── repinta sozinho enquanto o pregão corre ──
   // Sem isso a pessoa precisa recarregar para ver o número mexer. Só
   // roda em dia útil e só enquanto a tela do ranking estiver aberta —
   // ficar buscando de madrugada não muda nada e gasta o banco à toa.
   clearInterval(window.__timerRank);
-  if(ehDiaUtil() && proximaCotacao()){
+  if(emPregao()){
     window.__timerRank = setInterval(() => {
       // saiu do ranking ou a aba está escondida: não faz nada
       if((location.hash||"#/").split("?")[0] !== "#/" ) { clearInterval(window.__timerRank); return; }
@@ -1124,15 +1162,22 @@ async function telaRanking(){
     const pintarLinha = () => {
       const el = $("#linhaViva");
       if(!el) return;                       // saiu do ranking: para de mexer
-      const prox = proximaCotacao();
-      el.innerHTML = `Cotação de
-        <b>${new Date(quando).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit",timeZone:"America/Sao_Paulo"})}</b>
-        (${haQuantoTempo(quando)}).
-        ${prox ? "Atualiza de hora em hora durante o pregão — " + prox + "."
-               : (ehDiaUtil() ? "Fora do horário de pregão: o próximo movimento é na abertura."
-                              : "Sem pregão hoje: o próximo movimento é no próximo dia útil.")}
-        A coluna <b>No dia</b> marcada com • é parcial e muda até o fechamento
-        das 19h.${proximaCotacao() ? " Esta página se atualiza sozinha." : ""}`;
+      const min = minutosDe(quando);
+      const hora = new Date(quando).toLocaleTimeString("pt-BR",
+        {hour:"2-digit",minute:"2-digit",timeZone:"America/Sao_Paulo"});
+      const parado = emPregao() && min >= ATRASO_ALERTA;
+      el.style.color = parado ? "var(--baixa)" : "var(--graf)";
+      el.innerHTML = parado
+        ? `<b>A cotação está parada há ${min} minutos.</b> Durante o pregão ela
+           deveria mudar a cada minuto — verifique se o MetaTrader está aberto
+           com o robô anexado. O último dado é de ${hora}.`
+        : `Cotação de <b>${hora}</b> (${haQuantoTempo(quando)}).
+           ${emPregao()
+             ? "Atualiza sozinha a cada minuto enquanto o pregão corre. A coluna "
+               + "<b>No dia</b> marcada com • é parcial e muda até o fechamento das 19h."
+             : (ehDiaUtil()
+                ? "Fora do horário de pregão: o próximo movimento é na abertura."
+                : "Sem pregão hoje: o próximo movimento é no próximo dia útil.")}`;
     };
     pintarLinha();
     clearInterval(window.__timerViva);
@@ -1684,7 +1729,7 @@ async function telaCarteira(id){
 
   // repinta enquanto o pregao corre, so nesta carteira e so com a aba visivel
   clearInterval(window.__timerCart);
-  if(m.parcial && ehDiaUtil() && proximaCotacao()){
+  if(m.parcial && emPregao()){
     window.__timerCart = setInterval(() => {
       if(!(location.hash||"").startsWith("#/carteira/"+id)){
         clearInterval(window.__timerCart); return; }
@@ -1793,7 +1838,7 @@ async function telaDuelo(){
 
   // repinta enquanto o pregao corre
   clearInterval(window.__timerDuelo);
-  if(ehDiaUtil() && proximaCotacao()){
+  if(emPregao()){
     window.__timerDuelo = setInterval(() => {
       if((location.hash||"").split("?")[0] !== "#/duelo"){
         clearInterval(window.__timerDuelo); return; }
@@ -2164,6 +2209,13 @@ async function telaEditar(id){
       .eq("carteira_id",id).order("valida_de",{ascending:false});
   const { data:serie } = await sb.from("retorno_dia").select("data,retorno,indice")
       .eq("carteira_id",id).order("data",{ascending:false});
+  // Onde o mercado colocou a posicao. Sem isto a grade so sabia mostrar o
+  // DECLARADO — e declarar de novo devolvia todos os pesos ao declarado,
+  // rebalanceando a carteira inteira mesmo com rebalanceamento "nunca".
+  // Trocar dois papeis reequilibrava os outros oito, calado, e o extrato
+  // nao mostrava porque compara declaracao com declaracao.
+  const { data:pAtual } = await sb.from("peso_atual").select("ativo,peso")
+      .eq("carteira_id",id);
   await universo();
 
   // declarações agrupadas por data
@@ -2171,9 +2223,40 @@ async function telaEditar(id){
   const datas=Object.keys(decl).sort().reverse();
   const atual=datas.length?decl[datas[0]]:[];
 
+  // Arredonda para inteiro preservando a soma. O peso atual vem com
+  // casas decimais e arredondar linha a linha faz a soma cair em 99 ou
+  // 101 — o que reprova na Comprada, que exige exatamente 100.
+  function inteirosSomando(lista){
+    const alvo = Math.round(lista.reduce((a,p)=>a+Math.abs(p.peso),0));
+    const base = lista.map(p=>({ ativo:p.ativo, sinal:p.peso<0?-1:1,
+                                 exato:Math.abs(p.peso), n:Math.floor(Math.abs(p.peso)) }));
+    let sobra = alvo - base.reduce((a,b)=>a+b.n,0);
+    base.map((b,i)=>[i, b.exato-b.n]).sort((x,y)=>y[1]-x[1])
+        .forEach(([i])=>{ if(sobra>0){ base[i].n += 1; sobra--; } });
+    return base.filter(b=>b.n>0);
+  }
+
+  // A grade parte SEMPRE de onde o mercado deixou os pesos. Antes ela
+  // carregava o declarado, e declarar de novo devolvia todos os papeis
+  // ao peso original — um rebalanceamento completo, calado, mesmo em
+  // carteira com rebalanceamento "nunca". Trocar dois papeis reequilibrava
+  // os outros oito, e o extrato nao mostrava porque compara declaracao
+  // com declaracao.
+  //
+  // Nao ha escolha na tela de proposito: quem quer reequilibrar ja tem o
+  // campo Rebalanceamento acima, que e explicito, fica registrado em nota
+  // e vale para sempre. Um seletor aqui seria uma segunda maneira de
+  // fazer a mesma coisa, com o agravante de que, com pesos inteiros, as
+  // duas opcoes dao a mesma grade enquanto o drift for menor que 1 ponto.
+  const baseDeclarada = (atual||[]).map(p=>({ ativo:p.ativo, peso:p.peso }));
+  const basePesoAtual = (pAtual||[]).map(p=>({ ativo:p.ativo, peso:p.peso }));
+  // carteira que ainda nao estreou nao tem peso_atual: cai no declarado
+  const baseGrade = basePesoAtual.length ? basePesoAtual : baseDeclarada;
+
   // Na 60/40 a grade da tela de editar tambem passa a valer DENTRO da parte
-  // de acoes. A renda fixa vigente e o que sobra da soma declarada.
-  const brutaAtual = atual.reduce((a,p)=>a+Math.abs(p.peso), 0);
+  // de acoes. A renda fixa vigente e o que sobra da soma — da MESMA base
+  // que a grade usa, senao o campo abre com um numero e a grade com outro.
+  const brutaAtual = baseGrade.reduce((a,p)=>a+Math.abs(p.peso), 0);
   const rfAtual = Math.min(80, Math.max(50, Math.round(100 - brutaAtual)));
 
   app().innerHTML = `
@@ -2204,6 +2287,10 @@ async function telaEditar(id){
         <p style="font-size:12px;color:var(--t2);margin:0 0 14px">
           Isso cria uma declaração de hoje. As de dias anteriores ficam guardadas —
           é o histórico que mostra quando você mudou de ideia.</p>
+        <p style="font-size:12px;color:var(--graf);margin:0 0 14px;line-height:1.5">
+          A grade abaixo já vem com os pesos <b>onde o mercado deixou</b>. O que
+          você não mexer continua como está — declarar não reequilibra a carteira.
+          Para isso existe o campo Rebalanceamento, acima.</p>
         ${c.classe === "sessenta_quarenta" ? `
         <label>Renda fixa, em % do dinheiro</label>
         <input id="rendaFixa" type="number" step="1" min="50" max="80" value="${rfAtual}">
@@ -2246,14 +2333,23 @@ async function telaEditar(id){
     </div>
   </div>`;
 
-  // para a 60/40, mostra os pesos como fatia da parte de acoes (somando 100)
-  const fatia = 100 - rfAtual;
-  ligarGrade((atual||[]).map(p=>[
-    p.ativo,
-    c.classe === "sessenta_quarenta" && fatia > 0
-      ? Math.round(Math.abs(p.peso) * 100 / fatia)
-      : Math.round(Math.abs(p.peso)),
-    p.peso<0?"V":"C"]), c.classe);
+  // Monta a grade a partir da base escolhida. Na 60/40 os pesos viram
+  // fatia da parte de acoes (somando 100); nas demais, % do dinheiro.
+  function montarGrade(){
+    const inteiros = inteirosSomando(baseGrade);
+    const bruta = inteiros.reduce((a,b)=>a+b.n, 0);
+    const rf = Math.min(80, Math.max(50, Math.round(100 - bruta)));
+    const fatia = 100 - rf;
+    const elrf = $("#rendaFixa");
+    if(elrf) elrf.value = rf;
+    ligarGrade(inteiros.map(b=>[
+      b.ativo,
+      c.classe === "sessenta_quarenta" && fatia > 0
+        ? Math.round(b.n * 100 / fatia)
+        : b.n,
+      b.sinal < 0 ? "V" : "C"]), c.classe);
+  }
+  montarGrade();
   const elRF = $("#rendaFixa");
   if(elRF) elRF.oninput = resumoGrade;
 
@@ -2433,14 +2529,19 @@ async function telaTiroCurto(){
       Variação do papel no pregão de hoje, na direção do seu tiro. O número
       muda enquanto o pregão corre e só vira ponto no fechamento.</p>
     <table><tbody>${aoVivo.map(t=>`<tr>
-      <td class="mono" style="font-weight:500">${esc(t.ativo)}</td>
+      <td class="mono" style="font-weight:500">${esc(t.ativo)}${t.r==null
+        ? `<div style="font-size:10.5px;color:var(--baixa);margin-top:2px;
+             text-transform:none;letter-spacing:0">sem cotação — não vai pontuar</div>` : ""}</td>
       <td class="${t.direcao==="V"?"baixa":"alta"}" style="font-size:12.5px">
         ${t.direcao==="V"?"venda":"compra"}</td>
       <td class="d mono ${t.r==null?"nulo":cor(t.r)}" style="font-size:15px">
         ${t.r==null?"—":pct(t.r)}</td></tr>`).join("")}
     </tbody></table>
-    ${aoVivo.some(t=>t.r==null)?`<p style="font-size:11.5px;color:var(--graf);margin:9px 0 0">
-      Traço quer dizer que ainda não chegou cotação desse papel hoje.</p>`:""}
+    ${aoVivo.some(t=>t.r==null)?`<p style="font-size:11.5px;color:var(--baixa);margin:9px 0 0">
+      O robô não conseguiu cotar ${aoVivo.filter(t=>t.r==null).map(t=>esc(t.ativo)).join(", ")} hoje.
+      Sem preço não há como apurar, então esse tiro não entra no placar. Se o
+      MetaTrader estiver aberto, adicione o papel ao Observador do Mercado
+      (Ctrl+U) para os próximos pregões.</p>`:""}
   </div>` : ""}
 
   <div class="grid2">
