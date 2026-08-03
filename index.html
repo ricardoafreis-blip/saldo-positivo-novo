@@ -2377,11 +2377,45 @@ async function telaTiroCurto(){
 
   $("#apBt").onclick = async () => {
     const a = $("#apAtivo").value.trim().toUpperCase();
+    const bt = $("#apBt");
     if(!a) return $("#erro").innerHTML = aviso("Escolha um papel.", true);
     if(!UNISET.has(a)) return $("#erro").innerHTML = aviso(`${a} não está no universo.`, true);
+
+    // "Estar no universo" nao e "o robo consegue cotar". ALUP11 estava
+    // no universo, foi aceito, e nunca teve cotacao: o tiro ficou
+    // inapuravel e so apareceu como traco horas depois. O insert poe o
+    // papel na fila (trigger); aqui esperamos o EA responder.
+    bt.disabled = true; bt.textContent = "registrando…";
     const { error } = await sb.from("aposta")
       .insert({ data: prox, ativo: a, direcao: $("#apDir").value });
-    if(error) return $("#erro").innerHTML = aviso(error.message, true);
+    if(error){ bt.disabled=false; bt.textContent="Registrar tiro";
+      return $("#erro").innerHTML = aviso(error.message, true); }
+
+    // ate 8 segundos esperando o EA. Ele olha a fila a cada 3s, entao
+    // na pratica responde na primeira ou segunda tentativa.
+    bt.textContent = "conferindo no robô…";
+    let estado = "pendente";
+    for(let i = 0; i < 8 && estado === "pendente"; i++){
+      await new Promise(r => setTimeout(r, 1000));
+      const { data } = await sb.rpc("estado_papel", { p_ativo: a });
+      estado = data || "pendente";
+    }
+
+    if(estado === "nao_existe"){
+      // desfaz: melhor recusar agora do que deixar um tiro que nunca
+      // vai pontuar ocupando uma das 10 vagas do pregao
+      await sb.from("aposta").delete()
+        .eq("data", prox).eq("ativo", a).eq("direcao", $("#apDir").value);
+      bt.disabled=false; bt.textContent="Registrar tiro";
+      return $("#erro").innerHTML = aviso(
+        `A corretora não tem ${a} com esse código, então o robô não consegue cotar. `
+        + `O tiro foi desfeito — sem cotação ele nunca seria apurado.`, true);
+    }
+    if(estado === "pendente"){
+      $("#erro").innerHTML = aviso(
+        `${a} foi registrado, mas o robô ainda não confirmou a cotação. `
+        + `Se o MetaTrader estiver fechado, abra e confira esta tela em seguida.`);
+    }
     telaTiroCurto();
   };
 
