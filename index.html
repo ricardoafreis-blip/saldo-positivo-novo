@@ -663,7 +663,9 @@ function colunasPorClasse(lista, ordem, rotulo){
       const v = estreia ? null : x.m[chave];
       const txt = estreia ? "estreia"
                 : v==null ? "—"
-                : (chave==="sharpe" ? n2(v) : pct(v)) + (x.m.parcial && chave==="hoje" ? "•" : "");
+                : (chave==="sharpe" ? n2(v) : pct(v))
+                  + (x.m.parcial && chave==="hoje"
+                     ? '<sup style="font-size:10px;opacity:.75;margin-left:1px">•</sup>' : "");
       return `<div class="linhaC" onclick="location.hash='#/carteira/${x.c.id}'">
         <span class="n">${String(i+1).padStart(2,"0")}</span>
         <span class="quem"><div class="nome">${esc(x.c.nome)}</div>
@@ -862,9 +864,17 @@ async function telaRanking(){
   const chaves = { acum:x=>-x.m.acum, hoje:x=>-x.m.hoje, dd:x=>-x.m.dd,
                    sem:x=>-(x.m.sem ?? -9), mes:x=>-(x.m.mes ?? -9),
                    sharpe:x=>-(x.m.sharpe ?? -9) };
+  // Quem nunca apurou vai para o FIM, em qualquer criterio. metricas()
+  // devolve hoje 0 e acum 0 para serie vazia, e zero ganha de qualquer
+  // negativo: uma carteira que nao comecou aparecia em primeiro lugar
+  // com a celula escrita "estreia". Em Semana e Mes isso nao acontecia
+  // porque la o valor e null e cai no fallback -9 — dois dos seis
+  // criterios estavam certos por acidente.
   // Desempate: a carteira mais antiga ganha. Importa no começo, quando
   // todas estão em 0,00% e a ordem seria arbitrária.
-  lista.sort((a,b)=> chaves[ordem](a)-chaves[ordem](b)
+  const naoApurou = x => (x.m.dias || x.m.parcial) ? 0 : 1;
+  lista.sort((a,b)=> naoApurou(a)-naoApurou(b)
+    || chaves[ordem](a)-chaves[ordem](b)
     || Date.parse(a.c.criada_em||"2100-01-01") - Date.parse(b.c.criada_em||"2100-01-01"));
 
   app().innerHTML = `
@@ -924,8 +934,10 @@ async function telaRanking(){
         <div class="meta">${esc(x.c.apelido)} · ${x.c.n_ativos
           ? `${x.c.n_ativos} ativos · ${tags(x.c)}`
           : `estreia no próximo pregão${x.c.classe&&CLASSE[x.c.classe]?" · "+CLASSE[x.c.classe].nome:""}`}</div></td>
-      <td class="d mono ${cor(x.m.hoje)}" style="${x.m.parcial?"opacity:.82":""}"
-      title="${x.m.parcial?"parcial — o pregão ainda não fechou":"fechado"}">${pct(x.m.hoje)}${x.m.parcial?'<span style="font-size:9px;vertical-align:super;opacity:.7">•</span>':""}</td>
+      <td class="d mono ${x.m.dias||x.m.parcial?cor(x.m.hoje):"nulo"}" style="${x.m.parcial?"opacity:.82":""}"
+      title="${x.m.parcial?"parcial — o pregão ainda não fechou":(x.m.dias?"fechado":"ainda não apurou nenhum pregão")}">${
+      x.m.dias||x.m.parcial ? pct(x.m.hoje) : "—"}${
+      x.m.parcial?'<sup style="font-size:11px;opacity:.75;margin-left:1px">•</sup>':""}</td>
       <td class="d mono ${x.m.sem==null?"nulo":cor(x.m.sem)}">${x.m.sem==null?"—":pct(x.m.sem)}</td>
       <td class="d mono ${x.m.mes==null?"nulo":cor(x.m.mes)}">${x.m.mes==null?"—":pct(x.m.mes)}</td>
       <td class="d mono ${x.m.dias?cor(x.m.acum):"nulo"}">${x.m.dias?pct(x.m.acum):"estreia"}</td>
@@ -1385,8 +1397,9 @@ async function telaCarteira(id){
       · publicada em ${c.criada_em}</p>
   </div>
   <div class="grade">
-    <div class="cel"><div class="v ${cor(m.hoje)}" style="${m.parcial?"opacity:.85":""}">${pct(m.hoje)}${
-      m.parcial?'<span style="font-size:11px;vertical-align:super;opacity:.7">•</span>':""}</div>
+    <div class="cel"><div class="v ${m.dias||m.parcial?cor(m.hoje):"nulo"}" style="${m.parcial?"opacity:.85":""}">${
+      m.dias||m.parcial ? pct(m.hoje) : "—"}${
+      m.parcial?'<sup style="font-size:12px;opacity:.75;margin-left:1px">•</sup>':""}</div>
       <div class="k">${m.parcial?"hoje · parcial":"hoje"}</div></div>
     <div class="cel"><div class="v ${m.dias?cor(m.acum):"nulo"}">${m.dias?pct(m.acum):"estreia"}</div><div class="k">acumulado</div></div>
     <div class="cel"><div class="v">${n2(m.sharpe)}</div><div class="k">sharpe</div></div>
