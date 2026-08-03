@@ -149,6 +149,48 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
 .chip .n{color:var(--graf);font-size:11px;margin-left:3px}
 .divisor{width:1px;height:13px;background:var(--linha2);flex:none}
 
+/* ── filtros agrupados ──────────────────────────────────────────
+   Sete opções em fila única viravam uma sopa: "No dia" e "Sharpe"
+   são perguntas diferentes. Período responde QUANDO; qualidade
+   responde SE VALEU A PENA; classe é recorte, não ordenação. */
+.filtros{display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start;margin:20px 0 14px;
+  padding-bottom:14px;border-bottom:1px solid var(--linha)}
+.fgrupo{display:flex;flex-direction:column;gap:5px}
+.fgrupo .rot{font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--graf);opacity:.7;line-height:1.4}
+.fgrupo .itens{display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+
+/* ── janela de confirmação ──────────────────────────────────────
+   Estava injetada no topo de um formulário longo: o resumo aparecia
+   fora da tela e o botão de confirmar ficava lá embaixo, longe do
+   que ele confirma. Agora é uma janela com o botão junto do conteúdo. */
+.modal{position:fixed;inset:0;z-index:50;padding:18px;overflow-y:auto;
+  background:rgba(4,9,18,.8);display:grid;place-items:center}
+.modal .cx{width:100%;max-width:450px;background:var(--p2);border-radius:5px;
+  border:1px solid var(--lacre);box-shadow:0 22px 64px rgba(0,0,0,.55);
+  max-height:calc(100vh - 36px);display:flex;flex-direction:column;overflow:hidden}
+.modal .topo{padding:19px 22px 14px;border-bottom:1px solid var(--linha)}
+.modal .corpo{padding:15px 22px;overflow-y:auto;flex:1;min-height:0}
+.modal .pe{padding:13px 22px 16px;border-top:1px solid var(--linha);
+  display:flex;gap:9px;justify-content:flex-end;flex-wrap:wrap}
+.modal .pe .bt{flex:1;min-width:120px}
+@media(max-width:520px){.modal{padding:0;place-items:stretch}
+  .modal .cx{max-width:none;max-height:100vh;border-radius:0;border-left:none;border-right:none}}
+
+/* ── explicação do site ─────────────────────────────────────────── */
+.passos{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:16px 0}
+@media(max-width:720px){.passos{grid-template-columns:1fr}}
+.passo{background:var(--p2);border:1px solid var(--linha);border-radius:4px;padding:16px 17px}
+.passo .num{font-family:'IBM Plex Mono';font-size:11px;color:var(--lacre);letter-spacing:.1em}
+.passo h4{font-family:Newsreader,serif;font-size:15.5px;font-weight:500;margin:5px 0 6px}
+.passo p{font-size:12.5px;color:var(--t2);margin:0;line-height:1.5}
+.qa{border-bottom:1px solid var(--linha);padding:13px 0}
+.qa summary{cursor:pointer;font-size:14px;color:var(--tinta);list-style:none}
+.qa summary::-webkit-details-marker{display:none}
+.qa summary::before{content:"+";color:var(--lacre);margin-right:9px;font-family:'IBM Plex Mono'}
+.qa[open] summary::before{content:"−"}
+.qa p{font-size:12.5px;color:var(--t2);margin:9px 0 0 21px;max-width:62ch;line-height:1.6}
+
 /* posição no ranking em ouro */
 .pos{font-family:'IBM Plex Mono';font-size:12px;color:var(--graf);letter-spacing:.02em}
 
@@ -186,12 +228,13 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
 <body>
 
 <div class="aviso"><div class="w"><b>Caderno de estudo.</b>
-Nada aqui é recomendação — cada carteira é anotação pessoal de quem publica.</div></div>
+Nada aqui é recomendação — cada carteira é anotação pessoal de quem publica.
+<a href="#/como-funciona" style="color:var(--ouro2);margin-left:6px">Entenda o site &rarr;</a></div></div>
 
 <header><div class="w"><nav>
   <a href="#/" class="marca" style="margin-right:8px">Saldo Positivo</a>
   <span class="bloco"><span class="rot">carteiras</span>
-    <span class="itens"><a href="#/">Ranking</a><span id="navPub"></span></span></span>
+    <span class="itens"><a href="#/">Ranking</a><span id="navPub"></span><a href="#/como-funciona">Como funciona</a></span></span>
   <span class="divisor"></span>
   <span class="bloco"><span class="rot">diversão</span>
     <span class="itens"><a href="#/tiro-curto">Tiro curto</a><a href="#/placar">Placar</a><a href="#/duelo">Duelo</a></span></span>
@@ -202,8 +245,9 @@ Nada aqui é recomendação — cada carteira é anotação pessoal de quem publ
 
 <main class="w" id="app"><div class="carreg">carregando…</div></main>
 
-<footer class="w">A rentabilidade começa no dia em que a carteira é publicada — não há histórico retroativo.
-Cada carteira é anotação pessoal de quem a publica.</footer>
+<footer class="w">A rentabilidade começa no dia em que a carteira é publicada — não há histórico
+retroativo. Cada carteira é anotação pessoal de quem a publica.
+<a href="#/como-funciona" style="color:var(--t2);border-bottom:1px solid var(--linha2)">Como funciona</a></footer>
 
 <script type="module">
 // ═══════════════════════════════════════════════════════════════
@@ -216,12 +260,13 @@ const CHAVE = "sb_publishable_p45Gm13xcRkIAMhR_tfkrg_LJHOGTja";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const sb = createClient(URL, CHAVE);
 
-// Taxa da renda fixa ao ano. TEM QUE SER IGUAL ao fallback do fechar_dia
-// no banco (power(1.145, 1.0/252) - 1). Estava em 0.105 aqui enquanto o
-// banco ja usava 14,5%: o Sharpe do ranking descontava um custo de
-// oportunidade menor que o real e saia inflado para todo mundo.
-// Quando a tabela `parametro` passar a mandar, os dois leem de la.
-const CDI_ANO = 0.145;
+// Taxa da renda fixa ao ano. TEM QUE SER IGUAL ao que a taxa_rf_ano()
+// devolve no banco, que le de parametro.cdi_ano (hoje 15%). Estava em
+// 0.105 aqui enquanto o banco ja usava outra coisa: o Sharpe do ranking
+// descontava um custo de oportunidade menor que o real e saia inflado.
+// Se mudar a parametro, mude aqui tambem —  ou o Sharpe e o grafico
+// passam a discordar da apuracao.
+const CDI_ANO = 0.15;
 
 let eu = null;              // perfil logado
 const $ = s => document.querySelector(s);
@@ -642,7 +687,9 @@ function agrupar(lista){
 // alavancada. Aqui a separacao e visual, ninguem precisa ler regra.
 function colunasPorClasse(lista, ordem, rotulo){
   const chave = { hoje:"hoje", sem:"sem", mes:"mes", acum:"acum",
-                  sharpe:"sharpe", dd:"dd" }[ordem] || "acum";
+                  sharpe:"sharpe", dd:"dd", vsibov:"vsIbov" }[ordem] || "acum";
+  const formatar = v => chave==="sharpe" ? n2(v)
+                      : chave==="vsIbov" ? pts(v) : pct(v);
   const blocos = Object.entries(CLASSE).map(([k,v])=>{
     const g = lista.filter(x => x.c.classe === k).slice(0, 10);
     return { k, nome:v.nome, regra:v.regra, total: lista.filter(x=>x.c.classe===k).length, g };
@@ -659,12 +706,15 @@ function colunasPorClasse(lista, ordem, rotulo){
       // metricas() devolve acum 0 para serie vazia, e isso saia como
       // "+0,00%" verde, igual a quem apurou e nao variou. A tabela de
       // baixo ja dizia "estreia" — as colunas mentiam.
-      const estreia = !x.m.dias && !x.m.parcial;
-      const v = estreia ? null : x.m[chave];
-      const txt = estreia ? "estreia"
+      // Só a coluna do dia aceita parcial: acumulado, semana, mes,
+      // Sharpe e drawdown so existem com pregao FECHADO.
+      const valeParcial = chave === "hoje" && x.m.parcial;
+      const semDados = !x.m.dias && !valeParcial;
+      const v = semDados ? null : x.m[chave];
+      const txt = semDados ? "estreia"
                 : v==null ? "—"
-                : (chave==="sharpe" ? n2(v) : pct(v))
-                  + (x.m.parcial && chave==="hoje"
+                : formatar(v)
+                  + (valeParcial
                      ? '<sup style="font-size:10px;opacity:.75;margin-left:1px">•</sup>' : "");
       return `<div class="linhaC" onclick="location.hash='#/carteira/${x.c.id}'">
         <span class="n">${String(i+1).padStart(2,"0")}</span>
@@ -709,6 +759,83 @@ async function pintarFaixa(){
     <span class="hr">entre os papéis acompanhados · ${hora}</span>
   </div></div>`;
   el.style.display = "block";
+}
+
+// Diferenca em PONTOS, para excesso sobre benchmark. Nao usa pct()
+// porque "+0,67%" e "+0,67 pts" sao coisas diferentes: o primeiro
+// sugere retorno, o segundo e distancia entre dois retornos.
+const pts = v => v==null ? "—"
+  : (v>=0?"+":"−") + Math.abs(v*100).toFixed(2).replace(".",",") + " pts";
+
+// Quanto a carteira ganhou (ou perdeu) do Ibovespa no periodo DELA.
+// So conta pregao FECHADO: o parcial do dia nao entra, entao este
+// numero anda um dia atras do "No dia" — e tudo bem, porque comparar
+// parcial com indice fechado seria comparar reguas diferentes.
+function contraIbov(serie, oIbov){
+  if(!serie || !serie.length) return null;
+  let ib = 1, tem = false;
+  serie.forEach(x => {
+    if(oIbov[x.data] != null) tem = true;
+    ib *= 1 + (oIbov[x.data] ?? 0);
+  });
+  if(!tem) return null;                 // sem índice no período: cala
+  return (serie[serie.length-1].indice/100 - 1) - (ib - 1);
+}
+
+// ═══════════════════════════════════════════ contra o mercado, em número
+// O grafico so aparece com 2 pregoes ou mais — com um dia apurado nao
+// havia comparacao NENHUMA na tela. Estes numeros valem desde o
+// primeiro pregao e sao a mesma conta que alimenta as curvas.
+//
+// A diferenca e ARITMETICA, em pontos: "ganhou 2,3 pontos do Ibovespa".
+// A versao geometrica ((1+c)/(1+i)-1) e mais correta em periodos longos
+// mas nao e o que a pessoa faz de cabeca, e em janelas curtas as duas
+// dao praticamente o mesmo numero.
+function comparativo(serie, refs){
+  if(!serie || !serie.length) return null;
+  const oIbov = {};
+  (refs||[]).filter(x => x.ativo === "^BVSP").forEach(x => { oIbov[x.data] = x.valor; });
+  const temIbov = serie.some(x => oIbov[x.data] != null);
+  let ib = 1, cd = 1;
+  serie.forEach(x => {
+    ib *= 1 + (oIbov[x.data] ?? 0);   // pregão sem cotação não move
+    cd *= 1 + CDI_DIA;
+  });
+  const cart = serie[serie.length-1].indice/100 - 1;
+  return { cart, dias: serie.length,
+           ibov:   temIbov ? ib - 1 : null,
+           cdi:    cd - 1,
+           vsIbov: temIbov ? cart - (ib - 1) : null,
+           vsCdi:  cart - (cd - 1) };
+}
+
+function comparativoHTML(serie, refs){
+  const k = comparativo(serie, refs);
+  if(!k) return "";
+  return `<div class="card" style="margin-bottom:18px">
+    <div style="font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--graf);margin-bottom:12px">
+      Contra o mercado · ${k.dias} ${k.dias===1?"pregão":"pregões"}</div>
+    <div class="grade" style="margin:0">
+      <div class="cel"><div class="v ${cor(k.cart)}">${pct(k.cart)}</div>
+        <div class="k">carteira</div></div>
+      <div class="cel"><div class="v ${k.ibov==null?"nulo":cor(k.ibov)}">${
+        k.ibov==null?"—":pct(k.ibov)}</div><div class="k">Ibovespa</div></div>
+      <div class="cel"><div class="v" style="color:var(--ouro2)">${pct(k.cdi)}</div>
+        <div class="k">CDI estimado</div></div>
+      <div class="cel" style="background:var(--p3)">
+        <div class="v ${k.vsIbov==null?"nulo":cor(k.vsIbov)}">${pts(k.vsIbov)}</div>
+        <div class="k">contra o Ibovespa</div></div>
+      <div class="cel" style="background:var(--p3)">
+        <div class="v ${cor(k.vsCdi)}">${pts(k.vsCdi)}</div>
+        <div class="k">contra o CDI</div></div>
+    </div>
+    <p style="font-size:11.5px;color:var(--graf);margin:10px 0 0">
+      O Ibovespa e o CDI são medidos <b>a partir do dia em que esta carteira
+      nasceu</b>, não do começo do ano — por isso a coluna de pregões importa:
+      quem escolhe um dia de partida bom escolhe também um benchmark fácil.
+      ${k.ibov==null?"Sem cotação do Ibovespa no período. ":""}A renda fixa é
+      estimada em ${n2(CDI_ANO*100,1)}% ao ano, não medida.</p>
+  </div>`;
 }
 
 // ═══════════════════════════════════════════ grafico
@@ -851,19 +978,35 @@ async function telaRanking(){
 
   await colarClasse(cs);
 
+  // Ibovespa do periodo, UMA consulta para todas as carteiras. Cada uma
+  // compoe o indice sobre as proprias datas, porque o benchmark comeca
+  // no dia em que ela nasceu — nao no comeco do ano.
+  let oIbov = {};
+  {
+    const datas = Object.values(series).flat().map(r => r.data);
+    if(datas.length){
+      const min = datas.reduce((a,b) => a < b ? a : b);
+      const { data:bv } = await sb.from("oscilacao").select("data,valor")
+        .eq("ativo", "^BVSP").gte("data", min).order("data");
+      (bv||[]).forEach(x => { oIbov[x.data] = x.valor; });
+    }
+  }
+
   const conta = {};
   (cs||[]).forEach(c=> conta[c.classe||"sem"] = (conta[c.classe||"sem"]||0) + 1);
 
   let lista = (cs||[]).map(c=>{
     const s = series[c.id] || [];
     const m = aplicarParcial(metricas(s), vivo[c.id], s);
+    m.vsIbov = contraIbov(s, oIbov);
     return { c, m };
   });
   if(filtro) lista = lista.filter(x=> (x.c.classe||"sem") === filtro);
 
   const chaves = { acum:x=>-x.m.acum, hoje:x=>-x.m.hoje, dd:x=>-x.m.dd,
                    sem:x=>-(x.m.sem ?? -9), mes:x=>-(x.m.mes ?? -9),
-                   sharpe:x=>-(x.m.sharpe ?? -9) };
+                   sharpe:x=>-(x.m.sharpe ?? -9),
+                   vsibov:x=>-(x.m.vsIbov ?? -9) };
   // Quem nunca apurou vai para o FIM, em qualquer criterio. metricas()
   // devolve hoje 0 e acum 0 para serie vazia, e zero ganha de qualquer
   // negativo: uma carteira que nao comecou aparecia em primeiro lugar
@@ -884,17 +1027,24 @@ async function telaRanking(){
       Cada um publica quantas carteiras quiser. Rentabilidade, queda máxima e
       alavancagem ficam abertas a todos. Os papéis e os pesos, não.</p>
   </div>
-  <div class="chips">
-    ${[["hoje","No dia"],["sem","Na semana"],["mes","No mês"],
-       ["acum","Desde o início"],["sharpe","Sharpe"],["dd","Menor drawdown"]]
-      .map(([k,r])=>`<a href="#/?ordem=${k}${filtro?"&classe="+filtro:""}"
-        class="chip${ordem===k?" on":""}">${r}</a>`).join("")}
-    <span class="divisor"></span>
-    <a href="#/?ordem=${ordem}" class="chip${!filtro?" on":""}">Todas</a>
-    ${Object.entries(CLASSE).filter(([k])=>conta[k]).map(([k,v])=>
-      `<a href="#/?ordem=${ordem}&classe=${k}" class="chip${filtro===k?" on":""}">${v.nome}<span class="n">${conta[k]}</span></a>`).join("")}
-    ${conta.sem?`<a href="#/?ordem=${ordem}&classe=sem"
-      class="chip${filtro==="sem"?" on":""}">Sem classe<span class="n">${conta.sem}</span></a>`:""}
+  <div class="filtros">
+    <div class="fgrupo"><span class="rot">período</span><span class="itens">
+      ${[["hoje","No dia"],["sem","Na semana"],["mes","No mês"],["acum","Desde o início"]]
+        .map(([k,r])=>`<a href="#/?ordem=${k}${filtro?"&classe="+filtro:""}"
+          class="chip${ordem===k?" on":""}">${r}</a>`).join("")}
+    </span></div>
+    <div class="fgrupo"><span class="rot">qualidade</span><span class="itens">
+      ${[["vsibov","Contra o Ibovespa"],["sharpe","Sharpe"],["dd","Menor drawdown"]]
+        .map(([k,r])=>`<a href="#/?ordem=${k}${filtro?"&classe="+filtro:""}"
+          class="chip${ordem===k?" on":""}">${r}</a>`).join("")}
+    </span></div>
+    <div class="fgrupo"><span class="rot">classe</span><span class="itens">
+      <a href="#/?ordem=${ordem}" class="chip${!filtro?" on":""}">Todas</a>
+      ${Object.entries(CLASSE).filter(([k])=>conta[k]).map(([k,v])=>
+        `<a href="#/?ordem=${ordem}&classe=${k}" class="chip${filtro===k?" on":""}">${v.nome}<span class="n">${conta[k]}</span></a>`).join("")}
+      ${conta.sem?`<a href="#/?ordem=${ordem}&classe=sem"
+        class="chip${filtro==="sem"?" on":""}">Sem classe<span class="n">${conta.sem}</span></a>`:""}
+    </span></div>
   </div>
   ${quando?`<p id="linhaViva" style="font-size:11.5px;color:var(--graf);margin:0 0 12px"></p>`:""}
   ${filtro && CLASSE[filtro] ? `<p style="font-size:12.5px;color:var(--t2);max-width:60ch;margin:-2px 0 15px">
@@ -914,6 +1064,7 @@ async function telaRanking(){
     </div>` : ""}
   ${!filtro && lista.length ? colunasPorClasse(lista, ordem,
       {hoje:"no dia",sem:"na semana",mes:"no mês",acum:"desde o início",
+       vsibov:"contra o Ibovespa",
        sharpe:"Sharpe",dd:"menor drawdown"}[ordem] || "desde o início") : ""}
   ${!filtro && lista.length ? "" : (!lista.length ? `<div class="card" style="text-align:center;padding:38px">
       <h3 style="margin-bottom:8px">Nenhuma carteira ainda</h3>
@@ -921,10 +1072,11 @@ async function telaRanking(){
       <a href="#/publicar" class="bt cheio" style="margin-top:12px">Criar carteira</a></div>`
   : `<table><thead><tr><th></th><th>Carteira</th><th class="d">Dia</th>
       <th class="d">Semana</th><th class="d">Mês</th><th class="d">Desde o início</th>
+      <th class="d">vs Ibovespa</th>
       <th class="d">Sharpe</th><th class="d">Drawdown</th>
       <th class="d">Dias</th></tr></thead><tbody>
     ${(filtro ? [["", lista]] : agrupar(lista)).map(([titulo, grupo]) => (titulo
-      ? `<tr><td colspan="9" style="padding:16px 0 6px">
+      ? `<tr><td colspan="10" style="padding:16px 0 6px">
           <span style="font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--ouro2)">${titulo}</span>
           <span style="font-size:11px;color:var(--graf);margin-left:7px">${grupo.length}
             ${grupo.length===1?"carteira":"carteiras"}</span></td></tr>` : "")
@@ -941,6 +1093,9 @@ async function telaRanking(){
       <td class="d mono ${x.m.sem==null?"nulo":cor(x.m.sem)}">${x.m.sem==null?"—":pct(x.m.sem)}</td>
       <td class="d mono ${x.m.mes==null?"nulo":cor(x.m.mes)}">${x.m.mes==null?"—":pct(x.m.mes)}</td>
       <td class="d mono ${x.m.dias?cor(x.m.acum):"nulo"}">${x.m.dias?pct(x.m.acum):"estreia"}</td>
+      <td class="d mono ${x.m.vsIbov==null?"nulo":cor(x.m.vsIbov)}"
+        title="excesso sobre o Ibovespa medido a partir do primeiro pregão desta carteira; só conta pregão fechado">${
+        x.m.vsIbov==null?"—":pts(x.m.vsIbov)}</td>
       <td class="d mono ${x.m.sharpe==null?"nulo":""}">${n2(x.m.sharpe)}</td>
       <td class="d mono ${x.m.dd<0?"baixa":"nulo"}">${!x.m.dias?"—":(x.m.dd<0?pct(x.m.dd):"0,00%")}</td>
       <td class="d mono nulo">${x.m.dias}</td></tr>`).join("")).join("")}
@@ -1129,18 +1284,6 @@ async function telaPublicar(){
 
   ligarGrade([["","","C"]], "");
 
-  // Vira true no primeiro clique, para o segundo publicar de verdade.
-  // Mora AQUI, na tela que usa. Estava em telaEntrar, e por isso o
-  // botao Registrar morria calado num ReferenceError.
-  let confirmado = false;
-  $("#f").oninput = () => {
-    if(confirmado){                       // mexeu depois de conferir: confere de novo
-      confirmado = false;
-      $("#bt").textContent = "Criar carteira";
-      $("#erro").innerHTML = "";
-    }
-  };
-
   // Mensagem de erro rola ate a vista. O #erro fica no topo de um
   // formulario longo: sem isto, o aviso aparece fora da tela e o clique
   // parece nao ter feito nada.
@@ -1232,78 +1375,99 @@ async function telaPublicar(){
 
     // ── confirmação antes de publicar ──
     // A classe não muda depois de criada e o histórico começa aqui, então
-    // vale um segundo olhar. O primeiro clique mostra o resumo; o segundo
-    // publica de verdade.
-    if(!confirmado){
-      const cl = CLASSE[f.get("classe")];
-      const lista = Object.entries(pesos).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]));
-      const liq = Object.values(pesos).reduce((a,b)=>a+b,0);
-      const vendida = f.get("classe") === "vendida";
-      $("#erro").innerHTML = `
-      <div class="card" style="border-color:var(--lacre);margin-bottom:16px">
-        <div style="font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--graf);margin-bottom:10px">
-          Confira antes de publicar</div>
-        <div style="font-size:19px;font-weight:600;margin-bottom:2px">${esc(f.get("nome").trim())}</div>
-        <div style="font-size:12.5px;color:var(--t2);margin-bottom:12px">
+    // vale um segundo olhar. Em janela, e não no topo do formulário: ali
+    // o resumo nascia fora da tela e o botão que confirma ficava a uma
+    // rolagem de distância do que ele confirma.
+    const cl = CLASSE[f.get("classe")];
+    const lista = Object.entries(pesos).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]));
+    const liq = Object.values(pesos).reduce((a,b)=>a+b,0);
+    const vendida = f.get("classe") === "vendida";
+
+    const cx = document.createElement("div");
+    cx.className = "modal";
+    cx.innerHTML = `<div class="cx">
+      <div class="topo">
+        <div style="font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
+          color:var(--graf);margin-bottom:7px">Confira antes de publicar</div>
+        <div style="font-family:Newsreader,serif;font-size:21px;line-height:1.2">${esc(f.get("nome").trim())}</div>
+        <div style="font-size:12px;color:var(--t2);margin-top:3px">
           ${esc(f.get("descricao")||"sem descrição")}</div>
-        <div style="margin-bottom:12px"><span class="tag">${cl.nome}</span>
+        <div style="margin-top:10px"><span class="tag al">${cl.nome}</span>
           <span class="tag">${f.get("rebalancear")==="banda"
-            ? `rebalanceia por banda de ${n2(Number(f.get("banda_pct")||5),0)} p.p.`
-            : `rebalanceamento ${f.get("rebalancear")||"nunca"}`}</span></div>
+            ? `banda de ${n2(Number(f.get("banda_pct")||5),0)} p.p.`
+            : `rebalanceia ${f.get("rebalancear")||"nunca"}`}</span></div>
+      </div>
+      <div class="corpo">
         <table><tbody>${lista.map(([a,p])=>`<tr>
-          <td class="mono" style="font-weight:500">${esc(a)}</td>
-          <td class="d mono ${p<0?"baixa":""}">${p<0?"vendido":"comprado"} ${n2(Math.abs(p),0)}%</td>
+          <td class="mono" style="font-weight:500;padding:9px 0">${esc(a)}</td>
+          <td class="d mono ${p<0?"baixa":""}" style="padding:9px 0">${
+            p<0?"vendido":"comprado"} ${n2(Math.abs(p),0)}%</td>
         </tr>`).join("")}</tbody></table>
-        <div style="font-size:12.5px;color:var(--t2);margin-top:11px">
+        <div style="font-size:12px;color:var(--t2);margin-top:11px">
           ${vendida
             ? `vendido <b>${n2(bruta,0)}%</b> · ${lista.length} ${lista.length===1?"papel":"papéis"}`
             : `bruta <b>${n2(bruta,0)}%</b> · líquida <b>${n2(liq,0)}%</b> ·
                caixa <b>${n2(100-liq,0)}%</b> · ${lista.length} ${lista.length===1?"papel":"papéis"}`}</div>
-        <p style="font-size:11.5px;color:var(--graf);margin:11px 0 0">
+        <p style="font-size:11.5px;color:var(--graf);margin:12px 0 0;line-height:1.55">
           A classe <b>não muda</b> depois de criada, e a carteira passa a valer
           a partir do próximo pregão. Publicar de novo com outro nome é sempre
           possível; mudar esta, não.</p>
-      </div>`;
-      confirmado = true;
-      bt.textContent = "Confirmar e criar";
-      $("#erro").scrollIntoView({ behavior:"smooth", block:"nearest" });
-      return;
-    }
+      </div>
+      <div class="pe">
+        <button type="button" class="bt" id="mVoltar">Voltar e ajustar</button>
+        <button type="button" class="bt lacre" id="mOk">Publicar carteira</button>
+      </div>
+    </div>`;
+    document.body.appendChild(cx);
 
-    bt.disabled=true; bt.textContent="salvando…";
+    const fechar = () => cx.remove();
+    cx.querySelector("#mVoltar").onclick = fechar;
+    cx.onclick = ev => { if(ev.target === cx) fechar(); };
+    const porEsc = ev => { if(ev.key === "Escape"){ fechar();
+      document.removeEventListener("keydown", porEsc); } };
+    document.addEventListener("keydown", porEsc);
+    cx.querySelector("#mOk").focus();
 
-    // rebalancear e banda_pct sao imutaveis (trigger trava_classe), entao
-    // este insert e a unica chance de defini-los
-    const { data:c, error } = await sb.from("carteira").insert({
-      usuario_id: eu.id, nome: f.get("nome").trim(),
-      descricao: f.get("descricao")||"", classe: f.get("classe"),
-      rebalancear: f.get("rebalancear") || "nunca",
-      banda_pct: Math.min(100, Math.max(1, Math.round(Number(f.get("banda_pct")) || 5))) })
-      .select().single();
-    if(error){ bt.disabled=false; bt.textContent="Criar carteira";
-      const m = error.message.includes("carteira_nome_unico")
-        ? "Você já tem uma carteira com esse nome. Escolha outro."
-        : error.message;
-      return erroPub(m); }
+    cx.querySelector("#mOk").onclick = async () => {
+      const ok = cx.querySelector("#mOk");
+      ok.disabled = true; ok.textContent = "salvando…";
+      cx.querySelector("#mVoltar").disabled = true;
 
-    // Este insert é o que passa pelo porteiro da classe (valida_classe).
-    // Antes o erro era engolido e a carteira ficava criada e VAZIA — foi
-    // assim que nasceu uma "vendida" com quatro papéis comprados.
-    const { error: errPos } = await sb.from("posicao").insert(
-      Object.entries(pesos).map(([ativo,peso])=>({ carteira_id:c.id, ativo, peso })));
+      // rebalancear e banda_pct sao imutaveis (trigger trava_classe), entao
+      // este insert e a unica chance de defini-los
+      const { data:c, error } = await sb.from("carteira").insert({
+        usuario_id: eu.id, nome: f.get("nome").trim(),
+        descricao: f.get("descricao")||"", classe: f.get("classe"),
+        rebalancear: f.get("rebalancear") || "nunca",
+        banda_pct: Math.min(100, Math.max(1, Math.round(Number(f.get("banda_pct")) || 5))) })
+        .select().single();
+      if(error){
+        fechar();
+        return erroPub(error.message.includes("carteira_nome_unico")
+          ? "Você já tem uma carteira com esse nome. Escolha outro."
+          : error.message);
+      }
 
-    if(errPos){
-      // desfaz a carteira órfã, senão fica lixo na lista da pessoa
-      await sb.from("carteira").delete().eq("id", c.id);
-      bt.disabled=false; bt.textContent="Criar carteira"; confirmado=false;
-      // se chegou aqui, valida_classe() do banco recusou algo que a tela
-      // deixou passar — as duas listas de regra estao fora de sincronia
-      return erroPub("O banco recusou as posições: " + errPos.message);
-    }
+      // Este insert é o que passa pelo porteiro da classe (valida_classe).
+      // Antes o erro era engolido e a carteira ficava criada e VAZIA — foi
+      // assim que nasceu uma "vendida" com quatro papéis comprados.
+      const { error: errPos } = await sb.from("posicao").insert(
+        Object.entries(pesos).map(([ativo,peso])=>({ carteira_id:c.id, ativo, peso })));
 
-    if(f.get("nota")) await sb.from("nota").insert({ carteira_id:c.id, texto:f.get("nota") });
-    CACHE_CLASSE = null;        // carteira nova: o cache de classes envelheceu
-    location.hash = "#/carteira/"+c.id; rotear();
+      if(errPos){
+        // desfaz a carteira órfã, senão fica lixo na lista da pessoa
+        await sb.from("carteira").delete().eq("id", c.id);
+        fechar();
+        // se chegou aqui, valida_classe() do banco recusou algo que a tela
+        // deixou passar — as duas listas de regra estao fora de sincronia
+        return erroPub("O banco recusou as posições: " + errPos.message);
+      }
+
+      if(f.get("nota")) await sb.from("nota").insert({ carteira_id:c.id, texto:f.get("nota") });
+      CACHE_CLASSE = null;      // carteira nova: o cache de classes envelheceu
+      fechar();
+      location.hash = "#/carteira/"+c.id; rotear();
+    };
   };
 }
 
@@ -1403,8 +1567,8 @@ async function telaCarteira(id){
       <div class="k">${m.parcial?"hoje · parcial":"hoje"}</div></div>
     <div class="cel"><div class="v ${m.dias?cor(m.acum):"nulo"}">${m.dias?pct(m.acum):"estreia"}</div><div class="k">acumulado</div></div>
     <div class="cel"><div class="v">${n2(m.sharpe)}</div><div class="k">sharpe</div></div>
-    <div class="cel"><div class="v baixa">${pct(m.dd)}</div><div class="k">queda máxima</div></div>
-    <div class="cel"><div class="v">${pct(m.vol,1)}</div><div class="k">oscilação a.a.</div></div>
+    <div class="cel"><div class="v ${m.dd<0?"baixa":"nulo"}">${m.dias?(m.dd<0?pct(m.dd):"0,00%"):"—"}</div><div class="k">queda máxima</div></div>
+    <div class="cel"><div class="v">${m.vol==null?"—":n2(m.vol*100,1)+"%"}</div><div class="k">oscilação a.a.</div></div>
     <div class="cel"><div class="v">${m.dias}</div><div class="k">dias</div></div>
   </div>
   ${m.parcial ? `<p style="font-size:11.5px;color:var(--graf);margin:-8px 0 18px">
@@ -1438,6 +1602,7 @@ async function telaCarteira(id){
       A carteira nasceu dentro do limite de 100%. A soma vendida passou disso porque
       o peso anda com o mercado — numa vendida ela cresce nos dias de perda.</p>` : ""}
   </div>
+  ${comparativoHTML(serie, refs)}
   ${grafico(serie, refs)}
   ${abre ? `<div class="card">
     <div style="font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--graf);margin-bottom:10px">
@@ -2281,29 +2446,38 @@ async function telaTiroCurto(){
   <div class="grid2">
     <div>
       <div class="card">
-        <h3 style="font-size:15px;margin-bottom:12px">Novo tiro</h3>
+        <h3 style="font-size:15px;margin-bottom:3px">Novo tiro</h3>
+        <p style="font-size:11.5px;color:var(--graf);margin:0 0 14px">
+          Para o pregão de ${prox}. Restam ${10-pend.length} de 10.</p>
         <div id="erro"></div>
 
-        <label>Papel</label>
-        <input id="apAtivo" list="uni" maxlength="8" placeholder="PETR4"
-               style="text-transform:uppercase">
+        <div style="display:flex;gap:10px;align-items:flex-end">
+          <div style="flex:1;min-width:0">
+            <label>Papel</label>
+            <input id="apAtivo" list="uni" maxlength="8" placeholder="PETR4"
+                   style="text-transform:uppercase;margin-bottom:0">
+          </div>
+          <div style="flex:1;min-width:0">
+            <label>Lado</label>
+            <select id="apDir" style="margin-bottom:0">
+              <option value="C">compra</option>
+              <option value="V">venda</option>
+            </select>
+          </div>
+        </div>
         <datalist id="uni">${uni.map(a=>`<option value="${a}">`).join("")}</datalist>
 
-        <label>Lado</label>
-        <select id="apDir">
-          <option value="C">Compra — aposto que sobe</option>
-          <option value="V">Venda — aposto que cai</option>
-        </select>
+        <div id="apLimites" style="font-size:12px;color:var(--t2);margin:11px 0 14px;
+          min-height:17px;line-height:1.5"></div>
 
-        <div id="apLimites" style="font-size:12.5px;color:var(--t2);margin:4px 0 14px"></div>
-
-        <button class="bt cheio" id="apBt" ${pend.length>=10?"disabled":""}>
+        <button class="bt cheio" id="apBt" style="width:100%" ${pend.length>=10?"disabled":""}>
           ${pend.length>=10?"limite de 10 atingido":"Registrar tiro"}</button>
       </div>
 
-      <div class="card" style="margin-top:14px">
-        <h3 style="font-size:15px;margin-bottom:5px">Como é apurado</h3>
-        <p style="font-size:12.5px;color:var(--t2);margin:0 0 8px">
+      <details class="card" style="margin-top:14px">
+        <summary style="cursor:pointer;font-size:14px;font-weight:500;list-style:none">
+          <span style="color:var(--lacre);font-family:'IBM Plex Mono';margin-right:8px">?</span>Como é apurado</summary>
+        <p style="font-size:12.5px;color:var(--t2);margin:13px 0 8px">
           Stop e alvo saem da <b>amplitude média do próprio papel</b>, não de uma
           porcentagem fixa. Sem isso, papel agitado bateria alvo por ruído e papel
           parado não bateria nem quando você acertasse a direção.</p>
@@ -2314,7 +2488,7 @@ async function telaTiroCurto(){
         <p style="font-size:12.5px;color:var(--t2);margin:0">
           Se o papel abrir além do seu stop, você sai na abertura. Stop não é
           promessa de preço.</p>
-      </div>
+      </details>
     </div>
 
     <div>
@@ -2335,9 +2509,10 @@ async function telaTiroCurto(){
           <td class="d"><button class="bt ap-del" data-id="${p.id}"
             style="padding:3px 9px;font-size:11.5px;border-color:var(--baixa);color:var(--baixa)">
             desistir</button></td></tr>`).join("")}</tbody></table>`
-        : `<p style="font-size:12.5px;color:var(--graf);margin:0">Nenhum ainda.</p>`}
+        : `<p style="font-size:12.5px;color:var(--graf);margin:0">
+            Nenhum ainda. Escolha um papel ao lado.</p>`}
       </div>
-      <div style="margin-top:14px"><a href="#/placar" class="bt">Ver o placar &rarr;</a></div>
+      <div style="margin-top:14px"><a href="#/placar" class="bt" style="width:100%">Ver o placar &rarr;</a></div>
     </div>
   </div>`;
 
@@ -2479,6 +2654,101 @@ async function telaPlacar(){
       <a href="#/entrar">Entre</a> para dar o seu.</p></div>`}`;
 }
 
+// ═══════════════════════════════════════════ como funciona
+// O site nao explicava a si mesmo em lugar nenhum: quem chegava via
+// link caia num ranking de nomes sem saber o que estava vendo.
+function telaComo(){
+  const P = (q,r) => `<details class="qa"><summary>${q}</summary><p>${r}</p></details>`;
+  app().innerHTML = `
+  <div style="max-width:74ch;margin:34px 0 0">
+    <h1 style="font-size:31px;line-height:1.18;margin-bottom:10px">
+      Um caderno de estudo, aberto.</h1>
+    <p style="color:var(--t2);font-size:14.5px;line-height:1.6;margin:0 0 6px">
+      Qualquer pessoa publica uma carteira de ações aqui. A partir do dia
+      seguinte, o sistema apura sozinho o resultado de cada pregão — e
+      ninguém consegue mudar o que já passou, nem quem publicou.</p>
+    <p style="color:var(--t2);font-size:14.5px;line-height:1.6;margin:0">
+      Não é recomendação de investimento e não há dinheiro real envolvido.
+      É um lugar para registrar o que você faria e descobrir, com o tempo,
+      se teria dado certo.</p>
+  </div>
+
+  <div class="passos">
+    <div class="passo"><div class="num">01</div>
+      <h4>Você declara</h4>
+      <p>Escolhe a classe, os papéis e os pesos. A declaração fica registrada
+        com a data em que passou a valer.</p></div>
+    <div class="passo"><div class="num">02</div>
+      <h4>O sistema apura</h4>
+      <p>Depois do fechamento, cada carteira rende o que os papéis dela
+        renderam. O que sobra em caixa rende a taxa da renda fixa.</p></div>
+    <div class="passo"><div class="num">03</div>
+      <h4>O passado trava</h4>
+      <p>O resultado de um pregão apurado não é reescrito. Mudar de ideia
+        vale do dia seguinte em diante, e a mudança aparece no extrato.</p></div>
+  </div>
+
+  <h2 style="font-size:20px;margin:34px 0 4px">As quatro classes</h2>
+  <p style="color:var(--t2);font-size:13px;max-width:66ch;margin:0 0 14px">
+    Carteira só é comparada com outra da mesma classe. Comparar uma 60/40 com
+    uma alavancada pelo mesmo número mede o risco que cada uma tomou, não a
+    escolha de quem montou. A classe é escolhida no nascimento e não muda:
+    trocar depois de ver o resultado seria escolher a régua com o jogo jogado.</p>
+  <div class="colunas">
+    ${Object.entries(CLASSE).map(([k,v])=>`<div class="coluna">
+      <h3>${v.nome}</h3>
+      <div class="regra" style="margin-top:8px">${v.regra}</div></div>`).join("")}
+  </div>
+
+  <h2 style="font-size:20px;margin:34px 0 6px">Perguntas</h2>
+  <div style="max-width:74ch">
+  ${P("O que é aberto e o que é fechado?",
+     "Rentabilidade, queda máxima, alavancagem e exposição são públicas para "
+   + "qualquer visitante — é o risco que cada um está correndo. Os papéis, os "
+   + "pesos e as anotações de cada mudança são de quem assina. Publicar é grátis.")}
+  ${P("Por que a minha carteira começa em zero?",
+     "Não há histórico retroativo. A rentabilidade conta a partir do dia em que "
+   + "a carteira é publicada, porque um resultado montado olhando para trás não "
+   + "prova nada. Por isso a coluna de dias importa tanto quanto a de retorno.")}
+  ${P("O peso muda sozinho?",
+     "Muda. Depois de declarada, a posição que sobe mais que a carteira ganha "
+   + "espaço, como aconteceria de verdade. A tela da carteira mostra lado a lado "
+   + "o declarado e o atual. Se você escolheu rebalanceamento, os pesos voltam ao "
+   + "declarado na periodicidade combinada.")}
+  ${P("De onde vem a cotação?",
+     "De um robô ligado ao MetaTrader 5, que envia a variação de cada papel "
+   + "durante o pregão e no fechamento. A variação já vem ajustada por proventos, "
+   + "então dia de dividendo não vira queda falsa.")}
+  ${P("O que é o \\\"contra o Ibovespa\\\"?",
+     "É quanto a carteira ganhou ou perdeu do índice no período dela, em pontos. "
+   + "O benchmark é medido a partir do dia em que a carteira nasceu, não do começo "
+   + "do ano — quem escolhe um dia de partida bom escolhe também um índice fácil, "
+   + "e é por isso que o número de pregões fica sempre visível ao lado.")}
+  ${P("E o Tiro curto?",
+     "É a parte de palpite de curto prazo, separada das carteiras. Você escolhe "
+   + "papel e direção para o próximo pregão, e a pontuação é por dia, não por "
+   + "operação: entrar com dez papéis reduz a sorte, não aumenta a nota.")}
+  ${P("Isso é recomendação de investimento?",
+     "Não. Nada aqui é recomendação, e nenhuma carteira publicada é análise "
+   + "profissional — cada uma é anotação pessoal de quem a publicou. O site não "
+   + "movimenta dinheiro e não tem corretora associada.")}
+  </div>
+
+  <div class="chamada" style="margin-top:30px">
+    <div>
+      <h3 style="font-size:17px;margin-bottom:4px">Publicar é de graça</h3>
+      <p style="color:var(--t2);margin:0;font-size:13px;max-width:50ch">
+        Crie a conta e registre a primeira carteira — ela começa a contar no
+        próximo pregão.</p>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      ${eu ? '<a href="#/publicar" class="bt cheio">Criar carteira</a>'
+           : '<a href="#/entrar?novo=1" class="bt cheio">Criar conta grátis</a>'}
+      <a href="#/" class="bt">Ver o ranking</a>
+    </div>
+  </div>`;
+}
+
 // ═══════════════════════════════════════════ rotas
 function rotear(){
   // toda troca de tela para os timers da tela anterior
@@ -2493,6 +2763,7 @@ function rotear(){
   if(h==="#/entrar")          return telaEntrar();
   if(h==="#/publicar")        return telaPublicar();
   if(h==="#/duelo")           return telaDuelo();
+  if(h==="#/como-funciona")   return telaComo();
   // rota antiga continua valendo: link já compartilhado não pode quebrar
   if(h==="#/tiro-curto" || h==="#/apostar") return telaTiroCurto();
   if(h==="#/placar")          return telaPlacar();
