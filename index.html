@@ -2224,17 +2224,22 @@ async function telaTiroCurto(){
   let viva = {};
   if(emJogo.length){
     const { data:cv } = await sb.from("cotacao_viva")
-      .select("ativo,preco,abertura,atualizado_em")
+      .select("ativo,valor,preco,atualizado_em")
       .in("ativo", [...new Set(emJogo.map(x=>x.ativo))]);
     (cv||[]).forEach(x => { viva[x.ativo] = x; });
   }
-  // Entrada e na ABERTURA, entao o resultado ao vivo e preco sobre
-  // abertura. Sem a abertura nao da para dizer nada — melhor calar do
-  // que mostrar a variacao do dia como se fosse o resultado do tiro.
+  // A VARIACAO DO DIA, direto do terminal. Era preco/abertura - 1, que
+  // tinha dois problemas: a abertura gravada vinha do leilao em alguns
+  // papeis (ANIM3 marcava -2,25% num dia que o terminal dava +0,92%), e
+  // dia ex-dividendo virava queda falsa. A variacao do MT5 ja vem sobre
+  // a referencia ajustada, entao provento nao conta como perda.
   const aoVivo = emJogo.map(t => {
     const c = viva[t.ativo];
-    const r = (c && c.abertura > 0) ? (c.preco/c.abertura - 1) * (t.direcao==="V" ? -1 : 1) : null;
-    return { ...t, r, quando: c?.atualizado_em };
+    const deHoje = c?.atualizado_em && new Date(c.atualizado_em)
+      .toLocaleDateString("sv-SE", { timeZone:"America/Sao_Paulo" }) === HOJE_BR();
+    const r = (c && deHoje && c.valor != null)
+      ? c.valor * (t.direcao==="V" ? -1 : 1) : null;
+    return { ...t, r, quando: deHoje ? c.atualizado_em : null };
   }).sort((a,b) => (b.r ?? -9) - (a.r ?? -9));
   // Os limites de cada tiro ja registrado. Sem isto a pessoa registra e
   // nunca mais ve qual e o seu stop — que e a informacao que mais importa.
@@ -2260,8 +2265,8 @@ async function telaTiroCurto(){
       <span id="tcHora" style="margin-left:auto;font-size:11.5px;color:var(--graf)"></span>
     </div>
     <p style="font-size:11.5px;color:var(--graf);margin:0 0 10px">
-      Entrada na abertura. O número muda enquanto o pregão corre e só
-      vira ponto no fechamento.</p>
+      Variação do papel no pregão de hoje, na direção do seu tiro. O número
+      muda enquanto o pregão corre e só vira ponto no fechamento.</p>
     <table><tbody>${aoVivo.map(t=>`<tr>
       <td class="mono" style="font-weight:500">${esc(t.ativo)}</td>
       <td class="${t.direcao==="V"?"baixa":"alta"}" style="font-size:12.5px">
@@ -2270,7 +2275,7 @@ async function telaTiroCurto(){
         ${t.r==null?"—":pct(t.r)}</td></tr>`).join("")}
     </tbody></table>
     ${aoVivo.some(t=>t.r==null)?`<p style="font-size:11.5px;color:var(--graf);margin:9px 0 0">
-      Traço quer dizer que ainda não chegou a abertura desse papel.</p>`:""}
+      Traço quer dizer que ainda não chegou cotação desse papel hoje.</p>`:""}
   </div>` : ""}
 
   <div class="grid2">
