@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict DBjpacyTaDNPmbrhl9ERac8pj9AgZgPxnItfDYVXOOIUhQocIOyvmwysgHkWHYl
+\restrict nBdydjUCH1UHRIVGO3WDasF1Npx5U8BlvfXYMlKUBtopsyV2p9668DH4siQrW6X
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.10 (Ubuntu 17.10-1.pgdg24.04+1)
@@ -571,28 +571,37 @@ CREATE FUNCTION public.fechar_dia(d date DEFAULT NULL::date, refazer boolean DEF
     AS $$
 declare
   c        record;
-  cdi_dia  real := power(1.105, 1.0/252) - 1;
+  cdi_dia  real;
+  fallback real := power(1.145, 1.0/252) - 1;   -- só se o LFTS11 faltar
   ret      real;
   l real; s real; caixa real; rende real;
   idx_ant  real;
   n        int := 0;
-  m_novo   date;
-  m_atual  date;
+  m_novo   date; m_atual date;
   dia      date := coalesce(d, (select max(data) from oscilacao), hoje_br());
-  vira_sem boolean;
-  vira_mes boolean;
-  vira_ano boolean;
-  fora     boolean;
-  jafechou boolean;
-  motivo   text;
+  vira_sem boolean; vira_mes boolean; vira_ano boolean;
+  fora     boolean; jafechou boolean; motivo text;
 begin
-  if not coalesce((select admin from perfil where id = auth.uid()), false) then
+  if not coalesce((select admin from perfil where id = auth.uid()), false)
+     and coalesce(current_setting('request.jwt.claim.role', true), '') <> 'service_role' then
     raise exception 'só admin';
+  end if;
+
+  -- O caixa rende o que a RENDA FIXA rendeu de verdade naquele pregão,
+  -- medido pelo LFTS11 (ETF de LFT, acompanha a Selic). Antes era uma
+  -- constante de 10,5% ao ano escrita aqui dentro — e o CDI está em
+  -- 14,5%, ou seja, o caixa vinha rendendo 4 pontos a menos ao ano sem
+  -- ninguém ter onde corrigir. Se o LFTS11 faltar no dia, cai no
+  -- fallback e o aviso sai no log.
+  select valor into cdi_dia from oscilacao where ativo = 'LFTS11' and data = dia;
+  if cdi_dia is null then
+    cdi_dia := fallback;
+    raise notice 'sem LFTS11 em % — caixa remunerado pela taxa de reserva', dia;
   end if;
 
   jafechou := exists (select 1 from retorno_dia where data = dia);
   if not refazer and jafechou then
-    raise notice 'pregão % já fechado — nada a fazer (use refazer => true para forçar)', dia;
+    raise notice 'pregão % já fechado', dia;
     return 0;
   end if;
 
@@ -602,9 +611,6 @@ begin
 
   for c in select id, rebalancear, banda_pct from carteira where ativa loop
 
-    -- Refazer um pregão já fechado: o peso_atual dele já sofreu a deriva
-    -- deste dia. Aplicar de novo dobraria. Então reconstrói do declarado
-    -- e reaplica tudo até a véspera, antes de recalcular.
     if refazer and jafechou then
       perform refazer_pesos(c.id, dia);
       delete from rebalanceamento where carteira_id = c.id and data = dia;
@@ -612,23 +618,19 @@ begin
 
     select max(valida_de) into m_novo
       from posicao where carteira_id = c.id and valida_de <= dia;
-    select max(marco) into m_atual
-      from peso_atual where carteira_id = c.id;
+    select max(marco) into m_atual from peso_atual where carteira_id = c.id;
 
     if m_novo is not null and (m_atual is null or m_novo > m_atual) then
       delete from peso_atual where carteira_id = c.id;
       insert into peso_atual (carteira_id, ativo, peso, marco)
       select carteira_id, ativo, sum(peso), m_novo
-        from posicao
-       where carteira_id = c.id and valida_de = m_novo
+        from posicao where carteira_id = c.id and valida_de = m_novo
        group by carteira_id, ativo;
       perform recalcular_exposicao(c.id);
       m_atual := m_novo;
     end if;
 
-    if not exists (select 1 from peso_atual where carteira_id = c.id) then
-      continue;
-    end if;
+    if not exists (select 1 from peso_atual where carteira_id = c.id) then continue; end if;
 
     select coalesce(sum(peso) filter (where peso > 0), 0),
           -coalesce(sum(peso) filter (where peso < 0), 0)
@@ -660,23 +662,20 @@ begin
     fora := false;
     if c.rebalancear = 'banda' and m_atual is not null then
       select exists (
-        select 1
-          from peso_atual pa
-          left join (select ativo, sum(peso) as dec
-                       from posicao
-                      where carteira_id = c.id and valida_de = m_atual
-                      group by ativo) q on q.ativo = pa.ativo
+        select 1 from peso_atual pa
+          left join (select ativo, sum(peso) as dec from posicao
+                      where carteira_id = c.id and valida_de = m_atual group by ativo) q
+            on q.ativo = pa.ativo
          where pa.carteira_id = c.id
-           and abs(abs(pa.peso) - abs(coalesce(q.dec, 0))) > c.banda_pct
-      ) into fora;
+           and abs(abs(pa.peso) - abs(coalesce(q.dec, 0))) > c.banda_pct) into fora;
     end if;
 
     motivo := null;
     if m_atual is not null then
-      if      c.rebalancear = 'semanal' and vira_sem then motivo := 'semanal';
-      elsif   c.rebalancear = 'mensal'  and vira_mes then motivo := 'mensal';
-      elsif   c.rebalancear = 'anual'   and vira_ano then motivo := 'anual';
-      elsif   c.rebalancear = 'banda'   and fora     then
+      if    c.rebalancear = 'semanal' and vira_sem then motivo := 'semanal';
+      elsif c.rebalancear = 'mensal'  and vira_mes then motivo := 'mensal';
+      elsif c.rebalancear = 'anual'   and vira_ano then motivo := 'anual';
+      elsif c.rebalancear = 'banda'   and fora     then
         motivo := 'banda de ' || round(c.banda_pct) || ' p.p. estourada';
       end if;
     end if;
@@ -685,10 +684,8 @@ begin
       delete from peso_atual where carteira_id = c.id;
       insert into peso_atual (carteira_id, ativo, peso, marco)
       select carteira_id, ativo, sum(peso), m_atual
-        from posicao
-       where carteira_id = c.id and valida_de = m_atual
+        from posicao where carteira_id = c.id and valida_de = m_atual
        group by carteira_id, ativo;
-
       insert into rebalanceamento (carteira_id, data, motivo)
       values (c.id, dia, motivo)
       on conflict (carteira_id, data) do update set motivo = excluded.motivo;
@@ -698,8 +695,6 @@ begin
     n := n + 1;
   end loop;
 
-  raise notice 'pregão %: % carteiras%', dia, n,
-    case when vira_mes then ' (virada de mês: quem rebalanceia voltou ao declarado)' else '' end;
   return n;
 end $$;
 
@@ -929,9 +924,6 @@ CREATE FUNCTION public.mt5_viva(dados jsonb) RETURNS jsonb
     AS $$
 declare n int; papel text;
 begin
-  -- A permissão é pelo PAPEL da conexão, não por auth.uid(): a chave de
-  -- serviço não é um usuário e não tem uid, então perguntar "quem é
-  -- você" recusava justamente quem tem a chave-mestra.
   papel := coalesce(current_setting('request.jwt.claim.role', true),
                     current_setting('role', true), '');
   if papel <> 'service_role'
@@ -939,8 +931,6 @@ begin
     raise exception 'so admin pode gravar cotacao (papel: %)', papel;
   end if;
 
-  -- apaga e insere em vez de "on conflict": funciona qualquer que seja a
-  -- chave da tabela e garante uma linha por ativo
   delete from cotacao_viva
    where ativo in (select x.ativo from jsonb_to_recordset(dados)
                      as x(ativo text, preco real, ant real, abre real));
@@ -1867,6 +1857,18 @@ UNION
 
 
 --
+-- Name: parametro; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.parametro (
+    chave text NOT NULL,
+    valor real NOT NULL,
+    nome text,
+    atualizado_em timestamp with time zone DEFAULT now()
+);
+
+
+--
 -- Name: peso_atual_backup; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -2172,6 +2174,14 @@ ALTER TABLE ONLY public.nota
 
 ALTER TABLE ONLY public.oscilacao
     ADD CONSTRAINT oscilacao_pkey PRIMARY KEY (ativo, data);
+
+
+--
+-- Name: parametro parametro_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.parametro
+    ADD CONSTRAINT parametro_pkey PRIMARY KEY (chave);
 
 
 --
@@ -2631,6 +2641,12 @@ CREATE POLICY pa_le ON public.peso_atual FOR SELECT USING ((public.eh_assinante(
 
 
 --
+-- Name: parametro; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.parametro ENABLE ROW LEVEL SECURITY;
+
+--
 -- Name: perfil; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -2771,5 +2787,5 @@ ALTER TABLE public.universo ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict DBjpacyTaDNPmbrhl9ERac8pj9AgZgPxnItfDYVXOOIUhQocIOyvmwysgHkWHYl
+\unrestrict nBdydjUCH1UHRIVGO3WDasF1Npx5U8BlvfXYMlKUBtopsyV2p9668DH4siQrW6X
 

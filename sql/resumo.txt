@@ -5,7 +5,7 @@ barra | 0
 buckets | 0
 buckets_analytics | 0
 buckets_vectors | 0
-carteira | 4
+carteira | 6
 cotacao_viva | 15
 custom_oauth_providers | 0
 fechamento | 3810
@@ -27,20 +27,21 @@ oauth_consents | 0
 objects | 0
 one_time_tokens | 0
 oscilacao | 3683
+parametro | 1
 perfil | 2
-peso_atual | 18
+peso_atual | 0
 peso_atual_backup | 46
-posicao | 18
+posicao | 30
 rebalanceamento | 1
-referencia | 1
-refresh_tokens | 22
-retorno_dia | 4
+referencia | 2
+refresh_tokens | 24
+retorno_dia | 0
 s3_multipart_uploads | 0
 s3_multipart_uploads_parts | 0
 saml_providers | 0
 saml_relay_states | 0
-schema_migrations | 81
 schema_migrations | 77
+schema_migrations | 81
 secrets | 0
 seguidor | 0
 seguindo | 0
@@ -53,4 +54,4 @@ users | 2
 vector_indexes | 0
 webauthn_challenges | 0
 webauthn_credentials | 0
-(54 rows)
+(55 rows)
