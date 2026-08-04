@@ -1192,10 +1192,12 @@ async function telaRanking(){
         {hour:"2-digit",minute:"2-digit",timeZone:"America/Sao_Paulo"});
       const parado = emPregao() && min >= ATRASO_ALERTA;
       el.style.color = parado ? "var(--baixa)" : "var(--graf)";
+      // O visitante ve o FATO. De onde vem a cotacao e detalhe de
+      // infraestrutura e nao interessa a quem le — e o que fazer a
+      // respeito so o admin pode fazer.
       el.innerHTML = parado
-        ? `<b>A cotação está parada há ${min} minutos.</b> Durante o pregão ela
-           deveria mudar a cada minuto — verifique se o MetaTrader está aberto
-           com o robô anexado. O último dado é de ${hora}.`
+        ? `<b>A cotação está parada há ${min} minutos.</b> O último dado é de ${hora}.`
+          + (eu?.admin ? " Confira se o robô de cotação está no ar." : "")
         : `Cotação de <b>${hora}</b> (${haQuantoTempo(quando)}).
            ${emPregao()
              ? "Atualiza sozinha a cada minuto enquanto o pregão corre. A coluna "
@@ -2600,10 +2602,9 @@ async function telaTiroCurto(){
         ${t.r==null?"—":pct(t.r)}</td></tr>`).join("")}
     </tbody></table>
     ${aoVivo.some(t=>t.r==null)?`<p style="font-size:11.5px;color:var(--baixa);margin:9px 0 0">
-      O robô não conseguiu cotar ${aoVivo.filter(t=>t.r==null).map(t=>esc(t.ativo)).join(", ")} hoje.
-      Sem preço não há como apurar, então esse tiro não entra no placar. Se o
-      MetaTrader estiver aberto, adicione o papel ao Observador do Mercado
-      (Ctrl+U) para os próximos pregões.</p>`:""}
+      Não houve cotação de ${aoVivo.filter(t=>t.r==null).map(t=>esc(t.ativo)).join(", ")} hoje.
+      Sem preço não há como apurar, então esse tiro não entra no placar.${
+        eu?.admin ? " Acrescente o papel ao Observador do Mercado (Ctrl+U)." : ""}</p>`:""}
   </div>` : ""}
 
   <div class="grid2">
@@ -2751,8 +2752,8 @@ async function telaTiroCurto(){
     }
     if(estado === "pendente"){
       $("#erro").innerHTML = aviso(
-        `${a} foi registrado, mas o robô ainda não confirmou a cotação. `
-        + `Se o MetaTrader estiver fechado, abra e confira esta tela em seguida.`);
+        `${a} foi registrado, mas a cotação ainda não foi confirmada. `
+        + `Confira esta tela em alguns minutos.`);
     }
     telaTiroCurto();
   };
@@ -2874,22 +2875,36 @@ async function telaScreening(){
   const filtro = q.get("t") || "todos";
   const busca  = (q.get("q") || "").toUpperCase();
 
-  // Faixa morta: com as duas medias a menos de 0,5% uma da outra nao ha
-  // tendencia nenhuma, e rotular de alta ou baixa faz o papel trocar de
-  // lado a cada pregao por ruido.
-  const MORTA = 0.005;
-  const estado = d => d > MORTA ? "alta" : d < -MORTA ? "baixa" : "neutra";
-  const rotulo = { alta:"tendência de alta", baixa:"tendência de baixa",
-                   neutra:"sem tendência" };
+  // Duas perguntas, nao uma. O CRUZAMENTO das medias diz a direcao; a
+  // posicao do PRECO em relacao a elas diz a forca.
+  //
+  //   médias em alta + preço acima das duas  → alta forte
+  //   médias em alta + preço entre elas      → alta
+  //   médias em alta + preço abaixo das duas → alta fraca (perdendo fôlego)
+  //
+  // e o espelho para baixa. Nao ha estado lateral: com as medias coladas
+  // o papel ainda esta de um lado, so que por pouco — e a forca ja conta
+  // essa historia melhor do que um rotulo de "sem tendencia" contava.
+  const classificar = x => {
+    const alta = x.ema17 >= x.ema34;
+    const teto = Math.max(x.ema17, x.ema34), piso = Math.min(x.ema17, x.ema34);
+    const onde = x.fech > teto ? 1 : x.fech < piso ? -1 : 0;
+    if(alta)  return onde === 1 ? "alta_forte"  : onde === 0 ? "alta"  : "alta_fraca";
+    return           onde === -1 ? "baixa_forte" : onde === 0 ? "baixa" : "baixa_fraca";
+  };
+  const rotulo = { alta_forte:"alta forte", alta:"alta", alta_fraca:"alta fraca",
+                   baixa_fraca:"baixa fraca", baixa:"baixa", baixa_forte:"baixa forte" };
+  const ehAlta = e => e.startsWith("alta");
 
-  let l = (data||[]).map(x => ({ ...x, e: estado(x.dist) }));
+  let l = (data||[]).map(x => ({ ...x, e: classificar(x) }));
   const conta = { todos: l.length,
-    alta: l.filter(x=>x.e==="alta").length,
-    baixa: l.filter(x=>x.e==="baixa").length,
-    neutra: l.filter(x=>x.e==="neutra").length };
+    alta:  l.filter(x=> ehAlta(x.e)).length,
+    baixa: l.filter(x=>!ehAlta(x.e)).length };
 
-  if(filtro !== "todos") l = l.filter(x => x.e === filtro);
+  if(filtro === "alta")  l = l.filter(x=> ehAlta(x.e));
+  if(filtro === "baixa") l = l.filter(x=>!ehAlta(x.e));
   if(busca) l = l.filter(x => x.ativo.includes(busca));
+  // ordena pela distancia, que ja separa forte de fraco dentro de cada lado
   l.sort((a,b) => b.dist - a.dist);
 
   const link = (t, q2) => `#/screening?t=${t}${q2?"&q="+encodeURIComponent(q2):""}`;
@@ -2902,8 +2917,7 @@ async function telaScreening(){
     É medida, não recomendação.</p>
 
   <div class="abas">
-    ${[["todos","Todos"],["alta","Tendência de alta"],
-       ["baixa","Tendência de baixa"],["neutra","Sem tendência"]]
+    ${[["todos","Todos"],["alta","Tendência de alta"],["baixa","Tendência de baixa"]]
       .map(([k,r])=>`<a href="${link(k,busca)}" class="aba${filtro===k?" on":""}">${r}<span class="n">${conta[k]}</span></a>`).join("")}
   </div>
 
@@ -2924,23 +2938,26 @@ async function telaScreening(){
       <th class="d">Pregões</th></tr></thead><tbody>
     ${l.map(x=>`<tr>
       <td class="mono" style="font-weight:500">${esc(x.ativo)}</td>
-      <td style="font-size:12.5px" class="${x.e==="alta"?"alta":x.e==="baixa"?"baixa":"nulo"}">
-        ${rotulo[x.e]}</td>
+      <td style="font-size:12.5px" class="${ehAlta(x.e)?"alta":"baixa"}">
+        ${rotulo[x.e]}${x.e.endsWith("_forte")
+          ? '<span style="opacity:.7;margin-left:4px">▲</span>' : ""}</td>
       <td class="d mono">${n2(x.fech)}</td>
       <td class="d mono nulo" style="font-size:12px">${n2(x.ema17)}</td>
       <td class="d mono nulo" style="font-size:12px">${n2(x.ema34)}</td>
-      <td class="d mono ${x.e==="neutra"?"nulo":cor(x.dist)}"><b>${pct(x.dist)}</b></td>
+      <td class="d mono ${cor(x.dist)}"><b>${pct(x.dist)}</b></td>
       <td class="d mono nulo" style="font-size:12px">${n2(x.amplitude*100,1)}%</td>
       <td class="d mono nulo" style="font-size:12px">${x.pregoes}</td></tr>`).join("")}
     </tbody></table>`}
 
   <p style="font-size:11.5px;color:var(--graf);margin:12px 0 0;max-width:70ch">
-    <b>Distância</b> é o quanto a média de 17 está acima ou abaixo da de 34.
-    Entre −0,5% e +0,5% o papel aparece como <b>sem tendência</b>: aí as duas
-    curvas estão coladas e rotular de alta ou baixa seria ruído.
-    <b>Amplitude</b> é quanto o papel costuma oscilar por dia — é a mesma que
-    define o stop e o alvo no Tiro curto.
-    Só a janela diária existe por enquanto.</p>`;
+    A <b>direção</b> vem do cruzamento: média de 17 acima da de 34 é alta.
+    A <b>força</b> vem de onde o preço está em relação às duas — acima das duas
+    é forte, entre elas é neutro, abaixo das duas é fraco. Uma <b>alta fraca</b>
+    é o papel que ainda tem as médias viradas para cima mas já negocia abaixo
+    delas; a <b>baixa fraca</b> é o espelho disso.
+    <b>Distância</b> é o quanto uma média está da outra, e <b>amplitude</b> é
+    quanto o papel costuma oscilar por dia — a mesma que define o stop e o alvo
+    no Tiro curto. Só a janela diária existe por enquanto.</p>`;
 
   const bq = $("#qBusca");
   if(bq){
@@ -3016,9 +3033,9 @@ function telaComo(){
    + "o declarado e o atual. Se você escolheu rebalanceamento, os pesos voltam ao "
    + "declarado na periodicidade combinada.")}
   ${P("De onde vem a cotação?",
-     "De um robô ligado ao MetaTrader 5, que envia a variação de cada papel "
-   + "durante o pregão e no fechamento. A variação já vem ajustada por proventos, "
-   + "então dia de dividendo não vira queda falsa.")}
+     "De um terminal ligado à B3, que registra a variação de cada papel durante "
+   + "o pregão e no fechamento. A variação já vem ajustada por proventos, então "
+   + "dia de dividendo não vira queda falsa.")}
   ${P("O que é o \\\"contra o Ibovespa\\\"?",
      "É quanto a carteira ganhou ou perdeu do índice no período dela, em pontos. "
    + "O benchmark é medido a partir do dia em que a carteira nasceu, não do começo "
