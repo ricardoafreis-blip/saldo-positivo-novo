@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict nBdydjUCH1UHRIVGO3WDasF1Npx5U8BlvfXYMlKUBtopsyV2p9668DH4siQrW6X
+\restrict APvTpl6ISxHJtePnKTKbN5fCv9Vxu5plIxHwZZgVPTSNJW78Lxyww2cqh1Mf15f
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.10 (Ubuntu 17.10-1.pgdg24.04+1)
@@ -563,6 +563,39 @@ end $$;
 
 
 --
+-- Name: enfileirar_papel(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.enfileirar_papel() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+begin
+  insert into papel_fila (ativo, estado)
+  select new.ativo, 'pendente'
+   where not exists (select 1 from cotacao_viva c where c.ativo = new.ativo)
+  on conflict (ativo) do nothing;
+  return new;
+end $$;
+
+
+--
+-- Name: estado_papel(text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.estado_papel(p_ativo text) RETURNS text
+    LANGUAGE sql STABLE
+    SET search_path TO 'public'
+    AS $$
+  select coalesce(
+    (select f.estado from papel_fila f where f.ativo = p_ativo),
+    case when exists (select 1 from cotacao_viva c where c.ativo = p_ativo)
+         then 'cotando' else 'pendente' end
+  );
+$$;
+
+
+--
 -- Name: fechar_dia(date, boolean); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -915,6 +948,35 @@ end $$;
 
 
 --
+-- Name: mt5_papel_resposta(jsonb); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.mt5_papel_resposta(dados jsonb) RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+declare n int; papel text;
+begin
+  papel := coalesce(current_setting('request.jwt.claim.role', true),
+                    current_setting('role', true), '');
+  if papel <> 'service_role'
+     and not coalesce((select admin from perfil where id = auth.uid()), false) then
+    raise exception 'so admin pode responder (papel: %)', papel;
+  end if;
+
+  update papel_fila f
+     set estado = case when x.ok then 'cotando' else 'nao_existe' end,
+         motivo = x.motivo,
+         respondido_em = now()
+    from jsonb_to_recordset(dados) as x(ativo text, ok boolean, motivo text)
+   where f.ativo = x.ativo;
+
+  get diagnostics n = row_count;
+  return jsonb_build_object('atualizados', n);
+end $$;
+
+
+--
 -- Name: mt5_viva(jsonb); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -933,12 +995,19 @@ begin
 
   delete from cotacao_viva
    where ativo in (select x.ativo from jsonb_to_recordset(dados)
-                     as x(ativo text, preco real, ant real, abre real));
+                     as x(ativo text, preco real, var real, ant real, abre real));
 
   insert into cotacao_viva (ativo, valor, preco, abertura, atualizado_em)
-  select x.ativo, x.preco/x.ant - 1, x.preco, nullif(x.abre, 0), now()
-    from jsonb_to_recordset(dados) as x(ativo text, preco real, ant real, abre real)
-   where x.ativo is not null and x.preco > 0 and x.ant > 0;
+  select x.ativo,
+         -- variação pronta do terminal quando vier; senão deriva do
+         -- fechamento anterior, como antes (EA velho ainda no ar)
+         coalesce(x.var, x.preco / nullif(x.ant, 0) - 1),
+         x.preco, nullif(x.abre, 0), now()
+    from jsonb_to_recordset(dados)
+      as x(ativo text, preco real, var real, ant real, abre real)
+   where x.ativo is not null
+     and x.preco > 0
+     and (x.var is not null or x.ant > 0);
 
   get diagnostics n = row_count;
   return jsonb_build_object('gravados', n, 'quando', now());
@@ -981,6 +1050,21 @@ begin
           pai);
   return new;
 end $$;
+
+
+--
+-- Name: papeis_pendentes(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.papeis_pendentes() RETURNS TABLE(ativo text)
+    LANGUAGE sql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+  select f.ativo from papel_fila f
+   where f.estado = 'pendente'
+   order by f.pedido_em
+   limit 20;
+$$;
 
 
 --
@@ -1309,6 +1393,38 @@ CREATE FUNCTION public.sou_admin() RETURNS boolean
     SET search_path TO 'public'
     AS $$
   select coalesce((select p.admin from perfil p where p.id = auth.uid()), false)
+$$;
+
+
+--
+-- Name: taxa_rf_ano(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.taxa_rf_ano() RETURNS real
+    LANGUAGE sql STABLE
+    AS $$
+  select coalesce(
+    (select valor::real from parametro where chave = 'cdi_ano'),
+    14.5
+  );
+$$;
+
+
+--
+-- Name: FUNCTION taxa_rf_ano(); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.taxa_rf_ano() IS 'Taxa da renda fixa ao ano, em pontos percentuais. Fonte única: parametro.cdi_ano. Para mudar: update parametro set valor = X where chave = ''cdi_ano''; Ninguém mais deve cravar essa taxa.';
+
+
+--
+-- Name: taxa_rf_dia(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.taxa_rf_dia() RETURNS real
+    LANGUAGE sql STABLE
+    AS $$
+  select (power(1 + taxa_rf_ano()/100.0, 1.0/252) - 1)::real;
 $$;
 
 
@@ -1857,6 +1973,27 @@ UNION
 
 
 --
+-- Name: papel_fila; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.papel_fila (
+    ativo text NOT NULL,
+    estado text DEFAULT 'pendente'::text NOT NULL,
+    motivo text,
+    pedido_em timestamp with time zone DEFAULT now() NOT NULL,
+    respondido_em timestamp with time zone,
+    CONSTRAINT papel_fila_estado_check CHECK ((estado = ANY (ARRAY['pendente'::text, 'cotando'::text, 'nao_existe'::text])))
+);
+
+
+--
+-- Name: TABLE papel_fila; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.papel_fila IS 'Papéis que precisam entrar no Observador do MT5. pendente = o EA ainda não olhou; cotando = SymbolSelect deu certo e já vem cotação; nao_existe = a corretora não tem esse código.';
+
+
+--
 -- Name: parametro; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1994,13 +2131,13 @@ CREATE VIEW public.retorno_parcial AS
           GROUP BY peso_atual.carteira_id
         )
  SELECT pa.carteira_id,
-    ((sum(((pa.peso / (100.0)::double precision) * COALESCE(v.valor, (0)::real))) + ((LEAST(((100)::double precision - (e.l - e.s)), (100.0)::double precision) / (100.0)::double precision) * ((power(1.105, (1.0 / (252)::numeric)) - (1)::numeric))::double precision)))::real AS retorno,
+    ((sum(((pa.peso / (100.0)::double precision) * COALESCE(v.valor, (0)::real))) + ((LEAST(((100.0)::double precision - (e.l - e.s)), (100.0)::double precision) / (100.0)::double precision) * public.taxa_rf_dia())))::real AS retorno,
     max(v.atualizado_em) AS atualizado_em,
-    count(v.ativo) AS com_cotacao,
+    count(v.valor) AS com_cotacao,
     count(*) AS papeis
    FROM ((public.peso_atual pa
      JOIN expo e ON ((e.carteira_id = pa.carteira_id)))
-     LEFT JOIN public.cotacao_viva v ON ((v.ativo = pa.ativo)))
+     LEFT JOIN public.cotacao_viva v ON (((v.ativo = pa.ativo) AND (((v.atualizado_em AT TIME ZONE 'America/Sao_Paulo'::text))::date = public.hoje_br()))))
   GROUP BY pa.carteira_id, e.l, e.s;
 
 
@@ -2174,6 +2311,14 @@ ALTER TABLE ONLY public.nota
 
 ALTER TABLE ONLY public.oscilacao
     ADD CONSTRAINT oscilacao_pkey PRIMARY KEY (ativo, data);
+
+
+--
+-- Name: papel_fila papel_fila_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.papel_fila
+    ADD CONSTRAINT papel_fila_pkey PRIMARY KEY (ativo);
 
 
 --
@@ -2354,6 +2499,20 @@ CREATE TRIGGER tg_declarar AFTER INSERT ON public.posicao FOR EACH ROW EXECUTE F
 --
 
 CREATE TRIGGER tg_encerrar_se_zerou AFTER INSERT OR UPDATE ON public.retorno_dia FOR EACH ROW EXECUTE FUNCTION public.encerrar_se_zerou();
+
+
+--
+-- Name: aposta tg_fila_aposta; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER tg_fila_aposta AFTER INSERT ON public.aposta FOR EACH ROW EXECUTE FUNCTION public.enfileirar_papel();
+
+
+--
+-- Name: posicao tg_fila_posicao; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER tg_fila_posicao AFTER INSERT ON public.posicao FOR EACH ROW EXECUTE FUNCTION public.enfileirar_papel();
 
 
 --
@@ -2641,6 +2800,19 @@ CREATE POLICY pa_le ON public.peso_atual FOR SELECT USING ((public.eh_assinante(
 
 
 --
+-- Name: papel_fila; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.papel_fila ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: papel_fila papel_fila_leitura; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY papel_fila_leitura ON public.papel_fila FOR SELECT USING (true);
+
+
+--
 -- Name: parametro; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -2787,5 +2959,5 @@ ALTER TABLE public.universo ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict nBdydjUCH1UHRIVGO3WDasF1Npx5U8BlvfXYMlKUBtopsyV2p9668DH4siQrW6X
+\unrestrict APvTpl6ISxHJtePnKTKbN5fCv9Vxu5plIxHwZZgVPTSNJW78Lxyww2cqh1Mf15f
 

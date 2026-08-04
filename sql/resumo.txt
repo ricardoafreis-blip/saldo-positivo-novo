@@ -1,14 +1,14 @@
 tabela | linhas
-aposta | 6
+aposta | 9
 audit_log_entries | 0
 barra | 0
 buckets | 0
 buckets_analytics | 0
 buckets_vectors | 0
-carteira | 6
-cotacao_viva | 15
+carteira | 7
+cotacao_viva | 25
 custom_oauth_providers | 0
-fechamento | 3810
+fechamento | 3835
 fila_email | 0
 flow_state | 0
 identities | 2
@@ -26,16 +26,17 @@ oauth_clients | 0
 oauth_consents | 0
 objects | 0
 one_time_tokens | 0
-oscilacao | 3683
+oscilacao | 3708
+papel_fila | 238
 parametro | 1
 perfil | 2
-peso_atual | 0
+peso_atual | 30
 peso_atual_backup | 46
-posicao | 30
+posicao | 50
 rebalanceamento | 1
 referencia | 2
-refresh_tokens | 24
-retorno_dia | 0
+refresh_tokens | 36
+retorno_dia | 10
 s3_multipart_uploads | 0
 s3_multipart_uploads_parts | 0
 saml_providers | 0
@@ -54,4 +55,4 @@ users | 2
 vector_indexes | 0
 webauthn_challenges | 0
 webauthn_credentials | 0
-(55 rows)
+(56 rows)
