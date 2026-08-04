@@ -271,7 +271,7 @@ Nada aqui é recomendação — cada carteira é anotação pessoal de quem publ
 <header><div class="w"><nav>
   <a href="#/" class="marca" style="margin-right:8px">Saldo Positivo</a>
   <span class="bloco"><span class="rot">carteiras</span>
-    <span class="itens"><a href="#/">Ranking</a><span id="navPub"></span></span></span>
+    <span class="itens"><a href="#/">Ranking</a><a href="#/screening">Screening</a><span id="navPub"></span></span></span>
   <span class="divisor"></span>
   <span class="bloco"><span class="rot">diversão</span>
     <span class="itens"><a href="#/tiro-curto">Tiro curto</a><a href="#/placar">Placar</a><a href="#/duelo">Duelo</a></span></span>
@@ -1945,6 +1945,13 @@ async function telaAdmin(){
   const acum = {}; (rets||[]).forEach(r=> acum[r.carteira_id] = r.indice/100 - 1);
   let fila = [];
   try{ const { data:fq } = await sb.rpc("admin_fila", { so_pendente:true }); fila = fq||[]; }catch(e){}
+  // vencimento e total pago de cada conta. Se a tabela assinatura ainda
+  // nao existir, a tela continua funcionando sem esta parte.
+  let assin = {};
+  try{
+    const { data:pa } = await sb.from("painel_assinatura").select("*");
+    (pa||[]).forEach(x => { assin[x.id] = x; });
+  }catch(e){}
   const apelidoDe = {}; (us||[]).forEach(u=> apelidoDe[u.id]=u.apelido);
 
   const dataOsc = dias?.[0]?.data || null;
@@ -1999,12 +2006,28 @@ async function telaAdmin(){
         ${x.bloqueado?' <span class="tag">bloqueada</span>':""}
         <div style="font-size:11px;color:var(--graf)">${x.n_carteiras} carteiras</div></td>
       <td style="font-size:12px">${esc(x.email||"—")}</td>
-      <td class="d"><button class="bt ${x.assinante?"lacre":""}" data-uid="${x.id}"
-        data-ass="${x.assinante?1:0}" style="padding:4px 11px;font-size:12px">
-        ${x.assinante?"assinante":"grátis"}</button></td>
+      <td class="d">${(() => {
+        const a = assin[x.id];
+        const venc = a?.vence_em;
+        const dias = venc ? Math.round((Date.parse(venc+"T12:00:00Z") - Date.now())/86400000) : null;
+        return `<button class="bt ${x.assinante?"lacre":""}" data-uid="${x.id}"
+          data-ass="${x.assinante?1:0}" style="padding:4px 11px;font-size:12px">
+          ${x.assinante?"assinante":"grátis"}</button>
+        ${venc ? `<div style="font-size:10.5px;margin-top:3px;color:${
+            dias!=null && dias < 0 ? "var(--baixa)"
+          : dias!=null && dias <= 7 ? "var(--ouro2)" : "var(--graf)"}">
+          ${dias!=null && dias < 0 ? "venceu em " + dataBR(venc)
+            : "até " + dataBR(venc) + (dias<=7?` · ${dias} ${dias===1?"dia":"dias"}`:"")}</div>` : ""}
+        ${a?.pagamentos ? `<div style="font-size:10.5px;color:var(--graf)">
+          ${a.pagamentos} ${a.pagamentos===1?"pagamento":"pagamentos"} ·
+          R$ ${n2(a.total_pago,0)}</div>` : ""}`;
+      })()}</td>
       <td class="d">
+        <button class="bt ac-mes" data-ape="${esc(x.apelido)}"
+          style="padding:4px 10px;font-size:12px;border-color:var(--lacre);color:var(--ouro2)"
+          title="lança 30 dias de assinatura">+30d</button>
         <button class="bt ac-ape" data-uid="${x.id}" data-ape="${esc(x.apelido)}"
-          style="padding:4px 10px;font-size:12px">apelido</button>
+          style="padding:4px 10px;font-size:12px;margin-left:5px">apelido</button>
         ${x.id!==eu.id?`<button class="bt ac-blo" data-uid="${x.id}" data-blo="${x.bloqueado?1:0}"
           style="padding:4px 10px;font-size:12px;margin-left:5px">${x.bloqueado?"liberar":"bloquear"}</button>`:""}
       </td></tr>`).join("")}
@@ -2026,6 +2049,20 @@ async function telaAdmin(){
       if(error){ b.disabled=false; return log("falhou: "+error.message); }
       telaAdmin();
     };
+  });
+
+  // Lanca 30 dias pela funcao do banco, que estende a partir do
+  // vencimento em vez de comecar hoje — renovar nao faz perder dias.
+  document.querySelectorAll(".ac-mes").forEach(b=> b.onclick = async()=>{
+    const v = prompt(`Quanto ${b.dataset.ape} pagou? (em reais, 0 para cortesia)`, "19");
+    if(v === null) return;
+    b.disabled = true;
+    const { data, error } = await sb.rpc("dar_assinatura",
+      { p_apelido: b.dataset.ape, p_dias: 30,
+        p_valor: Number(String(v).replace(",",".")) || 0,
+        p_meio: Number(v) ? "pix" : "cortesia" });
+    if(error){ b.disabled=false; return log("falhou: "+error.message); }
+    log(data); telaAdmin();
   });
 
   document.querySelectorAll(".ac-ape").forEach(b=> b.onclick = ()=>{
@@ -2817,6 +2854,106 @@ async function telaPlacar(){
       <a href="#/entrar?novo=1" class="bt cheio">Criar conta grátis</a></div>`}`;
 }
 
+// ═══════════════════════════════════════════ screening
+// Medias exponenciais de 17 e 34 pregoes, calculadas NO BANCO — sao 236
+// papeis por 40 pregoes e o PostgREST corta em 1000 linhas por consulta.
+//
+// A tela diz "tendencia de alta" e "tendencia de baixa", nunca "comprado"
+// ou "vendido": o primeiro descreve onde o preco esta, o segundo e sinal
+// de operacao. Num site assinado por analista credenciado a diferenca
+// nao e estetica.
+//
+// So a janela DIARIA existe. Para 15 minutos e 1 hora o EA precisaria
+// mandar candles intradiarios — tabela nova e outro volume de dado.
+async function telaScreening(){
+  app().innerHTML = `<div class="carreg">calculando as médias…</div>`;
+  const { data, error } = await sb.rpc("quant_medias");
+  if(error) return app().innerHTML = aviso("Erro ao calcular: "+error.message, true);
+
+  const q = new URLSearchParams(location.hash.split("?")[1]||"");
+  const filtro = q.get("t") || "todos";
+  const busca  = (q.get("q") || "").toUpperCase();
+
+  // Faixa morta: com as duas medias a menos de 0,5% uma da outra nao ha
+  // tendencia nenhuma, e rotular de alta ou baixa faz o papel trocar de
+  // lado a cada pregao por ruido.
+  const MORTA = 0.005;
+  const estado = d => d > MORTA ? "alta" : d < -MORTA ? "baixa" : "neutra";
+  const rotulo = { alta:"tendência de alta", baixa:"tendência de baixa",
+                   neutra:"sem tendência" };
+
+  let l = (data||[]).map(x => ({ ...x, e: estado(x.dist) }));
+  const conta = { todos: l.length,
+    alta: l.filter(x=>x.e==="alta").length,
+    baixa: l.filter(x=>x.e==="baixa").length,
+    neutra: l.filter(x=>x.e==="neutra").length };
+
+  if(filtro !== "todos") l = l.filter(x => x.e === filtro);
+  if(busca) l = l.filter(x => x.ativo.includes(busca));
+  l.sort((a,b) => b.dist - a.dist);
+
+  const link = (t, q2) => `#/screening?t=${t}${q2?"&q="+encodeURIComponent(q2):""}`;
+
+  app().innerHTML = `
+  <h1 style="font-size:27px;margin:28px 0 4px">Screening</h1>
+  <p style="color:var(--t2);max-width:64ch;margin-bottom:4px;font-size:13.5px">
+    Média exponencial de <b>17</b> contra a de <b>34</b> pregões. Quando a curta
+    está acima da longa, o preço vem subindo há mais tempo do que caindo.
+    É medida, não recomendação.</p>
+
+  <div class="abas">
+    ${[["todos","Todos"],["alta","Tendência de alta"],
+       ["baixa","Tendência de baixa"],["neutra","Sem tendência"]]
+      .map(([k,r])=>`<a href="${link(k,busca)}" class="aba${filtro===k?" on":""}">${r}<span class="n">${conta[k]}</span></a>`).join("")}
+  </div>
+
+  <div class="ordena">
+    <input id="qBusca" placeholder="filtrar por código" value="${esc(busca)}"
+      style="width:190px;margin:0;padding:7px 11px;font-size:13px;text-transform:uppercase">
+    <span style="font-size:11.5px;color:var(--graf)">
+      ${l.length} ${l.length===1?"papel":"papéis"} · ordenado pela distância entre as médias</span>
+  </div>
+
+  ${!l.length ? `<div class="card"><p style="margin:0;color:var(--t2)">
+      Nenhum papel neste filtro. ${!(data||[]).length
+        ? "O cálculo precisa de 34 pregões de histórico — se o robô começou a rodar há pouco, ainda não há dado suficiente."
+        : ""}</p></div>`
+  : `<table><thead><tr><th>Papel</th><th>Estado</th>
+      <th class="d">Fechamento</th><th class="d">EMA 17</th><th class="d">EMA 34</th>
+      <th class="d">Distância</th><th class="d">Amplitude</th>
+      <th class="d">Pregões</th></tr></thead><tbody>
+    ${l.map(x=>`<tr>
+      <td class="mono" style="font-weight:500">${esc(x.ativo)}</td>
+      <td style="font-size:12.5px" class="${x.e==="alta"?"alta":x.e==="baixa"?"baixa":"nulo"}">
+        ${rotulo[x.e]}</td>
+      <td class="d mono">${n2(x.fech)}</td>
+      <td class="d mono nulo" style="font-size:12px">${n2(x.ema17)}</td>
+      <td class="d mono nulo" style="font-size:12px">${n2(x.ema34)}</td>
+      <td class="d mono ${x.e==="neutra"?"nulo":cor(x.dist)}"><b>${pct(x.dist)}</b></td>
+      <td class="d mono nulo" style="font-size:12px">${n2(x.amplitude*100,1)}%</td>
+      <td class="d mono nulo" style="font-size:12px">${x.pregoes}</td></tr>`).join("")}
+    </tbody></table>`}
+
+  <p style="font-size:11.5px;color:var(--graf);margin:12px 0 0;max-width:70ch">
+    <b>Distância</b> é o quanto a média de 17 está acima ou abaixo da de 34.
+    Entre −0,5% e +0,5% o papel aparece como <b>sem tendência</b>: aí as duas
+    curvas estão coladas e rotular de alta ou baixa seria ruído.
+    <b>Amplitude</b> é quanto o papel costuma oscilar por dia — é a mesma que
+    define o stop e o alvo no Tiro curto.
+    Só a janela diária existe por enquanto.</p>`;
+
+  const bq = $("#qBusca");
+  if(bq){
+    bq.oninput = () => {
+      clearTimeout(window.__tQ);
+      window.__tQ = setTimeout(() => {
+        location.hash = link(filtro, bq.value.trim().toUpperCase());
+      }, 400);
+    };
+    if(busca){ bq.focus(); bq.setSelectionRange(bq.value.length, bq.value.length); }
+  }
+}
+
 // ═══════════════════════════════════════════ como funciona
 // O site nao explicava a si mesmo em lugar nenhum: quem chegava via
 // link caia num ranking de nomes sem saber o que estava vendo.
@@ -2927,6 +3064,7 @@ function rotear(){
   if(h==="#/publicar")        return telaPublicar();
   if(h==="#/duelo")           return telaDuelo();
   if(h==="#/como-funciona")   return telaComo();
+  if(h==="#/screening")       return telaScreening();
   // rota antiga continua valendo: link já compartilhado não pode quebrar
   if(h==="#/tiro-curto" || h==="#/apostar") return telaTiroCurto();
   if(h==="#/placar")          return telaPlacar();
