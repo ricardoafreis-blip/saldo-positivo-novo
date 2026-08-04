@@ -1,11 +1,26 @@
 name: Fechar o dia
 
+# Apura as carteiras do último pregão com cotação.
+#
+# SETE TENTATIVAS POR DIA, e isso é de propósito: a cotação depende do
+# MT5 estar aberto, o que nem sempre acontece às 18h. O robô recusa
+# apurar duas vezes o mesmo pregão — se já está fechado, ele diz e sai
+# em segundos. Então tentar de novo não custa nada e não estraga nada.
+#
+# Se nenhuma tentativa pegar, o dia fica pendente até você abrir o MT5:
+# o robô prefere não apurar a apurar com dado furado.
+#
+# O cron do GitHub é em UTC. Brasília é UTC−3.
+# E ele costuma atrasar de 5 a 20 minutos — com sete tentativas isso
+# deixa de importar.
+
 on:
   schedule:
-    # O cron do GitHub é sempre UTC. Brasília = UTC-3, sem horário de verão.
-    # 22:00 UTC = 19:00 em Brasília — a rodada de verdade, depois do pregão.
-    - cron: "0 22 * * 1-5"
-  workflow_dispatch:
+    - cron: "20 21 * * 1-5"          # 18h20
+    - cron: "30 0 * * 2-6"           # 21h30 (já é o dia seguinte em UTC)
+    - cron: "30,45 11 * * 1-5"       # 8h30 e 8h45
+    - cron: "0,15,30 12 * * 1-5"     # 9h, 9h15 e 9h30
+  workflow_dispatch:                 # e o botão manual continua valendo
 
 jobs:
   fechar:
@@ -14,10 +29,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
       - run: node robo/robo.mjs dia
         env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-          EMAIL_DE: ${{ secrets.EMAIL_DE }}
+          RESEND_API_KEY:       ${{ secrets.RESEND_API_KEY }}
+          EMAIL_DE:             ${{ secrets.EMAIL_DE }}
