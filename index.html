@@ -3007,99 +3007,127 @@ async function telaScreening(){
   // Um repique dentro de uma queda de tres meses e outra coisa que uma
   // alta que ja dura tres meses — e ate aqui as duas apareciam iguais.
   const mare = x => x.ema72 == null ? null : (x.ema34 >= x.ema72 ? "alta" : "baixa");
-  const rotulo = { alta_forte:"alta forte", alta:"alta", alta_fraca:"alta fraca",
-                   baixa_fraca:"baixa fraca", baixa:"baixa", baixa_forte:"baixa forte" };
-  const ehAlta = e => e.startsWith("alta");
+  const ordem = q.get("o") || "liq";
+  const soLiq = q.get("liq") !== "0";
 
-  let l = (data||[]).map(x => ({ ...x, e: classificar(x) }));
-  l.forEach(x => {
-    x.mare = mare(x);
-    x.alinha = x.mare == null ? null : (ehAlta(x.e) === (x.mare === "alta"));
-  });
+  let l = (data||[]).map(x => ({ ...x, e: estadoDe(x) }));
+  // Onde o preco esta em relacao a media longa: e a forca do movimento.
+  l.forEach(x => { x.forca = (x.ema72 && x.ema72 > 0) ? x.fech/x.ema72 - 1 : null; });
+
+  // ⚠️ Papel de pouco negocio distorce tudo: a media curta descola por um
+  // pulo isolado e ele aparece em primeiro sem significar nada. Foi o que
+  // pos AZEV3 no topo. Corte de R$ 1 milhao de volume por dia.
+  const LIQ_MIN = 1000000;
+  const foraDoCorte = (data||[]).filter(x => x.liquidez != null && x.liquidez < LIQ_MIN).length;
+  if(soLiq) l = l.filter(x => x.liquidez == null || x.liquidez >= LIQ_MIN);
+
   const conta = { todos: l.length,
-    alta:  l.filter(x=> ehAlta(x.e)).length,
-    baixa: l.filter(x=>!ehAlta(x.e)).length,
-    junto: l.filter(x=> x.alinha === true).length,
-    contra:l.filter(x=> x.alinha === false).length };
+    alta_firme:  l.filter(x=>x.e==="alta_firme").length,
+    repique:     l.filter(x=>x.e==="repique").length,
+    correcao:    l.filter(x=>x.e==="correcao").length,
+    baixa_firme: l.filter(x=>x.e==="baixa_firme").length };
 
-  if(filtro === "alta")   l = l.filter(x=> ehAlta(x.e));
-  if(filtro === "baixa")  l = l.filter(x=>!ehAlta(x.e));
-  if(filtro === "junto")  l = l.filter(x=> x.alinha === true);
-  if(filtro === "contra") l = l.filter(x=> x.alinha === false);
+  if(filtro !== "todos") l = l.filter(x => x.e === filtro);
   if(busca) l = l.filter(x => x.ativo.includes(busca));
-  // ordena pela distancia, que ja separa forte de fraco dentro de cada lado
-  l.sort((a,b) => b.dist - a.dist);
 
-  const link = (t, q2) => `#/screening?t=${t}${q2?"&q="+encodeURIComponent(q2):""}`;
+  // O padrao e LIQUIDEZ. Ordenar por distancia entre as medias punha na
+  // frente o papel mais esticado, que costuma ser o de menos negocio.
+  const ordenar = {
+    liq:   (a,b) => (b.liquidez ?? 0) - (a.liquidez ?? 0),
+    forca: (a,b) => (b.forca ?? -9) - (a.forca ?? -9),
+    dist:  (a,b) => b.dist - a.dist,
+    amp:   (a,b) => b.amplitude - a.amplitude,
+    cod:   (a,b) => a.ativo.localeCompare(b.ativo),
+  }[ordem] || ((a,b) => (b.liquidez ?? 0) - (a.liquidez ?? 0));
+  l.sort(ordenar);
+
+  const link = (o={}) => {
+    const a = { t:filtro, o:ordem, q:busca, liq:soLiq?"":"0", ...o };
+    const p = Object.entries(a).filter(([,v]) => v && v !== "todos" && !(a.liq==="" && v===""))
+      .map(([k,v]) => `${k}=${encodeURIComponent(v)}`);
+    return "#/screening" + (p.length ? "?" + p.join("&") : "?t=todos");
+  };
+  const grana = v => v == null ? "—"
+    : v >= 1e9 ? n2(v/1e9,1) + " bi"
+    : v >= 1e6 ? n2(v/1e6,0) + " mi"
+    : n2(v/1e3,0) + " mil";
 
   app().innerHTML = `
   <h1 style="font-size:27px;margin:28px 0 4px">Screening</h1>
-  <p style="color:var(--t2);max-width:64ch;margin-bottom:4px;font-size:13.5px">
-    Médias exponenciais de <b>17</b>, <b>34</b> e <b>72</b> pregões. As duas
-    primeiras dizem para onde o papel vem indo agora; a de 72 é a maré, o
-    movimento de fundo. É medida, não recomendação.</p>
+  <p style="color:var(--t2);max-width:62ch;margin-bottom:2px;font-size:13.5px">
+    Onde cada papel está em relação às próprias médias — de <b>17</b> e <b>34</b>
+    pregões para o curto prazo, de <b>72</b> para o movimento de fundo.
+    É medida, não recomendação.</p>
 
   <div class="abas">
-    ${[["todos","Todos"],["alta","Tendência de alta"],["baixa","Tendência de baixa"],
-       ["junto","A favor da maré"],["contra","Contra a maré"]]
-      .map(([k,r])=>`<a href="${link(k,busca)}" class="aba${filtro===k?" on":""}">${r}<span class="n">${conta[k]}</span></a>`).join("")}
+    ${[["todos","Todos"],["alta_firme","Alta firme"],["repique","Repique"],
+       ["correcao","Correção"],["baixa_firme","Baixa firme"]]
+      .map(([k,r])=>`<a href="${link({t:k})}" class="aba${filtro===k?" on":""}">${r}<span class="n">${conta[k]??0}</span></a>`).join("")}
   </div>
 
   <div class="ordena">
+    <span class="rot">ordenar por</span>
+    <select id="selO" class="selOrdem">
+      ${[["liq","Mais negociados"],["forca","Mais acima da média longa"],
+         ["dist","Médias mais afastadas"],["amp","Mais oscilam por dia"],["cod","Código"]]
+        .map(([k,r])=>`<option value="${k}"${ordem===k?" selected":""}>${r}</option>`).join("")}
+    </select>
     <input id="qBusca" placeholder="filtrar por código" value="${esc(busca)}"
-      style="width:190px;margin:0;padding:7px 11px;font-size:13px;text-transform:uppercase">
-    <span style="font-size:11.5px;color:var(--graf)">
-      ${l.length} ${l.length===1?"papel":"papéis"} · ordenado pela distância entre as médias</span>
+      style="width:160px;margin:0;padding:7px 11px;font-size:13px;text-transform:uppercase">
+    <span class="divisor"></span>
+    <a href="${link({liq:soLiq?"0":""})}" style="font-size:12px;color:${soLiq?"var(--ouro2)":"var(--graf)"}">
+      ${soLiq?"✓ ":""}só os que negociam</a>
+    <span style="font-size:11.5px;color:var(--graf);margin-left:auto">
+      ${l.length} ${l.length===1?"papel":"papéis"}</span>
   </div>
 
   ${!l.length ? `<div class="card"><p style="margin:0;color:var(--t2)">
-      Nenhum papel neste filtro. ${!(data||[]).length
-        ? "O cálculo precisa de 34 pregões de histórico — se o robô começou a rodar há pouco, ainda não há dado suficiente."
+      Nenhum papel neste filtro.${!(data||[]).length
+        ? " O cálculo precisa de 34 pregões de histórico e o robô ainda não juntou tanto."
         : ""}</p></div>`
-  : `<table><thead><tr><th>Papel</th><th>Estado</th><th>Maré · 72</th>
-      <th class="d">Fechamento</th><th class="d">EMA 17</th><th class="d">EMA 34</th>
-      <th class="d">EMA 72</th>
-      <th class="d">Distância</th><th class="d">Amplitude</th>
-      <th class="d">Pregões</th></tr></thead><tbody>
+  : `<table><thead><tr><th>Papel</th><th>Estado</th>
+      <th class="d">Fechamento</th><th class="d">Vs. média longa</th>
+      <th class="d">17 × 34</th><th class="d">Oscila/dia</th>
+      <th class="d">Negócio/dia</th></tr></thead><tbody>
     ${l.map(x=>`<tr>
       <td class="mono" style="font-weight:500">${esc(x.ativo)}</td>
-      <td style="font-size:12.5px" class="${ehAlta(x.e)?"alta":"baixa"}">
-        ${rotulo[x.e]}${x.e.endsWith("_forte")
-          ? '<span style="opacity:.7;margin-left:4px">▲</span>' : ""}</td>
-      <td style="font-size:12px" class="${x.alinha==null?"nulo":x.alinha?"":"baixa"}">
-        ${x.alinha==null ? "—"
-          : x.alinha ? `<span class="${x.mare==="alta"?"alta":"baixa"}">a favor</span>`
-                     : "contra a maré"}</td>
+      <td style="font-size:12.5px" class="${SOBE(x.e)?"alta":"baixa"}">${ROT[x.e]}</td>
       <td class="d mono">${n2(x.fech)}</td>
-      <td class="d mono nulo" style="font-size:12px">${n2(x.ema17)}</td>
-      <td class="d mono nulo" style="font-size:12px">${n2(x.ema34)}</td>
-      <td class="d mono nulo" style="font-size:12px">${x.ema72==null?"—":n2(x.ema72)}</td>
-      <td class="d mono ${cor(x.dist)}"><b>${pct(x.dist)}</b></td>
+      <td class="d mono ${x.forca==null?"nulo":cor(x.forca)}"><b>${
+        x.forca==null?"—":pct(x.forca)}</b></td>
+      <td class="d mono ${cor(x.dist)}" style="font-size:12px">${pct(x.dist)}</td>
       <td class="d mono nulo" style="font-size:12px">${n2(x.amplitude*100,1)}%</td>
-      <td class="d mono nulo" style="font-size:12px">${x.pregoes}</td></tr>`).join("")}
+      <td class="d mono nulo" style="font-size:12px">${grana(x.liquidez)}</td></tr>`).join("")}
     </tbody></table>`}
 
-  <p style="font-size:11.5px;color:var(--graf);margin:12px 0 0;max-width:70ch">
-    A <b>direção</b> vem do cruzamento: média de 17 acima da de 34 é alta.
-    A <b>força</b> vem de onde o preço está em relação às duas — acima das duas
-    é forte, entre elas é neutro, abaixo das duas é fraco. Uma <b>alta fraca</b>
-    é o papel que ainda tem as médias viradas para cima mas já negocia abaixo
-    delas; a <b>baixa fraca</b> é o espelho disso.
-    A <b>maré</b> é a média de 72 pregões, o movimento de fundo: quando ela
-    concorda com o curto prazo o papel está <b>a favor</b>; quando discorda, o que
-    você vê pode ser um repique dentro de uma queda longa, ou uma correção dentro
-    de uma alta longa.
-    <b>Distância</b> é o quanto a média de 17 está da de 34, e <b>amplitude</b> é
-    quanto o papel costuma oscilar por dia — a mesma que define o stop e o alvo
-    no Tiro curto. Papel com menos de 72 pregões aparece com traço na maré.
-    Só a janela diária existe por enquanto.</p>`;
+  <div class="card" style="margin-top:16px">
+    <div style="font-size:10px;letter-spacing:.13em;text-transform:uppercase;
+      color:var(--graf);margin-bottom:9px">Como ler</div>
+    <div class="passos" style="margin:0">
+      <div class="passo"><h4 style="margin-top:0">Alta firme e baixa firme</h4>
+        <p>Curto e longo apontam para o mesmo lado. É o movimento instalado.</p></div>
+      <div class="passo"><h4 style="margin-top:0">Repique</h4>
+        <p>Sobe no curto prazo, mas o movimento de fundo ainda é de queda.</p></div>
+      <div class="passo"><h4 style="margin-top:0">Correção</h4>
+        <p>Cai no curto prazo dentro de um movimento de fundo de alta.</p></div>
+    </div>
+    <p style="font-size:11.5px;color:var(--graf);margin:12px 0 0;max-width:74ch">
+      <b>Vs. média longa</b> é quanto o preço está acima ou abaixo da média de 72 —
+      é a força do movimento. <b>17 × 34</b> é a distância entre as duas médias
+      curtas. <b>Oscila/dia</b> é a amplitude média, a mesma que define stop e alvo
+      no Tiro curto.${foraDoCorte && soLiq ? ` ${foraDoCorte} papéis de pouco
+      negócio estão fora da lista: neles a média descola por um pulo isolado e o
+      número engana.` : ""}</p>
+  </div>`;
 
+  const so = $("#selO");
+  if(so) so.onchange = e => location.hash = link({ o: e.target.value });
   const bq = $("#qBusca");
   if(bq){
     bq.oninput = () => {
       clearTimeout(window.__tQ);
       window.__tQ = setTimeout(() => {
-        location.hash = link(filtro, bq.value.trim().toUpperCase());
+        location.hash = link({ q: bq.value.trim().toUpperCase() });
       }, 400);
     };
     if(busca){ bq.focus(); bq.setSelectionRange(bq.value.length, bq.value.length); }
