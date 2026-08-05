@@ -2893,27 +2893,34 @@ async function telaPlacar(){
     ${lista.slice(0,3).map((x,i)=>`<div class="medalha${i===0?" um":""}">
       <div class="lug">${lugar[i]}</div>
       <div class="quem">${esc(x.apelido)}</div>
-      <div class="nota ${cor(x.nota)}">${n2(x.nota)}</div>
-      <div class="sub">${x.dias} ${x.dias===1?"dia":"dias"} · ${x.operacoes}
-        ${x.operacoes===1?"tiro":"tiros"} · média ${n2(x.media_dia)}</div>
+      <div class="nota ${cor(x.media_dia)}">${x.media_dia>0?"+":""}${n2(x.media_dia)}</div>
+      <div class="sub">pontos por dia · ${x.dias} ${x.dias===1?"dia":"dias"} ·
+        ${x.operacoes} ${x.operacoes===1?"tiro":"tiros"}</div>
+      <div class="sub" style="margin-top:5px">nota de ranking
+        <b class="mono ${cor(x.nota)}">${x.nota>0?"+":""}${n2(x.nota)}</b></div>
     </div>`).join("")}
   </div>
 
   ${lista.length > 3 ? `<table style="margin-bottom:10px">
-    <thead><tr><th></th><th>Quem</th><th class="d">Nota</th><th class="d">Média/dia</th>
-    <th class="d">Dias</th><th class="d">Tiros</th></tr></thead>
+    <thead><tr><th></th><th>Quem</th><th class="d">Pontos/dia</th>
+    <th class="d">Dias</th><th class="d">Tiros</th><th class="d">Nota</th></tr></thead>
     <tbody>${lista.slice(3).map((x,i)=>`<tr>
       <td class="mono pos">${String(i+4).padStart(2,"0")}</td>
       <td style="font-weight:500">${esc(x.apelido)}</td>
-      <td class="d mono ${cor(x.nota)}"><b>${n2(x.nota)}</b></td>
-      <td class="d mono ${cor(x.media_dia)}">${n2(x.media_dia)}</td>
+      <td class="d mono ${cor(x.media_dia)}"><b>${x.media_dia>0?"+":""}${n2(x.media_dia)}</b></td>
       <td class="d mono">${x.dias}</td>
-      <td class="d mono nulo">${x.operacoes}</td></tr>`).join("")}
+      <td class="d mono nulo">${x.operacoes}</td>
+      <td class="d mono ${cor(x.nota)}">${x.nota>0?"+":""}${n2(x.nota)}</td></tr>`).join("")}
     </tbody></table>` : ""}
 
-  <p style="font-size:11.5px;color:var(--graf);margin:0">
-    A nota encolhe por <b>dias/(dias+20)</b>: três dias bons não passam na frente
-    de um ano de consistência.</p>`
+  <p style="font-size:11.5px;color:var(--graf);margin:0;max-width:76ch">
+    <b>Pontos por dia</b> é a média: some os pontos dos papéis de cada dia,
+    divida pelo número de papéis daquele dia, e tire a média dos dias. Não é
+    soma — senão quem entra com dez papéis ganharia de quem entra com um só
+    por jogar mais.
+    A <b>nota</b> é essa média encolhida por <b>dias/(dias+20)</b>, e é ela que
+    ordena o ranking: com 3 dias você fica com 13% da sua média, com um ano
+    fica com 92%. Três dias bons não passam na frente de um ano de consistência.</p>`
   : `<div class="card" style="text-align:center;padding:30px">
       <h3 style="font-size:18px;margin-bottom:6px">O placar ainda está vazio</h3>
       <p style="color:var(--t2);margin:0 0 14px">Ele aparece depois do primeiro
@@ -2925,8 +2932,11 @@ async function telaPlacar(){
       <div class="topo">
         <span class="mono" style="font-size:12.5px;color:var(--graf)">${dataBR(d)}</span>
         <span style="font-size:11.5px;color:var(--graf)">${porDia[d].length}
-          ${porDia[d].length===1?"tiro":"tiros"}</span>
-        <span class="nota ${cor(notaDia(d))}">${notaDia(d)>0?"+":""}${n2(notaDia(d),1)}</span>
+          ${porDia[d].length===1?"tiro":"tiros"} ·
+          ${(() => { const t = porDia[d].reduce((a,x)=>a+x.pts,0);
+             return `${t>0?"+":""}${t} ${Math.abs(t)===1?"ponto":"pontos"} no total`; })()}</span>
+        <span class="nota ${cor(notaDia(d))}" title="média: total dividido pelo número de tiros"
+          >${notaDia(d)>0?"+":""}${n2(notaDia(d),2)}</span>
       </div>
       <table style="margin-top:6px"><tbody>${porDia[d].map(t=>`<tr>
         <td class="mono" style="font-weight:500;font-size:12.5px;padding:7px 0">${esc(t.ativo)}</td>
@@ -2944,9 +2954,12 @@ async function telaPlacar(){
     </div>`).join("")
     : `<div class="card"><p style="margin:0;color:var(--t2)">
         Nenhum tiro apurado ainda. <a href="#/tiro-curto">Dê o primeiro</a>.</p></div>`}
-    <p style="font-size:11.5px;color:var(--graf);margin:2px 0 0">
-      A nota do dia é a média dos pontos dos papéis daquele dia. Os preços são
-      os que o pregão de fato marcou — dá para conferir por onde o tiro saiu.</p>`
+    <p style="font-size:11.5px;color:var(--graf);margin:2px 0 0;max-width:76ch">
+      O número grande de cada dia é a <b>média</b>: o total dividido pelo número
+      de tiros daquele dia. Quatro tiros somando +1 ponto valem +0,25 — jogar
+      mais papéis não aumenta a nota, só reduz a sorte.
+      Os preços são os que o pregão de fato marcou, dá para conferir por onde
+      cada tiro saiu.</p>`
   : `<div class="card" style="margin-top:22px;text-align:center">
       <p style="margin:0 0 12px;color:var(--t2)">Entre para dar os seus e aparecer aqui.</p>
       <a href="#/entrar?novo=1" class="bt cheio">Criar conta grátis</a></div>`}`;
