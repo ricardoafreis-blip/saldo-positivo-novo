@@ -53,7 +53,10 @@ nav .marca{font-family:Newsreader,serif;font-weight:500;font-size:21px;letter-sp
 nav a,nav button.lnk{font-size:13px;color:var(--t2);background:none;transition:color .15s}
 nav a:hover,nav button.lnk:hover{color:var(--ouro2)}
 nav .marca:hover{color:var(--tinta)}
-nav .dir{margin-left:auto;display:flex;gap:14px;align-items:center;font-size:13px;align-self:flex-end}
+/* align-self era flex-end e jogava apelido, indicar e admin para a
+   LINHA DE BAIXO, porque os blocos ficaram com duas linhas depois das
+   etiquetas. Centralizado, tudo volta a ficar na mesma altura. */
+nav .dir{margin-left:auto;display:flex;gap:14px;align-items:center;font-size:13px;align-self:center}
 nav .divisor{align-self:stretch;margin:4px 0}
 nav .bloco{display:flex;flex-direction:column;gap:1px}
 nav .bloco .itens{display:flex;gap:16px;align-items:center}
@@ -2892,17 +2895,30 @@ async function telaScreening(){
     if(alta)  return onde === 1 ? "alta_forte"  : onde === 0 ? "alta"  : "alta_fraca";
     return           onde === -1 ? "baixa_forte" : onde === 0 ? "baixa" : "baixa_fraca";
   };
+  // A media de 72 e a MARE. As de 17 e 34 dizem para onde o papel vai
+  // agora; a de 72 diz se isso e a favor ou contra o movimento maior.
+  // Um repique dentro de uma queda de tres meses e outra coisa que uma
+  // alta que ja dura tres meses — e ate aqui as duas apareciam iguais.
+  const mare = x => x.ema72 == null ? null : (x.ema34 >= x.ema72 ? "alta" : "baixa");
   const rotulo = { alta_forte:"alta forte", alta:"alta", alta_fraca:"alta fraca",
                    baixa_fraca:"baixa fraca", baixa:"baixa", baixa_forte:"baixa forte" };
   const ehAlta = e => e.startsWith("alta");
 
   let l = (data||[]).map(x => ({ ...x, e: classificar(x) }));
+  l.forEach(x => {
+    x.mare = mare(x);
+    x.alinha = x.mare == null ? null : (ehAlta(x.e) === (x.mare === "alta"));
+  });
   const conta = { todos: l.length,
     alta:  l.filter(x=> ehAlta(x.e)).length,
-    baixa: l.filter(x=>!ehAlta(x.e)).length };
+    baixa: l.filter(x=>!ehAlta(x.e)).length,
+    junto: l.filter(x=> x.alinha === true).length,
+    contra:l.filter(x=> x.alinha === false).length };
 
-  if(filtro === "alta")  l = l.filter(x=> ehAlta(x.e));
-  if(filtro === "baixa") l = l.filter(x=>!ehAlta(x.e));
+  if(filtro === "alta")   l = l.filter(x=> ehAlta(x.e));
+  if(filtro === "baixa")  l = l.filter(x=>!ehAlta(x.e));
+  if(filtro === "junto")  l = l.filter(x=> x.alinha === true);
+  if(filtro === "contra") l = l.filter(x=> x.alinha === false);
   if(busca) l = l.filter(x => x.ativo.includes(busca));
   // ordena pela distancia, que ja separa forte de fraco dentro de cada lado
   l.sort((a,b) => b.dist - a.dist);
@@ -2912,12 +2928,13 @@ async function telaScreening(){
   app().innerHTML = `
   <h1 style="font-size:27px;margin:28px 0 4px">Screening</h1>
   <p style="color:var(--t2);max-width:64ch;margin-bottom:4px;font-size:13.5px">
-    Média exponencial de <b>17</b> contra a de <b>34</b> pregões. Quando a curta
-    está acima da longa, o preço vem subindo há mais tempo do que caindo.
-    É medida, não recomendação.</p>
+    Médias exponenciais de <b>17</b>, <b>34</b> e <b>72</b> pregões. As duas
+    primeiras dizem para onde o papel vem indo agora; a de 72 é a maré, o
+    movimento de fundo. É medida, não recomendação.</p>
 
   <div class="abas">
-    ${[["todos","Todos"],["alta","Tendência de alta"],["baixa","Tendência de baixa"]]
+    ${[["todos","Todos"],["alta","Tendência de alta"],["baixa","Tendência de baixa"],
+       ["junto","A favor da maré"],["contra","Contra a maré"]]
       .map(([k,r])=>`<a href="${link(k,busca)}" class="aba${filtro===k?" on":""}">${r}<span class="n">${conta[k]}</span></a>`).join("")}
   </div>
 
@@ -2932,8 +2949,9 @@ async function telaScreening(){
       Nenhum papel neste filtro. ${!(data||[]).length
         ? "O cálculo precisa de 34 pregões de histórico — se o robô começou a rodar há pouco, ainda não há dado suficiente."
         : ""}</p></div>`
-  : `<table><thead><tr><th>Papel</th><th>Estado</th>
+  : `<table><thead><tr><th>Papel</th><th>Estado</th><th>Maré · 72</th>
       <th class="d">Fechamento</th><th class="d">EMA 17</th><th class="d">EMA 34</th>
+      <th class="d">EMA 72</th>
       <th class="d">Distância</th><th class="d">Amplitude</th>
       <th class="d">Pregões</th></tr></thead><tbody>
     ${l.map(x=>`<tr>
@@ -2941,9 +2959,14 @@ async function telaScreening(){
       <td style="font-size:12.5px" class="${ehAlta(x.e)?"alta":"baixa"}">
         ${rotulo[x.e]}${x.e.endsWith("_forte")
           ? '<span style="opacity:.7;margin-left:4px">▲</span>' : ""}</td>
+      <td style="font-size:12px" class="${x.alinha==null?"nulo":x.alinha?"":"baixa"}">
+        ${x.alinha==null ? "—"
+          : x.alinha ? `<span class="${x.mare==="alta"?"alta":"baixa"}">a favor</span>`
+                     : "contra a maré"}</td>
       <td class="d mono">${n2(x.fech)}</td>
       <td class="d mono nulo" style="font-size:12px">${n2(x.ema17)}</td>
       <td class="d mono nulo" style="font-size:12px">${n2(x.ema34)}</td>
+      <td class="d mono nulo" style="font-size:12px">${x.ema72==null?"—":n2(x.ema72)}</td>
       <td class="d mono ${cor(x.dist)}"><b>${pct(x.dist)}</b></td>
       <td class="d mono nulo" style="font-size:12px">${n2(x.amplitude*100,1)}%</td>
       <td class="d mono nulo" style="font-size:12px">${x.pregoes}</td></tr>`).join("")}
@@ -2955,9 +2978,14 @@ async function telaScreening(){
     é forte, entre elas é neutro, abaixo das duas é fraco. Uma <b>alta fraca</b>
     é o papel que ainda tem as médias viradas para cima mas já negocia abaixo
     delas; a <b>baixa fraca</b> é o espelho disso.
-    <b>Distância</b> é o quanto uma média está da outra, e <b>amplitude</b> é
+    A <b>maré</b> é a média de 72 pregões, o movimento de fundo: quando ela
+    concorda com o curto prazo o papel está <b>a favor</b>; quando discorda, o que
+    você vê pode ser um repique dentro de uma queda longa, ou uma correção dentro
+    de uma alta longa.
+    <b>Distância</b> é o quanto a média de 17 está da de 34, e <b>amplitude</b> é
     quanto o papel costuma oscilar por dia — a mesma que define o stop e o alvo
-    no Tiro curto. Só a janela diária existe por enquanto.</p>`;
+    no Tiro curto. Papel com menos de 72 pregões aparece com traço na maré.
+    Só a janela diária existe por enquanto.</p>`;
 
   const bq = $("#qBusca");
   if(bq){
