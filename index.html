@@ -157,7 +157,7 @@ input[readonly]{color:var(--t2)}
    Numa celula so, com os tres separados por ponto, o cabecalho nunca
    cai em cima dos valores — larguras diferentes, so o ultimo encosta na
    borda. Coluna por coluna o alinhamento sai de graca. */
-th.mA{padding-left:12px;width:64px}
+th.mA{padding-left:12px;width:80px;letter-spacing:.09em}
 th.mA.m1{border-left:1px solid var(--linha)}
 th.mA.m3{color:var(--lacre)}
 td.mA{font-family:var(--mono,'IBM Plex Mono',monospace);font-variant-numeric:tabular-nums;
@@ -3241,8 +3241,8 @@ async function telaScreening(){
   <div class="cabeca">
     <h1>Screening</h1>
     <p>Em que fase da tendência cada papel está, pela ordem de <b>três pontos de
-      força</b> — preços em torno dos quais o mercado mais intermediou negócio — e pela
-      posição do preço entre eles.</p>
+      força</b> — o do trader, o do investidor e o do institucional — e pela posição do
+      preço entre eles.</p>
   </div>
 
   <div class="abas">
@@ -3276,8 +3276,8 @@ async function telaScreening(){
         ? " O cálculo precisa de 34 pregões de histórico e o robô ainda não juntou tanto."
         : ""}</p></div>`
   : `<table><thead><tr><th>Papel</th><th>Estado</th>
-      <th class="d">Fechamento</th><th class="d">Vs. ponto forte</th>
-      <th class="d mA m1">Fraco</th><th class="d mA m2">Médio</th><th class="d mA m3">Forte</th>
+      <th class="d">Fechamento</th><th class="d">Vs. institucional</th>
+      <th class="d mA m1">Trader</th><th class="d mA m2">Investidor</th><th class="d mA m3">Institucional</th>
       <th class="d" style="width:166px;padding-left:14px">60 pregões</th>
       <th class="d">Negócio/dia</th></tr></thead><tbody>
     ${l.map(x=>`<tr>
