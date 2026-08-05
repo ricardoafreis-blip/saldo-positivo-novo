@@ -207,6 +207,27 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
 .qa[open] summary::before{content:"−"}
 .qa p{font-size:12.5px;color:var(--t2);margin:9px 0 0 21px;max-width:62ch;line-height:1.6}
 
+/* menu da conta: apelido, indicar, admin e sair viravam quatro links
+   soltos na barra, e com as etiquetas dos blocos eles caiam para a
+   linha de baixo. Agora e um so, com o resto dentro. */
+.eu{position:relative}
+.eu>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:7px;
+  font-size:13px;color:var(--t2);padding:5px 9px;border-radius:3px;transition:.15s}
+.eu>summary::-webkit-details-marker{display:none}
+.eu>summary:hover{color:var(--tinta);background:var(--p2)}
+.eu>summary::after{content:"";width:5px;height:5px;border-right:1px solid currentColor;
+  border-bottom:1px solid currentColor;transform:rotate(45deg) translate(-2px,-2px);opacity:.7}
+.eu[open]>summary{color:var(--ouro2);background:var(--p2)}
+.eu .gaveta{position:absolute;right:0;top:calc(100% + 5px);z-index:40;min-width:186px;
+  background:var(--p2);border:1px solid var(--linha2);border-radius:4px;
+  box-shadow:0 14px 34px rgba(0,0,0,.5);padding:5px}
+.eu .gaveta a,.eu .gaveta button{display:block;width:100%;text-align:left;
+  padding:8px 11px;font-size:13px;color:var(--t2);border-radius:3px;transition:.13s}
+.eu .gaveta a:hover,.eu .gaveta button:hover{background:var(--p3);color:var(--tinta)}
+.eu .gaveta .risco{height:1px;background:var(--linha);margin:5px 0}
+.eu .gaveta .quem{padding:8px 11px 4px;font-size:11px;color:var(--graf);
+  letter-spacing:.06em;text-transform:uppercase}
+
 /* pódio do placar. O ranking foi refeito duas vezes e o placar nunca
    tinha sido tocado: era uma tabela de seis colunas onde a informação
    principal — quem está ganhando — não tinha destaque nenhum. */
@@ -290,7 +311,8 @@ Nada aqui é recomendação — cada carteira é anotação pessoal de quem publ
 
 <footer class="w">A rentabilidade começa no dia em que a carteira é publicada — não há histórico
 retroativo. Cada carteira é anotação pessoal de quem a publica.
-<a href="#/como-funciona" style="color:var(--t2);border-bottom:1px solid var(--linha2)">Como funciona</a></footer>
+<a href="#/como-funciona" style="color:var(--t2);border-bottom:1px solid var(--linha2)">Como funciona</a>
+ · <a href="#/termos" style="color:var(--t2);border-bottom:1px solid var(--linha2)">Termos e privacidade</a></footer>
 
 <script type="module">
 // ═══════════════════════════════════════════════════════════════
@@ -666,15 +688,34 @@ function pintarNav(){
   // Publicar pertence ao bloco de investidor; conta, indicacao e admin
   // sao do usuario, nao do site — ficam agrupados a direita.
   $("#navPub").innerHTML = eu ? `<a href="#/publicar">Criar</a>` : "";
+  // Um item so na barra: o apelido. O resto — indicar, admin, sair —
+  // fica na gaveta. Antes eram quatro links soltos disputando espaco com
+  // a navegacao do site, e quem nao e admin nem via a diferenca.
   $("#navDir").innerHTML = eu
-    ? `<a href="#/conta">${esc(eu.apelido)}</a>${eu.assinante?'<span class="pill">assinante</span>':""}
-       <a href="#/indicar" title="Indicar">indicar</a>
-       ${eu.admin?'<a href="#/admin" title="Admin">admin</a>':""}
-       <button class="lnk" id="btSair">sair</button>`
+    ? `<details class="eu" id="menuEu">
+         <summary>${esc(eu.apelido)}${eu.admin?'<span class="pill">admin</span>':""}</summary>
+         <div class="gaveta">
+           <div class="quem">${esc(eu.apelido)}</div>
+           <a href="#/conta">Minha conta</a>
+           <a href="#/publicar">Criar carteira</a>
+           <a href="#/indicar">Indicar</a>
+           ${eu.admin?'<div class="risco"></div><a href="#/admin">Administração</a>':""}
+           <div class="risco"></div>
+           <button class="lnk" id="btSair">Sair</button>
+         </div>
+       </details>`
     : `<a href="#/entrar">entrar</a>
        <a href="#/entrar?novo=1" class="bt cheio" style="padding:6px 13px">criar conta</a>`;
   const b=$("#btSair");
   if(b) b.onclick = async()=>{ await sb.auth.signOut(); eu=null; location.hash="#/"; rotear(); };
+  // fecha a gaveta ao clicar fora ou ao navegar
+  const men = $("#menuEu");
+  if(men){
+    document.addEventListener("click", ev => {
+      if(!men.contains(ev.target)) men.removeAttribute("open");
+    });
+    men.querySelectorAll("a").forEach(a => a.onclick = () => men.removeAttribute("open"));
+  }
 }
 
 // ═══════════════════════════════════════════ métricas
@@ -923,6 +964,23 @@ function grafico(serie, refs){
     ibov.push(iv); cdi.push(ic);
   });
 
+  // ── a maior queda, para MARCAR no desenho ──
+  // Mesma conta de metricas(): pico corrente partindo de 100 e a maior
+  // distancia abaixo dele. Aqui guardamos ONDE aconteceu, para o
+  // drawdown deixar de ser so um numero na tabela.
+  let pico = 100, iPico = 0, dd = 0, iTopo = 0, iFundo = 0;
+  cart.forEach((v,i) => {
+    if(v > pico){ pico = v; iPico = i; }
+    const q = v/pico - 1;
+    if(q < dd){ dd = q; iTopo = iPico; iFundo = i; }
+  });
+  const temQueda = dd < -0.0001 && iFundo > iTopo;
+
+  // A carteira ganha COR: verde acima da base, vermelho abaixo. Antes
+  // era branca em qualquer caso e a pessoa tinha de ler o eixo para
+  // saber se estava ganhando ou perdendo.
+  const cCart = cart[cart.length-1] >= 100 ? "var(--alta)" : "var(--baixa)";
+
   const L=44, R=10, T=10, B=22, W=560, H=190;
   const todos = cart.concat(cdi, temIbov ? ibov : []);
   let lo = Math.min(...todos), hi = Math.max(...todos);
@@ -939,22 +997,44 @@ function grafico(serie, refs){
     <h3 style="font-size:16px;margin-bottom:4px">Contra o mercado</h3>
     <p style="font-size:11.5px;color:var(--graf);margin:0 0 10px">
       Base 100 no primeiro pregão da carteira.
-      <span style="color:var(--tinta)">━ carteira ${pct(fim(cart))}</span>
-      ${temIbov?` · <span style="color:var(--graf)">━ Ibovespa ${pct(fim(ibov))}</span>`:""}
-      · <span style="color:var(--lacre)">━ CDI estimado ${pct(fim(cdi))}</span></p>
+      <span style="color:${cCart}">━ carteira ${pct(fim(cart))}</span>
+      ${temIbov?` · <span style="color:var(--t2)">┅ Ibovespa ${pct(fim(ibov))}</span>`:""}
+      · <span style="color:var(--lacre)">┄ CDI ${pct(fim(cdi))}</span>
+      ${temQueda?` · <span style="color:var(--baixa)">◤ maior queda ${pct(dd)}</span>`:""}</p>
     <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;overflow:visible">
       ${marcas.map(v=>`<g><line x1="${L}" x2="${W-R}" y1="${py(v).toFixed(1)}" y2="${py(v).toFixed(1)}"
         stroke="var(--linha2)" stroke-width=".5"${Math.abs(v-100)<.01?' stroke-dasharray="3 3"':""}/>
         <text x="${L-6}" y="${(py(v)+3).toFixed(1)}" text-anchor="end"
           style="font-size:9px;fill:var(--graf)">${n2(v,0)}</text></g>`).join("")}
-      ${temIbov?`<path d="${linha(ibov)}" fill="none" stroke="var(--graf)" stroke-width="1"/>`:""}
-      <path d="${linha(cdi)}" fill="none" stroke="var(--lacre)" stroke-width="1" stroke-dasharray="4 3"/>
-      <path d="${linha(cart)}" fill="none" stroke="var(--tinta)" stroke-width="1.8"/>
+      ${temQueda?`<g>
+        <rect x="${px(iTopo).toFixed(1)}" y="${T}" width="${(px(iFundo)-px(iTopo)).toFixed(1)}"
+          height="${H-T-B}" fill="var(--baixa)" opacity=".08"/>
+        <line x1="${px(iTopo).toFixed(1)}" x2="${px(iFundo).toFixed(1)}"
+          y1="${py(cart[iTopo]).toFixed(1)}" y2="${py(cart[iTopo]).toFixed(1)}"
+          stroke="var(--baixa)" stroke-width=".7" stroke-dasharray="2 2" opacity=".8"/>
+        <line x1="${px(iFundo).toFixed(1)}" x2="${px(iFundo).toFixed(1)}"
+          y1="${py(cart[iTopo]).toFixed(1)}" y2="${py(cart[iFundo]).toFixed(1)}"
+          stroke="var(--baixa)" stroke-width="1.3"/>
+        <circle cx="${px(iTopo).toFixed(1)}" cy="${py(cart[iTopo]).toFixed(1)}" r="2.6"
+          fill="var(--papel)" stroke="var(--baixa)" stroke-width="1.2"/>
+        <circle cx="${px(iFundo).toFixed(1)}" cy="${py(cart[iFundo]).toFixed(1)}" r="2.6"
+          fill="var(--baixa)"/>
+      </g>`:""}
+      <path d="${linha(cart)}L${px(cart.length-1).toFixed(1)},${py(100).toFixed(1)}L${px(0).toFixed(1)},${py(100).toFixed(1)}Z"
+        fill="${cCart}" opacity=".10" stroke="none"/>
+      ${temIbov?`<path d="${linha(ibov)}" fill="none" stroke="var(--t2)"
+        stroke-width="1.1" stroke-dasharray="6 3" opacity=".9"/>`:""}
+      <path d="${linha(cdi)}" fill="none" stroke="var(--lacre)" stroke-width="1" stroke-dasharray="2 3"/>
+      <path d="${linha(cart)}" fill="none" stroke="${cCart}" stroke-width="2"/>
       <text x="${L}" y="${H-6}" style="font-size:9px;fill:var(--graf)">${dataBR(dias[0])}</text>
       <text x="${W-R}" y="${H-6}" text-anchor="end"
         style="font-size:9px;fill:var(--graf)">${dataBR(dias[dias.length-1])}</text>
     </svg>
     <p style="font-size:11.5px;color:var(--graf);margin:8px 0 0">
+      ${temQueda?`A faixa avermelhada é a <b>maior queda</b> do período: entre
+        ${dataBR(dias[iTopo])} e ${dataBR(dias[iFundo])} a carteira perdeu
+        <b>${pct(dd)}</b> do topo que já tinha alcançado. É a mesma queda máxima
+        que aparece no ranking. `:""}
       ${!temIbov?"Sem cotação do Ibovespa no período. ":""}A linha de renda fixa é
       estimada em ${n2(CDI_ANO*100,1)}% ao ano, não medida.</p>
   </div>`;
@@ -1113,14 +1193,14 @@ async function telaRanking(){
       Carteira só é comparada com outra da mesma classe — laranja com laranja.</p>` : ""}
   ${!eu ? `<div class="chamada">
       <div>
-        <h3 style="font-size:18px;margin-bottom:5px">Os números são abertos. O que tem dentro, não.</h3>
+        <h3 style="font-size:18px;margin-bottom:5px">Tudo aberto, de graça.</h3>
         <p style="color:var(--t2);margin:0;font-size:13.5px;max-width:52ch">
-          Crie sua conta de graça para publicar suas carteiras e acompanhar as dos outros.
-          A assinatura abre os papéis e os pesos de todas elas.</p>
+          Crie sua conta para publicar suas carteiras e ver os papéis e os pesos
+          de todas as outras. Sem cobrança.</p>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
         <a href="#/entrar?novo=1" class="bt cheio">Criar conta grátis</a>
-        <a href="#/assinar" class="bt lacre">Assinar</a>
+        <a href="#/como-funciona" class="bt">Como funciona</a>
       </div>
     </div>` : ""}
   ${!filtro && lista.length ? colunasPorClasse(lista, ordem,
@@ -1739,13 +1819,11 @@ async function telaCarteira(id){
       ${souDono?`<a href="#/editar/${id}" class="bt">Ver o que foi declarado</a>`:""}
     </div>`
   : `<div class="trancado"><div class="selo">&#128274;</div>
-      <h3 style="font-size:19px;margin-bottom:7px">Papéis e pesos fechados</h3>
+      <h3 style="font-size:19px;margin-bottom:7px">Papéis e pesos</h3>
       <p style="color:var(--t2);max-width:36ch;margin:0 auto 16px">
-        ${eu ? "A assinatura abre os papéis e os pesos de todas as carteiras, e as anotações de cada mudança."
-             : "Para ver o que tem dentro é preciso ter conta e assinar. Criar conta é de graça e já permite publicar as suas."}</p>
-      ${eu ? '<a href="#/assinar" class="bt lacre">Assinar</a>'
-           : '<a href="#/entrar?novo=1" class="bt cheio">Criar conta grátis</a>' +
-             ' <a href="#/assinar" class="bt lacre" style="margin-left:8px">Ver planos</a>'}
+        Para ver o que tem dentro é preciso ter conta. É de graça, e já
+        permite publicar as suas.</p>
+      <a href="#/entrar?novo=1" class="bt cheio">Criar conta grátis</a>
       </div>`}`;
 
   const bs = $("#btSino");
@@ -1904,31 +1982,18 @@ async function telaIndicar(){
   </div>`;
 }
 
+// A rota continua existindo porque links antigos apontam para ela, mas
+// nao ha mais cobranca: o site esta aberto. Cobrar antes de haver
+// carteira com track record e vender o que ainda nao existe.
 function telaAssinar(){
-  // Assinante e admin já têm o lacre aberto: oferecer plano a quem já
-  // paga é o tipo de detalhe que faz o site parecer desatento.
-  if(eu && (eu.assinante || eu.admin)){
-    return app().innerHTML = `
-    <div style="max-width:460px;margin:46px auto;text-align:center">
-      <h1 style="font-size:29px;margin-bottom:9px">Você já tem acesso</h1>
-      <p style="color:var(--t2);margin-bottom:20px">
-        ${eu.admin ? "Sua conta é de administração, então o lacre já vem aberto."
-                   : "Sua assinatura está ativa: os papéis e os pesos de todas as carteiras aparecem para você."}</p>
-      <a href="#/" class="bt cheio">Ver o ranking</a>
-      <a href="#/conta" class="bt" style="margin-left:8px">Minha conta</a>
-    </div>`;
-  }
   app().innerHTML = `
-  <div style="max-width:450px;margin:46px auto;text-align:center">
-    <h1 style="font-size:29px;margin-bottom:9px">Assinar</h1>
+  <div style="max-width:460px;margin:46px auto;text-align:center">
+    <h1 style="font-size:29px;margin-bottom:9px">Está tudo aberto</h1>
     <p style="color:var(--t2);margin-bottom:20px">
-      Abre os papéis e os pesos de todas as carteiras. Publicar continua grátis.</p>
-    <div class="card">
-      <div class="mono" style="font-size:33px;font-weight:600">R$ 19</div>
-      <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--graf);margin-bottom:16px">por mês</div>
-      <p style="font-size:12.5px;color:var(--t2)">O pagamento ainda não está ligado.
-        Por enquanto o admin ativa manualmente na área de administração.</p>
-    </div>
+      Não há assinatura por enquanto. Todas as carteiras — papéis, pesos e
+      anotações — aparecem para quem tem conta, de graça.</p>
+    ${eu ? '<a href="#/" class="bt cheio">Ver o ranking</a>'
+         : '<a href="#/entrar?novo=1" class="bt cheio">Criar conta grátis</a>'}
   </div>`;
 }
 
@@ -2202,6 +2267,20 @@ async function telaConta(){
       </tr>`}).join("")}
     </tbody></table>`}
 
+  <h2 style="font-size:19px;margin:32px 0 12px">Encerrar conta</h2>
+  <div class="card" style="max-width:560px;border-color:rgba(242,104,95,.3)">
+    <p style="font-size:12.5px;color:var(--t2);margin:0 0 12px">
+      Sua conta sai do site na hora: as carteiras deixam de aparecer no ranking
+      e ninguém mais consegue entrar nela. O histórico de retorno já apurado
+      continua existindo, porque ele é o que dá sentido ao ranking.</p>
+    <p style="font-size:11.5px;color:var(--graf);margin:0 0 14px">
+      Seus dados de cadastro ficam guardados fora do site pelo prazo legal, só
+      para consulta e para reativar se você pedir.
+      <a href="#/termos" style="color:var(--t2)">Termos e privacidade</a>.</p>
+    <button class="bt" id="btEncerrar"
+      style="border-color:var(--baixa);color:var(--baixa)">Encerrar minha conta</button>
+  </div>
+
   <h2 style="font-size:19px;margin:32px 0 12px">Trocar senha</h2>
   <div class="card" style="max-width:420px">
     <label>Senha nova</label><input type="password" id="s1" minlength="6">
@@ -2242,6 +2321,21 @@ async function telaConta(){
     $("#erro").innerHTML = error ? aviso(error.message,true) : aviso("Senha trocada.");
     $("#s1").value=$("#s2").value="";
   };
+  $("#btEncerrar").onclick = async () => {
+    if(!confirm("Encerrar sua conta?\n\nEla sai do site imediatamente e suas "
+      + "carteiras deixam de aparecer. Você não vai mais conseguir entrar.\n\n"
+      + "Para voltar, é preciso pedir a reativação.")) return;
+    const conf = prompt('Para confirmar, escreva ENCERRAR em maiúsculas:');
+    if(conf !== "ENCERRAR") return;
+    const { error } = await sb.rpc("encerrar_minha_conta");
+    if(error) return $("#erro").innerHTML = aviso(error.message, true);
+    await sb.auth.signOut(); eu = null; pintarNav();
+    app().innerHTML = `<div style="max-width:460px;margin:60px auto;text-align:center">
+      <h1 style="font-size:26px;margin-bottom:9px">Conta encerrada</h1>
+      <p style="color:var(--t2)">Obrigado por ter participado. Se um dia quiser
+        voltar, é só escrever.</p></div>`;
+  };
+
   ligarApagarMinhas();
 }
 
@@ -3094,6 +3188,73 @@ function telaComo(){
   </div>`;
 }
 
+// ═══════════════════════════════════════════ termos e privacidade
+// Site brasileiro que guarda nome, telefone e e-mail precisa dizer o que
+// faz com isso. Nao e formalidade: e a LGPD, e vira problema depois que
+// ja tem gente dentro.
+function telaTermos(){
+  app().innerHTML = `
+  <div style="max-width:70ch;margin:34px 0">
+    <h1 style="font-size:29px;margin-bottom:8px">Termos e privacidade</h1>
+    <p style="color:var(--graf);font-size:12px;margin:0 0 24px">
+      Última atualização: 04/08/2026</p>
+
+    <h2 style="font-size:19px;margin:26px 0 8px">O que este site é</h2>
+    <p style="color:var(--t2);font-size:13.5px;line-height:1.65">
+      Um caderno de estudo público. Cada pessoa registra carteiras de ações
+      hipotéticas e o sistema apura o resultado de cada pregão. <b>Não há
+      dinheiro real envolvido</b>: o site não movimenta valores, não executa
+      ordens e não tem corretora associada.</p>
+    <p style="color:var(--t2);font-size:13.5px;line-height:1.65">
+      <b>Nada aqui é recomendação de investimento.</b> Cada carteira é anotação
+      pessoal de quem a publicou, não análise profissional. Decisão de investir
+      é sua, e o risco também.</p>
+
+    <h2 style="font-size:19px;margin:26px 0 8px">Que dados guardamos</h2>
+    <p style="color:var(--t2);font-size:13.5px;line-height:1.65">
+      No cadastro: <b>apelido, nome, telefone e e-mail</b>. O apelido (ou o nome
+      público que você escolher) aparece no site; o resto não aparece para
+      ninguém além da administração. Guardamos também o que você publica —
+      carteiras, posições, anotações e palpites — e a data de cada coisa.</p>
+    <p style="color:var(--t2);font-size:13.5px;line-height:1.65">
+      Usamos esses dados para operar o site e falar com você sobre a sua conta.
+      <b>Não vendemos nem repassamos para terceiros.</b></p>
+
+    <h2 style="font-size:19px;margin:26px 0 8px">O que fica registrado para sempre</h2>
+    <p style="color:var(--t2);font-size:13.5px;line-height:1.65">
+      O histórico de uma carteira apurada <b>não é apagado nem reescrito</b>,
+      nem por quem publicou. É o que dá sentido ao ranking: sem isso, bastaria
+      apagar os resultados ruins. Ao publicar, você concorda com isso.</p>
+
+    <h2 style="font-size:19px;margin:26px 0 8px">Encerrar a conta</h2>
+    <p style="color:var(--t2);font-size:13.5px;line-height:1.65">
+      Você pode encerrar sua conta a qualquer momento, em Minha conta. Ela sai
+      do site imediatamente: suas carteiras deixam de aparecer no ranking e
+      ninguém mais consegue acessá-la.</p>
+    <p style="color:var(--t2);font-size:13.5px;line-height:1.65">
+      Seus dados de cadastro ficam guardados fora do site por até <b>cinco
+      anos</b>, prazo em que registros de relação de consumo precisam ser
+      mantidos. Nesse período eles servem só para consulta e para reativar a
+      conta se você pedir — <b>não usamos para contatar você</b>. Se quiser a
+      eliminação antes disso, escreva e nós apagamos o que não formos obrigados
+      a manter.</p>
+
+    <h2 style="font-size:19px;margin:26px 0 8px">Seus direitos</h2>
+    <p style="color:var(--t2);font-size:13.5px;line-height:1.65">
+      Pela LGPD você pode pedir acesso, correção ou eliminação dos seus dados,
+      e saber com quem foram compartilhados. Basta escrever para o contato
+      abaixo.</p>
+
+    <h2 style="font-size:19px;margin:26px 0 8px">Contato</h2>
+    <p style="color:var(--t2);font-size:13.5px;line-height:1.65">
+      <b>saldopositivo.com.br</b> — responsável pelo tratamento dos dados.
+      Escreva pelo e-mail de contato do site.</p>
+
+    <p style="color:var(--graf);font-size:12px;margin-top:26px">
+      Estes termos podem mudar. Mudanças relevantes serão avisadas no site.</p>
+  </div>`;
+}
+
 // ═══════════════════════════════════════════ rotas
 function rotear(){
   // toda troca de tela para os timers da tela anterior
@@ -3109,6 +3270,7 @@ function rotear(){
   if(h==="#/publicar")        return telaPublicar();
   if(h==="#/duelo")           return telaDuelo();
   if(h==="#/como-funciona")   return telaComo();
+  if(h==="#/termos")          return telaTermos();
   if(h==="#/screening")       return telaScreening();
   // rota antiga continua valendo: link já compartilhado não pode quebrar
   if(h==="#/tiro-curto" || h==="#/apostar") return telaTiroCurto();
