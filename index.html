@@ -175,6 +175,17 @@ td.mA.m3{color:var(--ouro2)}
 .chaveL .cx{width:14px;height:14px;border:1px solid var(--linha2);border-radius:2px;
   display:flex;align-items:center;justify-content:center;font-size:10px;font-style:normal;flex:none}
 .chaveL.on .cx{border-color:var(--lacre)}
+/* Indice e linha igual as outras: sem fundo, sem barra dourada, sem
+   caixa. Uma faixa cheia acima da tabela vira um segundo cabecalho e
+   empurra o de verdade. O que marca e o codigo em dourado e o fio que
+   fecha embaixo do ultimo indice. */
+tr.ref td{padding-top:10px;padding-bottom:10px}
+tr.ref+tr:not(.ref) td{border-top:1px solid var(--linha2)}
+tr.ref .cod{font-weight:600;font-size:13.5px;letter-spacing:.03em;color:var(--ouro2)}
+tr.ref.set .cod{font-size:12.5px;color:var(--t2)}
+tr.ref .nm{font-family:inherit;font-size:10.5px;font-weight:400;letter-spacing:0;
+  color:var(--graf);margin-left:9px}
+.chaveL .n2{font-family:'IBM Plex Mono',monospace;font-size:11px;opacity:.7}
 .chaveL .n{font-family:'IBM Plex Mono',monospace;font-size:11px;opacity:.7}
 
 .barra{height:26px;display:flex;background:var(--papel);border:1px solid var(--linha2);border-radius:3px;overflow:hidden}
@@ -3068,6 +3079,20 @@ async function telaScreening(){
   const q = new URLSearchParams(location.hash.split("?")[1]||"");
   const filtro = q.get("t") || "todos";
   const busca  = (q.get("q") || "").toUpperCase();
+  const verSet = q.get("set") === "1";
+
+  // ── ÍNDICES ─────────────────────────────────────────────────────
+  // O Ibovespa nao e mais um papel da lista: e a REGUA. Papel em alta
+  // com o indice em baixa e uma informacao, com o indice em alta e
+  // outra. Por isso ele fica fixo no alto da tabela, fora de qualquer
+  // aba, de qualquer busca e do corte de liquidez — indice nao e papel,
+  // e se um dia entrar no corte a regua some da tela quando alguem
+  // marcar a caixinha.
+  const IND_AMPLO = ["IBOV","IBOVESPA","IBXX","IBRX"];
+  const IND_SET = { IFNC:"Financeiro", ICON:"Consumo", IMAT:"Materiais básicos",
+    IEEX:"Energia elétrica", INDX:"Industrial", IMOB:"Imobiliário",
+    UTIL:"Utilidade pública", SMLL:"Small caps", IDIV:"Dividendos", IFIX:"Fundos imobiliários" };
+  const ehIndice = a => IND_AMPLO.includes(a) || IND_SET[a] != null;
 
   // ── OITO ESTADOS ────────────────────────────────────────────────
   // A ordem das tres medias diz em que FASE o papel esta; a posicao do
@@ -3146,7 +3171,15 @@ async function telaScreening(){
   // pessoa. Quem não quer ver os de pouco negócio marca a caixa.
   const soLiq = q.get("liq") === "1";
 
-  let l = (data||[]).map(x => ({ ...x, e: estadoDe(x) }));
+  const todosCalc = (data||[]).map(x => ({ ...x, e: estadoDe(x) }));
+
+  // Os indices saem da lista de papeis e viram REGUA: fora das abas, da
+  // busca, da ordenacao e do corte de liquidez.
+  const amplo = todosCalc.find(x => IND_AMPLO.includes(x.ativo)) || null;
+  const setoriais = todosCalc.filter(x => IND_SET[x.ativo] != null)
+    .sort((a,b) => Object.keys(IND_SET).indexOf(a.ativo) - Object.keys(IND_SET).indexOf(b.ativo));
+
+  let l = todosCalc.filter(x => !ehIndice(x.ativo));
   // Onde o preco esta em relacao a media longa: e a forca do movimento.
   l.forEach(x => { x.forca = (x.ema72 && x.ema72 > 0) ? x.fech/x.ema72 - 1 : null; });
 
@@ -3158,7 +3191,8 @@ async function telaScreening(){
   // lugares, um dia o corte muda e a tela promete o valor antigo — foi
   // exatamente o que aconteceu com o CDI_ANO.
   const LIQ_ROT = n2(LIQ_MIN/1e6, LIQ_MIN%1e6?1:0) + " MM/dia";
-  const foraDoCorte = (data||[]).filter(x => x.liquidez != null && x.liquidez < LIQ_MIN).length;
+  const foraDoCorte = todosCalc.filter(x => !ehIndice(x.ativo)
+    && x.liquidez != null && x.liquidez < LIQ_MIN).length;
   if(soLiq) l = l.filter(x => x.liquidez == null || x.liquidez >= LIQ_MIN);
 
   const conta = { todos: l.length };
@@ -3267,8 +3301,10 @@ async function telaScreening(){
       title="papel de pouco negócio tem ponto que descola por um pulo isolado">
       <i class="cx">${soLiq?"✓":""}</i>Só acima ${LIQ_ROT}${
         foraDoCorte?` <span class="n">−${foraDoCorte}</span>`:""}</a>
-    <span style="font-size:11.5px;color:var(--graf);margin-left:auto">
-      ${l.length} ${l.length===1?"papel":"papéis"}</span>
+    ${setoriais.length?`<a href="${link({set:verSet?"":"1"})}" class="chaveL${verSet?" on":""}"
+      title="os índices setoriais da B3, entre o Ibovespa e o primeiro papel">
+      <i class="cx">${verSet?"✓":""}</i>Mostrar índices setoriais
+      <span class="n2">${setoriais.length}</span></a>`:""}
   </div>
 
   ${!l.length ? `<div class="card"><p style="margin:0;color:var(--t2)">
@@ -3280,6 +3316,20 @@ async function telaScreening(){
       <th class="d mA m1">Trader</th><th class="d mA m2">Investidor</th><th class="d mA m3">Institucional</th>
       <th class="d" style="width:166px;padding-left:14px">60 pregões</th>
       <th class="d">Negócio/dia</th></tr></thead><tbody>
+    ${[...(amplo?[amplo]:[]), ...(verSet?setoriais:[])].map(x=>`<tr class="ref${
+        x===amplo?"":" set"}">
+      <td class="mono cod">${esc(x.ativo)}${
+        IND_SET[x.ativo]?`<span class="nm">${IND_SET[x.ativo]}</span>`:""}</td>
+      <td style="font-size:12.5px" class="${tomDe(x.e)}">${ROT[x.e]}</td>
+      <td class="d mono">${n2(x.fech, x.fech>1000?0:2)}</td>
+      <td class="d mono ${x.forca==null?"nulo":cor(x.forca)}"><b>${
+        x.forca==null?"—":pct(x.forca)}</b></td>
+      <td class="mA m1">${n2(x.ema17, x.fech>1000?0:2)}</td>
+      <td class="mA m2">${n2(x.ema34, x.fech>1000?0:2)}</td>
+      <td class="mA m3">${x.ema72==null?"—":n2(x.ema72, x.fech>1000?0:2)}</td>
+      <td style="padding:6px 0 6px 14px"><div style="margin-left:auto;width:150px">${risco(x)}</div></td>
+      <td class="d mono nulo" style="font-size:12px">${x.liquidez==null?"—":grana(x.liquidez)}</td>
+    </tr>`).join("")}
     ${l.map(x=>`<tr>
       <td class="mono" style="font-weight:500">${esc(x.ativo)}</td>
       <td style="font-size:12.5px" class="${tomDe(x.e)}">${ROT[x.e]}</td>
