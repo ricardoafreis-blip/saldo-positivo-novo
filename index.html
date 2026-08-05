@@ -87,6 +87,88 @@ nav .rot{display:none}
 .pill{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;padding:3px 9px;
   border:1px solid var(--lacre);color:var(--ouro2);border-radius:99px;background:var(--ouro-fraco)}
 
+/* ══ TELA DA CARTEIRA ═══════════════════════════════════════════════ */
+.heroi{display:grid;grid-template-columns:minmax(0,auto) 1fr;gap:34px;align-items:end;
+  padding:26px 0 20px;margin-top:16px;border-top:1px solid var(--linha2)}
+@media(max-width:760px){.heroi{grid-template-columns:1fr;gap:22px;align-items:start}}
+.numerao{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;
+  font-size:56px;font-weight:500;letter-spacing:-.045em;line-height:.92;white-space:nowrap}
+@media(max-width:620px){.numerao{font-size:42px}}
+.rotulo{font-size:12.5px;color:var(--t2);margin-top:11px}
+.rotulo b{color:var(--tinta);font-weight:500}
+
+/* a fita: da para CONTAR as marcas */
+.fita{position:relative;padding-bottom:16px}
+.fita .trilho{display:flex;align-items:center;gap:2px;height:74px;border-bottom:1px solid var(--linha)}
+.fita .d{flex:1 1 3px;max-width:11px;min-width:2px;height:100%;position:relative;display:flex;align-items:center}
+.fita .b{width:100%;border-radius:1px;transition:opacity .15s}
+.fita .d:hover .b{opacity:1}
+.fita .base{position:absolute;left:0;right:0;top:50%;height:1px;background:var(--linha2)}
+.fita .leg{display:flex;justify-content:space-between;gap:12px;font-size:10.5px;
+  color:var(--graf);padding-top:7px}
+.fita .leg .sel{color:var(--ouro2)}
+.fita .selo{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--lacre);
+  margin-right:5px;vertical-align:1px;box-shadow:0 0 6px rgba(201,162,39,.6)}
+
+.contra{display:flex;flex-wrap:wrap;border-top:1px solid var(--linha);border-bottom:1px solid var(--linha)}
+.contra .i{padding:14px 22px 14px 0;margin-right:22px;border-right:1px solid var(--linha)}
+.contra .i:last-child{border-right:none;margin-right:0;padding-right:0}
+.contra .i.forte{color:var(--tinta)}
+.contra .n{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;
+  font-size:19px;font-weight:500;letter-spacing:-.02em}
+.contra .k{font-size:10.5px;color:var(--graf);margin-top:2px}
+
+.secund{display:flex;flex-wrap:wrap;gap:0 34px;padding:15px 0 2px}
+.secund .s{padding:5px 0}
+.secund .v{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;
+  font-size:15px;font-weight:500}
+.secund .k{font-size:10.5px;color:var(--graf)}
+.explica{font-size:11.5px;color:var(--graf);max-width:74ch;margin:10px 0 18px;line-height:1.6}
+.explica b{color:var(--t2);font-weight:500}
+
+/* ══ SERVIÇOS ═══════════════════════════════════════════════════════
+   Treze cartoes numa grade so viram catalogo em que ninguem acha o
+   proprio caso. Agrupados por momento — organizar, proteger, complexo —
+   a pessoa le tres frases e sabe em qual bloco esta. Cada cartao tem
+   borda propria e vao de verdade: a tecnica de fundo com 1px entre
+   celulas so fecha se formarem retangulo perfeito, e sobra buraco. */
+.secaoS{margin-top:32px}
+.cabsec{padding-bottom:12px;border-bottom:1px solid var(--linha2)}
+.cabsec h2{font-size:22px;margin:0 0 5px}
+.cabsec span{display:block;font-size:12.5px;color:var(--graf);line-height:1.55;max-width:74ch}
+.gradeS{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));
+  gap:12px;margin-top:15px;align-items:start}
+.srv{background:var(--p2);border:1px solid var(--linha);border-radius:4px;
+  padding:22px 22px 18px;display:flex;flex-direction:column;cursor:pointer;
+  transition:border-color .14s,background .14s}
+.srv:hover{border-color:var(--linha2);background:var(--p3)}
+.srv.on{border-color:var(--lacre);background:var(--p3)}
+.srv h3{font-size:18px;margin:0 0 10px}
+/* Uma enfase por cartao. Ouro no meio do texto corrido, em cinco
+   lugares, deixa de destacar e vira ruido: aqui ele so marca registro
+   e orgao, dentro do bloco de baixo. */
+.srv .oq{font-size:13px;color:var(--t2);line-height:1.6;flex:1}
+.srv .oq b{color:var(--tinta);font-weight:500}
+.srv .quem{margin-top:16px;padding-top:13px;border-top:1px solid var(--linha)}
+.srv .rotq{display:block;font-size:8px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--graf);opacity:.65;margin-bottom:5px}
+.srv .txq{font-size:11.5px;color:var(--graf);line-height:1.55}
+.srv .txq b{color:var(--ouro2);font-weight:500}
+.srv .escolher{font-size:11px;color:var(--graf);margin-top:12px;display:flex;align-items:center;gap:7px}
+.srv .cx{width:13px;height:13px;border:1px solid var(--linha2);border-radius:2px;
+  display:flex;align-items:center;justify-content:center;font-size:9px;font-style:normal;flex:none}
+.srv.on .cx{border-color:var(--lacre);color:var(--ouro2);background:var(--ouro-fraco)}
+.srv.on .escolher{color:var(--ouro2)}
+.contatoS{display:grid;grid-template-columns:1fr 1fr;gap:38px;margin-top:44px;
+  padding-top:30px;border-top:1px solid var(--linha2)}
+@media(max-width:800px){.contatoS{grid-template-columns:1fr;gap:24px}}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.tg{font-size:11.5px;padding:4px 10px;border-radius:99px;border:1px solid var(--lacre);
+  color:var(--ouro2);background:var(--ouro-fraco)}
+.lgpd{display:flex;gap:9px;align-items:flex-start;font-size:11px;color:var(--graf);
+  line-height:1.5;margin-top:6px}
+.lgpd input{width:auto;margin:2px 0 0;accent-color:var(--lacre)}
+
 /* botões */
 .bt{display:inline-block;padding:10px 18px;border:1px solid var(--linha2);border-radius:3px;
   font-size:13.5px;font-weight:500;text-align:center;color:var(--tinta);transition:.16s}
@@ -344,6 +426,45 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
 .coluna h3{font-family:Newsreader,serif;font-size:15px;margin:0 0 2px}
 .coluna .qtd{font-size:10.5px;color:var(--graf);letter-spacing:.06em;text-transform:uppercase}
 .coluna .regra{font-size:11px;color:var(--graf);margin:6px 0 10px;line-height:1.45}
+/* ── a fita: um traco por pregao apurado ── */
+.fitinha{display:inline-flex;align-items:center;gap:1px;height:16px;vertical-align:middle}
+.fitinha i{flex:1;border-radius:.5px}
+
+/* ── a ultima da classe, em silencio ──────────────────────────────
+   Ranking que so mostra vencedor e folheto. A regua fica honesta
+   quando o outro extremo tambem aparece — e so entra quando ha mais
+   de seis, senao a "ultima" seria a sexta e nao diria nada. */
+.ultima{display:flex;align-items:baseline;gap:8px;padding:9px 0 0;margin-top:2px;
+  border-top:1px dashed var(--linha2);opacity:.6;font-size:12px;cursor:pointer}
+.ultima:hover{opacity:1}
+.ultima .n{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--graf);width:16px;flex:none}
+.ultima .quem{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--t2)}
+.ultima .num{font-family:'IBM Plex Mono',monospace;font-size:12px;flex:none}
+
+/* ── A FILA ────────────────────────────────────────────────────────
+   Quem publicou ontem nao entra no podio e sumia da tela sem
+   explicacao. Aqui ela aparece com a conta regressiva: nao esta fora,
+   esta a caminho, e da para ver quanto falta. */
+.fila{margin-top:26px;padding-top:20px;border-top:1px solid var(--linha)}
+.fila .cab{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:13px}
+.fila h3{font-family:Newsreader,serif;font-weight:500;font-size:17px;margin:0}
+.fila .cab span{font-size:11.5px;color:var(--graf);max-width:66ch;line-height:1.55}
+.cartas{display:grid;grid-template-columns:repeat(auto-fill,minmax(178px,1fr));gap:10px}
+.carta{background:var(--p2);border:1px solid var(--linha);border-radius:4px;
+  padding:12px 13px;cursor:pointer}
+.carta:hover{border-color:var(--linha2)}
+.carta .nm{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.carta .au{font-size:10.5px;color:var(--graf);margin-top:1px;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+.carta .pb{height:3px;background:var(--papel);border-radius:2px;margin:10px 0 7px;overflow:hidden}
+.carta .pb i{display:block;height:100%;background:var(--lacre);border-radius:2px}
+.carta .ct{font-size:11px;color:var(--t2)}
+.carta .ct b{font-family:'IBM Plex Mono',monospace;color:var(--ouro2);font-size:13px}
+.carta.mais{cursor:default;display:flex;flex-direction:column;justify-content:center;
+  align-items:center;color:var(--graf);font-family:'IBM Plex Mono',monospace;font-size:19px;
+  background:transparent;border-style:dashed}
+.carta.mais span{font-family:inherit;font-size:10.5px;margin-top:2px}
+
 .linhaC{display:flex;align-items:baseline;gap:8px;padding:7px 0;border-top:1px solid var(--linha)}
 .linhaC:hover{background:var(--p3);cursor:pointer}
 .linhaC .n{font-family:'IBM Plex Mono';font-size:10.5px;color:var(--graf);flex:none;width:15px}
@@ -776,7 +897,7 @@ function pintarNav(){
            <a href="#/conta">Minha conta</a>
            <a href="#/publicar">Criar carteira</a>
            <a href="#/indicar">Indicar</a>
-           ${eu.admin?'<div class="risco"></div><a href="#/admin">Administração</a>':""}
+           ${eu.admin?'<div class="risco"></div><a href="#/admin">Administração</a><a href="#/leads">Pedidos de contato</a>':""}
            <div class="risco"></div>
            <button class="lnk" id="btSair">Sair</button>
          </div>
@@ -854,14 +975,56 @@ function agrupar(lista){
 // capa: com muitas carteiras, uma tabela unica de sete colunas fica
 // ilegivel e — pior — sugere que uma vendida e comparavel com uma
 // alavancada. Aqui a separacao e visual, ninguem precisa ler regra.
+/* Um traco por pregao apurado, os 24 ultimos. E o que faz uma lista de
+   vinte linhas ser VARRIDA em vez de lida: da para achar de longe quem
+   sobe pouco todo dia e quem teve duas semanas boas depois de um tombo
+   — coisa que nenhuma coluna de numero diz. */
+function fitinha(s, larg = 74){
+  const u = (s||[]).slice(-24).map(r => r.retorno).filter(v => v != null);
+  if(!u.length) return `<span class="fitinha" style="width:${larg}px"></span>`;
+  const mx = Math.max(...u.map(Math.abs), .004);
+  return `<span class="fitinha" style="width:${larg}px">${u.map(r=>{
+    const h = Math.max(Math.abs(r)/mx*14, 1.5);
+    return `<i style="height:${h.toFixed(1)}px;background:${
+      r>=0?"var(--alta)":"var(--baixa)"};opacity:.8;align-self:${
+      r>=0?"flex-end":"flex-start"};margin-${r>=0?"bottom":"top"}:1px"></i>`;
+  }).join("")}</span>`;
+}
+
+/* A FILA — quem publicou e ainda nao completou o minimo de pregoes. */
+function filaHTML(naFila, MINP){
+  if(!MINP || !naFila.length) return "";
+  const f = naFila.slice().sort((a,b)=>(b.m.dias||0)-(a.m.dias||0));
+  return `<div class="fila">
+    <div class="cab"><h3>Na fila</h3>
+      <span>${f.length} ${f.length===1?"carteira publicada que ainda não completou"
+        :"carteiras publicadas que ainda não completaram"} ${MINP} pregões apurados.
+        Nenhuma sai do lugar — elas entram no pódio sozinhas no dia em que fecharem a conta.</span></div>
+    <div class="cartas">${f.slice(0,8).map(x=>{
+      const d = x.m.dias||0, falta = MINP - d;
+      return `<div class="carta" onclick="location.hash='#/carteira/${x.c.id}'">
+        <div class="nm">${esc(x.c.nome)}</div>
+        <div class="au">${esc(x.c.apelido)}${x.c.classe&&CLASSE[x.c.classe]
+          ? " · "+CLASSE[x.c.classe].nome : ""}</div>
+        <div class="pb"><i style="width:${(d/MINP*100).toFixed(0)}%"></i></div>
+        <div class="ct"><b>${falta}</b> ${falta===1?"pregão":"pregões"} para entrar</div>
+      </div>`; }).join("")}
+      ${f.length>8?`<div class="carta mais">+${f.length-8}<span>outras na fila</span></div>`:""}
+    </div></div>`;
+}
+
 function colunasPorClasse(lista, ordem, rotulo){
   const chave = { hoje:"hoje", sem:"sem", mes:"mes", acum:"acum",
                   sharpe:"sharpe", dd:"dd", vsibov:"vsIbov" }[ordem] || "acum";
   const formatar = v => chave==="sharpe" ? n2(v)
                       : chave==="vsIbov" ? pts(v) : pct(v);
   const blocos = Object.entries(CLASSE).map(([k,v])=>{
-    const g = lista.filter(x => x.c.classe === k).slice(0, 10);
-    return { k, nome:v.nome, regra:v.regra, total: lista.filter(x=>x.c.classe===k).length, g };
+    // ⚠️ CINCO, nao dez. Com vinte carteiras por classe, dez linhas dao
+    // 440px de altura por coluna: quatro muros lado a lado e a pagina
+    // perde o folego logo abaixo da abertura. Cinco cabe numa olhada.
+    const todas = lista.filter(x => x.c.classe === k);
+    return { k, nome:v.nome, regra:v.regra, total: todas.length,
+             g: todas.slice(0,5), ultima: todas.length > 6 ? todas[todas.length-1] : null };
   });
 
   return `<div class="colunas">${blocos.map(b=>`<div class="coluna">
@@ -888,12 +1051,19 @@ function colunasPorClasse(lista, ordem, rotulo){
       return `<div class="linhaC" onclick="location.hash='#/carteira/${x.c.id}'">
         <span class="n">${String(i+1).padStart(2,"0")}</span>
         <span class="quem"><div class="nome">${esc(x.c.nome)}</div>
-          <div class="autor">${esc(x.c.apelido)}${x.c.n_ativos
-            ? ` · ${x.c.n_ativos} ativos` : " · estreia no próximo pregão"}</div></span>
+          <div class="autor">${esc(x.c.apelido)}${x.m.dias
+            ? ` · ${x.m.dias} ${x.m.dias===1?"pregão":"pregões"}`
+            : " · estreia no próximo pregão"}</div></span>
         <span class="num ${v==null?"nulo":cor(v)}">${txt}</span></div>`;
     }).join("")
     : `<div class="vazio">Nenhuma carteira nesta classe ainda.</div>`}
-    ${b.total > 10 ? `<div style="padding-top:9px">
+    ${b.ultima ? (()=>{ const v = b.ultima.m.dias ? b.ultima.m[chave] : null;
+      return `<div class="ultima" onclick="location.hash='#/carteira/${b.ultima.c.id}'"
+        title="a última da classe">
+        <span class="n">${String(b.total).padStart(2,"0")}</span>
+        <span class="quem">${esc(b.ultima.c.nome)}</span>
+        <span class="num ${v==null?"nulo":cor(v)}">${v==null?"—":formatar(v)}</span></div>`; })() : ""}
+    ${b.total > 5 ? `<div style="padding-top:9px">
       <a href="#/?ordem=${ordem}&classe=${b.k}" style="font-size:11.5px;color:var(--ouro2)">
         ver todas as ${b.total} &rarr;</a></div>` : ""}
   </div>`).join("")}</div>
@@ -1162,6 +1332,11 @@ async function telaRanking(){
   const q = new URLSearchParams(location.hash.split("?")[1]||"");
   const ordem = q.get("ordem") || "acum";
   const filtro = q.get("classe") || "";
+  // ⚠️ Nasce em ZERO de proposito. Carteira de tres dias no meio do
+  // podio nao mede nada — um pregao bom poe qualquer uma em primeiro —
+  // mas com o site novo, cortar em 30 esvazia o ranking no dia da
+  // estreia. Suba o padrao quando houver historico.
+  const MINP = Math.max(0, +(q.get("min") || 0) || 0);
   app().innerHTML = `<div class="carreg">carregando ranking…</div>`;
 
   const { data:cs, error } = await sb.from("ranking").select("*");
@@ -1207,9 +1382,15 @@ async function telaRanking(){
     const s = series[c.id] || [];
     const m = aplicarParcial(metricas(s), vivo[c.id], s);
     m.vsIbov = contraIbov(s, oIbov);
-    return { c, m };
+    return { c, m, s };
   });
   if(filtro) lista = lista.filter(x=> (x.c.classe||"sem") === filtro);
+
+  // A fila nao e descarte: e sala de espera com a conta regressiva a
+  // vista. Sumir com quem publicou ontem, sem dizer nada, e o pior jeito
+  // de receber quem acabou de chegar.
+  const naFila = MINP ? lista.filter(x => (x.m.dias||0) <  MINP) : [];
+  if(MINP)     lista = lista.filter(x => (x.m.dias||0) >= MINP);
 
   const chaves = { acum:x=>-x.m.acum, hoje:x=>-x.m.hoje, dd:x=>-x.m.dd,
                    sem:x=>-(x.m.sem ?? -9), mes:x=>-(x.m.mes ?? -9),
@@ -1259,6 +1440,11 @@ async function telaRanking(){
       class="aba${filtro==="sem"?" on":""}">Sem classe<span class="n">${conta.sem}</span></a>`:""}
   </div>
   <div class="ordena">
+    <span class="rot">no pódio, a partir de</span>
+    <select id="selMin" class="selOrdem" style="min-width:150px">
+      ${[0,10,21,30,63].map(v=>`<option value="${v}"${MINP===v?" selected":""}>${
+        v ? v+" pregões" : "qualquer idade"}</option>`).join("")}
+    </select>
     <span class="rot">ordenar por</span>
     <select id="selOrdem" class="selOrdem">
       <optgroup label="Período">
@@ -1299,6 +1485,7 @@ async function telaRanking(){
       {hoje:"no dia",sem:"na semana",mes:"no mês",acum:"desde o início",
        vsibov:"contra o Ibovespa",
        sharpe:"Sharpe",dd:"menor drawdown"}[ordem] || "desde o início") : ""}
+  ${!filtro ? filaHTML(naFila, MINP) : ""}
   ${!filtro && lista.length ? "" : (!lista.length ? `<div class="card" style="text-align:center;padding:38px">
       <h3 style="margin-bottom:8px">Nenhuma carteira ainda</h3>
       <p style="color:var(--t2)">Publique a primeira — o ranking começa a contar a partir de hoje.</p>
@@ -1307,9 +1494,9 @@ async function telaRanking(){
       <th class="d">Semana</th><th class="d">Mês</th><th class="d">Desde o início</th>
       <th class="d">vs Ibovespa</th>
       <th class="d">Sharpe</th><th class="d">Drawdown</th>
-      <th class="d">Dias</th></tr></thead><tbody>
+      <th class="d">Dias</th><th style="width:86px">24 pregões</th></tr></thead><tbody>
     ${(filtro ? [["", lista]] : agrupar(lista)).map(([titulo, grupo]) => (titulo
-      ? `<tr><td colspan="10" style="padding:16px 0 6px">
+      ? `<tr><td colspan="11" style="padding:16px 0 6px">
           <span style="font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--ouro2)">${titulo}</span>
           <span style="font-size:11px;color:var(--graf);margin-left:7px">${grupo.length}
             ${grupo.length===1?"carteira":"carteiras"}</span></td></tr>` : "")
@@ -1331,13 +1518,18 @@ async function telaRanking(){
         x.m.vsIbov==null?"—":pts(x.m.vsIbov)}</td>
       <td class="d mono ${x.m.sharpe==null?"nulo":""}">${n2(x.m.sharpe)}</td>
       <td class="d mono ${x.m.dd<0?"baixa":"nulo"}">${!x.m.dias?"—":(x.m.dd<0?pct(x.m.dd):"0,00%")}</td>
-      <td class="d mono nulo">${x.m.dias}</td></tr>`).join("")).join("")}
+      <td class="d mono nulo">${x.m.dias}</td>
+      <td>${fitinha(x.s, 82)}</td></tr>`).join("")).join("")}
     </tbody></table>`)}`;
 
-  // seletor de ordem: navega pela hash, para o link continuar compartilhável
+  // Os dois seletores navegam pela hash, para o link continuar
+  // compartilhavel — quem manda o endereco manda a MESMA tela.
+  const cauda = (o, mi) => `#/?ordem=${o}${mi ? "&min="+mi : ""}${
+    filtro ? "&classe="+filtro : ""}`;
   const so = $("#selOrdem");
-  if(so) so.onchange = e =>
-    location.hash = `#/?ordem=${e.target.value}${filtro ? "&classe="+filtro : ""}`;
+  if(so) so.onchange = e => location.hash = cauda(e.target.value, MINP);
+  const sm = $("#selMin");
+  if(sm) sm.onchange = e => location.hash = cauda(ordem, +e.target.value);
 
   // ── repinta sozinho enquanto o pregão corre ──
   // Sem isso a pessoa precisa recarregar para ver o número mexer. Só
@@ -1719,6 +1911,30 @@ async function telaPublicar(){
 }
 
 // ═══════════════════════════════════════════ carteira
+/* ══ A FITA ═════════════════════════════════════════════════════════
+   Um traco por pregao apurado, da linha de base para cima ou para
+   baixo. Da para CONTAR as marcas — e a imutabilidade virando desenho
+   em vez de frase no rodape, e cresce sozinha a cada fechamento. */
+function fitaGrande(serie){
+  const s = (serie||[]).filter(r => r.retorno != null);
+  if(!s.length) return `<div class="fita"><div class="trilho"><span class="base"></span></div>
+    <div class="leg"><span></span><span class="sel"><i class="selo"></i>nenhum pregão
+      apurado ainda</span><span></span></div></div>`;
+  const mx = Math.max(...s.map(r => Math.abs(r.retorno)), .004);
+  return `<div class="fita">
+    <div class="trilho"><span class="base"></span>${s.map((r,i)=>{
+      const h = Math.max(Math.abs(r.retorno)/mx*46, 2);
+      return `<span class="d" title="${dataBR(r.data)} · ${pct(r.retorno)}">
+        <i class="b" style="height:${h.toFixed(1)}px;background:${
+          r.retorno>=0?"var(--alta)":"var(--baixa)"};opacity:${i===s.length-1?1:.72};
+          align-self:${r.retorno>=0?"flex-end":"flex-start"};
+          margin-${r.retorno>=0?"bottom":"top"}:37px"></i></span>`;}).join("")}</div>
+    <div class="leg"><span>${dataBR(s[0].data)}</span>
+      <span class="sel"><i class="selo"></i>${s.length} ${
+        s.length===1?"pregão apurado":"pregões apurados"} — nenhum pode ser reescrito</span>
+      <span>${dataBR(s[s.length-1].data)}</span></div></div>`;
+}
+
 async function telaCarteira(id){
   app().innerHTML = `<div class="carreg">carregando…</div>`;
   const { data:c } = await sb.from("ranking").select("*").eq("id", id).single();
@@ -1807,17 +2023,50 @@ async function telaCarteira(id){
     <p style="font-size:12px;color:var(--graf)">${esc(c.apelido)}
       · publicada em ${c.criada_em}</p>
   </div>
-  <div class="grade">
-    <div class="cel"><div class="v ${m.dias||m.parcial?cor(m.hoje):"nulo"}" style="${m.parcial?"opacity:.85":""}">${
-      m.dias||m.parcial ? pct(m.hoje) : "—"}${
-      m.parcial?'<sup style="font-size:12px;opacity:.75;margin-left:1px">•</sup>':""}</div>
-      <div class="k">${m.parcial?"hoje · parcial":"hoje"}</div></div>
-    <div class="cel"><div class="v ${m.dias?cor(m.acum):"nulo"}">${m.dias?pct(m.acum):"estreia"}</div><div class="k">acumulado</div></div>
-    <div class="cel"><div class="v">${n2(m.sharpe)}</div><div class="k">sharpe</div></div>
-    <div class="cel"><div class="v ${m.dd<0?"baixa":"nulo"}">${m.dias?(m.dd<0?pct(m.dd):"0,00%"):"—"}</div><div class="k">queda máxima</div></div>
-    <div class="cel"><div class="v">${m.vol==null?"—":n2(m.vol*100,1)+"%"}</div><div class="k">oscilação a.a.</div></div>
-    <div class="cel"><div class="v">${m.dias}</div><div class="k">dias</div></div>
+  <!-- ══ O HERÓI ═══════════════════════════════════════════════════
+       Seis células de 20px, todas iguais, e o olho nao tem onde pousar:
+       o ACUMULADO — que e a razao de o site existir — tinha o mesmo
+       peso de "dias". Aqui ele vai a 56px, com a fita ao lado, e os
+       indices no MESMO campo de visao: a comparacao e a leitura, nao um
+       cartao 200px abaixo. O resto vira faixa fina. -->
+  <div class="heroi">
+    <div>
+      <div class="numerao ${m.dias?cor(m.acum):"nulo"}">${m.dias?pct(m.acum):"estreia"}</div>
+      <div class="rotulo"><b>desde a publicação.</b> ${m.dias||m.parcial
+        ? `Hoje <span class="${cor(m.hoje)}">${pct(m.hoje)}</span>${
+            m.parcial?' <span style="color:var(--graf)">· parcial</span>':""}.`
+        : "Ainda não apurou nenhum pregão."}</div>
+    </div>
+    ${fitaGrande(serie)}
   </div>
+  ${(()=>{ const k = comparativo(serie, refs); return !k ? "" : `<div class="contra">
+    <div class="i forte"><div class="n ${k.vsIbov==null?"nulo":cor(k.vsIbov)}">${
+      k.vsIbov==null?"—":pts(k.vsIbov)+" pts"}</div>
+      <div class="k">contra o Ibovespa</div></div>
+    <div class="i"><div class="n ${cor(k.vsCdi)}">${pts(k.vsCdi)} pts</div>
+      <div class="k">contra o CDI</div></div>
+    <div class="i"><div class="n ${k.ibov==null?"nulo":cor(k.ibov)}">${
+      k.ibov==null?"—":pct(k.ibov)}</div>
+      <div class="k">Ibovespa no mesmo período</div></div>
+    <div class="i"><div class="n" style="color:var(--ouro2)">${pct(k.cdi)}</div>
+      <div class="k">CDI estimado</div></div>
+  </div>`; })()}
+  <div class="secund">
+    <div class="s"><div class="v ${m.dd<0?"baixa":"nulo"}">${
+      m.dias?(m.dd<0?pct(m.dd):"0,00%"):"—"}</div>
+      <div class="k">maior queda desde um topo</div></div>
+    <div class="s"><div class="v ${m.vol==null?"nulo":""}">${
+      m.vol==null?"—":"±"+n2(m.vol*100,1)+"%"}</div>
+      <div class="k">balanço típico no ano</div></div>
+    <div class="s"><div class="v ${m.sharpe==null?"nulo":""}">${n2(m.sharpe)}</div>
+      <div class="k">retorno por unidade de risco</div></div>
+    <div class="s"><div class="v">${m.dias}</div>
+      <div class="k">${m.dias===1?"pregão apurado":"pregões apurados"}</div></div>
+  </div>
+  ${m.vol==null ? `<p class="explica">O <b>balanço</b> e o <b>retorno por unidade de
+    risco</b> só aparecem a partir de 20 pregões apurados — com ${m.dias}
+    ${m.dias===1?"dia":"dias"} de vida, qualquer medida de risco seria ruído com cara de
+    número. ${20-m.dias>0?`Faltam ${20-m.dias}.`:""}</p>` : ""}
   ${m.parcial ? `<p style="font-size:11.5px;color:var(--graf);margin:-8px 0 18px">
     O número de hoje é <b>parcial</b>: vem da cotação de
     ${new Date(m.parcialQuando).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit",timeZone:"America/Sao_Paulo"})}
@@ -1849,7 +2098,12 @@ async function telaCarteira(id){
       A carteira nasceu dentro do limite de 100%. A soma vendida passou disso porque
       o peso anda com o mercado — numa vendida ela cresce nos dias de perda.</p>` : ""}
   </div>
-  ${comparativoHTML(serie, refs)}
+  ${(()=>{ const k = comparativo(serie, refs); return !k ? "" : `<p class="explica">
+    O Ibovespa e o CDI são medidos <b>a partir do dia em que esta carteira nasceu</b>,
+    não do começo do ano — por isso a coluna de pregões importa: quem escolhe um dia de
+    partida bom escolhe também um benchmark fácil.
+    ${k.ibov==null?"Sem cotação do Ibovespa no período. ":""}A renda fixa é estimada em
+    ${n2(CDI_ANO*100,1)}% ao ano, não medida.</p>`; })()}
   ${grafico(serie, refs)}
   ${abre ? `<div class="card">
     <div style="font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--graf);margin-bottom:10px">
@@ -3551,6 +3805,286 @@ function telaTermos(){
 }
 
 // ═══════════════════════════════════════════ rotas
+const GRUPOS_S=[
+ ["organizar","Organizar","Para quem está montando a base: saber para onde vai o dinheiro antes de decidir onde investir."],
+ ["proteger","Proteger e transmitir","Para quem já tem o que perder — e quer que o patrimônio atravesse separação, sociedade e sucessão inteiro."],
+ ["complexo","Patrimônio complexo","Para quem tem empresa, bens em mais de um país ou uma família inteira dependendo da mesma estrutura."]];
+
+const SERVICOS=[
+ {g:"organizar", id:"planejamento", nome:"Planejamento financeiro",
+  oq:`Organizar o que entra, o que sai e o que sobra, e transformar isso em metas com
+      prazo: reserva de emergência, troca de carro, entrada de imóvel, aposentadoria.
+      Começa pelo orçamento, não pelo investimento.`,
+  quem:`Não é atividade regulada em si. Procure o selo <b>CFP®</b> (Planejar) — é a
+        certificação de referência no Brasil.`},
+
+ {g:"organizar", id:"consultoria", nome:"Consultoria de investimentos",
+  oq:`Orientação sobre onde investir, contratada e <b>paga pelo próprio cliente</b>. Como
+      a remuneração não vem de comissão de produto, não há incentivo para indicar um
+      fundo em vez de outro.`,
+  quem:`<b>Economista</b> ou especialista com registro na CVM como <b>consultor de
+        valores mobiliários</b> (Resolução CVM 19).`},
+
+ {g:"organizar", id:"assessoria", nome:"Assessoria de investimentos",
+  oq:`Atendimento ligado a uma corretora ou distribuidora: apresenta produtos da
+      plataforma, executa ordens e acompanha a carteira. A remuneração vem da
+      instituição, não do cliente.`,
+  quem:`Exige registro na CVM e vínculo com instituição integrante do sistema de
+        distribuição (<b>Resolução CVM 178</b>). Pergunte a qual instituição
+        o profissional está vinculado.`},
+
+ {g:"organizar", id:"clube", nome:"Clube de investimentos",
+  oq:`Um condomínio de 3 a 50 pessoas que juntam recursos numa carteira comum, com
+      regulamento próprio. Custo menor que um fundo e decisão mais próxima do grupo.`,
+  quem:`Administrado por instituição autorizada pela CVM e registrado na B3. A gestão
+        pode caber a um cotista, se o regulamento permitir.`},
+
+ {g:"organizar", id:"consorcio", nome:"Estratégias com consórcio",
+  oq:`Compra programada sem juros, com taxa de administração. Serve para quem tem
+      prazo e não tem pressa — e também como carta de crédito para investir em
+      imóvel ou equipamento.`,
+  quem:`Administradoras autorizadas e fiscalizadas pelo <b>Banco Central</b>.
+        Não há garantia de contemplação em data certa: quem promete isso está mentindo.`},
+
+ {g:"proteger", id:"blindagem", nome:"Blindagem e proteção patrimonial",
+  oq:`Definir <b>em vida e por escrito</b> quem é dono do quê, para que uma separação, a
+      entrada de um sócio ou uma discussão de herança não alcance o patrimônio inteiro.
+      Pacto antenupcial e escolha do regime de bens, acordo de sócios com regra de saída
+      e de sucessão de cotas, holding familiar, doação com cláusula de incomunicabilidade e
+      impenhorabilidade, seguro.`,
+  quem:`<b>Especialista em direito patrimonial</b> e <b>contador</b>. A linha é esta: proteger <i>antes</i> de o
+        problema existir é planejamento, e é lícito. Mover bens <i>depois</i> que a dívida,
+        o processo ou a separação apareceram é fraude contra credores e fraude à execução
+        — e é desfeito em juízo. Quem prometer a segunda coisa está vendendo um problema.`},
+
+ {g:"proteger", id:"sucessorio", nome:"Planejamento sucessório",
+  oq:`Organizar em vida como o patrimônio será transmitido, para reduzir imposto, custo
+      de inventário e briga de família. Ferramentas usuais: testamento, doação com
+      usufruto, holding familiar, seguro de vida e previdência.`,
+  quem:`Trabalho conjunto de <b>especialista em sucessão</b> e <b>contador</b>, com apoio
+        de quem cuida dos investimentos.`},
+
+ {g:"complexo", id:"gestao", nome:"Gestão de recursos",
+  oq:`O cliente dá mandato e o gestor decide as operações por ele, dentro da política
+      combinada. Diferente da assessoria: aqui quem aperta o botão é o gestor.`,
+  quem:`Exige autorização da CVM como <b>administrador de carteiras</b>
+        (Resolução CVM 21). Sem essa autorização, ninguém pode operar por você.`},
+
+ {g:"complexo", id:"fortunas", nome:"Gestão de grandes fortunas",
+  oq:`A partir de <b>R$ 20 milhões</b>, com equipe dedicada. A pergunta deixa de ser
+      quanto rendeu no ano e passa a ser <b>quanto tempo o patrimônio dura</b>: política
+      de investimento escrita, regra de retirada anual, caixa dimensionado para
+      atravessar anos ruins sem vender na baixa, e a sucessão desenhada junto — não
+      depois.`,
+  quem:`Autorização da CVM para <b>administrador de carteiras</b> (Res. 21), somada a
+        economista, contador e, quando há bens fora, especialista em tributação
+        internacional. É o cuidado com a <i>carteira</i> — quem cuida do conjunto todo
+        é o family office, logo abaixo.`},
+
+ {g:"complexo", id:"exterior", nome:"Conta no exterior",
+  oq:`Conta em banco nos <b>Estados Unidos ou na Europa</b>, no nome da pessoa física.
+      Tirar dinheiro do país é a parte fácil; o que decide o resultado é a legislação
+      que se aplica a <b>brasileiro com bens fora</b> — em que nome o ativo fica, qual
+      tratado evita a dupla tributação, o que o Fisco de lá retém na fonte e como o
+      inventário funciona quando o titular mora aqui e o banco está lá. É onde quase
+      todo mundo erra, e o erro só aparece anos depois.
+      <br><br>O acesso às instituições é <b>direto</b>, sem plataforma no meio: conta
+      aberta no banco, custódia no nome do titular.`,
+  quem:`<b>Especialista em tributação internacional</b> — economista, contador ou
+        advogado com prática no assunto. As
+        obrigações não são opcionais: declaração no IR, <b>DCBE</b> ao Banco Central
+        acima de US$ 1 milhão e, desde a <b>Lei 14.754/2023</b>, tributação anual dos
+        lucros da offshore, tenha havido distribuição ou não.`},
+
+ {g:"complexo", id:"offshore", nome:"Abertura de offshore",
+  oq:`Constituir uma empresa fora do país para ser <b>dona dos investimentos</b>. Serve
+      para consolidar aplicações em várias moedas e instituições sob um só titular,
+      separar o patrimônio investido do pessoal e resolver a sucessão sem inventário
+      lá fora — a transmissão passa a ser de cotas, não de cada ativo.
+      <br><br>O caminho: escolher a jurisdição, constituir a empresa com agente
+      registrado, abrir a conta bancária ligada a ela, aprovar o estatuto e fazer o
+      registro no Brasil. Leva de algumas semanas a poucos meses.`,
+  quem:`<b>Advogado</b> e <b>contador</b> com prática em tributação internacional, mais
+        o agente registrado na jurisdição escolhida. A estrutura é <b>declarada</b>:
+        desde a <b>Lei 14.754/2023</b> os lucros são tributados no Brasil todo ano,
+        tenha havido distribuição ou não. Offshore não declarada não é planejamento —
+        é problema esperando data.`},
+
+ {g:"complexo", id:"empresarial", nome:"Estruturação empresarial",
+  oq:`Do lado da empresa: desenhar a estrutura societária, trocar capital de giro caro
+      por dívida bem estruturada e captar no mercado — <b>CRI e CRA</b> lastreados em
+      recebíveis, além de operações estruturadas com os grandes bancos.`,
+  quem:`Securitizadora registrada, oferta pela <b>Resolução CVM 160</b> e distribuição
+        por instituição integrante do sistema. Depende de porte, garantia e qualidade do
+        recebível — não é caminho para qualquer empresa, e um bom estruturador diz isso
+        antes de cobrar.`},
+
+ {g:"complexo", id:"family", nome:"Multi family office",
+  oq:`A partir de <b>R$ 20 milhões</b>, e a diferença aqui não é tamanho, é dispersão.
+      O dinheiro <b>fica onde a família quiser</b> — em qualquer banco, corretora ou
+      gestora, no Brasil e fora. O family office não custodia nada e não disputa com
+      ninguém: ele enxerga tudo junto, num relatório só, e decide ao lado da família.
+      <br><br>Além dos investimentos, cuida do que orbita o patrimônio: compra e venda
+      de ativos, imóvel, câmbio, contabilidade, sucessão, e o miúdo que ninguém lembra
+      — o seguro que vence, a escritura que falta registrar, a transferência entre
+      países. É uma consultoria de dedicação exclusiva, com um objetivo só:
+      <b>que a família não perca a situação que levou uma vida para construir</b>,
+      atravessando geração, separação, venda de empresa e mudança de país.`,
+  quem:`Estrutura própria ou rede de <b>profissionais habilitados</b>, cada um com o
+        registro da sua atividade — e a remuneração declarada, porque family office que
+        ganha comissão do produto que indica deixou de ser family office. Pergunte quem
+        responde por qual parte.`},
+];
+
+
+const escolhidosS = new Set();
+
+/* ══ SERVIÇOS ═══════════════════════════════════════════════════════
+   A pagina nao vende: ela EXPLICA. Cada cartao diz o que e, para quem
+   serve e — o que falta em todo site do ramo — QUAL REGISTRO o
+   profissional precisa ter. Essa ultima linha e o que separa a pagina
+   de um classificado: ela ensina a pessoa a cobrar credencial de quem
+   for atende-la.
+   ⚠️ O site NAO presta nenhum destes servicos e nao recebe por eles. */
+async function telaServicos(){
+  const pintar = (recado="", ruim=false) => {
+    app().innerHTML = `
+    <div class="cabeca" style="text-align:left;max-width:72ch">
+      <h1>O que cada um desses serviços é, de verdade</h1>
+      <p>Treze palavras que aparecem em anúncio o tempo todo e quase nunca vêm
+        explicadas. Aqui elas estão em português, com o que cada uma faz, para quem
+        serve e — principalmente — <b>qual registro o profissional precisa ter</b>.</p>
+      <p style="font-size:13px;color:var(--graf);margin-top:10px">O Saldo Positivo não
+        presta nenhum deles. Se quiser conversar com alguém, marque os assuntos e deixe
+        um contato: um profissional habilitado retorna. Sem custo e sem compromisso.</p>
+    </div>
+    ${GRUPOS_S.map(([gid,tit,sub])=>`
+    <div class="secaoS">
+      <div class="cabsec"><h2>${tit}</h2><span>${sub}</span></div>
+      <div class="gradeS">${SERVICOS.filter(v=>v.g===gid).map(v=>`
+        <div class="srv${escolhidosS.has(v.id)?" on":""}" data-srv="${v.id}">
+          <h3>${v.nome}</h3><div class="oq">${v.oq}</div>
+          <div class="quem"><span class="rotq">Quem pode exercer</span>
+            <div class="txq">${v.quem}</div></div>
+          <div class="escolher"><i class="cx">${escolhidosS.has(v.id)?"✓":""}</i>${
+            escolhidosS.has(v.id)?"escolhido":"quero falar sobre isso"}</div>
+        </div>`).join("")}</div>
+    </div>`).join("")}
+    <div class="contatoS">
+      <div>
+        <h2 style="font-size:24px;margin:0 0 11px">Falar com um profissional</h2>
+        <p style="color:var(--t2);font-size:14.5px;line-height:1.62;max-width:46ch">
+          Você deixa o contato, um profissional habilitado retorna. Ele vai se
+          identificar pelo nome e pelo registro — e você pode conferir os dois no site
+          da CVM antes de qualquer conversa sobre dinheiro.</p>
+        <div style="margin-top:18px;font-size:12.5px;color:var(--graf)">Assuntos marcados:
+          <div class="tags">${escolhidosS.size
+            ? [...escolhidosS].map(id=>`<span class="tg">${SERVICOS.find(v=>v.id===id).nome}</span>`).join("")
+            : `<span style="font-style:italic">nenhum ainda — marque acima, ou escreva no recado</span>`}</div>
+        </div>
+      </div>
+      <div>
+        <label>Nome</label><input id="sNome" placeholder="como prefere ser chamado">
+        <label>WhatsApp</label><input id="sTel" placeholder="(31) 90000-0000">
+        <label>E-mail</label><input id="sMail" placeholder="voce@email.com">
+        <label>Melhor horário</label>
+        <select id="sHora"><option>Manhã</option><option>Tarde</option>
+          <option>Fim do dia</option><option>Qualquer horário</option></select>
+        <label>Recado</label>
+        <textarea id="sRec" rows="3" placeholder="opcional — em uma linha, o que você quer resolver"></textarea>
+        <!-- isca: robo preenche, gente nao ve. Sem isso o insert aberto
+             enche a tabela de lixo em minutos. -->
+        <input id="sIsca" tabindex="-1" autocomplete="off"
+          style="position:absolute;left:-9999px;width:1px;height:1px">
+        <label class="lgpd"><input type="checkbox" id="sOk">
+          <span>Autorizo o contato por telefone, WhatsApp ou e-mail sobre os assuntos
+          marcados. Os dados são usados só para isso e podem ser apagados a qualquer
+          momento — é só pedir.</span></label>
+        <button class="bt lacre" id="sEnv" style="margin-top:12px;width:100%">Pedir contato</button>
+        <div style="font-size:12px;margin-top:9px;min-height:18px;color:${
+          ruim?"var(--baixa)":"var(--alta)"}">${esc(recado)}</div>
+      </div>
+    </div>
+    <div class="msg" style="margin-top:34px"><b>Por que esta página não vende nada.</b>
+      Consultoria, assessoria e gestão de recursos são atividades reguladas, e cada uma
+      exige um registro diferente na CVM. O Saldo Positivo é um caderno de estudo.
+      Encaminhar alguém a um profissional habilitado é diferente de recomendar
+      investimento — e nada nesta página é recomendação.</div>`;
+
+    document.querySelectorAll("[data-srv]").forEach(el =>
+      el.onclick = () => { const id = el.dataset.srv;
+        escolhidosS.has(id) ? escolhidosS.delete(id) : escolhidosS.add(id); pintar(); });
+
+    document.getElementById("sEnv").onclick = async () => {
+      const nome = document.getElementById("sNome").value.trim();
+      const tel  = document.getElementById("sTel").value.trim();
+      if(document.getElementById("sIsca").value) return;            // robô
+      if(!nome || !tel) return pintar("Falta o nome ou o WhatsApp.", true);
+      if(!document.getElementById("sOk").checked)
+        return pintar("Marque a autorização de contato.", true);
+      const bt = document.getElementById("sEnv");
+      bt.disabled = true; bt.textContent = "enviando…";
+      const { error } = await sb.from("lead").insert({
+        nome, whatsapp: tel,
+        email:   document.getElementById("sMail").value.trim() || null,
+        horario: document.getElementById("sHora").value,
+        recado:  document.getElementById("sRec").value.trim() || null,
+        assuntos: [...escolhidosS] });
+      if(error) return pintar("Não consegui registrar: " + error.message, true);
+      escolhidosS.clear();
+      pintar("Pedido registrado. Alguém entra em contato em até um dia útil.");
+    };
+  };
+  pintar();
+}
+
+/* ══ LEADS ══════════════════════════════════════════════════════════
+   ⚠️ Quem tranca e a RLS no banco, nao esta tela. Se a politica
+   lead_ler cair, esconder o link nao adianta: o PostgREST devolve a
+   tabela para quem pedir. A tela e conveniencia; o lacre e o banco. */
+async function telaLeads(){
+  app().innerHTML = `<div class="carreg">carregando pedidos…</div>`;
+  const { data, error } = await sb.from("lead")
+    .select("*").order("criado_em", { ascending:false }).limit(200);
+  if(error) return app().innerHTML = aviso("Não consegui ler os pedidos: " + error.message +
+    " — se falar em permissão, a política lead_ler ainda não está no banco.", true);
+  const l = data || [], abertos = l.filter(x => !x.atendido_em).length;
+  app().innerHTML = `
+  <div class="cabeca" style="text-align:left"><h1>Pedidos de contato</h1>
+    <p>${l.length} ${l.length===1?"pedido":"pedidos"}${
+      abertos?` · <b>${abertos} sem atender</b>`:l.length?" · todos atendidos":""}</p></div>
+  ${!l.length ? `<div class="card"><p style="margin:0;color:var(--t2)">Nenhum pedido ainda.
+      Os que chegarem pela tela de serviços aparecem aqui.</p></div>`
+  : `<table><thead><tr><th>Quando</th><th>Quem</th><th>Contato</th><th>Assuntos</th>
+      <th>Recado</th><th class="d">Situação</th></tr></thead><tbody>
+    ${l.map(x=>`<tr${x.atendido_em?' style="opacity:.5"':""}>
+      <td class="mono" style="font-size:11.5px;color:var(--graf);white-space:nowrap">${dataBR(x.criado_em)}</td>
+      <td style="font-weight:500">${esc(x.nome)}</td>
+      <td style="font-size:12.5px">
+        <a href="https://wa.me/55${esc((x.whatsapp||"").replace(/\D/g,""))}" target="_blank"
+           rel="noopener" style="color:var(--ouro2)">${esc(x.whatsapp)}</a>
+        ${x.email?`<div style="color:var(--graf);font-size:11.5px">${esc(x.email)}</div>`:""}
+        ${x.horario?`<div style="color:var(--graf);font-size:11px">prefere ${esc(x.horario)}</div>`:""}</td>
+      <td style="font-size:11.5px;max-width:240px">${(x.assuntos||[]).map(id=>{
+          const v = SERVICOS.find(w=>w.id===id);
+          return `<span class="tg" style="display:inline-block;margin:1px 3px 1px 0">${
+            v?v.nome:id}</span>`; }).join("") || "—"}</td>
+      <td style="font-size:12px;color:var(--t2);max-width:260px">${esc(x.recado||"—")}</td>
+      <td class="d">${x.atendido_em
+        ? `<span style="font-size:11px;color:var(--graf)">atendido<br>${dataBR(x.atendido_em)}</span>`
+        : `<button class="bt" style="padding:5px 12px;font-size:12px" data-at="${x.id}">marcar atendido</button>`}</td>
+    </tr>`).join("")}</tbody></table>`}`;
+
+  document.querySelectorAll("[data-at]").forEach(b =>
+    b.onclick = async () => { b.disabled = true; b.textContent = "…";
+      const u = (await sb.auth.getUser()).data.user;
+      const { error } = await sb.from("lead")
+        .update({ atendido_em: new Date().toISOString(), atendido_por: u?.id })
+        .eq("id", b.dataset.at);
+      if(error){ b.disabled = false; b.textContent = "erro"; return; }
+      telaLeads(); });
+}
+
 function rotear(){
   // toda troca de tela para os timers da tela anterior
   clearInterval(window.__timerRank);
@@ -3573,6 +4107,8 @@ function rotear(){
   if(h==="#/indicar")         return telaIndicar();
   if(h==="#/assinar")         return telaAssinar();
   if(h==="#/admin")           return telaAdmin();
+  if(h==="#/servicos")        return telaServicos();
+  if(h==="#/leads")           return telaLeads();
   if(h==="#/conta")           return telaConta();
   if(h==="#/senha")           return telaSenha();
   if(h==="#/nova-senha")      return telaNovaSenha();
