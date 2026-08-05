@@ -170,9 +170,12 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
 .aba .n{font-family:'IBM Plex Mono';font-size:10.5px;color:var(--graf);margin-left:5px}
 .aba.on .n{color:var(--lacre)}
 
-.ordena{display:flex;gap:12px;align-items:center;flex-wrap:wrap;
-  padding:11px 14px;margin-top:-1px;background:var(--p2);
-  border:1px solid var(--linha);border-top:none;border-radius:0 0 4px 4px}
+/* Sem caixa. A faixa cinza fechava os controles num bloco apertado e
+   espremia o que vinha antes e depois. Espaço em branco separa melhor
+   que borda. */
+.ordena{display:flex;gap:14px;align-items:center;flex-wrap:wrap;
+  justify-content:center;padding:14px 0 6px}
+@media(max-width:620px){.ordena{justify-content:flex-start}}
 .selOrdem{width:auto;min-width:190px;margin:0;padding:7px 11px;font-size:13px;
   background:var(--p2);border-color:var(--linha2);cursor:pointer}
 .selOrdem:hover{border-color:var(--graf)}
@@ -219,9 +222,11 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
    e com medida limitada, a abertura ganha eixo e o conteúdo abaixo — que
    é tabela e ocupa a largura toda — passa a pendurar de um ponto claro. */
 .cabeca{padding:34px 0 0;margin-bottom:4px;text-align:center}
-.cabeca h1{font-size:27px;line-height:1.16;margin:0 auto 8px;max-width:22ch}
-.cabeca p{color:var(--t2);font-size:13.5px;line-height:1.55;margin:0 auto;max-width:58ch}
-.cabeca .apoio{font-size:11.5px;color:var(--graf);margin-top:8px}
+/* Sem max-width no título: 22ch quebrava "Duelo do dia" em duas linhas
+   com meia tela sobrando ao lado. Quem controla a medida é o parágrafo. */
+.cabeca h1{font-size:29px;line-height:1.14;margin:0 0 9px}
+.cabeca p{color:var(--t2);font-size:15px;line-height:1.6;margin:0 auto;max-width:62ch}
+.cabeca .apoio{font-size:12px;color:var(--graf);margin-top:9px}
 @media(max-width:620px){.cabeca{text-align:left}
   .cabeca h1,.cabeca p{margin-left:0}}
 
@@ -3156,7 +3161,8 @@ async function telaScreening(){
     <h1>Screening</h1>
     <p>Em que fase da tendência cada papel está, pela ordem das médias de
       <b>17</b>, <b>34</b> e <b>72</b> pregões e pela posição do preço entre elas.</p>
-    <div class="apoio">É medida, não recomendação.</div>
+    <div class="apoio">É medida, não recomendação — o site descreve onde o
+      preço está, não diz o que fazer.</div>
   </div>
 
   <div class="abas">
@@ -3191,7 +3197,8 @@ async function telaScreening(){
         : ""}</p></div>`
   : `<table><thead><tr><th>Papel</th><th>Estado</th>
       <th class="d">Fechamento</th><th class="d">Vs. média longa</th>
-      <th class="d">17 · 34 · 72</th><th style="width:112px">60 pregões</th>
+      <th class="d" style="white-space:nowrap">17 · 34 · 72</th>
+      <th class="d" style="width:118px">60 pregões</th>
       <th class="d">Negócio/dia</th></tr></thead><tbody>
     ${l.map(x=>`<tr>
       <td class="mono" style="font-weight:500">${esc(x.ativo)}</td>
@@ -3205,7 +3212,7 @@ async function telaScreening(){
         <span style="color:var(--graf)">${n2(x.ema34)}</span>
         <span style="color:var(--linha2)">·</span>
         <span style="color:var(--ouro2)">${x.ema72==null?"—":n2(x.ema72)}</span></td>
-      <td style="padding:6px 0">${risco(x)}</td>
+      <td style="padding:6px 0"><div style="margin-left:auto;width:108px">${risco(x)}</div></td>
       <td class="d mono nulo" style="font-size:12px">${grana(x.liquidez)}</td></tr>`).join("")}
     </tbody></table>`}
 
