@@ -159,7 +159,7 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
    listado. Lado a lado, em três grupos, viravam sete opções soltas
    competindo entre si. Agora a classe é aba (nível de cima) e a
    ordem é uma linha só, com divisória entre período e qualidade. */
-.abas{display:flex;gap:2px;flex-wrap:wrap;margin:22px 0 0;
+.abas{display:flex;gap:2px;flex-wrap:wrap;margin:6px 0 0;
   justify-content:center;border-bottom:1px solid var(--linha)}
 @media(max-width:620px){.abas{justify-content:flex-start}}
 .aba{padding:9px 15px;font-size:13px;color:var(--t2);border:1px solid transparent;
@@ -221,7 +221,7 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
    canto com um vazio enorme à direita, e a página parecia mural. Centrado
    e com medida limitada, a abertura ganha eixo e o conteúdo abaixo — que
    é tabela e ocupa a largura toda — passa a pendurar de um ponto claro. */
-.cabeca{padding:34px 0 0;margin-bottom:4px;text-align:center}
+.cabeca{padding:36px 0 0;margin-bottom:14px;text-align:center}
 /* Sem max-width no título: 22ch quebrava "Duelo do dia" em duas linhas
    com meia tela sobrando ao lado. Quem controla a medida é o parágrafo. */
 .cabeca h1{font-size:29px;line-height:1.14;margin:0 0 9px}
@@ -2066,10 +2066,11 @@ async function telaAdmin(){
   <div class="card" style="margin-bottom:16px">
     <h3 style="font-size:15px;margin-bottom:6px">Robô diário</h3>
     <p style="font-size:11.5px;color:var(--graf);margin:0">
-      A apuração <b>não roda sozinha</b>: depois das 19h, em Actions &rarr; Fechar o dia
-      &rarr; Run workflow. A cotação vem do EA no MetaTrader 5, que precisa estar aberto
-      durante o pregão. Os botões que ficavam aqui raspavam o Fundamentus, que recusa
-      conexão de datacenter desde julho/2026.</p>
+      A apuração roda sozinha em sete horários (18h20, 21h30 e de 8h30 às 9h30),
+      e também pelo botão em Actions &rarr; Fechar o dia. Ela recusa apurar duas
+      vezes o mesmo pregão, então tentar de novo não estraga nada.
+      <b>O terminal de cotação precisa estar aberto durante o pregão</b> — sem
+      ele não chega preço e o dia fica pendente.</p>
   </div>
 
   <details class="card" style="margin-bottom:16px" open>
@@ -2711,17 +2712,17 @@ async function telaTiroCurto(){
       muda enquanto o pregão corre e só vira ponto no fechamento.</p>
     <table><tbody>${aoVivo.map(t=>`<tr>
       <td class="mono" style="font-weight:500">${esc(t.ativo)}${t.r==null
-        ? `<div style="font-size:10.5px;color:var(--baixa);margin-top:2px;
-             text-transform:none;letter-spacing:0">sem cotação — não vai pontuar</div>` : ""}</td>
+        ? `<div style="font-size:10.5px;color:var(--graf);margin-top:2px;
+             text-transform:none;letter-spacing:0">sem cotação agora</div>` : ""}</td>
       <td class="${t.direcao==="V"?"baixa":"alta"}" style="font-size:12.5px">
         ${t.direcao==="V"?"venda":"compra"}</td>
       <td class="d mono ${t.r==null?"nulo":cor(t.r)}" style="font-size:15px">
         ${t.r==null?"—":pct(t.r)}</td></tr>`).join("")}
     </tbody></table>
-    ${aoVivo.some(t=>t.r==null)?`<p style="font-size:11.5px;color:var(--baixa);margin:9px 0 0">
-      Não houve cotação de ${aoVivo.filter(t=>t.r==null).map(t=>esc(t.ativo)).join(", ")} hoje.
-      Sem preço não há como apurar, então esse tiro não entra no placar.${
-        eu?.admin ? " Acrescente o papel ao Observador do Mercado (Ctrl+U)." : ""}</p>`:""}
+    ${aoVivo.some(t=>t.r==null)?`<p style="font-size:11.5px;color:var(--graf);margin:9px 0 0">
+      Sem cotação ao vivo de ${aoVivo.filter(t=>t.r==null).map(t=>esc(t.ativo)).join(", ")}
+      no momento. <b>Isso não afeta a apuração</b>: o resultado é calculado no
+      fechamento, pelo pregão do dia.</p>`:""}
   </div>` : ""}
 
   <div class="grid2">
@@ -2864,13 +2865,13 @@ async function telaTiroCurto(){
         .eq("data", prox).eq("ativo", a).eq("direcao", $("#apDir").value);
       bt.disabled=false; bt.textContent="Registrar tiro";
       return $("#erro").innerHTML = aviso(
-        `A corretora não tem ${a} com esse código, então o robô não consegue cotar. `
-        + `O tiro foi desfeito — sem cotação ele nunca seria apurado.`, true);
+        `Não conseguimos cotar ${a} — o código pode estar errado ou o papel pode `
+        + `não estar mais em negociação. O tiro foi desfeito.`, true);
     }
     if(estado === "pendente"){
       $("#erro").innerHTML = aviso(
-        `${a} foi registrado, mas a cotação ainda não foi confirmada. `
-        + `Confira esta tela em alguns minutos.`);
+        `${a} foi registrado. A cotação dele ainda não chegou — confira esta `
+        + `tela em alguns minutos.`);
     }
     telaTiroCurto();
   };
@@ -3133,8 +3134,13 @@ async function telaScreening(){
     const v = x.serie || [], m72 = x.serie72 || [];
     if(v.length < 5) return "";
     const W = 108, H = 30, P = 2;
+    // A média de 72 vem NULA nos pregões em que ainda não existia. Só
+    // desenhamos o trecho definido — e ele só entra na escala se houver.
+    const i72 = m72.findIndex(n => n != null);
+    const tem72 = i72 >= 0 && m72.length === v.length;
+    const val72 = tem72 ? m72.slice(i72).filter(n => n != null) : [];
     const alvos = [x.ema17, x.ema34, x.ema72].filter(m => m != null);
-    const lo = Math.min(...v, ...m72, ...alvos), hi = Math.max(...v, ...m72, ...alvos);
+    const lo = Math.min(...v, ...val72, ...alvos), hi = Math.max(...v, ...val72, ...alvos);
     const f = (hi - lo) || 1;
     const px = i => P + (W - 2*P - 11) * i / (v.length - 1);
     const py = n => P + (H - 2*P) * (1 - (n - lo) / f);
@@ -3145,8 +3151,9 @@ async function telaScreening(){
     const cCor = tomDe(x.e) === "alta" ? "var(--alta)"
                : tomDe(x.e) === "baixa" ? "var(--baixa)" : "var(--t2)";
     return `<svg viewBox="0 0 ${W} ${H}" style="width:108px;height:30px;display:block">
-      ${m72.length === v.length
-        ? `<path d="${cam(m72)}" fill="none" stroke="var(--lacre)" stroke-width="1" opacity=".75"/>` : ""}
+      ${tem72 ? `<path d="${m72.map((n,i) => n == null ? ""
+          : `${i === i72 ? "M" : "L"}${px(i).toFixed(1)},${py(n).toFixed(1)}`).join("")}"
+        fill="none" stroke="var(--lacre)" stroke-width="1" opacity=".8"/>` : ""}
       <path d="${cam(v)}" fill="none" stroke="${cCor}" stroke-width="1.4"/>
       <circle cx="${px(v.length-1).toFixed(1)}" cy="${py(v[v.length-1]).toFixed(1)}"
         r="2" fill="${cCor}"/>
@@ -3197,8 +3204,8 @@ async function telaScreening(){
         : ""}</p></div>`
   : `<table><thead><tr><th>Papel</th><th>Estado</th>
       <th class="d">Fechamento</th><th class="d">Vs. média longa</th>
-      <th class="d" style="white-space:nowrap">17 · 34 · 72</th>
-      <th class="d" style="width:118px">60 pregões</th>
+      <th class="d" style="white-space:nowrap;padding-right:18px">17 · 34 · 72</th>
+      <th class="d" style="width:126px;padding-left:14px">60 pregões</th>
       <th class="d">Negócio/dia</th></tr></thead><tbody>
     ${l.map(x=>`<tr>
       <td class="mono" style="font-weight:500">${esc(x.ativo)}</td>
@@ -3206,13 +3213,13 @@ async function telaScreening(){
       <td class="d mono">${n2(x.fech)}</td>
       <td class="d mono ${x.forca==null?"nulo":cor(x.forca)}"><b>${
         x.forca==null?"—":pct(x.forca)}</b></td>
-      <td class="d mono" style="font-size:11px;line-height:1.35;white-space:nowrap">
+      <td class="d mono" style="font-size:11.5px;white-space:nowrap;padding-right:18px">
         <span style="color:var(--tinta)">${n2(x.ema17)}</span>
         <span style="color:var(--linha2)">·</span>
         <span style="color:var(--graf)">${n2(x.ema34)}</span>
         <span style="color:var(--linha2)">·</span>
         <span style="color:var(--ouro2)">${x.ema72==null?"—":n2(x.ema72)}</span></td>
-      <td style="padding:6px 0"><div style="margin-left:auto;width:108px">${risco(x)}</div></td>
+      <td style="padding:6px 0 6px 14px"><div style="margin-left:auto;width:108px">${risco(x)}</div></td>
       <td class="d mono nulo" style="font-size:12px">${grana(x.liquidez)}</td></tr>`).join("")}
     </tbody></table>`}
 
