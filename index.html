@@ -2985,30 +2985,72 @@ async function telaScreening(){
   const filtro = q.get("t") || "todos";
   const busca  = (q.get("q") || "").toUpperCase();
 
-  // Duas perguntas, nao uma. O CRUZAMENTO das medias diz a direcao; a
-  // posicao do PRECO em relacao a elas diz a forca.
+  // ── OITO ESTADOS ────────────────────────────────────────────────
+  // A ordem das tres medias diz em que FASE o papel esta; a posicao do
+  // PRECO diz se ele empurra o movimento ou descansa dentro dele.
+  // Da alta mais forte para a baixa mais forte:
   //
-  //   médias em alta + preço acima das duas  → alta forte
-  //   médias em alta + preço entre elas      → alta
-  //   médias em alta + preço abaixo das duas → alta fraca (perdendo fôlego)
+  //   17>34>72  preco>17   fortissima alta
+  //   17>34>72  preco<17   realizando na alta
+  //   17>72>34             sem tendência (só a de 17 cruzou a longa)
+  //   17<34, ambas>72, preco>72   possivel saida da alta
+  //   17<34, ambas>72, preco<72   saindo da alta, indefinido
+  //   17>34, ambas<72, preco<72   possivel saida da baixa
+  //   17>34, ambas<72, preco>72   saindo da baixa, indefinido
+  //   34>72>17             sem tendência (espelho do de cima)
+  //   17<34<72  preco>17   realizando na baixa
+  //   17<34<72  preco<17   fortissima baixa
   //
-  // e o espelho para baixa. Nao ha estado lateral: com as medias coladas
-  // o papel ainda esta de um lado, so que por pouco — e a forca ja conta
-  // essa historia melhor do que um rotulo de "sem tendencia" contava.
-  const classificar = x => {
-    const alta = x.ema17 >= x.ema34;
-    const teto = Math.max(x.ema17, x.ema34), piso = Math.min(x.ema17, x.ema34);
-    const onde = x.fech > teto ? 1 : x.fech < piso ? -1 : 0;
-    if(alta)  return onde === 1 ? "alta_forte"  : onde === 0 ? "alta"  : "alta_fraca";
-    return           onde === -1 ? "baixa_forte" : onde === 0 ? "baixa" : "baixa_fraca";
+  // Os dois estados do meio nao estavam na lista original mas EXISTEM:
+  // so a media de 17 atravessou a de 72 e a de 34 nao acompanhou. Nao da
+  // para dizer direcao — sao SEM TENDENCIA, nao uma virada confirmada.
+  // Sem eles o papel cairia num balde errado, calado.
+  const estadoDe = x => {
+    const a = x.ema17, b = x.ema34, c = x.ema72, p = x.fech;
+    if(c == null) return a >= b ? "alta_sem" : "baixa_sem";
+    if(a >= b && b >= c) return p >= a ? "alta_max"  : "alta_realiza";
+    if(a <  b && b <  c) return p <= a ? "baixa_max" : "baixa_realiza";
+    if(a <  b && a >= c && b >= c) return p >= c ? "saida_alta"  : "saida_alta_ind";
+    if(a >= b && a <  c && b <  c) return p <= c ? "saida_baixa" : "saida_baixa_ind";
+    if(a >= c && b <  c) return "indef_alta";      // 17 > 72 > 34
+    return "indef_baixa";                           // 34 > 72 > 17
   };
-  // A media de 72 e a MARE. As de 17 e 34 dizem para onde o papel vai
-  // agora; a de 72 diz se isso e a favor ou contra o movimento maior.
-  // Um repique dentro de uma queda de tres meses e outra coisa que uma
-  // alta que ja dura tres meses — e ate aqui as duas apareciam iguais.
-  const mare = x => x.ema72 == null ? null : (x.ema34 >= x.ema72 ? "alta" : "baixa");
+
+  // Escala continua: 0 e a alta mais forte, 9 a baixa mais forte. Assim
+  // "por estado" ordena de verdade, em vez de agrupar por nome.
+  // Os indefinidos ficam no MEIO da escala, entre a alta e a baixa: eles
+  // nao sao um degrau da tendencia, sao a ausencia dela.
+  const GRAU = { alta_max:0, alta_realiza:1, saida_alta:2, saida_alta_ind:3,
+                 alta_sem:3.5, indef_alta:4.5, indef_baixa:5.5, baixa_sem:6.5,
+                 saida_baixa_ind:7, saida_baixa:8, baixa_realiza:9, baixa_max:10 };
+
+  const ROT = {
+    alta_max:"fortíssima alta",         alta_realiza:"realizando na alta",
+    indef_alta:"sem tendência",         saida_alta:"possível saída da alta",
+    saida_alta_ind:"saindo da alta · indefinido",
+    saida_baixa:"possível saída da baixa",
+    saida_baixa_ind:"saindo da baixa · indefinido",
+    indef_baixa:"sem tendência",
+    baixa_realiza:"realizando na baixa", baixa_max:"fortíssima baixa",
+    alta_sem:"alta · sem a de 72",      baixa_sem:"baixa · sem a de 72" };
+
+  // Verde nos estados de alta, vermelho nos de baixa, neutro nas
+  // transicoes — que e justamente onde nao da para afirmar nada.
+  const TOM = { alta_max:"alta", alta_realiza:"alta", alta_sem:"alta",
+                baixa_max:"baixa", baixa_realiza:"baixa", baixa_sem:"baixa" };
+  const tomDe = e => TOM[e] || "nulo";
+
+  // Quatro abas, nao dez botoes.
+  const GRUPO = { alta_max:"alta", alta_realiza:"alta", alta_sem:"alta",
+                  saida_alta:"saindo_alta", saida_alta_ind:"saindo_alta",
+                  baixa_max:"baixa", baixa_realiza:"baixa", baixa_sem:"baixa",
+                  saida_baixa:"saindo_baixa", saida_baixa_ind:"saindo_baixa",
+                  indef_alta:"indefinido", indef_baixa:"indefinido" };
+
   const ordem = q.get("o") || "liq";
-  const soLiq = q.get("liq") !== "0";
+  // Desligado por padrão: esconder papel sem avisar é decidir pela
+  // pessoa. Quem não quer ver os de pouco negócio marca a caixa.
+  const soLiq = q.get("liq") === "1";
 
   let l = (data||[]).map(x => ({ ...x, e: estadoDe(x) }));
   // Onde o preco esta em relacao a media longa: e a forca do movimento.
@@ -3021,29 +3063,28 @@ async function telaScreening(){
   const foraDoCorte = (data||[]).filter(x => x.liquidez != null && x.liquidez < LIQ_MIN).length;
   if(soLiq) l = l.filter(x => x.liquidez == null || x.liquidez >= LIQ_MIN);
 
-  const conta = { todos: l.length,
-    alta_firme:  l.filter(x=>x.e==="alta_firme").length,
-    repique:     l.filter(x=>x.e==="repique").length,
-    correcao:    l.filter(x=>x.e==="correcao").length,
-    baixa_firme: l.filter(x=>x.e==="baixa_firme").length };
+  const conta = { todos: l.length };
+  ["alta","saindo_alta","indefinido","saindo_baixa","baixa"].forEach(g =>
+    conta[g] = l.filter(x => GRUPO[x.e] === g).length);
 
-  if(filtro !== "todos") l = l.filter(x => x.e === filtro);
+  if(filtro !== "todos") l = l.filter(x => GRUPO[x.e] === filtro);
   if(busca) l = l.filter(x => x.ativo.includes(busca));
 
   // O padrao e LIQUIDEZ. Ordenar por distancia entre as medias punha na
   // frente o papel mais esticado, que costuma ser o de menos negocio.
   const ordenar = {
-    liq:   (a,b) => (b.liquidez ?? 0) - (a.liquidez ?? 0),
-    forca: (a,b) => (b.forca ?? -9) - (a.forca ?? -9),
-    dist:  (a,b) => b.dist - a.dist,
-    amp:   (a,b) => b.amplitude - a.amplitude,
-    cod:   (a,b) => a.ativo.localeCompare(b.ativo),
+    liq:    (a,b) => (b.liquidez ?? 0) - (a.liquidez ?? 0),
+    estado: (a,b) => GRAU[a.e] - GRAU[b.e] || (b.liquidez ?? 0) - (a.liquidez ?? 0),
+    forca:  (a,b) => (b.forca ?? -9) - (a.forca ?? -9),
+    dist:   (a,b) => b.dist - a.dist,
+    amp:    (a,b) => b.amplitude - a.amplitude,
+    cod:    (a,b) => a.ativo.localeCompare(b.ativo),
   }[ordem] || ((a,b) => (b.liquidez ?? 0) - (a.liquidez ?? 0));
   l.sort(ordenar);
 
   const link = (o={}) => {
-    const a = { t:filtro, o:ordem, q:busca, liq:soLiq?"":"0", ...o };
-    const p = Object.entries(a).filter(([,v]) => v && v !== "todos" && !(a.liq==="" && v===""))
+    const a = { t:filtro, o:ordem, q:busca, liq:soLiq?"1":"", ...o };
+    const p = Object.entries(a).filter(([,v]) => v && v !== "todos")
       .map(([k,v]) => `${k}=${encodeURIComponent(v)}`);
     return "#/screening" + (p.length ? "?" + p.join("&") : "?t=todos");
   };
@@ -3052,31 +3093,63 @@ async function telaScreening(){
     : v >= 1e6 ? n2(v/1e6,0) + " mi"
     : n2(v/1e3,0) + " mil";
 
+  // Mini gráfico: o caminho do preço nos últimos 60 pregões, com as três
+  // médias marcadas onde estão AGORA. Não desenha as médias inteiras de
+  // propósito — três curvas em 100 pixels viram borrão, e o que importa
+  // aqui é ver onde o preço está em relação a elas.
+  const risco = x => {
+    const v = x.serie || [];
+    if(v.length < 5) return "";
+    const W = 108, H = 30, P = 2;
+    const alvos = [x.ema17, x.ema34, x.ema72].filter(m => m != null);
+    const lo = Math.min(...v, ...alvos), hi = Math.max(...v, ...alvos);
+    const f = (hi - lo) || 1;
+    const px = i => P + (W - 2*P) * i / (v.length - 1);
+    const py = n => P + (H - 2*P) * (1 - (n - lo) / f);
+    const linha = v.map((n,i) => `${i?"L":"M"}${px(i).toFixed(1)},${py(n).toFixed(1)}`).join("");
+    const marca = (m, c) => m == null ? "" :
+      `<line x1="${W-14}" x2="${W-P}" y1="${py(m).toFixed(1)}" y2="${py(m).toFixed(1)}"
+        stroke="${c}" stroke-width="1.4" opacity=".9"/>`;
+    const cCor = tomDe(x.e) === "alta" ? "var(--alta)"
+               : tomDe(x.e) === "baixa" ? "var(--baixa)" : "var(--t2)";
+    return `<svg viewBox="0 0 ${W} ${H}" style="width:108px;height:30px;display:block">
+      ${marca(x.ema72, "var(--lacre)")}
+      ${marca(x.ema34, "var(--graf)")}
+      ${marca(x.ema17, "var(--t2)")}
+      <path d="${linha}" fill="none" stroke="${cCor}" stroke-width="1.3"/>
+      <circle cx="${px(v.length-1).toFixed(1)}" cy="${py(v[v.length-1]).toFixed(1)}"
+        r="1.9" fill="${cCor}"/>
+    </svg>`;
+  };
+
   app().innerHTML = `
   <h1 style="font-size:27px;margin:28px 0 4px">Screening</h1>
   <p style="color:var(--t2);max-width:62ch;margin-bottom:2px;font-size:13.5px">
-    Onde cada papel está em relação às próprias médias — de <b>17</b> e <b>34</b>
-    pregões para o curto prazo, de <b>72</b> para o movimento de fundo.
+    Em que fase da tendência cada papel está, pela ordem das médias de
+    <b>17</b>, <b>34</b> e <b>72</b> pregões e pela posição do preço entre elas.
     É medida, não recomendação.</p>
 
   <div class="abas">
-    ${[["todos","Todos"],["alta_firme","Alta firme"],["repique","Repique"],
-       ["correcao","Correção"],["baixa_firme","Baixa firme"]]
+    ${[["todos","Todos"],["alta","Em alta"],["saindo_alta","Saindo da alta"],
+       ["indefinido","Sem tendência"],["saindo_baixa","Saindo da baixa"],["baixa","Em baixa"]]
       .map(([k,r])=>`<a href="${link({t:k})}" class="aba${filtro===k?" on":""}">${r}<span class="n">${conta[k]??0}</span></a>`).join("")}
   </div>
 
   <div class="ordena">
     <span class="rot">ordenar por</span>
     <select id="selO" class="selOrdem">
-      ${[["liq","Mais negociados"],["forca","Mais acima da média longa"],
+      ${[["liq","Mais negociados"],["estado","Da alta mais forte à baixa mais forte"],
+         ["forca","Mais acima da média longa"],
          ["dist","Médias mais afastadas"],["amp","Mais oscilam por dia"],["cod","Código"]]
         .map(([k,r])=>`<option value="${k}"${ordem===k?" selected":""}>${r}</option>`).join("")}
     </select>
     <input id="qBusca" placeholder="filtrar por código" value="${esc(busca)}"
       style="width:160px;margin:0;padding:7px 11px;font-size:13px;text-transform:uppercase">
     <span class="divisor"></span>
-    <a href="${link({liq:soLiq?"0":""})}" style="font-size:12px;color:${soLiq?"var(--ouro2)":"var(--graf)"}">
-      ${soLiq?"✓ ":""}só os que negociam</a>
+    <a href="${link({liq:soLiq?"":"1"})}" style="font-size:12px;color:${soLiq?"var(--ouro2)":"var(--graf)"}"
+      title="esconde quem negocia menos de R$ 1 milhão por dia">
+      ${soLiq?"☑":"☐"} esconder os de pouco negócio${
+        foraDoCorte?` <span style="color:var(--graf)">(${foraDoCorte})</span>`:""}</a>
     <span style="font-size:11.5px;color:var(--graf);margin-left:auto">
       ${l.length} ${l.length===1?"papel":"papéis"}</span>
   </div>
@@ -3087,16 +3160,16 @@ async function telaScreening(){
         : ""}</p></div>`
   : `<table><thead><tr><th>Papel</th><th>Estado</th>
       <th class="d">Fechamento</th><th class="d">Vs. média longa</th>
-      <th class="d">17 × 34</th><th class="d">Oscila/dia</th>
+      <th class="d">17 × 34</th><th style="width:112px">60 pregões</th>
       <th class="d">Negócio/dia</th></tr></thead><tbody>
     ${l.map(x=>`<tr>
       <td class="mono" style="font-weight:500">${esc(x.ativo)}</td>
-      <td style="font-size:12.5px" class="${SOBE(x.e)?"alta":"baixa"}">${ROT[x.e]}</td>
+      <td style="font-size:12.5px" class="${tomDe(x.e)}">${ROT[x.e]}</td>
       <td class="d mono">${n2(x.fech)}</td>
       <td class="d mono ${x.forca==null?"nulo":cor(x.forca)}"><b>${
         x.forca==null?"—":pct(x.forca)}</b></td>
       <td class="d mono ${cor(x.dist)}" style="font-size:12px">${pct(x.dist)}</td>
-      <td class="d mono nulo" style="font-size:12px">${n2(x.amplitude*100,1)}%</td>
+      <td style="padding:6px 0">${risco(x)}</td>
       <td class="d mono nulo" style="font-size:12px">${grana(x.liquidez)}</td></tr>`).join("")}
     </tbody></table>`}
 
@@ -3104,20 +3177,29 @@ async function telaScreening(){
     <div style="font-size:10px;letter-spacing:.13em;text-transform:uppercase;
       color:var(--graf);margin-bottom:9px">Como ler</div>
     <div class="passos" style="margin:0">
-      <div class="passo"><h4 style="margin-top:0">Alta firme e baixa firme</h4>
-        <p>Curto e longo apontam para o mesmo lado. É o movimento instalado.</p></div>
-      <div class="passo"><h4 style="margin-top:0">Repique</h4>
-        <p>Sobe no curto prazo, mas o movimento de fundo ainda é de queda.</p></div>
-      <div class="passo"><h4 style="margin-top:0">Correção</h4>
-        <p>Cai no curto prazo dentro de um movimento de fundo de alta.</p></div>
+      <div class="passo"><h4 style="margin-top:0">Em alta · em baixa</h4>
+        <p>As três médias empilhadas na mesma direção. Se o preço estiver
+          além da média de 17, a tendência é <b>fortíssima</b>; se estiver
+          aquém, o papel está <b>realizando</b> dentro dela.</p></div>
+      <div class="passo"><h4 style="margin-top:0">Saindo</h4>
+        <p>As curtas se cruzaram mas as duas ainda estão do mesmo lado da de
+          72. Com o preço ainda do lado da tendência, é <b>possível saída</b>;
+          com o preço já do outro lado, <b>indefinido</b>.</p></div>
+      <div class="passo"><h4 style="margin-top:0">Sem tendência</h4>
+        <p>Só a média de 17 atravessou a de 72 e a de 34 não acompanhou.
+          As três apontam para lados diferentes: não há direção a afirmar.</p></div>
     </div>
     <p style="font-size:11.5px;color:var(--graf);margin:12px 0 0;max-width:74ch">
-      <b>Vs. média longa</b> é quanto o preço está acima ou abaixo da média de 72 —
-      é a força do movimento. <b>17 × 34</b> é a distância entre as duas médias
-      curtas. <b>Oscila/dia</b> é a amplitude média, a mesma que define stop e alvo
-      no Tiro curto.${foraDoCorte && soLiq ? ` ${foraDoCorte} papéis de pouco
-      negócio estão fora da lista: neles a média descola por um pulo isolado e o
-      número engana.` : ""}</p>
+      <b>Vs. média longa</b> é quanto o preço está acima ou abaixo da média de 72.
+      <b>17 × 34</b> é a distância entre as duas médias curtas.
+      No gráfico, a linha é o preço dos últimos 60 pregões e os três traços à
+      direita são onde estão as médias hoje —
+      <span style="color:var(--t2)">17</span>,
+      <span style="color:var(--graf)">34</span> e
+      <span style="color:var(--lacre)">72</span>.
+      ${soLiq ? `${foraDoCorte} papéis que negociam menos de R$ 1 milhão por dia
+        estão escondidos: neles a média descola por um pulo isolado e o número
+        engana.` : ""}</p>
   </div>`;
 
   const so = $("#selO");
