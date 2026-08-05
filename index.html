@@ -48,7 +48,7 @@ button{cursor:pointer;border:none;background:none;color:inherit}
 /* topo */
 header{border-bottom:1px solid var(--linha);background:linear-gradient(180deg,#0C1425,#0A1120)}
 
-nav{display:flex;align-items:center;gap:30px;padding:20px 0;flex-wrap:wrap}
+nav{display:flex;align-items:center;gap:22px;padding:16px 0;flex-wrap:wrap}
 nav .marca{font-family:Newsreader,serif;font-weight:500;font-size:21px;letter-spacing:-.02em;color:var(--tinta)}
 nav a,nav button.lnk{font-size:13px;color:var(--t2);background:none;transition:color .15s}
 nav a:hover,nav button.lnk:hover{color:var(--ouro2)}
@@ -56,12 +56,13 @@ nav .marca:hover{color:var(--tinta)}
 /* align-self era flex-end e jogava apelido, indicar e admin para a
    LINHA DE BAIXO, porque os blocos ficaram com duas linhas depois das
    etiquetas. Centralizado, tudo volta a ficar na mesma altura. */
-nav .dir{margin-left:auto;display:flex;gap:14px;align-items:center;font-size:13px;align-self:center}
-nav .divisor{align-self:stretch;margin:4px 0}
-nav .bloco{display:flex;flex-direction:column;gap:1px}
-nav .bloco .itens{display:flex;gap:16px;align-items:center}
-nav .rot{font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;
-  color:var(--graf);opacity:.75;line-height:1.4}
+nav .dir{margin-left:auto;display:flex;gap:12px;align-items:center;font-size:13px}
+/* As etiquetas ficavam EM CIMA dos links e a barra virava dois andares,
+   com o bloco da conta boiando sozinho na direita. Uma linha só, com
+   fios finos separando os grupos — que é o que a etiqueta fazia. */
+nav .bloco{display:flex;gap:15px;align-items:center}
+nav .divisor{height:14px}
+nav .rot{display:none}
 .pill{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;padding:3px 9px;
   border:1px solid var(--lacre);color:var(--ouro2);border-radius:99px;background:var(--ouro-fraco)}
 
@@ -158,7 +159,7 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
    listado. Lado a lado, em três grupos, viravam sete opções soltas
    competindo entre si. Agora a classe é aba (nível de cima) e a
    ordem é uma linha só, com divisória entre período e qualidade. */
-.abas{display:flex;gap:2px;flex-wrap:wrap;margin:18px 0 0;
+.abas{display:flex;gap:2px;flex-wrap:wrap;margin:20px 0 0;
   border-bottom:1px solid var(--linha)}
 .aba{padding:9px 15px;font-size:13px;color:var(--t2);border:1px solid transparent;
   border-bottom:none;border-radius:4px 4px 0 0;margin-bottom:-1px;transition:.15s;white-space:nowrap}
@@ -168,7 +169,9 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
 .aba .n{font-family:'IBM Plex Mono';font-size:10.5px;color:var(--graf);margin-left:5px}
 .aba.on .n{color:var(--lacre)}
 
-.ordena{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:13px 0 4px}
+.ordena{display:flex;gap:12px;align-items:center;flex-wrap:wrap;
+  padding:11px 14px;margin-top:-1px;background:var(--p2);
+  border:1px solid var(--linha);border-top:none;border-radius:0 0 4px 4px}
 .selOrdem{width:auto;min-width:190px;margin:0;padding:7px 11px;font-size:13px;
   background:var(--p2);border-color:var(--linha2);cursor:pointer}
 .selOrdem:hover{border-color:var(--graf)}
@@ -206,6 +209,14 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
 .qa summary::before{content:"+";color:var(--lacre);margin-right:9px;font-family:'IBM Plex Mono'}
 .qa[open] summary::before{content:"−"}
 .qa p{font-size:12.5px;color:var(--t2);margin:9px 0 0 21px;max-width:62ch;line-height:1.6}
+
+/* Abertura de página: título e uma linha de apoio, com respiro embaixo
+   e um fio separando dos controles. Sem isso o texto ficava pendurado à
+   esquerda de um vazio e a página parecia um mural. */
+.cabeca{padding:30px 0 0;margin-bottom:2px}
+.cabeca h1{font-size:26px;line-height:1.16;margin:0 0 7px}
+.cabeca p{color:var(--t2);font-size:13.5px;line-height:1.55;margin:0;max-width:60ch}
+.cabeca .apoio{font-size:11.5px;color:var(--graf);margin-top:7px}
 
 /* menu da conta: apelido, indicar, admin e sair viravam quatro links
    soltos na barra, e com as etiquetas dos blocos eles caiam para a
@@ -294,14 +305,11 @@ Nada aqui é recomendação — cada carteira é anotação pessoal de quem publ
 
 <header><div class="w"><nav>
   <a href="#/" class="marca" style="margin-right:8px">Saldo Positivo</a>
-  <span class="bloco"><span class="rot">carteiras</span>
-    <span class="itens"><a href="#/">Ranking</a><a href="#/screening">Screening</a><span id="navPub"></span></span></span>
+  <span class="bloco"><a href="#/">Ranking</a><a href="#/screening">Screening</a><span id="navPub"></span></span>
   <span class="divisor"></span>
-  <span class="bloco"><span class="rot">diversão</span>
-    <span class="itens"><a href="#/tiro-curto">Tiro curto</a><a href="#/placar">Placar</a><a href="#/duelo">Duelo</a></span></span>
+  <span class="bloco"><a href="#/tiro-curto">Tiro curto</a><a href="#/placar">Placar</a><a href="#/duelo">Duelo</a></span>
   <span class="divisor"></span>
-  <span class="bloco"><span class="rot">o site</span>
-    <span class="itens"><a href="#/como-funciona">Como funciona</a></span></span>
+  <span class="bloco"><a href="#/como-funciona">Como funciona</a></span>
   <span class="dir" id="navDir"></span>
 </nav></div></header>
 
@@ -1152,11 +1160,10 @@ async function telaRanking(){
     || Date.parse(a.c.criada_em||"2100-01-01") - Date.parse(b.c.criada_em||"2100-01-01"));
 
   app().innerHTML = `
-  <div style="padding:22px 0 2px">
-    <h1 style="font-size:21px;line-height:1.25">O risco é público. O conteúdo é de quem assina.</h1>
-    <p style="max-width:66ch;color:var(--t2);font-size:12.5px;margin:5px 0 0">
-      Cada um publica quantas carteiras quiser. Rentabilidade, queda máxima e
-      alavancagem ficam abertas a todos. Os papéis e os pesos, não.</p>
+  <div class="cabeca">
+    <h1>Quem realmente tem consistência?</h1>
+    <p>Cada um publica quantas carteiras quiser e o site apura sozinho todo
+      pregão. Ninguém muda o passado depois — nem quem publicou.</p>
   </div>
   <div class="abas">
     <a href="#/?ordem=${ordem}" class="aba${!filtro?" on":""}">Todas<span class="n">${(cs||[]).length}</span></a>
@@ -1905,16 +1912,16 @@ async function telaDuelo(){
   const temDuelo = blocos.some(b => b.pares.length);
 
   app().innerHTML = `
-  <h1 style="font-size:27px;margin:30px 0 6px">Duelo do dia</h1>
-  <p style="color:var(--t2);max-width:58ch;margin-bottom:8px">
-    Dentro de cada classe: primeiro contra último, segundo contra penúltimo,
-    e assim por diante. Vale o retorno de hoje. Sem aposta — vale ponto.</p>
-  <p style="font-size:11.5px;color:var(--graf);max-width:58ch;margin:0 0 22px">
-    Classe contra classe não vale: num dia de alta a Comprada ganharia da
-    Vendida por definição, não por mérito.
-    ${quando?`Cotação de <b>${new Date(quando).toLocaleTimeString("pt-BR",
-      {hour:"2-digit",minute:"2-digit",timeZone:"America/Sao_Paulo"})}</b> —
-      o número marcado com • é parcial e muda até as 19h.`:""}</p>
+  <div class="cabeca" style="margin-bottom:20px">
+    <h1>Duelo do dia</h1>
+    <p>Dentro de cada classe: primeiro contra último, segundo contra
+      penúltimo. Vale o retorno de hoje, e os pares mudam todo dia.</p>
+    <div class="apoio">Classe contra classe não vale — num dia de alta a
+      Comprada ganharia da Vendida por definição, não por mérito.${
+      quando?` Cotação de <b>${new Date(quando).toLocaleTimeString("pt-BR",
+        {hour:"2-digit",minute:"2-digit",timeZone:"America/Sao_Paulo"})}</b>;
+        o número com • é parcial.`:""}</div>
+  </div>
 
   ${!temDuelo ? `<div class="card" style="text-align:center;padding:34px">
       Precisa de pelo menos duas carteiras na mesma classe para haver duelo.</div>`
@@ -2672,12 +2679,13 @@ async function telaTiroCurto(){
   }));
 
   app().innerHTML = `
-  <h1 style="font-size:31px;margin-bottom:6px">Tiro curto</h1>
-  <p style="color:var(--t2);max-width:62ch;margin-bottom:22px">
-    Escolha o papel e o lado para o pregão de <b>${prox}</b>. Você entra na
-    abertura e sai no stop, no alvo ou no fechamento — o que vier primeiro.
-    Até 10 papéis por pregão, e ninguém vê o seu tiro antes de o prazo
-    fechar.</p>
+  <div class="cabeca" style="margin-bottom:20px">
+    <h1>Tiro curto</h1>
+    <p>Sobe ou cai no pregão de <b>${dataBR(prox)}</b>? Entrada na abertura,
+      saída no stop, no alvo ou no fechamento — o que vier primeiro.</p>
+    <div class="apoio">Até 10 papéis por pregão. Ninguém vê o seu tiro antes
+      de o prazo fechar.</div>
+  </div>
 
   ${aoVivo.length ? `<div class="card" style="margin-bottom:18px;border-color:var(--linha2)">
     <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:4px">
@@ -2884,10 +2892,11 @@ async function telaPlacar(){
   const lugar = ["primeiro","segundo","terceiro"];
 
   app().innerHTML = `
-  <h1 style="font-size:27px;margin:28px 0 4px">Placar</h1>
-  <p style="color:var(--t2);max-width:58ch;margin-bottom:2px;font-size:13.5px">
-    Quem acerta a direção com mais frequência. Conta o <b>dia</b>, não o tiro:
-    entrar com dez papéis reduz a sorte, não aumenta a nota.</p>
+  <div class="cabeca">
+    <h1>Placar</h1>
+    <p>Quem acerta a direção com mais frequência. Conta o <b>dia</b>, não o
+      tiro: entrar com dez papéis reduz a sorte, não aumenta a nota.</p>
+  </div>
 
   ${lista.length ? `<div class="podio">
     ${lista.slice(0,3).map((x,i)=>`<div class="medalha${i===0?" um":""}">
@@ -3093,41 +3102,45 @@ async function telaScreening(){
     : v >= 1e6 ? n2(v/1e6,0) + " mi"
     : n2(v/1e3,0) + " mil";
 
-  // Mini gráfico: o caminho do preço nos últimos 60 pregões, com as três
-  // médias marcadas onde estão AGORA. Não desenha as médias inteiras de
-  // propósito — três curvas em 100 pixels viram borrão, e o que importa
-  // aqui é ver onde o preço está em relação a elas.
+  // Mini gráfico: preço dos últimos 60 pregões e a MÉDIA DE 72 como
+  // curva — é ela que define a fase, e o cruzamento das duas é o que a
+  // tabela está classificando. As de 17 e 34 entram como traços na ponta,
+  // não como curvas: três linhas em 120 pixels viram borrão e o número
+  // exato delas está na coluna ao lado.
   const risco = x => {
-    const v = x.serie || [];
+    const v = x.serie || [], m72 = x.serie72 || [];
     if(v.length < 5) return "";
-    const W = 108, H = 30, P = 2;
+    const W = 124, H = 34, P = 3;
     const alvos = [x.ema17, x.ema34, x.ema72].filter(m => m != null);
-    const lo = Math.min(...v, ...alvos), hi = Math.max(...v, ...alvos);
+    const lo = Math.min(...v, ...m72, ...alvos), hi = Math.max(...v, ...m72, ...alvos);
     const f = (hi - lo) || 1;
-    const px = i => P + (W - 2*P) * i / (v.length - 1);
+    const px = i => P + (W - 2*P - 11) * i / (v.length - 1);
     const py = n => P + (H - 2*P) * (1 - (n - lo) / f);
-    const linha = v.map((n,i) => `${i?"L":"M"}${px(i).toFixed(1)},${py(n).toFixed(1)}`).join("");
+    const cam = a => a.map((n,i) => `${i?"L":"M"}${px(i).toFixed(1)},${py(n).toFixed(1)}`).join("");
     const marca = (m, c) => m == null ? "" :
-      `<line x1="${W-14}" x2="${W-P}" y1="${py(m).toFixed(1)}" y2="${py(m).toFixed(1)}"
-        stroke="${c}" stroke-width="1.4" opacity=".9"/>`;
+      `<line x1="${W-11}" x2="${W-P}" y1="${py(m).toFixed(1)}" y2="${py(m).toFixed(1)}"
+        stroke="${c}" stroke-width="1.5"/>`;
     const cCor = tomDe(x.e) === "alta" ? "var(--alta)"
                : tomDe(x.e) === "baixa" ? "var(--baixa)" : "var(--t2)";
-    return `<svg viewBox="0 0 ${W} ${H}" style="width:108px;height:30px;display:block">
-      ${marca(x.ema72, "var(--lacre)")}
-      ${marca(x.ema34, "var(--graf)")}
-      ${marca(x.ema17, "var(--t2)")}
-      <path d="${linha}" fill="none" stroke="${cCor}" stroke-width="1.3"/>
+    return `<svg viewBox="0 0 ${W} ${H}" style="width:124px;height:34px;display:block">
+      ${m72.length === v.length
+        ? `<path d="${cam(m72)}" fill="none" stroke="var(--lacre)" stroke-width="1" opacity=".75"/>` : ""}
+      <path d="${cam(v)}" fill="none" stroke="${cCor}" stroke-width="1.4"/>
       <circle cx="${px(v.length-1).toFixed(1)}" cy="${py(v[v.length-1]).toFixed(1)}"
-        r="1.9" fill="${cCor}"/>
+        r="2" fill="${cCor}"/>
+      ${marca(x.ema17, "var(--tinta)")}
+      ${marca(x.ema34, "var(--graf)")}
+      ${marca(x.ema72, "var(--lacre)")}
     </svg>`;
   };
 
   app().innerHTML = `
-  <h1 style="font-size:27px;margin:28px 0 4px">Screening</h1>
-  <p style="color:var(--t2);max-width:62ch;margin-bottom:2px;font-size:13.5px">
-    Em que fase da tendência cada papel está, pela ordem das médias de
-    <b>17</b>, <b>34</b> e <b>72</b> pregões e pela posição do preço entre elas.
-    É medida, não recomendação.</p>
+  <div class="cabeca">
+    <h1>Screening</h1>
+    <p>Em que fase da tendência cada papel está, pela ordem das médias de
+      <b>17</b>, <b>34</b> e <b>72</b> pregões e pela posição do preço entre elas.</p>
+    <div class="apoio">É medida, não recomendação.</div>
+  </div>
 
   <div class="abas">
     ${[["todos","Todos"],["alta","Em alta"],["saindo_alta","Saindo da alta"],
@@ -3160,7 +3173,8 @@ async function telaScreening(){
         : ""}</p></div>`
   : `<table><thead><tr><th>Papel</th><th>Estado</th>
       <th class="d">Fechamento</th><th class="d">Vs. média longa</th>
-      <th class="d">17 × 34</th><th style="width:112px">60 pregões</th>
+      <th class="d">17 · 34 · 72</th><th class="d">17 × 34</th>
+      <th style="width:128px">60 pregões</th>
       <th class="d">Negócio/dia</th></tr></thead><tbody>
     ${l.map(x=>`<tr>
       <td class="mono" style="font-weight:500">${esc(x.ativo)}</td>
@@ -3168,6 +3182,12 @@ async function telaScreening(){
       <td class="d mono">${n2(x.fech)}</td>
       <td class="d mono ${x.forca==null?"nulo":cor(x.forca)}"><b>${
         x.forca==null?"—":pct(x.forca)}</b></td>
+      <td class="d mono" style="font-size:11px;line-height:1.35;white-space:nowrap">
+        <span style="color:var(--tinta)">${n2(x.ema17)}</span>
+        <span style="color:var(--linha2)">·</span>
+        <span style="color:var(--graf)">${n2(x.ema34)}</span>
+        <span style="color:var(--linha2)">·</span>
+        <span style="color:var(--ouro2)">${x.ema72==null?"—":n2(x.ema72)}</span></td>
       <td class="d mono ${cor(x.dist)}" style="font-size:12px">${pct(x.dist)}</td>
       <td style="padding:6px 0">${risco(x)}</td>
       <td class="d mono nulo" style="font-size:12px">${grana(x.liquidez)}</td></tr>`).join("")}
@@ -3192,11 +3212,13 @@ async function telaScreening(){
     <p style="font-size:11.5px;color:var(--graf);margin:12px 0 0;max-width:74ch">
       <b>Vs. média longa</b> é quanto o preço está acima ou abaixo da média de 72.
       <b>17 × 34</b> é a distância entre as duas médias curtas.
-      No gráfico, a linha é o preço dos últimos 60 pregões e os três traços à
-      direita são onde estão as médias hoje —
-      <span style="color:var(--t2)">17</span>,
+      A coluna <b>17 · 34 · 72</b> traz as três médias em ordem, nas mesmas
+      cores do gráfico: <span style="color:var(--tinta)">17</span>,
       <span style="color:var(--graf)">34</span> e
-      <span style="color:var(--lacre)">72</span>.
+      <span style="color:var(--ouro2)">72</span>.
+      No gráfico, a linha colorida é o preço e a dourada é a média de 72 —
+      é o cruzamento das duas que define a fase. Os traços na ponta direita
+      marcam onde as três estão hoje.
       ${soLiq ? `${foraDoCorte} papéis que negociam menos de R$ 1 milhão por dia
         estão escondidos: neles a média descola por um pulo isolado e o número
         engana.` : ""}</p>
