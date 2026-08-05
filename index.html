@@ -60,9 +60,30 @@ nav .dir{margin-left:auto;display:flex;gap:12px;align-items:center;font-size:13p
 /* As etiquetas ficavam EM CIMA dos links e a barra virava dois andares,
    com o bloco da conta boiando sozinho na direita. Uma linha só, com
    fios finos separando os grupos — que é o que a etiqueta fazia. */
-nav .bloco{display:flex;gap:15px;align-items:center}
-nav .divisor{height:14px}
+/* O rotulo ficava NO MEIO da linha de links, entao cada grupo tinha o
+   seu proprio eixo e nada se alinhava com nada. Empilhado, todos os
+   rotulos caem numa base e todos os links noutra: duas linhas retas
+   atravessando o cabecalho. O fio nasce do proprio grupo, entao
+   acompanha a altura e nunca sobra. */
+nav .bloco{display:flex;gap:15px;align-items:baseline}
+nav .grupo{display:flex;flex-direction:column;gap:3px}
+nav .grupo+.grupo{margin-left:26px;padding-left:26px;border-left:1px solid var(--linha)}
+nav .rotg{font-size:8px;letter-spacing:.19em;text-transform:uppercase;color:var(--graf);opacity:.6}
+nav .divisor{display:none}
 nav .rot{display:none}
+@media(max-width:760px){nav .grupo+.grupo{margin-left:14px;padding-left:14px}}
+/* a linha de prova da abertura */
+.prova{display:inline-flex;flex-wrap:wrap;margin-top:22px;border:1px solid var(--linha2);
+  border-radius:3px;background:var(--p2);overflow:hidden}
+.prova .p{padding:9px 18px;border-right:1px solid var(--linha2);font-size:12px;
+  color:var(--t2);white-space:nowrap}
+.prova .p:last-child{border-right:none}
+.prova .n{font-family:var(--mono,'IBM Plex Mono',monospace);color:var(--tinta);
+  font-weight:500;font-size:13px;margin-right:5px}
+.prova .viva{color:var(--ouro2)}
+.prova .selo{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--lacre);
+  margin-right:7px;vertical-align:1px;box-shadow:0 0 6px rgba(201,162,39,.7)}
+
 .pill{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;padding:3px 9px;
   border:1px solid var(--lacre);color:var(--ouro2);border-radius:99px;background:var(--ouro-fraco)}
 
@@ -131,6 +152,30 @@ input[readonly]{color:var(--t2)}
    no CSS, entao o formulario e o painel de tiros ficavam empilhados. */
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
 @media(max-width:860px){.grid2{grid-template-columns:1fr}}
+
+/* ══ pontos de força: uma coluna por ponto ═══════════════════════════
+   Numa celula so, com os tres separados por ponto, o cabecalho nunca
+   cai em cima dos valores — larguras diferentes, so o ultimo encosta na
+   borda. Coluna por coluna o alinhamento sai de graca. */
+th.mA{padding-left:12px;width:64px}
+th.mA.m1{border-left:1px solid var(--linha)}
+th.mA.m3{color:var(--lacre)}
+td.mA{font-family:var(--mono,'IBM Plex Mono',monospace);font-variant-numeric:tabular-nums;
+  font-size:12px;text-align:right;padding-left:12px}
+td.mA.m1{border-left:1px solid var(--linha);color:var(--tinta)}
+td.mA.m2{color:var(--t2)}
+td.mA.m3{color:var(--ouro2)}
+
+/* o corte de liquidez como botao, nao como link solto no canto */
+.chaveL{display:inline-flex;align-items:center;gap:9px;background:var(--p2);
+  border:1px solid var(--linha2);border-radius:3px;padding:6px 12px;
+  font-size:12.5px;color:var(--t2);white-space:nowrap;text-decoration:none}
+.chaveL:hover{border-color:var(--linha2);color:var(--tinta)}
+.chaveL.on{border-color:var(--lacre);background:rgba(201,162,39,.12);color:var(--ouro2)}
+.chaveL .cx{width:14px;height:14px;border:1px solid var(--linha2);border-radius:2px;
+  display:flex;align-items:center;justify-content:center;font-size:10px;font-style:normal;flex:none}
+.chaveL.on .cx{border-color:var(--lacre)}
+.chaveL .n{font-family:'IBM Plex Mono',monospace;font-size:11px;opacity:.7}
 
 .barra{height:26px;display:flex;background:var(--papel);border:1px solid var(--linha2);border-radius:3px;overflow:hidden}
 .barra{position:relative}
@@ -316,12 +361,13 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
 Nada aqui é recomendação — cada carteira é anotação pessoal de quem publica.</div></div>
 
 <header><div class="w"><nav>
-  <a href="#/" class="marca" style="margin-right:8px">Saldo Positivo</a>
-  <span class="bloco"><a href="#/">Ranking</a><a href="#/screening">Screening</a><span id="navPub"></span></span>
-  <span class="divisor"></span>
-  <span class="bloco"><a href="#/tiro-curto">Tiro curto</a><a href="#/placar">Placar</a><a href="#/duelo">Duelo</a></span>
-  <span class="divisor"></span>
-  <span class="bloco"><a href="#/como-funciona">Como funciona</a></span>
+  <a href="#/" class="marca">Saldo Positivo</a>
+  <span class="grupo"><span class="rotg">Carteiras</span>
+    <span class="bloco"><a href="#/">Ranking</a><a href="#/screening">Screening</a><span id="navPub"></span></span></span>
+  <span class="grupo"><span class="rotg">Diversão</span>
+    <span class="bloco"><a href="#/tiro-curto">Tiro curto</a><a href="#/placar">Placar</a><a href="#/duelo">Duelo</a></span></span>
+  <span class="grupo"><span class="rotg">Ajuda</span>
+    <span class="bloco"><a href="#/como-funciona">Como funciona</a><a href="#/servicos">Serviços</a></span></span>
   <span class="dir" id="navDir"></span>
 </nav></div></header>
 
@@ -1171,11 +1217,27 @@ async function telaRanking(){
     || chaves[ordem](a)-chaves[ordem](b)
     || Date.parse(a.c.criada_em||"2100-01-01") - Date.parse(b.c.criada_em||"2100-01-01"));
 
+  // ⚠️ A abertura vende a DISPUTA, nao o regulamento. O que traz alguem
+  // para publicar e o podio; "ninguem reescreve" e regra, e regra fica
+  // no rodape. Os tres numeros embaixo sao PROVA: existem porque o robo
+  // fechou o pregao de verdade, coisa que promessa nenhuma consegue.
+  const maxPregoes = Math.max(0, ...(cs||[]).map(c => c.dias||0));
+  const ultimoFech = (cs||[]).map(c => c.ultimo_dia).filter(Boolean).sort().pop();
+
   app().innerHTML = `
   <div class="cabeca">
-    <h1>Quem realmente tem consistência?</h1>
-    <p>Cada um publica quantas carteiras quiser e o site apura sozinho todo
-      pregão. Ninguém muda o passado depois — nem quem publicou.</p>
+    <h1>Quem monta a melhor carteira do Brasil?</h1>
+    <p>${Object.values(CLASSE).map(v=>v.nome).join(", ")}: <b>cada estilo disputa o seu
+      próprio pódio</b>. Simule, estude e aprenda <b>num ambiente real, sem risco de
+      perda financeira</b>: veja quem está na frente, entenda como chegou lá e publique
+      a sua para entrar na disputa.</p>
+    <div class="prova">
+      <span class="p"><span class="n">${(cs||[]).length}</span>carteiras na disputa</span>
+      <span class="p"><span class="n">${maxPregoes}</span>${maxPregoes===1?"pregão apurado":"pregões apurados"}</span>
+      ${ultimoFech?`<span class="p viva"><span class="selo"></span>último fechamento
+        <span class="n" style="color:var(--ouro2)">${dataBR(ultimoFech)}</span></span>`:""}
+    </div>
+    <a href="#/publicar" class="bt lacre" style="margin-top:20px">Publicar a minha carteira &rarr;</a>
   </div>
   <div class="abas">
     <a href="#/?ordem=${ordem}" class="aba${!filtro?" on":""}">Todas<span class="n">${(cs||[]).length}</span></a>
@@ -3090,8 +3152,12 @@ async function telaScreening(){
 
   // ⚠️ Papel de pouco negocio distorce tudo: a media curta descola por um
   // pulo isolado e ele aparece em primeiro sem significar nada. Foi o que
-  // pos AZEV3 no topo. Corte de R$ 1 milhao de volume por dia.
-  const LIQ_MIN = 1000000;
+  // pos AZEV3 no topo. Corte de R$ 5 milhoes de volume por dia.
+  const LIQ_MIN = 5000000;
+  // ⚠️ O texto do corte sai do PROPRIO numero. Escrito a mao em tres
+  // lugares, um dia o corte muda e a tela promete o valor antigo — foi
+  // exatamente o que aconteceu com o CDI_ANO.
+  const LIQ_ROT = n2(LIQ_MIN/1e6, LIQ_MIN%1e6?1:0) + " MM/dia";
   const foraDoCorte = (data||[]).filter(x => x.liquidez != null && x.liquidez < LIQ_MIN).length;
   if(soLiq) l = l.filter(x => x.liquidez == null || x.liquidez >= LIQ_MIN);
 
@@ -3125,51 +3191,58 @@ async function telaScreening(){
     : v >= 1e6 ? n2(v/1e6,0) + " mi"
     : n2(v/1e3,0) + " mil";
 
-  // Mini gráfico: preço dos últimos 60 pregões e a MÉDIA DE 72 como
-  // curva — é ela que define a fase, e o cruzamento das duas é o que a
-  // tabela está classificando. As de 17 e 34 entram como traços na ponta,
-  // não como curvas: três linhas em 120 pixels viram borrão e o número
-  // exato delas está na coluna ao lado.
+  // Mini grafico: o PRECO dos ultimos 60 pregoes e o ponto FORTE como
+  // curva — e ele que define a fase. Os outros dois entram como tracos
+  // depois do fio, escalonados do mais firme para o mais recente: no
+  // mesmo x eles se cobrem justamente quando estao proximos, que e o
+  // caso em que a leitura importa. Escalonados, a ordem vira INCLINACAO
+  // — escada subindo e alta, descendo e baixa.
+  //
+  // ⚠️ Nao desenhar tracinho para o ponto forte: a curva dele ja esta
+  // ali, e onde ela encosta no fio e a posicao de hoje. Marcar duas
+  // vezes so rouba espaco dos outros dois.
   const risco = x => {
-    const v = x.serie || [], m72 = x.serie72 || [];
+    const v = x.serie || [], mF = x.serie72 || [];
     if(v.length < 5) return "";
-    const W = 108, H = 30, P = 2;
-    // A média de 72 vem NULA nos pregões em que ainda não existia. Só
-    // desenhamos o trecho definido — e ele só entra na escala se houver.
-    const i72 = m72.findIndex(n => n != null);
-    const tem72 = i72 >= 0 && m72.length === v.length;
-    const val72 = tem72 ? m72.slice(i72).filter(n => n != null) : [];
+    const W = 150, H = 36, P = 2, FAIXA = 26;
+    const fim = W - P - FAIXA;                 // o fio: aqui acaba o passado
+    // A curva longa vem NULA nos pregoes em que ainda nao existia. So
+    // desenhamos o trecho definido — e so ele entra na escala.
+    const iF = mF.findIndex(n => n != null);
+    const temF = iF >= 0 && mF.length === v.length;
+    const valF = temF ? mF.slice(iF).filter(n => n != null) : [];
     const alvos = [x.ema17, x.ema34, x.ema72].filter(m => m != null);
-    const lo = Math.min(...v, ...val72, ...alvos), hi = Math.max(...v, ...val72, ...alvos);
+    const lo = Math.min(...v, ...valF, ...alvos), hi = Math.max(...v, ...valF, ...alvos);
     const f = (hi - lo) || 1;
-    const px = i => P + (W - 2*P - 11) * i / (v.length - 1);
+    const px = i => P + (fim - P) * i / (v.length - 1);
     const py = n => P + (H - 2*P) * (1 - (n - lo) / f);
     const cam = a => a.map((n,i) => `${i?"L":"M"}${px(i).toFixed(1)},${py(n).toFixed(1)}`).join("");
-    const marca = (m, c) => m == null ? "" :
-      `<line x1="${W-11}" x2="${W-P}" y1="${py(m).toFixed(1)}" y2="${py(m).toFixed(1)}"
-        stroke="${c}" stroke-width="1.5"/>`;
     const cCor = tomDe(x.e) === "alta" ? "var(--alta)"
                : tomDe(x.e) === "baixa" ? "var(--baixa)" : "var(--t2)";
-    return `<svg viewBox="0 0 ${W} ${H}" style="width:108px;height:30px;display:block">
-      ${tem72 ? `<path d="${m72.map((n,i) => n == null ? ""
-          : `${i === i72 ? "M" : "L"}${px(i).toFixed(1)},${py(n).toFixed(1)}`).join("")}"
-        fill="none" stroke="var(--lacre)" stroke-width="1" opacity=".8"/>` : ""}
-      <path d="${cam(v)}" fill="none" stroke="${cCor}" stroke-width="1.4"/>
+    const L = 9, g = 2, x0 = fim + 5;
+    const tracos = [[x.ema34,"var(--graf)"],[x.ema17,"var(--tinta)"]]
+      .map(([m,c],k) => m == null ? "" : (()=>{ const xa = x0 + k*(L+g);
+        return `<line x1="${xa}" x2="${xa+L}" y1="${py(m).toFixed(1)}" y2="${py(m).toFixed(1)}"
+          stroke="${c}" stroke-width="1.8" stroke-linecap="round"/>`; })()).join("");
+    return `<svg viewBox="0 0 ${W} ${H}" style="width:${W}px;height:${H}px;display:block"
+      role="img" aria-label="${esc(x.ativo)}: preço e ponto forte em 60 pregões">
+      <line x1="${fim+2}" x2="${fim+2}" y1="1" y2="${H-1}" stroke="var(--linha)" stroke-width="1"/>
+      ${temF ? `<path d="${mF.map((n,i) => n == null ? ""
+          : `${i === iF ? "M" : "L"}${px(i).toFixed(1)},${py(n).toFixed(1)}`).join("")}"
+        fill="none" stroke="var(--lacre)" stroke-width="1.1" opacity=".9"/>` : ""}
+      <path d="${cam(v)}" fill="none" stroke="${cCor}" stroke-width="1.5"
+        stroke-linejoin="round" stroke-linecap="round"/>
       <circle cx="${px(v.length-1).toFixed(1)}" cy="${py(v[v.length-1]).toFixed(1)}"
         r="2" fill="${cCor}"/>
-      ${marca(x.ema17, "var(--tinta)")}
-      ${marca(x.ema34, "var(--graf)")}
-      ${marca(x.ema72, "var(--lacre)")}
-    </svg>`;
+      ${tracos}</svg>`;
   };
 
   app().innerHTML = `
   <div class="cabeca">
     <h1>Screening</h1>
-    <p>Em que fase da tendência cada papel está, pela ordem das médias de
-      <b>17</b>, <b>34</b> e <b>72</b> pregões e pela posição do preço entre elas.</p>
-    <div class="apoio">É medida, não recomendação — o site descreve onde o
-      preço está, não diz o que fazer.</div>
+    <p>Em que fase da tendência cada papel está, pela ordem de <b>três pontos de
+      força</b> — preços em torno dos quais o mercado mais intermediou negócio — e pela
+      posição do preço entre eles.</p>
   </div>
 
   <div class="abas">
@@ -3190,10 +3263,10 @@ async function telaScreening(){
     <input id="qBusca" placeholder="filtrar por código" value="${esc(busca)}"
       style="width:160px;margin:0;padding:7px 11px;font-size:13px;text-transform:uppercase">
     <span class="divisor"></span>
-    <a href="${link({liq:soLiq?"":"1"})}" style="font-size:12px;color:${soLiq?"var(--ouro2)":"var(--graf)"}"
-      title="esconde quem negocia menos de R$ 1 milhão por dia">
-      ${soLiq?"☑":"☐"} esconder os de pouco negócio${
-        foraDoCorte?` <span style="color:var(--graf)">(${foraDoCorte})</span>`:""}</a>
+    <a href="${link({liq:soLiq?"":"1"})}" class="chaveL${soLiq?" on":""}"
+      title="papel de pouco negócio tem ponto que descola por um pulo isolado">
+      <i class="cx">${soLiq?"✓":""}</i>Só acima ${LIQ_ROT}${
+        foraDoCorte?` <span class="n">−${foraDoCorte}</span>`:""}</a>
     <span style="font-size:11.5px;color:var(--graf);margin-left:auto">
       ${l.length} ${l.length===1?"papel":"papéis"}</span>
   </div>
@@ -3203,9 +3276,9 @@ async function telaScreening(){
         ? " O cálculo precisa de 34 pregões de histórico e o robô ainda não juntou tanto."
         : ""}</p></div>`
   : `<table><thead><tr><th>Papel</th><th>Estado</th>
-      <th class="d">Fechamento</th><th class="d">Vs. média longa</th>
-      <th class="d" style="white-space:nowrap;padding-right:18px">17 · 34 · 72</th>
-      <th class="d" style="width:126px;padding-left:14px">60 pregões</th>
+      <th class="d">Fechamento</th><th class="d">Vs. ponto forte</th>
+      <th class="d mA m1">Fraco</th><th class="d mA m2">Médio</th><th class="d mA m3">Forte</th>
+      <th class="d" style="width:166px;padding-left:14px">60 pregões</th>
       <th class="d">Negócio/dia</th></tr></thead><tbody>
     ${l.map(x=>`<tr>
       <td class="mono" style="font-weight:500">${esc(x.ativo)}</td>
@@ -3213,13 +3286,10 @@ async function telaScreening(){
       <td class="d mono">${n2(x.fech)}</td>
       <td class="d mono ${x.forca==null?"nulo":cor(x.forca)}"><b>${
         x.forca==null?"—":pct(x.forca)}</b></td>
-      <td class="d mono" style="font-size:11.5px;white-space:nowrap;padding-right:18px">
-        <span style="color:var(--tinta)">${n2(x.ema17)}</span>
-        <span style="color:var(--linha2)">·</span>
-        <span style="color:var(--graf)">${n2(x.ema34)}</span>
-        <span style="color:var(--linha2)">·</span>
-        <span style="color:var(--ouro2)">${x.ema72==null?"—":n2(x.ema72)}</span></td>
-      <td style="padding:6px 0 6px 14px"><div style="margin-left:auto;width:108px">${risco(x)}</div></td>
+      <td class="mA m1">${n2(x.ema17)}</td>
+      <td class="mA m2">${n2(x.ema34)}</td>
+      <td class="mA m3">${x.ema72==null?"—":n2(x.ema72)}</td>
+      <td style="padding:6px 0 6px 14px"><div style="margin-left:auto;width:150px">${risco(x)}</div></td>
       <td class="d mono nulo" style="font-size:12px">${grana(x.liquidez)}</td></tr>`).join("")}
     </tbody></table>`}
 
@@ -3249,7 +3319,7 @@ async function telaScreening(){
       <span style="color:var(--ouro2)">72</span>.
       No gráfico, a linha colorida é o preço e a dourada é a de 72; os traços
       à direita marcam onde as três estão hoje.
-      ${soLiq ? `${foraDoCorte} papéis que negociam menos de R$ 1 milhão por dia
+      ${soLiq ? `${foraDoCorte} papéis que negociam menos de ${LIQ_ROT}
         estão escondidos: neles a média descola por um pulo isolado e o número
         engana.` : ""}</p>
   </div>`;
