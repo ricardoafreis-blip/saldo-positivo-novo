@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict v18mTH1WdjRyYDfv3Feawd8ggxRymI5TSIr30SKWO0a8bDFPspu2m5GJJ0PPM3N
+\restrict XbDUPkfmwBLS2SoCnPnsg1ziJeRoWwl7i93yFgVpTfVOprhpT2orpPkZJlzT7mS
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.10 (Ubuntu 17.10-1.pgdg24.04+1)
@@ -601,6 +601,47 @@ $$;
 
 
 --
+-- Name: encerrar_minha_conta(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.encerrar_minha_conta() RETURNS text
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+declare uid uuid; ap text;
+begin
+  uid := auth.uid();
+  if uid is null then raise exception 'precisa estar logado'; end if;
+
+  select apelido into ap from perfil where id = uid;
+
+  insert into conta_arquivada (usuario_id, apelido, nome, telefone, email, criado_em, motivo)
+  select p.id, p.apelido, p.nome, p.telefone,
+         (select u.email from auth.users u where u.id = p.id),
+         p.criado_em, 'pedido do usuário'
+    from perfil p where p.id = uid
+  on conflict (usuario_id) do update set encerrada_em = now();
+
+  -- as carteiras saem do ranking; o retorno já apurado fica
+  update carteira set ativa = false where usuario_id = uid;
+
+  -- o cadastro sai do site. O apelido é liberado com um sufixo, para
+  -- não travar o nome nem revelar quem era.
+  update perfil
+     set bloqueado = true,
+         assinante = false,
+         nome = null,
+         telefone = null,
+         nome_publico = null,
+         exibir = 'anonimo',
+         apelido = 'encerrada_' || left(uid::text, 8)
+   where id = uid;
+
+  return coalesce(ap, 'conta') || ' encerrada';
+end $$;
+
+
+--
 -- Name: encerrar_se_zerou(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -654,11 +695,11 @@ $$;
 
 CREATE FUNCTION public.fechar_dia(d date DEFAULT NULL::date, refazer boolean DEFAULT false) RETURNS integer
     LANGUAGE plpgsql
+    SET search_path TO 'public'
     AS $$
 declare
   c        record;
   cdi_dia  real;
-  fallback real := power(1.145, 1.0/252) - 1;   -- só se o LFTS11 faltar
   ret      real;
   l real; s real; caixa real; rende real;
   idx_ant  real;
@@ -666,24 +707,14 @@ declare
   m_novo   date; m_atual date;
   dia      date := coalesce(d, (select max(data) from oscilacao), hoje_br());
   vira_sem boolean; vira_mes boolean; vira_ano boolean;
-  fora     boolean; jafechou boolean; motivo text;
+  jafechou boolean; motivo text;
 begin
-  if not coalesce((select admin from perfil where id = auth.uid()), false)
-     and coalesce(current_setting('request.jwt.claim.role', true), '') <> 'service_role' then
+  if coalesce(current_setting('request.jwt.claim.role', true), '') <> 'service_role'
+     and not coalesce((select admin from perfil where id = auth.uid()), false) then
     raise exception 'só admin';
   end if;
 
-  -- O caixa rende o que a RENDA FIXA rendeu de verdade naquele pregão,
-  -- medido pelo LFTS11 (ETF de LFT, acompanha a Selic). Antes era uma
-  -- constante de 10,5% ao ano escrita aqui dentro — e o CDI está em
-  -- 14,5%, ou seja, o caixa vinha rendendo 4 pontos a menos ao ano sem
-  -- ninguém ter onde corrigir. Se o LFTS11 faltar no dia, cai no
-  -- fallback e o aviso sai no log.
-  select valor into cdi_dia from oscilacao where ativo = 'LFTS11' and data = dia;
-  if cdi_dia is null then
-    cdi_dia := fallback;
-    raise notice 'sem LFTS11 em % — caixa remunerado pela taxa de reserva', dia;
-  end if;
+  cdi_dia := power(1 + taxa_rf_ano()/100.0, 1.0/252) - 1;
 
   jafechou := exists (select 1 from retorno_dia where data = dia);
   if not refazer and jafechou then
@@ -697,6 +728,9 @@ begin
 
   for c in select id, rebalancear, banda_pct from carteira where ativa loop
 
+    -- Refazer um pregão já fechado: o peso_atual dele já sofreu a deriva
+    -- deste dia. Aplicar de novo dobraria — foi assim que os pesos
+    -- ficaram tortos em 02/08.
     if refazer and jafechou then
       perform refazer_pesos(c.id, dia);
       delete from rebalanceamento where carteira_id = c.id and data = dia;
@@ -745,24 +779,14 @@ begin
       from (select ativo, valor from oscilacao where data = dia) o
      where pa.carteira_id = c.id and pa.ativo = o.ativo and (1 + ret) <> 0;
 
-    fora := false;
-    if c.rebalancear = 'banda' and m_atual is not null then
-      select exists (
-        select 1 from peso_atual pa
-          left join (select ativo, sum(peso) as dec from posicao
-                      where carteira_id = c.id and valida_de = m_atual group by ativo) q
-            on q.ativo = pa.ativo
-         where pa.carteira_id = c.id
-           and abs(abs(pa.peso) - abs(coalesce(q.dec, 0))) > c.banda_pct) into fora;
-    end if;
-
     motivo := null;
     if m_atual is not null then
       if    c.rebalancear = 'semanal' and vira_sem then motivo := 'semanal';
       elsif c.rebalancear = 'mensal'  and vira_mes then motivo := 'mensal';
       elsif c.rebalancear = 'anual'   and vira_ano then motivo := 'anual';
-      elsif c.rebalancear = 'banda'   and fora     then
-        motivo := 'banda de ' || round(c.banda_pct) || ' p.p. estourada';
+      elsif c.rebalancear = 'banda'
+        and fora_da_banda(c.id, m_atual, c.banda_pct) then
+        motivo := 'banda de ' || round(c.banda_pct) || '% estourada';
       end if;
     end if;
 
@@ -781,6 +805,9 @@ begin
     n := n + 1;
   end loop;
 
+  -- assinatura vencida deixa de valer no mesmo passo do fechamento
+  perform sincronizar_assinantes();
+
   return n;
 end $$;
 
@@ -797,6 +824,9 @@ declare cl text; b_atual real; b_decl real;
 begin
   select classe into cl from carteira where id = cid;
 
+  -- Na 60/40 o que deriva é a PROPORÇÃO entre renda fixa e ações, não
+  -- cada papel: dez ações de 4% nunca se afastam sozinhas, mas o bloco
+  -- todo vai de 40 para 50 e descaracteriza a carteira.
   if cl = 'sessenta_quarenta' then
     select coalesce(sum(abs(peso)),0) into b_atual from peso_atual where carteira_id = cid;
     select coalesce(sum(abs(peso)),0) into b_decl  from posicao
@@ -804,10 +834,6 @@ begin
     return b_decl > 0 and abs(b_atual - b_decl) / b_decl > banda / 100.0;
   end if;
 
-  -- A banda passa a ser RELATIVA ao peso declarado, não em pontos.
-  -- Antes, 5 pontos sobre uma posição de 10% só disparava quando ela
-  -- chegasse a 15% — um movimento de 50% contra a carteira, que quase
-  -- nunca ocorre. Agora 5 quer dizer 5% do peso: 10% vira 10,5%.
   return exists (
     select 1
       from peso_atual pa
@@ -1173,50 +1199,72 @@ $$;
 
 
 --
--- Name: quant_medias(integer, integer); Type: FUNCTION; Schema: public; Owner: -
+-- Name: quant_medias(integer, integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.quant_medias(p_curta integer DEFAULT 17, p_longa integer DEFAULT 34) RETURNS TABLE(ativo text, pregoes integer, fech real, ema17 real, ema34 real, dist real, amplitude real)
+CREATE FUNCTION public.quant_medias(p_curta integer DEFAULT 17, p_media integer DEFAULT 34, p_longa integer DEFAULT 72) RETURNS TABLE(ativo text, pregoes integer, fech real, ema17 real, ema34 real, ema72 real, dist real, amplitude real, liquidez real, serie real[], serie72 real[])
     LANGUAGE plpgsql STABLE
     SET search_path TO 'public'
     AS $$
 declare
   r record; v record;
-  e17 real; e34 real; k17 real; k34 real;
-  n int; soma17 real; soma34 real;
-  amp real; ult real;
+  e1 real; e2 real; e3 real;
+  k1 real; k2 real; k3 real;
+  s1 real; s2 real; s3 real;
+  n int; amp real; ult real; ser real[]; ser3 real[];
 begin
-  k17 := 2.0 / (p_curta + 1);
-  k34 := 2.0 / (p_longa + 1);
+  k1 := 2.0 / (p_curta + 1);
+  k2 := 2.0 / (p_media + 1);
+  k3 := 2.0 / (p_longa + 1);
 
-  for r in select b.ativo as a, count(*) as q from barra b group by b.ativo loop
-    if r.q < p_longa then continue; end if;
+  for r in
+    select b.ativo as a, count(*) as q,
+           (select u.liquidez from universo u where u.ativo = b.ativo) as liq
+      from barra b group by b.ativo
+  loop
+    if r.q < p_media then continue; end if;
 
-    e17 := null; e34 := null; n := 0; soma17 := 0; soma34 := 0;
-    amp := 0; ult := null;
+    e1 := null; e2 := null; e3 := null;
+    s1 := 0; s2 := 0; s3 := 0;
+    n := 0; amp := 0; ult := null; ser := '{}'; ser3 := '{}';
 
     for v in select b.fechamento as f, b.maxima as mx, b.minima as mn
                from barra b where b.ativo = r.a order by b.data loop
       n := n + 1;
-      if n <= p_curta then soma17 := soma17 + v.f; end if;
-      if n = p_curta then e17 := soma17 / p_curta; end if;
-      if n > p_curta then e17 := v.f * k17 + e17 * (1 - k17); end if;
 
-      if n <= p_longa then soma34 := soma34 + v.f; end if;
-      if n = p_longa then e34 := soma34 / p_longa; end if;
-      if n > p_longa then e34 := v.f * k34 + e34 * (1 - k34); end if;
+      -- Semeia cada média com a média simples dos primeiros N fechamentos:
+      -- sem isso, com histórico curto o primeiro valor domina por semanas.
+      if n <= p_curta then s1 := s1 + v.f; end if;
+      if n =  p_curta then e1 := s1 / p_curta; end if;
+      if n >  p_curta then e1 := v.f * k1 + e1 * (1 - k1); end if;
+
+      if n <= p_media then s2 := s2 + v.f; end if;
+      if n =  p_media then e2 := s2 / p_media; end if;
+      if n >  p_media then e2 := v.f * k2 + e2 * (1 - k2); end if;
+
+      if n <= p_longa then s3 := s3 + v.f; end if;
+      if n =  p_longa then e3 := s3 / p_longa; end if;
+      if n >  p_longa then e3 := v.f * k3 + e3 * (1 - k3); end if;
 
       if v.mx is not null and v.mn is not null and v.f > 0 then
         amp := amp + (v.mx - v.mn) / v.f;
       end if;
       ult := v.f;
+      ser  := ser  || v.f;                    -- preço, para o mini gráfico
+      ser3 := ser3 || coalesce(e3, v.f);      -- a média longa, no mesmo passo
     end loop;
 
-    if e17 is null or e34 is null or e34 = 0 then continue; end if;
+    if e1 is null or e2 is null or e2 = 0 then continue; end if;
+
     ativo := r.a; pregoes := n; fech := ult;
-    ema17 := e17; ema34 := e34;
-    dist := e17 / e34 - 1;
+    ema17 := e1; ema34 := e2; ema72 := e3;   -- ema72 pode vir nulo
+    dist := e1 / e2 - 1;
     amplitude := amp / n;
+    liquidez := r.liq;
+    -- só os últimos 60 fechamentos: é o que cabe num gráfico de 90px
+    -- e o suficiente para ver o caminho recente sem pesar a resposta.
+    serie   := ser [greatest(1, array_length(ser ,1) - 59) : array_length(ser ,1)];
+    serie72 := ser3[greatest(1, array_length(ser3,1) - 59) : array_length(ser3,1)];
     return next;
   end loop;
 end $$;
@@ -1512,6 +1560,7 @@ begin
     update perfil p
        set assinante = (p.id in (select usuario_id from vigente))
      where p.assinante is distinct from (p.id in (select usuario_id from vigente))
+       and not p.bloqueado
     returning 1
   )
   select count(*) into n from mudou;
@@ -1537,11 +1586,9 @@ $$;
 
 CREATE FUNCTION public.taxa_rf_ano() RETURNS real
     LANGUAGE sql STABLE
+    SET search_path TO 'public'
     AS $$
-  select coalesce(
-    (select valor::real from parametro where chave = 'cdi_ano'),
-    14.5
-  );
+  select coalesce((select valor from parametro where chave = 'cdi_ano'), 15.0);
 $$;
 
 
@@ -1978,6 +2025,22 @@ CREATE SEQUENCE public.carteira_id_seq
 --
 
 ALTER SEQUENCE public.carteira_id_seq OWNED BY public.carteira.id;
+
+
+--
+-- Name: conta_arquivada; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.conta_arquivada (
+    usuario_id uuid NOT NULL,
+    apelido text,
+    nome text,
+    telefone text,
+    email text,
+    criado_em timestamp with time zone,
+    encerrada_em timestamp with time zone DEFAULT now(),
+    motivo text
+);
 
 
 --
@@ -2482,6 +2545,14 @@ ALTER TABLE ONLY public.carteira
 
 
 --
+-- Name: conta_arquivada conta_arquivada_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.conta_arquivada
+    ADD CONSTRAINT conta_arquivada_pkey PRIMARY KEY (usuario_id);
+
+
+--
 -- Name: cotacao_viva cotacao_viva_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2969,6 +3040,12 @@ CREATE POLICY c_le ON public.carteira FOR SELECT USING (true);
 ALTER TABLE public.carteira ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: conta_arquivada; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.conta_arquivada ENABLE ROW LEVEL SECURITY;
+
+--
 -- Name: cotacao_viva; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -3226,5 +3303,5 @@ ALTER TABLE public.universo ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict v18mTH1WdjRyYDfv3Feawd8ggxRymI5TSIr30SKWO0a8bDFPspu2m5GJJ0PPM3N
+\unrestrict XbDUPkfmwBLS2SoCnPnsg1ziJeRoWwl7i93yFgVpTfVOprhpT2orpPkZJlzT7mS
 
