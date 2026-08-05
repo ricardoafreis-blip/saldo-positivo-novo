@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict APvTpl6ISxHJtePnKTKbN5fCv9Vxu5plIxHwZZgVPTSNJW78Lxyww2cqh1Mf15f
+\restrict v18mTH1WdjRyYDfv3Feawd8ggxRymI5TSIr30SKWO0a8bDFPspu2m5GJJ0PPM3N
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.10 (Ubuntu 17.10-1.pgdg24.04+1)
@@ -377,6 +377,32 @@ end $$;
 
 
 --
+-- Name: apurar_dia_apostas(date); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.apurar_dia_apostas(p_data date) RETURNS integer
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+declare a record; r record; n int := 0;
+begin
+  for a in select id, ativo, direcao from aposta
+            where data = p_data
+              and not exists (select 1 from aposta_apurada x where x.id = a.id)
+  loop
+    select * into r from apurar_aposta(a.ativo, p_data, a.direcao);
+    if r.tipo is null then continue; end if;   -- sem candle ainda
+    insert into aposta_apurada (id, tipo, entrada, stop, alvo, saida, retorno, pts)
+    values (a.id, r.tipo, r.entrada, r.stop, r.alvo, r.saida, r.retorno, r.pts)
+    on conflict (id) do update
+       set tipo = excluded.tipo, retorno = excluded.retorno, pts = excluded.pts;
+    n := n + 1;
+  end loop;
+  return n;
+end $$;
+
+
+--
 -- Name: apurar_operacao(text, date, text, real, real); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -472,6 +498,33 @@ begin
 
   get diagnostics n = row_count;
   return n;
+end $$;
+
+
+--
+-- Name: dar_assinatura(text, integer, real, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.dar_assinatura(p_apelido text, p_dias integer DEFAULT 30, p_valor real DEFAULT 19, p_meio text DEFAULT 'pix'::text) RETURNS text
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+declare uid uuid; ini date; fim date;
+begin
+  if not sou_admin() then raise exception 'só admin'; end if;
+
+  select id into uid from perfil where lower(apelido) = lower(p_apelido);
+  if uid is null then return 'não achei o apelido ' || p_apelido; end if;
+
+  select max(a.fim) into fim from assinatura a
+   where a.usuario_id = uid and a.fim >= hoje_br();
+  ini := coalesce(fim + 1, hoje_br());
+
+  insert into assinatura (usuario_id, inicio, fim, valor, meio)
+  values (uid, ini, ini + p_dias - 1, p_valor, p_meio);
+
+  perform sincronizar_assinantes();
+  return p_apelido || ' assinante até ' || (ini + p_dias - 1);
 end $$;
 
 
@@ -737,30 +790,32 @@ end $$;
 --
 
 CREATE FUNCTION public.fora_da_banda(cid bigint, marco date, banda real) RETURNS boolean
-    LANGUAGE plpgsql
+    LANGUAGE plpgsql STABLE
+    SET search_path TO 'public'
     AS $$
 declare cl text; b_atual real; b_decl real;
 begin
   select classe into cl from carteira where id = cid;
 
-  -- Na 60/40 o que deriva é a PROPORÇÃO entre renda fixa e ações, não
-  -- cada papel. Dez ações de 4% nunca se afastam 5 pontos sozinhas, mas
-  -- o bloco todo vai de 40 para 50 e descaracteriza a carteira.
   if cl = 'sessenta_quarenta' then
     select coalesce(sum(abs(peso)),0) into b_atual from peso_atual where carteira_id = cid;
     select coalesce(sum(abs(peso)),0) into b_decl  from posicao
      where carteira_id = cid and valida_de = marco;
-    return abs(b_atual - b_decl) > banda;
+    return b_decl > 0 and abs(b_atual - b_decl) / b_decl > banda / 100.0;
   end if;
 
+  -- A banda passa a ser RELATIVA ao peso declarado, não em pontos.
+  -- Antes, 5 pontos sobre uma posição de 10% só disparava quando ela
+  -- chegasse a 15% — um movimento de 50% contra a carteira, que quase
+  -- nunca ocorre. Agora 5 quer dizer 5% do peso: 10% vira 10,5%.
   return exists (
     select 1
       from peso_atual pa
-      left join (select ativo, sum(peso) as dec from posicao
-                  where carteira_id = cid and valida_de = marco group by ativo) q
+      join (select ativo, sum(peso) as dec from posicao
+             where carteira_id = cid and valida_de = marco group by ativo) q
         on q.ativo = pa.ativo
-     where pa.carteira_id = cid
-       and abs(abs(pa.peso) - abs(coalesce(q.dec, 0))) > banda);
+     where pa.carteira_id = cid and abs(q.dec) > 0
+       and abs(abs(pa.peso) - abs(q.dec)) / abs(q.dec) > banda / 100.0);
 end $$;
 
 
@@ -900,12 +955,8 @@ CREATE FUNCTION public.mt5_gravar(dados jsonb) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
-declare n_fech int; n_osc int; d_min date; d_max date; papel text;
+declare n_bar int; n_osc int; d_min date; d_max date; papel text;
 begin
-  -- Quem pode gravar: a service_role (chave-mestra, so o dono tem) ou
-  -- uma conta marcada como admin. A service_role nao tem auth.uid(),
-  -- entao perguntar "quem e voce" nao funciona para ela — o que
-  -- funciona e perguntar o PAPEL da conexao.
   papel := coalesce(current_setting('request.jwt.claim.role', true),
                     current_setting('role', true), '');
   if papel <> 'service_role'
@@ -913,37 +964,47 @@ begin
     raise exception 'so admin pode gravar cotacao (papel: %)', papel;
   end if;
 
+  -- Agora grava o CANDLE INTEIRO na barra, não só o fechamento. Sem
+  -- máxima e mínima o apurar_aposta não tem como saber se o stop ou o
+  -- alvo foram tocados — foi por isso que o Tiro curto nunca apurou.
   with e as (
-    select x.ativo, x.data, x.fech
-      from jsonb_to_recordset(dados) as x(ativo text, data date, fech real)
+    select x.ativo, x.data, x.abre, x.max, x.min, x.fech
+      from jsonb_to_recordset(dados)
+        as x(ativo text, data date, abre real, max real, min real, fech real)
      where x.ativo is not null and x.data is not null and x.fech > 0
   ), g as (
-    insert into fechamento (ativo, data, fech)
-    select ativo, data, fech from e
-    on conflict (ativo, data) do update set fech = excluded.fech
+    insert into barra (ativo, data, abertura, maxima, minima, fechamento)
+    select ativo, data, nullif(abre,0), nullif(max,0), nullif(min,0), fech from e
+    on conflict (ativo, data) do update
+       set abertura = coalesce(excluded.abertura, barra.abertura),
+           maxima   = coalesce(excluded.maxima,   barra.maxima),
+           minima   = coalesce(excluded.minima,   barra.minima),
+           fechamento = excluded.fechamento
     returning 1
   )
-  select count(*) into n_fech from g;
+  select count(*) into n_bar from g;
 
   select min(x.data), max(x.data) into d_min, d_max
-    from jsonb_to_recordset(dados) as x(ativo text, data date, fech real);
+    from jsonb_to_recordset(dados)
+      as x(ativo text, data date, abre real, max real, min real, fech real);
 
   with a as (
-    select distinct x.ativo from jsonb_to_recordset(dados) as x(ativo text, data date, fech real)
+    select distinct x.ativo from jsonb_to_recordset(dados)
+      as x(ativo text, data date, abre real, max real, min real, fech real)
   ), p as (
-    select f.ativo, f.data, f.fech,
-           lag(f.fech) over (partition by f.ativo order by f.data) as ant
-      from fechamento f where f.ativo in (select ativo from a)
+    select b.ativo, b.data, b.fechamento,
+           lag(b.fechamento) over (partition by b.ativo order by b.data) as ant
+      from barra b where b.ativo in (select ativo from a)
   ), g2 as (
     insert into oscilacao (ativo, data, valor)
-    select ativo, data, fech/ant - 1 from p
+    select ativo, data, fechamento/ant - 1 from p
      where ant is not null and ant > 0 and data between d_min and d_max
     on conflict (ativo, data) do update set valor = excluded.valor
     returning 1
   )
   select count(*) into n_osc from g2;
 
-  return jsonb_build_object('fechamentos', n_fech, 'oscilacoes', n_osc);
+  return jsonb_build_object('barras', n_bar, 'oscilacoes', n_osc);
 end $$;
 
 
@@ -1109,6 +1170,56 @@ CREATE FUNCTION public.proximo_pregao(a_partir date DEFAULT NULL::date) RETURNS 
            else        coalesce(a_partir, hoje_br()) + 1
          end;
 $$;
+
+
+--
+-- Name: quant_medias(integer, integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.quant_medias(p_curta integer DEFAULT 17, p_longa integer DEFAULT 34) RETURNS TABLE(ativo text, pregoes integer, fech real, ema17 real, ema34 real, dist real, amplitude real)
+    LANGUAGE plpgsql STABLE
+    SET search_path TO 'public'
+    AS $$
+declare
+  r record; v record;
+  e17 real; e34 real; k17 real; k34 real;
+  n int; soma17 real; soma34 real;
+  amp real; ult real;
+begin
+  k17 := 2.0 / (p_curta + 1);
+  k34 := 2.0 / (p_longa + 1);
+
+  for r in select b.ativo as a, count(*) as q from barra b group by b.ativo loop
+    if r.q < p_longa then continue; end if;
+
+    e17 := null; e34 := null; n := 0; soma17 := 0; soma34 := 0;
+    amp := 0; ult := null;
+
+    for v in select b.fechamento as f, b.maxima as mx, b.minima as mn
+               from barra b where b.ativo = r.a order by b.data loop
+      n := n + 1;
+      if n <= p_curta then soma17 := soma17 + v.f; end if;
+      if n = p_curta then e17 := soma17 / p_curta; end if;
+      if n > p_curta then e17 := v.f * k17 + e17 * (1 - k17); end if;
+
+      if n <= p_longa then soma34 := soma34 + v.f; end if;
+      if n = p_longa then e34 := soma34 / p_longa; end if;
+      if n > p_longa then e34 := v.f * k34 + e34 * (1 - k34); end if;
+
+      if v.mx is not null and v.mn is not null and v.f > 0 then
+        amp := amp + (v.mx - v.mn) / v.f;
+      end if;
+      ult := v.f;
+    end loop;
+
+    if e17 is null or e34 is null or e34 = 0 then continue; end if;
+    ativo := r.a; pregoes := n; fech := ult;
+    ema17 := e17; ema34 := e34;
+    dist := e17 / e34 - 1;
+    amplitude := amp / n;
+    return next;
+  end loop;
+end $$;
 
 
 --
@@ -1385,6 +1496,30 @@ end $$;
 
 
 --
+-- Name: sincronizar_assinantes(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.sincronizar_assinantes() RETURNS integer
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+declare n int;
+begin
+  with vigente as (
+    select distinct usuario_id from assinatura
+     where hoje_br() between inicio and fim
+  ), mudou as (
+    update perfil p
+       set assinante = (p.id in (select usuario_id from vigente))
+     where p.assinante is distinct from (p.id in (select usuario_id from vigente))
+    returning 1
+  )
+  select count(*) into n from mudou;
+  return n;
+end $$;
+
+
+--
 -- Name: sou_admin(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1426,6 +1561,26 @@ CREATE FUNCTION public.taxa_rf_dia() RETURNS real
     AS $$
   select (power(1 + taxa_rf_ano()/100.0, 1.0/252) - 1)::real;
 $$;
+
+
+--
+-- Name: tirar_assinatura(text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.tirar_assinatura(p_apelido text) RETURNS text
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+declare uid uuid;
+begin
+  if not sou_admin() then raise exception 'só admin'; end if;
+  select id into uid from perfil where lower(apelido) = lower(p_apelido);
+  if uid is null then return 'não achei ' || p_apelido; end if;
+  update assinatura set fim = hoje_br() - 1
+   where usuario_id = uid and fim >= hoje_br();
+  perform sincronizar_assinantes();
+  return p_apelido || ' deixou de ser assinante';
+end $$;
 
 
 --
@@ -1614,6 +1769,41 @@ CREATE SEQUENCE public.aposta_id_seq
 --
 
 ALTER SEQUENCE public.aposta_id_seq OWNED BY public.aposta.id;
+
+
+--
+-- Name: assinatura; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.assinatura (
+    id bigint NOT NULL,
+    usuario_id uuid NOT NULL,
+    inicio date DEFAULT public.hoje_br() NOT NULL,
+    fim date NOT NULL,
+    valor real,
+    meio text,
+    obs text,
+    criada_em timestamp with time zone DEFAULT now()
+);
+
+
+--
+-- Name: assinatura_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.assinatura_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: assinatura_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.assinatura_id_seq OWNED BY public.assinatura.id;
 
 
 --
@@ -1930,6 +2120,26 @@ ALTER SEQUENCE public.nota_id_seq OWNED BY public.nota.id;
 
 
 --
+-- Name: painel_assinatura; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.painel_assinatura AS
+ SELECT id,
+    apelido,
+    assinante,
+    ( SELECT max(a.fim) AS max
+           FROM public.assinatura a
+          WHERE (a.usuario_id = p.id)) AS vence_em,
+    ( SELECT count(*) AS count
+           FROM public.assinatura a
+          WHERE (a.usuario_id = p.id)) AS pagamentos,
+    ( SELECT COALESCE(sum(a.valor), (0)::real) AS "coalesce"
+           FROM public.assinatura a
+          WHERE (a.usuario_id = p.id)) AS total_pago
+   FROM public.perfil p;
+
+
+--
 -- Name: peso_atual; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1956,6 +2166,17 @@ CREATE TABLE public.posicao (
 
 
 --
+-- Name: universo; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.universo (
+    ativo text NOT NULL,
+    cotacao real,
+    liquidez real
+);
+
+
+--
 -- Name: papeis_do_dia; Type: VIEW; Schema: public; Owner: -
 --
 
@@ -1968,8 +2189,15 @@ UNION
      JOIN public.carteira c ON ((c.id = p.carteira_id)))
   WHERE (c.ativa AND (p.valida_de <= public.hoje_br()))
 UNION
+ SELECT a.ativo
+   FROM public.aposta a
+  WHERE (a.data >= (public.hoje_br() - 45))
+UNION
  SELECT referencia.ativo
-   FROM public.referencia;
+   FROM public.referencia
+UNION
+ SELECT u.ativo
+   FROM public.universo u;
 
 
 --
@@ -2163,21 +2391,17 @@ CREATE TABLE public.seguindo (
 
 
 --
--- Name: universo; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.universo (
-    ativo text NOT NULL,
-    cotacao real,
-    liquidez real
-);
-
-
---
 -- Name: aposta id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.aposta ALTER COLUMN id SET DEFAULT nextval('public.aposta_id_seq'::regclass);
+
+
+--
+-- Name: assinatura id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.assinatura ALTER COLUMN id SET DEFAULT nextval('public.assinatura_id_seq'::regclass);
 
 
 --
@@ -2231,6 +2455,14 @@ ALTER TABLE ONLY public.aposta
 
 ALTER TABLE ONLY public.aposta
     ADD CONSTRAINT aposta_usuario_id_data_ativo_key UNIQUE (usuario_id, data, ativo);
+
+
+--
+-- Name: assinatura assinatura_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.assinatura
+    ADD CONSTRAINT assinatura_pkey PRIMARY KEY (id);
 
 
 --
@@ -2425,6 +2657,20 @@ CREATE INDEX aposta_data ON public.aposta USING btree (data);
 
 
 --
+-- Name: assinatura_usuario; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX assinatura_usuario ON public.assinatura USING btree (usuario_id, fim DESC);
+
+
+--
+-- Name: barra_ativo_data_uk; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX barra_ativo_data_uk ON public.barra USING btree (ativo, data);
+
+
+--
 -- Name: carteira_nome_unico; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -2521,6 +2767,14 @@ CREATE TRIGGER tg_fila_posicao AFTER INSERT ON public.posicao FOR EACH ROW EXECU
 
 ALTER TABLE ONLY public.aposta
     ADD CONSTRAINT aposta_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.perfil(id) ON DELETE CASCADE;
+
+
+--
+-- Name: assinatura assinatura_usuario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.assinatura
+    ADD CONSTRAINT assinatura_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.perfil(id) ON DELETE CASCADE;
 
 
 --
@@ -2653,6 +2907,19 @@ CREATE POLICY aposta_cria ON public.aposta FOR INSERT WITH CHECK ((usuario_id = 
 
 CREATE POLICY aposta_le ON public.aposta FOR SELECT USING (((usuario_id = auth.uid()) OR (data <= public.hoje_br())));
 
+
+--
+-- Name: assinatura assin_ler; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY assin_ler ON public.assinatura FOR SELECT USING (((usuario_id = auth.uid()) OR public.sou_admin()));
+
+
+--
+-- Name: assinatura; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.assinatura ENABLE ROW LEVEL SECURITY;
 
 --
 -- Name: barra; Type: ROW SECURITY; Schema: public; Owner: -
@@ -2959,5 +3226,5 @@ ALTER TABLE public.universo ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict APvTpl6ISxHJtePnKTKbN5fCv9Vxu5plIxHwZZgVPTSNJW78Lxyww2cqh1Mf15f
+\unrestrict v18mTH1WdjRyYDfv3Feawd8ggxRymI5TSIr30SKWO0a8bDFPspu2m5GJJ0PPM3N
 
