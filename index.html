@@ -566,10 +566,18 @@ async function telaClube(){
 
 /* tabelas — limpas, sem grade pesada */
 table{width:100%;border-collapse:collapse;font-size:13.5px}
+/* ⚠️ Sem padding lateral os cabecalhos ENCOSTAM: "FECHAMENTOVS.
+   INSTITUCIONAL" saia colado, sem um pixel entre as duas palavras. E,
+   como nenhuma coluna absorvia a sobra, o conteudo terminava antes da
+   margem direita e as colunas de numero ficavam espremidas a esquerda —
+   apertado de um lado, vazio do outro. */
 th{font-size:9.5px;text-transform:uppercase;letter-spacing:.14em;color:var(--graf);
   text-align:left;padding:0 0 11px;font-weight:500;border-bottom:1px solid var(--linha2)}
 td{padding:13px 0;border-bottom:1px solid var(--linha)}
-th.d,td.d{text-align:right}
+th.d,td.d{text-align:right;padding-left:16px}
+/* a coluna que ESTICA. Sem uma folgada, a largura sobrando fica no fim
+   da linha em vez de virar respiro entre as colunas. */
+th.estica,td.estica{width:100%;padding-right:16px}
 tr.clicavel{transition:background .14s}
 tr.clicavel:hover{background:var(--p2);cursor:pointer}
 tr.clicavel:hover td:first-child{box-shadow:inset 2px 0 0 var(--lacre)}
@@ -812,7 +820,13 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
   padding:15px 16px;display:flex;flex-direction:column}
 .coluna h3{font-family:Newsreader,serif;font-size:16px;margin:0 0 2px}
 .coluna .qtd{font-size:10.5px;color:var(--graf);letter-spacing:.06em;text-transform:uppercase}
-.coluna .regra{font-size:11px;color:var(--graf);margin:7px 0 12px;line-height:1.45;flex:none}
+/* ⚠️ As quatro regras tem comprimentos diferentes (duas linhas na
+   Vendida, quatro na 60/40) e o rotulo do criterio acabava numa altura
+   diferente em cada coluna. Altura minima de quatro linhas alinha o
+   degrau nas quatro, e a lista comeca na mesma altura. */
+.coluna .regra{font-size:11px;color:var(--graf);margin:7px 0 12px;line-height:1.45;
+  flex:none;min-height:calc(1.45em * 4)}
+@media(max-width:1000px){.coluna .regra{min-height:0}}
 /* o rotulo do criterio fecha com um fio: e ele que marca onde comeca a
    lista, e sem o fio a coluna virava um monte de texto sem degrau */
 .coluna .rotc{font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;
@@ -862,7 +876,12 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
 .linhaC .n{font-family:'IBM Plex Mono';font-size:10.5px;color:var(--graf);flex:none;width:15px}
 .linhaC .quem{flex:1;min-width:0}
 .linhaC .nome{font-size:13px;color:var(--tinta);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.linhaC .autor{font-size:10.5px;color:var(--graf)}
+/* ⚠️ Sem nowrap o autor partia no meio — "Tio Patinhas · 63" numa linha
+   e "pregões" na outra — e cada linha da coluna ficava com altura
+   diferente. O ritmo das cinco linhas e o que faz as quatro colunas
+   parecerem uma grade so. */
+.linhaC .autor{font-size:10.5px;color:var(--graf);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .linhaC .num{font-family:'IBM Plex Mono';font-size:13px;flex:none}
 .vazio{font-size:11.5px;color:var(--graf);padding:10px 0 2px}
 .meta{font-size:11.5px;color:var(--graf);margin-top:3px}
@@ -1885,7 +1904,7 @@ async function telaRanking(){
       <h3 style="margin-bottom:8px">Nenhuma carteira ainda</h3>
       <p style="color:var(--t2)">Publique a primeira — o ranking começa a contar a partir de hoje.</p>
       <a href="#/publicar" class="bt cheio" style="margin-top:12px">Criar carteira</a></div>`
-  : `<table><thead><tr><th></th><th>Carteira</th><th class="d">Dia</th>
+  : `<table><thead><tr><th></th><th class="estica">Carteira</th><th class="d">Dia</th>
       <th class="d">Semana</th><th class="d">Mês</th><th class="d">Desde o início</th>
       <th class="d">vs Ibovespa</th>
       <th class="d">Sharpe</th><th class="d">Drawdown</th>
@@ -1897,7 +1916,7 @@ async function telaRanking(){
             ${grupo.length===1?"carteira":"carteiras"}</span></td></tr>` : "")
       + grupo.map((x,i)=>`<tr class="clicavel" onclick="location.hash='#/carteira/${x.c.id}'">
       <td class="mono pos">${String(i+1).padStart(2,"0")}</td>
-      <td><span style="font-family:Newsreader,serif;font-weight:500;font-size:15px">${esc(x.c.nome)}</span>
+      <td class="estica"><span style="font-family:Newsreader,serif;font-weight:500;font-size:15px">${esc(x.c.nome)}</span>
         <div class="meta">${esc(x.c.apelido)} · ${x.c.n_ativos
           ? `${x.c.n_ativos} ativos · ${tags(x.c)}`
           : `estreia no próximo pregão${x.c.classe&&CLASSE[x.c.classe]?" · "+CLASSE[x.c.classe].nome:""}`}</div></td>
@@ -4078,7 +4097,7 @@ async function telaScreening(){
       Nenhum papel neste filtro.${!(data||[]).length
         ? " O cálculo precisa de alguns meses de histórico e o robô ainda não juntou tanto."
         : ""}</p></div>`
-  : `<table><thead><tr><th>Papel</th><th>Estado</th>
+  : `<table><thead><tr><th>Papel</th><th class="estica">Estado</th>
       <th class="d">Fechamento</th><th class="d">Vs. institucional</th>
       <th class="d mA m1">Trader</th><th class="d mA m2">Investidor</th><th class="d mA m3">Institucional</th>
       <th class="d" style="width:196px;padding-left:14px">90 pregões</th>
@@ -4087,7 +4106,7 @@ async function telaScreening(){
         x===amplo?"":" set"}">
       <td class="mono cod">${esc(x.ativo==="IBOV"||x.ativo==="^BVSP"?"IBOVESPA":x.ativo.replace("^",""))}${
         IND_SET[x.ativo]?`<span class="nm">${IND_SET[x.ativo]}</span>`:""}</td>
-      <td style="font-size:12.5px" class="${tomDe(x.e)}">${ROT[x.e]}</td>
+      <td class="estica ${tomDe(x.e)}" style="font-size:12.5px">${ROT[x.e]}</td>
       <td class="d mono">${n2(x.fech, x.fech>1000?0:2)}</td>
       <td class="d mono ${x.forca==null?"nulo":cor(x.forca)}"><b>${
         x.forca==null?"—":pct(x.forca)}</b></td>
@@ -4099,7 +4118,7 @@ async function telaScreening(){
     </tr>`).join("")}
     ${l.map(x=>`<tr>
       <td class="mono" style="font-weight:500">${esc(x.ativo)}</td>
-      <td style="font-size:12.5px" class="${tomDe(x.e)}">${ROT[x.e]}</td>
+      <td class="estica ${tomDe(x.e)}" style="font-size:12.5px">${ROT[x.e]}</td>
       <td class="d mono">${n2(x.fech)}</td>
       <td class="d mono ${x.forca==null?"nulo":cor(x.forca)}"><b>${
         x.forca==null?"—":pct(x.forca)}</b></td>
