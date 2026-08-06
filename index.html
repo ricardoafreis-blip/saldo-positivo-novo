@@ -46,32 +46,52 @@ button{cursor:pointer;border:none;background:none;color:inherit}
 .aviso b{color:var(--tinta);font-weight:500}
 
 /* topo */
-header{border-bottom:1px solid var(--linha);background:linear-gradient(180deg,#0C1425,#0A1120)}
+/* ══ CABEÇALHO ══════════════════════════════════════════════════════
+   Dez links em quatro grupos, mais a marca, mais a conta: isso NAO cabe
+   numa linha so em largura nenhuma. Tentar forcar era o que jogava o
+   apelido para uma terceira linha, sozinho na direita — parecendo erro.
 
-nav{display:flex;align-items:center;gap:22px;padding:16px 0;flex-wrap:wrap}
-nav .marca{font-family:Newsreader,serif;font-weight:500;font-size:21px;letter-spacing:-.02em;color:var(--tinta)}
-nav a,nav button.lnk{font-size:13px;color:var(--t2);background:none;transition:color .15s}
+   Duas faixas explicitas resolvem: em cima marca e conta, uma em cada
+   ponta; embaixo a navegacao inteira. Cada faixa tem uma funcao — quem
+   eu sou e quem esta logado; para onde eu vou — e o fio entre elas
+   separa as duas leituras. */
+header{border-bottom:1px solid var(--linha);background:linear-gradient(180deg,#0C1425,#0A1120)}
+header .alto{display:flex;align-items:center;justify-content:space-between;gap:20px;
+  padding:14px 0 12px}
+header .marca{font-family:Newsreader,serif;font-weight:500;font-size:26px;
+  letter-spacing:-.025em;color:var(--tinta);line-height:1.05;white-space:nowrap}
+header .marca:hover{color:var(--tinta)}
+
+nav{display:flex;align-items:flex-start;gap:0;flex-wrap:wrap;
+  padding:0 0 13px;border-top:1px solid var(--linha)}
+nav .grupo{display:flex;flex-direction:column;gap:3px;padding-top:11px}
+nav .grupo+.grupo{margin-left:24px;padding-left:24px;border-left:1px solid var(--linha)}
+nav .rotg{font-size:8px;letter-spacing:.19em;text-transform:uppercase;
+  color:var(--graf);opacity:.6}
+nav .bloco{display:flex;gap:14px;align-items:baseline;flex-wrap:wrap}
+nav a,nav button.lnk{font-size:13.5px;color:var(--t2);background:none;
+  transition:color .15s;white-space:nowrap}
 nav a:hover,nav button.lnk:hover{color:var(--ouro2)}
-nav .marca:hover{color:var(--tinta)}
-/* align-self era flex-end e jogava apelido, indicar e admin para a
-   LINHA DE BAIXO, porque os blocos ficaram com duas linhas depois das
-   etiquetas. Centralizado, tudo volta a ficar na mesma altura. */
-nav .dir{margin-left:auto;display:flex;gap:12px;align-items:center;font-size:13px}
-/* As etiquetas ficavam EM CIMA dos links e a barra virava dois andares,
-   com o bloco da conta boiando sozinho na direita. Uma linha só, com
-   fios finos separando os grupos — que é o que a etiqueta fazia. */
-/* O rotulo ficava NO MEIO da linha de links, entao cada grupo tinha o
-   seu proprio eixo e nada se alinhava com nada. Empilhado, todos os
-   rotulos caem numa base e todos os links noutra: duas linhas retas
-   atravessando o cabecalho. O fio nasce do proprio grupo, entao
-   acompanha a altura e nunca sobra. */
-nav .bloco{display:flex;gap:15px;align-items:baseline}
-nav .grupo{display:flex;flex-direction:column;gap:3px}
-nav .grupo+.grupo{margin-left:26px;padding-left:26px;border-left:1px solid var(--linha)}
-nav .rotg{font-size:8px;letter-spacing:.19em;text-transform:uppercase;color:var(--graf);opacity:.6}
-nav .divisor{display:none}
-nav .rot{display:none}
-@media(max-width:760px){nav .grupo+.grupo{margin-left:14px;padding-left:14px}}
+nav .divisor,nav .rot{display:none}
+
+/* a conta vive na faixa de cima, encostada na direita */
+header .dir{display:flex;gap:12px;align-items:center;font-size:13px;flex:none}
+header .dir a,header .dir button.lnk{font-size:13px;color:var(--t2);background:none}
+header .dir a:hover{color:var(--ouro2)}
+
+@media(max-width:820px){
+  header .marca{font-size:22px}
+  nav .grupo+.grupo{margin-left:14px;padding-left:14px}
+  nav .bloco{gap:11px}
+  nav a{font-size:13px}
+}
+@media(max-width:560px){
+  /* sem espaco para quatro colunas: os grupos empilham e a etiqueta
+     passa a ser o unico separador */
+  nav{flex-direction:column;gap:9px;padding-bottom:11px}
+  nav .grupo+.grupo{margin-left:0;padding-left:0;border-left:none;padding-top:0}
+}
+
 /* a linha de prova da abertura */
 .prova{display:inline-flex;flex-wrap:wrap;margin-top:22px;border:1px solid var(--linha2);
   border-radius:3px;background:var(--p2);overflow:hidden}
@@ -503,13 +523,21 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
    soltos na barra, e com as etiquetas dos blocos eles caiam para a
    linha de baixo. Agora e um so, com o resto dentro. */
 .eu{position:relative}
-.eu>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:7px;
-  font-size:13px;color:var(--t2);padding:5px 9px;border-radius:3px;transition:.15s}
+/* O apelido era texto solto na ponta e nao parecia clicavel. Agora e um
+   bloco: quadrinho com a inicial, apelido, etiqueta de admin e a seta.
+   Quem olha entende que ali mora a conta, sem precisar descobrir. */
+.eu>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:9px;
+  font-size:13.5px;color:var(--t2);padding:5px 11px 5px 5px;border-radius:99px;
+  border:1px solid var(--linha);background:var(--p2);transition:.15s}
 .eu>summary::-webkit-details-marker{display:none}
-.eu>summary:hover{color:var(--tinta);background:var(--p2)}
+.eu>summary:hover{color:var(--tinta);border-color:var(--linha2);background:var(--p3)}
 .eu>summary::after{content:"";width:5px;height:5px;border-right:1px solid currentColor;
   border-bottom:1px solid currentColor;transform:rotate(45deg) translate(-2px,-2px);opacity:.7}
-.eu[open]>summary{color:var(--ouro2);background:var(--p2)}
+.eu[open]>summary{color:var(--ouro2);border-color:var(--lacre);background:var(--p3)}
+.eu .ini{width:26px;height:26px;border-radius:50%;flex:none;display:grid;place-items:center;
+  font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;letter-spacing:.02em;
+  color:#0A1120;background:linear-gradient(150deg,var(--ouro2),var(--lacre))}
+.eu .nomeEu{max-width:15ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .eu .gaveta{position:absolute;right:0;top:calc(100% + 5px);z-index:40;min-width:186px;
   background:var(--p2);border:1px solid var(--linha2);border-radius:4px;
   box-shadow:0 14px 34px rgba(0,0,0,.5);padding:5px}
@@ -517,6 +545,12 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
   padding:8px 11px;font-size:13px;color:var(--t2);border-radius:3px;transition:.13s}
 .eu .gaveta a:hover,.eu .gaveta button:hover{background:var(--p3);color:var(--tinta)}
 .eu .gaveta .risco{height:1px;background:var(--linha);margin:5px 0}
+.eu .cabeGav{display:flex;align-items:center;gap:10px;padding:9px 11px 11px;
+  border-bottom:1px solid var(--linha);margin-bottom:5px}
+.eu .cabeGav .ap{font-size:13.5px;color:var(--tinta);max-width:17ch;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.eu .cabeGav .sub{font-size:10.5px;color:var(--graf);letter-spacing:.04em;
+  text-transform:uppercase;margin-top:1px}
 .eu .gaveta .quem{padding:8px 11px 4px;font-size:11px;color:var(--graf);
   letter-spacing:.06em;text-transform:uppercase}
 
@@ -564,11 +598,17 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
 .coluna .qtd{font-size:10.5px;color:var(--graf);letter-spacing:.06em;text-transform:uppercase}
 /* ⚠️ As quatro regras tem comprimentos diferentes (duas linhas na
    Vendida, quatro na 60/40) e o rotulo do criterio acabava numa altura
-   diferente em cada coluna. Altura minima de quatro linhas alinha o
-   degrau nas quatro, e a lista comeca na mesma altura. */
+   diferente em cada coluna.
+   `min-height` nao bastava: era so o PISO. Numa largura em que a 60/40
+   estourasse para cinco linhas ela empurrava tudo e as quatro
+   desalinhavam de novo — que e o que aparecia ao expandir a tela.
+   Altura FIXA de quatro linhas, com corte, garante o mesmo degrau em
+   qualquer largura: nem encolhe, nem estoura. Abaixo de 1000px o grid
+   vira duas colunas e a propria linha do grid iguala as alturas. */
 .coluna .regra{font-size:11px;color:var(--graf);margin:7px 0 12px;line-height:1.45;
-  flex:none;min-height:calc(1.45em * 4)}
-@media(max-width:1000px){.coluna .regra{min-height:0}}
+  flex:none;height:calc(1.45em * 3);overflow:hidden;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
+@media(max-width:1000px){.coluna .regra{height:auto;display:block;overflow:visible}}
 /* o rotulo do criterio fecha com um fio: e ele que marca onde comeca a
    lista, e sem o fio a coluna virava um monte de texto sem degrau */
 .coluna .rotc{font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;
@@ -642,26 +682,31 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
 </head>
 <body>
 
-<div class="aviso"><div class="w"><b>Caderno de estudo.</b>
-Nada aqui é recomendação — cada carteira é anotação pessoal de quem publica.</div></div>
-
-<header><div class="w"><nav>
-  <a href="#/" class="marca">Saldo Positivo</a>
-  <span class="grupo"><span class="rotg">Carteiras</span>
-    <span class="bloco"><a href="#/">Ranking</a><a href="#/screening">Screening</a><span id="navPub"></span></span></span>
-  <span class="grupo"><span class="rotg">Diversão</span>
-    <span class="bloco"><a href="#/tiro-curto">Tiro curto</a><a href="#/placar">Placar</a><a href="#/duelo">Duelo</a></span></span>
-  <span class="grupo"><span class="rotg">Ajuda</span>
-    <span class="bloco"><a href="#/como-funciona">Como funciona</a><a href="#/clube">Clube</a><a href="#/servicos">Serviços</a></span></span>
-  <span class="dir" id="navDir"></span>
-</nav></div></header>
+<header><div class="w">
+  <div class="alto">
+    <a href="#/" class="marca">Saldo Positivo</a>
+    <span class="dir" id="navDir"></span>
+  </div>
+  <nav>
+    <span class="grupo"><span class="rotg">Carteiras</span>
+      <span class="bloco"><a href="#/">Ranking</a><a href="#/screening">Screening</a><span id="navPub"></span></span></span>
+    <span class="grupo"><span class="rotg">Diversão</span>
+      <span class="bloco"><a href="#/tiro-curto">Tiro curto</a><a href="#/placar">Placar</a><a href="#/duelo">Duelo</a></span></span>
+    <span class="grupo"><span class="rotg">Aprender</span>
+      <span class="bloco"><a href="#/como-funciona">Como funciona</a></span></span>
+    <span class="grupo"><span class="rotg">Com a gente</span>
+      <span class="bloco"><a href="#/clube">Clube de investimentos</a><a href="#/servicos">Serviços</a></span></span>
+  </nav>
+</div></header>
 
 <div class="faixa" id="faixa"></div>
 
 <main class="w" id="app"><div class="carreg">carregando…</div></main>
 
-<footer class="w">A rentabilidade começa no dia em que a carteira é publicada — não há histórico
-retroativo. Cada carteira é anotação pessoal de quem a publica.
+<footer class="w"><b style="color:var(--t2);font-weight:500">Caderno de estudo.</b>
+Nada aqui é recomendação de investimento — cada carteira é anotação pessoal de quem a
+publica, sem dinheiro real. A rentabilidade começa no dia da publicação: não há
+histórico retroativo.
 <a href="#/como-funciona" style="color:var(--t2);border-bottom:1px solid var(--linha2)">Como funciona</a>
  · <a href="#/termos" style="color:var(--t2);border-bottom:1px solid var(--linha2)">Termos e privacidade</a></footer>
 
@@ -704,11 +749,11 @@ function aviso(t, erro){ return `<div class="msg${erro?" erro":""}">${esc(t)}</d
 // 100% e 200% são sempre INCLUSIVE.
 const CLASSE = {
   diversificada:     { nome:"Comprada",
-    regra:"Só compra, exatamente 10 papéis somando 100% do dinheiro. Não deixa caixa." },
+    regra:"Só compra, exatamente 10 papéis somando 100%. Não deixa caixa." },
   sessenta_quarenta: { nome:"60/40",
-    regra:"Só compra, com 50% a 80% do dinheiro em renda fixa e o resto em ações — 100% na montagem." },
+    regra:"Só compra, com 50% a 80% em renda fixa e o resto em ações." },
   long_short:        { nome:"Long × short",
-    regra:"Compra e venda ao mesmo tempo. A soma vai até 200% e a diferença entre elas até 100%." },
+    regra:"Compra e venda ao mesmo tempo. A soma vai até 200%, a diferença até 100%." },
   vendida:           { nome:"Vendida",
     regra:"Só venda a descoberto, até 100% do patrimônio." },
 };
@@ -1044,9 +1089,14 @@ function pintarNav(){
   // a navegacao do site, e quem nao e admin nem via a diferenca.
   $("#navDir").innerHTML = eu
     ? `<details class="eu" id="menuEu">
-         <summary>${esc(eu.apelido)}${eu.admin?'<span class="pill">admin</span>':""}</summary>
+         <summary><span class="ini">${esc((eu.apelido||"?").trim().slice(0,2).toUpperCase())}</span
+           ><span class="nomeEu">${esc(eu.apelido)}</span>${
+             eu.admin?'<span class="pill">admin</span>':""}</summary>
          <div class="gaveta">
-           <div class="quem">${esc(eu.apelido)}</div>
+           <div class="cabeGav"><span class="ini">${
+             esc((eu.apelido||"?").trim().slice(0,2).toUpperCase())}</span>
+             <div><div class="ap">${esc(eu.apelido)}</div>
+               <div class="sub">${eu.admin?"administrador":"minha conta"}</div></div></div>
            <a href="#/conta">Minha conta</a>
            <a href="#/publicar">Criar carteira</a>
            <a href="#/indicar">Indicar</a>
