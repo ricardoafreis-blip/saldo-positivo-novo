@@ -218,13 +218,21 @@ tr.semdado:hover td{opacity:1}
    Tres colunas de largura inteira. A primeira MOSTRA o grafico com a
    legenda ao lado; descrever cor com palavra, tendo o desenho logo
    acima, e o jeito mais dificil de explicar a coisa mais simples. */
-.comoler{display:grid;grid-template-columns:1.15fr 1fr 1fr;gap:1px;margin-top:26px;
-  background:var(--linha);border:1px solid var(--linha);border-radius:4px;overflow:hidden}
-@media(max-width:940px){.comoler{grid-template-columns:1fr}}
+/* ⚠️ Era 1.15fr 1fr 1fr. O SVG da primeira coluna nao encolhe, entao
+   ela ficava com a largura do desenho e empurrava as outras duas: a do
+   meio caiu para ~14 caracteres e o texto quebrou palavra por palavra.
+   `minmax(0,...)` deixa as colunas cederem, e o piso de 230px garante
+   que nenhuma fique estreita demais para uma frase. */
+.comoler{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+  gap:1px;margin-top:26px;background:var(--linha);border:1px solid var(--linha);
+  border-radius:4px;overflow:hidden}
+.comoler .cel{min-width:0}
+.comoler .amostra svg{max-width:100%;height:auto}
 .comoler .cel{background:var(--p2);padding:18px 20px}
 .comoler h4{font-family:Newsreader,serif;font-weight:500;font-size:16px;margin:0 0 12px;
   color:var(--tinta);letter-spacing:-.01em}
-.comoler p{font-size:11.5px;color:var(--graf);margin:12px 0 0;line-height:1.6}
+.comoler p{font-size:11.5px;color:var(--graf);margin:12px 0 0;line-height:1.6;
+  overflow-wrap:break-word}
 .comoler p b{color:var(--t2);font-weight:500}
 .amostra{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
 .chaves{list-style:none;margin:0;padding:0;font-size:11px;color:var(--t2);flex:1;min-width:158px}
@@ -235,7 +243,11 @@ tr.semdado:hover td{opacity:1}
 .comoler dt{color:var(--tinta);font-size:12px;margin-top:9px}
 .comoler dt:first-child{margin-top:0}
 .comoler dd{margin:1px 0 0;color:var(--graf);line-height:1.5}
-.comoler .selo2{border-top:1px solid var(--linha);padding-top:11px;margin-top:14px;color:var(--ouro2)}
+/* o aviso era um .selo2 — classe de etiqueta monoespacada, sem quebra:
+   virava uma faixa de largura fixa estourando a coluna. Aqui e texto. */
+.comoler .selo2{display:block;border:none;background:none;padding:11px 0 0;margin-top:14px;
+  border-top:1px solid var(--linha);color:var(--ouro2);font-family:inherit;
+  font-size:11px;letter-spacing:0;text-transform:none;white-space:normal}
 
 /* ══ TELA DA CARTEIRA ═══════════════════════════════════════════════ */
 .heroi{display:grid;grid-template-columns:minmax(0,auto) 1fr;gap:34px;align-items:end;
@@ -249,7 +261,14 @@ tr.semdado:hover td{opacity:1}
 
 /* a fita: da para CONTAR as marcas */
 .fita{position:relative;padding-bottom:16px}
-.fita .trilho{display:flex;align-items:center;gap:2px;height:74px;border-bottom:1px solid var(--linha)}
+.fita .trilho{display:flex;align-items:center;gap:2px;height:74px;
+  border-bottom:1px solid var(--linha);position:relative}
+/* a curva do acumulado por cima das barras: o destino sobre o caminho */
+.fita .acum{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+.fita .ponta{position:absolute;right:0;transform:translate(calc(100% + 8px),-50%);
+  font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;
+  font-size:12px;font-weight:500;white-space:nowrap;pointer-events:none}
+.fita{padding-right:52px}
 .fita .d{flex:1 1 3px;max-width:11px;min-width:2px;height:100%;position:relative;display:flex;align-items:center}
 .fita .b{width:100%;border-radius:1px;transition:opacity .15s}
 .fita .d:hover .b{opacity:1}
@@ -1513,7 +1532,11 @@ function grafico(serie, refs){
 // Compara cada declaracao com a anterior e descreve em portugues o que
 // mudou. Nao precisa de tabela nova: a posicao ja guarda toda declaracao
 // separada por valida_de — o historico sempre esteve la, so nao aparecia.
-function montarExtrato(todas){
+// ⚠️ REBALANCEAMENTO NAO CRIA POSICAO. Ele volta ao marco ja declarado,
+// entao montar o extrato so pela `posicao` fazia 17 disparos de banda
+// sumirem da carteira 42 — e a regua na tela promete registrar quando a
+// banda estourar. Prometia e nao entregava. Agora as duas fontes entram.
+function montarExtrato(todas, rebal){
   const porData = {};
   (todas||[]).forEach(x => { (porData[x.valida_de] ||= {})[x.ativo] = x.peso; });
   const datas = Object.keys(porData).sort();
@@ -1546,6 +1569,18 @@ function montarExtrato(todas){
     return { data:d, abertura:false, acoes };
   });
 
+  // As linhas da regra entram como eventos proprios, com o motivo que o
+  // fechar_dia gravou. Se cairem no mesmo dia de uma declaracao, viram
+  // uma linha so: foi o mesmo pregao.
+  (rebal||[]).forEach(r => {
+    const d = String(r.data).slice(0,10);
+    const mesmo = eventos.find(e => String(e.data).slice(0,10) === d);
+    if(mesmo){ mesmo.regra = r.motivo || "rebalanceamento"; return; }
+    eventos.push({ data:d, abertura:false, regra: r.motivo || "rebalanceamento",
+                   acoes: ["os pesos voltaram ao que foi declarado"] });
+  });
+
+  eventos.sort((a,b) => String(a.data).localeCompare(String(b.data)));
   return eventos.reverse();          // mais recente em cima
 }
 
@@ -2206,7 +2241,24 @@ function fitaGrande(serie){
   if(!s.length) return `<div class="fita"><div class="trilho"><span class="base"></span></div>
     <div class="leg"><span></span><span class="sel"><i class="pontinho"></i>nenhum pregão
       apurado ainda</span><span></span></div></div>`;
+
   const mx = Math.max(...s.map(r => Math.abs(r.retorno)), .004);
+  const H = 74, MEIO = H/2;
+
+  // ⚠️ As barras mostram o RITMO — quantos dias para cima, quantos para
+  // baixo, com que força. Não dizem ONDE a carteira chegou: vinte verdes
+  // e treze vermelhas continuam sem responder se ela está ganhando.
+  // A curva do acumulado responde, e as duas juntas contam a história
+  // inteira: o caminho e o destino.
+  let acum = 1;
+  const cam = s.map(r => { acum *= 1 + r.retorno; return acum - 1; });
+  const topo = Math.max(...cam.map(Math.abs), .004);
+  const px = i => s.length === 1 ? 50 : (i / (s.length - 1)) * 100;
+  const py = v => MEIO - (v / topo) * (MEIO - 6);
+  const linha = cam.map((v,i) => `${i?"L":"M"}${px(i).toFixed(2)},${py(v).toFixed(1)}`).join("");
+  const fim = cam[cam.length-1];
+  const cor = fim >= 0 ? "var(--alta)" : "var(--baixa)";
+
   return `<div class="fita">
     <div class="trilho"><span class="base"></span>${s.map((r,i)=>{
       const h = Math.max(Math.abs(r.retorno)/mx*46, 2);
@@ -2214,7 +2266,14 @@ function fitaGrande(serie){
         <i class="b" style="height:${h.toFixed(1)}px;background:${
           r.retorno>=0?"var(--alta)":"var(--baixa)"};opacity:${i===s.length-1?1:.72};
           align-self:${r.retorno>=0?"flex-end":"flex-start"};
-          margin-${r.retorno>=0?"bottom":"top"}:37px"></i></span>`;}).join("")}</div>
+          margin-${r.retorno>=0?"bottom":"top"}:37px"></i></span>`;}).join("")}
+      <svg class="acum" viewBox="0 0 100 ${H}" preserveAspectRatio="none"
+        role="img" aria-label="acumulado no período: ${pct(fim)}">
+        <path d="${linha}" fill="none" stroke="${cor}" stroke-width="1.4"
+          vector-effect="non-scaling-stroke" stroke-linejoin="round"/>
+      </svg>
+      <span class="ponta" style="color:${cor};top:${py(fim).toFixed(1)}px">${pct(fim)}</span>
+    </div>
     <div class="leg"><span>${dataBR(s[0].data)}</span>
       <span class="sel"><i class="pontinho"></i>${s.length} ${
         s.length===1?"pregão apurado":"pregões apurados"} — nenhum pode ser reescrito</span>
@@ -2272,15 +2331,25 @@ async function telaCarteira(id){
   // acesso: a RLS que protege o peso protege isto tambem.
   const { data:todasPos } = await sb.from("posicao").select("ativo,peso,valida_de")
                                     .eq("carteira_id", id).order("valida_de");
-  const extrato = montarExtrato(todasPos);
+
+  // ⚠️ BUSCAR ANTES DE USAR. Este bloco estava DEPOIS do montarExtrato:
+  // `let rebalLista` na zona morta temporal derrubava telaCarteira com
+  // ReferenceError e a tela ficava em "carregando..." para sempre.
+  //
+  // Julgar quem publica e julgar as ESCOLHAS dele: acertar porque a
+  // banda disparou nao e o mesmo que acertar porque a pessoa trocou um
+  // papel. A data casa a declaracao com a linha de `rebalanceamento`.
+  const rebal = {}; let rebalLista = [];
+  { const { data:rb } = await sb.from("rebalanceamento")
+      .select("data,motivo").eq("carteira_id", id).order("data");
+    rebalLista = rb || [];
+    rebalLista.forEach(r => rebal[String(r.data).slice(0,10)] = r.motivo || ""); }
+
+  const extrato = montarExtrato(todasPos, rebalLista);
   // ⚠️ Julgar quem publica e julgar as ESCOLHAS dele. Acertar porque a
   // banda disparou nao e o mesmo que acertar porque a pessoa decidiu
   // trocar um papel. A data casa a declaracao com a linha de
   // `rebalanceamento`; o que nao casa foi decisao do autor.
-  const rebal = {};
-  { const { data:rb } = await sb.from("rebalanceamento")
-      .select("data,motivo").eq("carteira_id", id);
-    (rb||[]).forEach(r => rebal[String(r.data).slice(0,10)] = r.motivo || ""); }
   let sigo=false, nSeg=0;
   if(eu){
     const { data:sg } = await sb.from("seguidor").select("carteira_id")
@@ -2444,7 +2513,7 @@ async function telaCarteira(id){
         Extrato · ${extrato.length} ${extrato.length===1?"declaração":"declarações"}</div>
       ${extrato.map(e=>{
         const dr = String(e.data).slice(0,10);
-        const porRegra = !e.abertura && dr in rebal;
+        const porRegra = !e.abertura && (e.regra != null || dr in rebal);
         return `<div class="ext">
           <div class="dt">${dataBR(e.data)}</div>
           <div>
@@ -2452,8 +2521,8 @@ async function telaCarteira(id){
               e.abertura ? "abertura"
               : porRegra ? "rebalanceamento · regra"
               : "decisão do autor"}</span>
-            ${porRegra && rebal[dr]
-              ? `<span class="motivo">${esc(rebal[dr])}</span>` : ""}
+            ${porRegra && (e.regra || rebal[dr])
+              ? `<span class="motivo">${esc(e.regra || rebal[dr])}</span>` : ""}
             <div class="oq">${e.acoes.length ? e.acoes.map(esc).join(" · ")
               : "declarou de novo sem mudar peso nenhum"}</div>
           </div>
@@ -3093,6 +3162,18 @@ async function telaEditar(id){
         <h3 style="font-size:16px;margin-bottom:14px">Nome e descrição</h3>
         <label>Nome</label><input id="nome" maxlength="40" value="${esc(c.nome)}">
         <label>Descrição</label><input id="desc" maxlength="160" value="${esc(c.descricao||"")}">
+        <button class="bt cheio" id="btNome">Salvar</button>
+      </div>
+
+      <!-- ⚠️ CARTAO PROPRIO. A regua estava enfiada no cartao de nome e
+           descricao, abaixo de dois campos de texto — e ninguem achava.
+           Rebalanceamento nao e metadado: e a disciplina da carteira, e
+           fica ao lado das posicoes, que e o que ela governa. -->
+      <div class="card" style="margin-top:16px;border-left:2px solid var(--lacre)">
+        <h3 style="font-size:16px;margin-bottom:4px">Como a carteira se mantém</h3>
+        <p style="font-size:11.5px;color:var(--graf);margin:0 0 12px;line-height:1.55">
+          O peso anda sozinho: quem sobe mais que a carteira ganha espaço. A régua
+          decide se, e quando, ele volta ao declarado.</p>
         <label>Rebalanceamento</label>
         <select id="selRebEd">
           ${[["nunca","nunca — o peso corre solto"],
@@ -3103,8 +3184,10 @@ async function telaEditar(id){
         <div id="campoBandaEd" style="display:${c.rebalancear==="banda"?"block":"none"}">
           <label>Banda, em pontos percentuais</label>
           <input id="bandaEd" type="number" step="1" min="1" max="100" value="${Math.round(c.banda_pct||5)}">
+          <p style="font-size:11px;color:var(--graf);margin:6px 0 0">
+            Banda apertada rebalanceia muito: 3 p.p. costuma disparar a cada dois pregões.</p>
         </div>
-        <button class="bt cheio" id="btNome">Salvar</button>
+        <button class="bt cheio" id="btRegra" style="margin-top:12px">Mudar a régua</button>
       </div>
       <div class="card" style="margin-top:16px">
         <h3 style="font-size:16px;margin-bottom:8px">Declarar novas posições</h3>
@@ -3185,20 +3268,37 @@ async function telaEditar(id){
       { cid:id, novo_nome:$("#nome").value, nova_desc:$("#desc").value });
     if(error) return $("#erro").innerHTML=aviso(error.message,true);
 
-    // rebalanceamento agora pode mudar. A troca fica registrada como nota,
-    // para o extrato mostrar que a regra mudou e quando.
+    // ⚠️ A troca de regra vale do PROXIMO pregao. Ela entra na tabela
+    // `regra`, que guarda o historico com validade — e o fechar_dia le a
+    // que valia em cada dia. O que ja foi apurado continua apurado pela
+    // regra antiga, sem ninguem precisar avisar nada.
+    //
+    // A coluna carteira.rebalancear e o ESPELHO da regra vigente: o
+    // ranking e a regua da tela leem dela sem join. Gravar so nela, como
+    // era antes, deixaria o fechar_dia usando a regra velha.
     const novoReb = $("#selRebEd").value;
     const novaBanda = Math.min(100, Math.max(1, Math.round(Number($("#bandaEd")?.value) || 5)));
     if(novoReb !== c.rebalancear || (novoReb === "banda" && novaBanda !== Math.round(c.banda_pct||5))){
+      const { data:prox } = await sb.rpc("proximo_pregao_br");
+      const vale = prox || new Date().toISOString().slice(0,10);
+      const { error:e3 } = await sb.from("regra").upsert({
+        carteira_id: id, valida_de: vale,
+        rebalancear: novoReb, banda_pct: novaBanda }, { onConflict: "carteira_id,valida_de" });
+      if(e3) return $("#erro").innerHTML=aviso(e3.message,true);
       const { error:e2 } = await sb.from("carteira")
         .update({ rebalancear: novoReb, banda_pct: novaBanda }).eq("id", id);
       if(e2) return $("#erro").innerHTML=aviso(e2.message,true);
       await sb.from("nota").insert({ carteira_id:id,
-        texto:`Rebalanceamento alterado de ${c.rebalancear} para ${novoReb}`
-            + (novoReb==="banda"?` (banda de ${novaBanda} p.p.)`:"") });
+        texto:`Passou a rebalancear ${novoReb==="banda"
+          ? `por banda de ${novaBanda} p.p.` : novoReb}, a partir de ${dataBR(vale)}` });
     }
     $("#erro").innerHTML=aviso("Salvo."); telaEditar(id);
   };
+  // o cartao da regua tem botao proprio: salvar nome nao deve mexer na
+  // disciplina da carteira, e vice-versa
+  const btr = $("#btRegra");
+  if(btr) btr.onclick = $("#btNome").onclick;
+
   $("#btPos").onclick = async()=>{
     let brutos = lerGrade();
     if(!Object.keys(brutos).length) return $("#erro").innerHTML=aviso("Nenhuma posição válida.",true);
@@ -3643,7 +3743,14 @@ async function telaPlacar(){
 // mandar candles intradiarios — tabela nova e outro volume de dado.
 async function telaScreening(){
   app().innerHTML = `<div class="carreg">calculando as médias…</div>`;
-  const { data, error } = await sb.rpc("quant_medias");
+  // ⚠️ A janela esteve em 58 enquanto a media longa era CALCULADA no
+  // banco: ela so passava a existir depois de acumular o periodo, e com
+  // 92 pregoes carregados a curva nascia no meio do desenho. Agora as
+  // medias vem prontas do MT5, calculadas sobre anos de historico, e
+  // existem desde o primeiro pregao gravado — a janela pode ser a que
+  // o desenho pede, nao a que o calculo aguenta.
+  const JANELA_GRAFICO = 90;
+  const { data, error } = await sb.rpc("quant_medias", { p_janela: JANELA_GRAFICO });
   if(error) return app().innerHTML = aviso("Erro ao calcular: "+error.message, true);
 
   const q = new URLSearchParams(location.hash.split("?")[1]||"");
@@ -3696,8 +3803,21 @@ async function telaScreening(){
   const estadoDe = x => {
     const a = x.ema17, b = x.ema34, c = x.ema72, p = x.fech;
     if(c == null) return a >= b ? "alta_sem" : "baixa_sem";
-    if(a >= b && b >= c) return p >= a ? "alta_max"  : "alta_realiza";
-    if(a <  b && b <  c) return p <= a ? "baixa_max" : "baixa_realiza";
+    // ⚠️ Faltava um degrau. A regra so olhava se o preco estava acima ou
+    // abaixo da CURTA: o BBDC4 apareceu como "realizando na alta" com o
+    // preco abaixo das TRES e 2,39% abaixo do institucional. Realizacao
+    // e recuo DENTRO da tendencia; quem perdeu a referencia mais firme
+    // esta saindo dela, nao realizando.
+    if(a >= b && b >= c){
+      if(p >= a) return "alta_max";
+      if(p >= c) return "alta_realiza";   // recuou, mas segura a longa
+      return "saida_alta";                // perdeu as tres
+    }
+    if(a <  b && b <  c){
+      if(p <= a) return "baixa_max";
+      if(p <= c) return "baixa_realiza";  // repicou, mas nao passou a longa
+      return "saida_baixa";               // passou as tres
+    }
     if(a <  b && a >= c && b >= c) return p >= c ? "saida_alta"  : "saida_alta_ind";
     if(a >= b && a <  c && b <  c) return p <= c ? "saida_baixa" : "saida_baixa_ind";
     // Médias desalinhadas, mas o PREÇO já passou de todas as três: isso é
@@ -3854,7 +3974,7 @@ async function telaScreening(){
         return `<line x1="${xa}" x2="${xa+L}" y1="${py(m).toFixed(1)}" y2="${py(m).toFixed(1)}"
           stroke="${c}" stroke-width="1.8" stroke-linecap="round"/>`; })()).join("");
     return `<svg viewBox="0 0 ${W} ${H}" style="width:${W}px;height:${H}px;display:block"
-      role="img" aria-label="${esc(x.ativo)}: preço e ponto do institucional em 90 pregões">
+      role="img" aria-label="${esc(x.ativo)}: preço e ponto do institucional">
       <line x1="${fim+2}" x2="${fim+2}" y1="1" y2="${H-1}" stroke="var(--linha)" stroke-width="1"/>
       ${temF ? `<path d="${mF.map((n,i) => n == null ? ""
           : `${i === iF ? "M" : "L"}${px(i).toFixed(1)},${py(n).toFixed(1)}`).join("")}"
@@ -3909,7 +4029,7 @@ async function telaScreening(){
   : `<table><thead><tr><th>Papel</th><th class="estica">Estado</th>
       <th class="d">Fechamento</th><th class="d">Vs. institucional</th>
       <th class="d mA m1">Trader</th><th class="d mA m2">Investidor</th><th class="d mA m3">Institucional</th>
-      <th class="d" style="width:196px;padding-left:14px">90 pregões</th>
+      <th class="d" style="width:196px;padding-left:14px">${JANELA_GRAFICO} pregões</th>
       <th class="d">Negócio/dia</th></tr></thead><tbody>
     ${[...(amplo?[amplo]:[]), ...(verSet?setoriais:[])].map(x=>`<tr class="ref${
         x===amplo?"":" set"}">
@@ -3949,7 +4069,7 @@ async function telaScreening(){
       <h4>O desenho</h4>
       <div class="amostra">${exemploRisco()}
         <ul class="chaves">
-          <li><i class="l" style="background:var(--alta)"></i>preço dos 90 últimos pregões</li>
+          <li><i class="l" style="background:var(--alta)"></i>preço dos últimos pregões</li>
           <li><i class="l" style="background:var(--lacre)"></i>ponto do <b>institucional</b> — define a fase</li>
           <li><i class="l" style="background:var(--graf);width:9px"></i>ponto do <b>investidor</b>, hoje</li>
           <li><i class="l" style="background:var(--tinta);width:9px"></i>ponto do <b>trader</b>, hoje</li>
@@ -3976,11 +4096,14 @@ async function telaScreening(){
     <div class="cel">
       <h4>As fases</h4>
       <dl>
-        <dt class="alta">fortíssima alta · em baixa</dt><dd>os três na ordem, do trader ao
-          institucional, e o preço além de todos. Se o preço recuou para dentro, é
-          <b>realizando</b>.</dd>
-        <dt>possível saída · saindo</dt><dd>o do trader cruzou o do investidor, e os dois
-          ainda estão do mesmo lado do institucional.</dd>
+        <dt class="alta">fortíssima alta · em baixa</dt><dd>os três pontos na ordem, do
+          trader ao institucional, e o preço além de todos.</dd>
+        <dt>realizando</dt><dd>mesma ordem, mas o preço voltou para dentro — ainda
+          segurando o ponto do institucional.</dd>
+        <dt>possível saída · saindo</dt><dd>dois caminhos levam aqui: o preço perdeu os
+          <b>três</b> pontos, ou o do trader cruzou o do investidor e os dois ficaram do
+          mesmo lado do institucional. Nos dois casos a tendência está sendo questionada,
+          não apenas descansando.</dd>
         <dt>virando · sem tendência</dt><dd>pontos desalinhados. Se o preço já passou dos
           três, é virada — quem manda é o preço.</dd>
       </dl>
