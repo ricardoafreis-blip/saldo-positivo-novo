@@ -166,6 +166,22 @@ tr.semdado:hover td{opacity:1}
 .regua .obs{font-size:11.5px;color:var(--graf);margin:12px 0 0;max-width:70ch;line-height:1.6}
 .regua .obs b{color:var(--t2);font-weight:500}
 
+/* ══ CONSENSO ═══════════════════════════════════════════════════════ */
+.linhaK{display:grid;grid-template-columns:58px 1fr 26px 44px;gap:9px;align-items:center;
+  padding:7px 0;border-bottom:1px solid var(--linha)}
+.linhaK .cod{font-family:'IBM Plex Mono',monospace;font-size:12.5px;font-weight:500;
+  color:var(--tinta);letter-spacing:.02em}
+.linhaK .tr{height:6px;background:var(--papel);border-radius:2px;overflow:hidden}
+.linhaK .tr i{display:block;height:100%;border-radius:2px;opacity:.8}
+.linhaK .qt{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--t2);text-align:right}
+.linhaK .pp{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--graf);text-align:right}
+.linhaK.briga{grid-template-columns:58px 1fr}
+.linhaK .duelo{display:flex;height:16px;border-radius:2px;overflow:hidden;gap:1px}
+.linhaK .duelo i{display:grid;place-items:center;font-style:normal;font-size:10.5px;
+  font-family:'IBM Plex Mono',monospace;color:#0A1120;font-weight:600}
+.linhaK .duelo .c{background:var(--alta)}
+.linhaK .duelo .v{background:var(--baixa)}
+
 /* ══ CRM DOS PEDIDOS ════════════════════════════════════════════════ */
 .lead{border:1px solid var(--linha);border-radius:4px;background:var(--p2);margin-top:9px}
 .lead.urg{border-left:2px solid var(--baixa)}
@@ -1644,6 +1660,7 @@ async function telaRanking(){
         class="aba${filtro===k?" on":""}">${v.nome}<span class="n">${conta[k]}</span></a>`).join("")}
     ${conta.sem?`<a href="#/?ordem=${ordem}&classe=sem"
       class="aba${filtro==="sem"?" on":""}">Sem classe<span class="n">${conta.sem}</span></a>`:""}
+    <a href="#/consenso" class="aba" style="margin-left:auto">O que estão comprando</a>
   </div>
   <div class="ordena">
     <span class="rot">no pódio, a partir de</span>
@@ -4783,6 +4800,90 @@ async function telaClube(){
   pintar();
 }
 
+/* ══ CONSENSO ═══════════════════════════════════════════════════════
+   Os papeis mais carregados por quem publica. E o unico numero do site
+   que nenhum concorrente tem, porque so existe se voce apura carteiras.
+
+   ⚠️ A composicao e o conteudo PAGO. Um agregado com poucas carteiras
+   denuncia o individual: "3 carteiras tem PETR4" com 4 carteiras no ar
+   e quase a lista de cada uma. Por isso a funcao `consenso` tem piso —
+   nenhuma linha aparece com menos de MIN carteiras por tras — e o piso
+   e regra, nao enfeite. Nunca baixar para "mostrar alguma coisa". */
+const MIN_CONSENSO = 5;
+
+async function telaConsenso(){
+  app().innerHTML = `<div class="carreg">apurando o consenso…</div>`;
+  const { data, error } = await sb.rpc("consenso", { min_carteiras: MIN_CONSENSO });
+  if(error) return app().innerHTML = aviso("Não consegui apurar: " + error.message +
+    " — se falar em função inexistente, o `consenso` ainda não está no banco.", true);
+
+  const l = data || [];
+  const comprados = l.filter(x => x.peso_liquido > 0).slice(0, 12);
+  const vendidos  = l.filter(x => x.peso_liquido < 0)
+                     .sort((a,b) => a.peso_liquido - b.peso_liquido).slice(0, 12);
+  // ⚠️ A leitura mais interessante das tres: papel que UNS compram e
+  // OUTROS vendem. E onde o desacordo esta, e desacordo e o que ensina.
+  const briga = l.filter(x => x.comprada > 0 && x.vendida > 0)
+                 .sort((a,b) => Math.min(b.comprada,b.vendida) - Math.min(a.comprada,a.vendida))
+                 .slice(0, 8);
+  const maxC = Math.max(1, ...comprados.map(x => x.carteiras));
+  const maxV = Math.max(1, ...vendidos.map(x => x.carteiras));
+
+  const bloco = (titulo, sub, itens, mx, cor1) => `
+    <div class="cel">
+      <h3 style="font-size:19px;margin:0 0 3px">${titulo}</h3>
+      <p style="font-size:11.5px;color:var(--graf);margin:0 0 14px">${sub}</p>
+      ${!itens.length ? `<p style="font-size:12.5px;color:var(--graf)">Ainda não há
+        papel em ${MIN_CONSENSO} carteiras diferentes.</p>`
+      : itens.map(x => `<div class="linhaK">
+          <span class="cod">${esc(x.ativo)}</span>
+          <span class="tr"><i style="width:${(x.carteiras/mx*100).toFixed(0)}%;
+            background:${cor1}"></i></span>
+          <span class="qt">${x.carteiras}</span>
+          <span class="pp">${n2(Math.abs(x.peso_medio),1)}%</span>
+        </div>`).join("")}
+    </div>`;
+
+  app().innerHTML = `
+  <div class="cabeca" style="text-align:left;max-width:66ch">
+    <h1>O que estão comprando</h1>
+    <p>Os papéis que mais aparecem nas carteiras publicadas, somando todas as classes.
+      Não é recomendação nem previsão: é o retrato do que as pessoas escolheram, e o
+      retrato muda todo pregão.</p>
+  </div>
+
+  <div class="comoler" style="margin-top:20px">
+    ${bloco("Mais comprados", "em quantas carteiras o papel aparece, e o peso médio nelas",
+            comprados, maxC, "var(--alta)")}
+    ${bloco("Mais vendidos", "posições vendidas a descoberto, nas classes que permitem",
+            vendidos, maxV, "var(--baixa)")}
+    <div class="cel">
+      <h3 style="font-size:19px;margin:0 0 3px">Onde há briga</h3>
+      <p style="font-size:11.5px;color:var(--graf);margin:0 0 14px">
+        papéis que umas carteiras compram e outras vendem ao mesmo tempo</p>
+      ${!briga.length ? `<p style="font-size:12.5px;color:var(--graf)">Nenhum papel com
+        os dois lados ainda. Costuma aparecer quando há mais long × short publicadas.</p>`
+      : briga.map(x => `<div class="linhaK briga">
+          <span class="cod">${esc(x.ativo)}</span>
+          <span class="duelo">
+            <i class="c" style="flex:${x.comprada}">${x.comprada}</i>
+            <i class="v" style="flex:${x.vendida}">${x.vendida}</i></span>
+        </div>`).join("")}
+      <p style="font-size:11px;color:var(--graf);margin:14px 0 0;line-height:1.55">
+        Verde é quantas compram, vermelho quantas vendem. Concordância é confortável;
+        <b style="color:var(--t2)">o desacordo é o que ensina</b> — vale abrir as duas
+        e ver o que cada lado enxergou.</p>
+    </div>
+  </div>
+
+  <p style="font-size:11.5px;color:var(--graf);margin:18px 0 0;max-width:80ch;line-height:1.65">
+    ⚠️ Um papel só entra nesta tela quando aparece em pelo menos
+    <b style="color:var(--t2)">${MIN_CONSENSO} carteiras diferentes</b>. Com menos que
+    isso, o agregado entregaria a composição de quem publicou — e composição é o que cada
+    autor decide mostrar ou não. Nenhum número aqui identifica carteira nenhuma.
+  </p>`;
+}
+
 function rotear(){
   // toda troca de tela para os timers da tela anterior
   clearInterval(window.__timerRank);
@@ -4807,6 +4908,7 @@ function rotear(){
   if(h==="#/admin")           return telaAdmin();
   if(h==="#/servicos")        return telaServicos();
   if(h==="#/clube")           return telaClube();
+  if(h==="#/consenso")        return telaConsenso();
   if(h.split("?")[0]==="#/universo") return telaUniverso();
   if(h.split("?")[0]==="#/leads") return telaLeads();
   if(h==="#/conta")           return telaConta();
