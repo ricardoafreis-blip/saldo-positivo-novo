@@ -803,10 +803,21 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
 .colunas{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:16px}
 @media(max-width:1000px){.colunas{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:620px){.colunas{grid-template-columns:1fr}}
-.coluna{background:var(--p2);border:1px solid var(--linha);border-radius:4px;padding:14px 15px}
-.coluna h3{font-family:Newsreader,serif;font-size:15px;margin:0 0 2px}
+/* ⚠️ COLUNA EM FLEX, NAO EM BLOCO. Com 3, 2, 2 e 3 carteiras cada
+   coluna terminava numa altura diferente e o rodape — ultima colocada e
+   "ver todas" — ficava boiando logo abaixo da ultima linha. Em flex, o
+   `pe` recebe margin-top:auto e as quatro terminam na MESMA linha, que
+   e o que fazia o desenho parecer equilibrado. */
+.coluna{background:var(--p2);border:1px solid var(--linha);border-radius:4px;
+  padding:15px 16px;display:flex;flex-direction:column}
+.coluna h3{font-family:Newsreader,serif;font-size:16px;margin:0 0 2px}
 .coluna .qtd{font-size:10.5px;color:var(--graf);letter-spacing:.06em;text-transform:uppercase}
-.coluna .regra{font-size:11px;color:var(--graf);margin:6px 0 10px;line-height:1.45}
+.coluna .regra{font-size:11px;color:var(--graf);margin:7px 0 12px;line-height:1.45;flex:none}
+/* o rotulo do criterio fecha com um fio: e ele que marca onde comeca a
+   lista, e sem o fio a coluna virava um monte de texto sem degrau */
+.coluna .rotc{font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--graf);text-align:right;padding-bottom:3px;border-bottom:1px solid var(--linha2)}
+.coluna .pe{margin-top:auto}
 /* ── a fita: um traco por pregao apurado ── */
 .fitinha{display:inline-flex;align-items:center;gap:1px;height:16px;vertical-align:middle}
 .fitinha i{flex:1;border-radius:.5px}
@@ -846,7 +857,7 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
   background:transparent;border-style:dashed}
 .carta.mais span{font-family:inherit;font-size:10.5px;margin-top:2px}
 
-.linhaC{display:flex;align-items:baseline;gap:8px;padding:7px 0;border-top:1px solid var(--linha)}
+.linhaC{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid var(--linha)}
 .linhaC:hover{background:var(--p3);cursor:pointer}
 .linhaC .n{font-family:'IBM Plex Mono';font-size:10.5px;color:var(--graf);flex:none;width:15px}
 .linhaC .quem{flex:1;min-width:0}
@@ -1412,8 +1423,7 @@ function colunasPorClasse(lista, ordem, rotulo){
     <h3>${b.nome}</h3>
     <div class="qtd">${b.total} ${b.total===1?"carteira":"carteiras"}</div>
     <div class="regra">${b.regra}</div>
-    <div style="font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;
-      color:var(--graf);text-align:right;padding-bottom:2px">${rotulo}</div>
+    <div class="rotc">${rotulo}</div>
     ${b.g.length ? b.g.map((x,i)=>{
       // Carteira sem nenhum pregao apurado nao vale zero: ela nao comecou.
       // metricas() devolve acum 0 para serie vazia, e isso saia como
@@ -1438,6 +1448,7 @@ function colunasPorClasse(lista, ordem, rotulo){
         <span class="num ${v==null?"nulo":cor(v)}">${txt}</span></div>`;
     }).join("")
     : `<div class="vazio">Nenhuma carteira nesta classe ainda.</div>`}
+    <div class="pe">
     ${b.ultima ? (()=>{ const v = b.ultima.m.dias ? b.ultima.m[chave] : null;
       return `<div class="ultima" onclick="location.hash='#/carteira/${b.ultima.c.id}'"
         title="a última da classe">
@@ -1447,6 +1458,7 @@ function colunasPorClasse(lista, ordem, rotulo){
     ${b.total > 5 ? `<div style="padding-top:9px">
       <a href="#/?ordem=${ordem}&classe=${b.k}" style="font-size:11.5px;color:var(--ouro2)">
         ver todas as ${b.total} &rarr;</a></div>` : ""}
+    </div>
   </div>`).join("")}</div>
 `;
 }
@@ -1514,7 +1526,7 @@ function contraIbov(serie, oIbov){
 function comparativo(serie, refs){
   if(!serie || !serie.length) return null;
   const oIbov = {};
-  (refs||[]).filter(x => x.ativo === "^BVSP").forEach(x => { oIbov[x.data] = x.valor; });
+  (refs||[]).filter(x => x.ativo === "IBOV").forEach(x => { oIbov[x.data] = x.valor; });
   const temIbov = serie.some(x => oIbov[x.data] != null);
   let ib = 1, cd = 1;
   serie.forEach(x => {
@@ -1565,7 +1577,9 @@ function comparativoHTML(serie, refs){
 // EXISTE na corretora e nunca entrou na tabela oscilacao, entao a curva
 // caia no estimado todo dia sem ninguem ver. Ficou so o estimado, com a
 // taxa vindo de CDI_ANO, que e a mesma do fallback do fechar_dia.
-const REFERENCIAS = ["^BVSP"];
+// O codigo do site e o simbolo do MT5: um nome so. O ^BVSP era heranca
+// do Yahoo e obrigava traducao no EA e na tela.
+const REFERENCIAS = ["IBOV"];
 // Derivado do CDI_ANO, nao redigitado: duas copias do mesmo numero um dia
 // divergem. Continua havendo uma segunda copia no fechar_dia, no banco —
 // e essa e a que precisa ser unificada pela tabela `parametro`.
@@ -1581,7 +1595,7 @@ function grafico(serie, refs){
     (refs||[]).filter(x => x.ativo === tk).forEach(x => { m[x.data] = x.valor; });
     return m;
   };
-  const oIbov = oscDe("^BVSP");
+  const oIbov = oscDe("IBOV");
   const temIbov = Object.keys(oIbov).length > 0;
 
   let iv = 100, ic = 100;
@@ -1751,7 +1765,7 @@ async function telaRanking(){
     if(datas.length){
       const min = datas.reduce((a,b) => a < b ? a : b);
       const { data:bv } = await sb.from("oscilacao").select("data,valor")
-        .eq("ativo", "^BVSP").gte("data", min).order("data");
+        .eq("ativo", "IBOV").gte("data", min).order("data");
       (bv||[]).forEach(x => { oIbov[x.data] = x.valor; });
     }
   }
@@ -2397,7 +2411,7 @@ async function telaCarteira(id){
     .select("retorno,atualizado_em,com_cotacao,papeis")
     .eq("carteira_id", id).maybeSingle();
   const m = aplicarParcial(metricas(serie), parcial, serie);
-  // Ibovespa do mesmo periodo, do ^BVSP que o robo ja grava. Nao custa
+  // Ibovespa do mesmo periodo, do IBOV que o robo ja grava. Nao custa
   // chamada de API: e a mesma tabela que alimenta o fechamento.
   const { data:refs } = serie?.length
     ? await sb.from("oscilacao").select("ativo,data,valor").in("ativo", REFERENCIAS)
@@ -3816,10 +3830,10 @@ async function telaScreening(){
   // aba, de qualquer busca e do corte de liquidez — indice nao e papel,
   // e se um dia entrar no corte a regua some da tela quando alguem
   // marcar a caixinha.
-  // ⚠️ Na tabela `barra` o Ibovespa entra como ^BVSP — mesmo codigo que a
-  // tela da carteira usa como referencia. Sem ele na lista, o indice caia
-  // no meio dos papeis, no fim da tabela, ordenado por liquidez zero.
-  const IND_AMPLO = ["^BVSP","IBOV","IBOVESPA","IBXX","IBRX","IBRA"];
+  // ⚠️ ^BVSP continua reconhecido de proposito: se sobrar linha antiga em
+  // alguma tabela, o indice ainda e tratado como regua em vez de cair no
+  // meio dos papeis, no fim da lista, ordenado por liquidez nula.
+  const IND_AMPLO = ["IBOV","^BVSP","IBOVESPA","IBXX","IBRX","IBRA"];
   // Aceita as duas grafias: o codigo puro da B3 e a versao com ^ que
   // alguns provedores usam. Basta um deles existir na `barra`.
   const IND_SET = { IFNC:"Financeiro", ICON:"Consumo", IMAT:"Materiais básicos",
@@ -3988,7 +4002,10 @@ async function telaScreening(){
   const risco = x => {
     const v = x.serie || [], mF = x.serie72 || [];
     if(v.length < 5) return "";
-    const W = 150, H = 36, P = 2, FAIXA = 26;
+    // ⚠️ A janela veio de 60 para 90 pregoes (a media longa e de 72: com
+    // 60 o desenho mostrava um trecho em que a curva ainda nem existia).
+    // Noventa tracos em 150px viram borrao — a largura acompanha.
+    const W = 180, H = 36, P = 2, FAIXA = 26;
     const fim = W - P - FAIXA;                 // o fio: aqui acaba o passado
     // A curva longa vem NULA nos pregoes em que ainda nao existia. So
     // desenhamos o trecho definido — e so ele entra na escala.
@@ -4009,7 +4026,7 @@ async function telaScreening(){
         return `<line x1="${xa}" x2="${xa+L}" y1="${py(m).toFixed(1)}" y2="${py(m).toFixed(1)}"
           stroke="${c}" stroke-width="1.8" stroke-linecap="round"/>`; })()).join("");
     return `<svg viewBox="0 0 ${W} ${H}" style="width:${W}px;height:${H}px;display:block"
-      role="img" aria-label="${esc(x.ativo)}: preço e ponto forte em 60 pregões">
+      role="img" aria-label="${esc(x.ativo)}: preço e ponto do institucional em 90 pregões">
       <line x1="${fim+2}" x2="${fim+2}" y1="1" y2="${H-1}" stroke="var(--linha)" stroke-width="1"/>
       ${temF ? `<path d="${mF.map((n,i) => n == null ? ""
           : `${i === iF ? "M" : "L"}${px(i).toFixed(1)},${py(n).toFixed(1)}`).join("")}"
@@ -4064,11 +4081,11 @@ async function telaScreening(){
   : `<table><thead><tr><th>Papel</th><th>Estado</th>
       <th class="d">Fechamento</th><th class="d">Vs. institucional</th>
       <th class="d mA m1">Trader</th><th class="d mA m2">Investidor</th><th class="d mA m3">Institucional</th>
-      <th class="d" style="width:166px;padding-left:14px">60 pregões</th>
+      <th class="d" style="width:196px;padding-left:14px">90 pregões</th>
       <th class="d">Negócio/dia</th></tr></thead><tbody>
     ${[...(amplo?[amplo]:[]), ...(verSet?setoriais:[])].map(x=>`<tr class="ref${
         x===amplo?"":" set"}">
-      <td class="mono cod">${esc(x.ativo==="^BVSP"?"IBOVESPA":x.ativo.replace("^",""))}${
+      <td class="mono cod">${esc(x.ativo==="IBOV"||x.ativo==="^BVSP"?"IBOVESPA":x.ativo.replace("^",""))}${
         IND_SET[x.ativo]?`<span class="nm">${IND_SET[x.ativo]}</span>`:""}</td>
       <td style="font-size:12.5px" class="${tomDe(x.e)}">${ROT[x.e]}</td>
       <td class="d mono">${n2(x.fech, x.fech>1000?0:2)}</td>
@@ -4077,7 +4094,7 @@ async function telaScreening(){
       <td class="mA m1">${n2(x.ema17, x.fech>1000?0:2)}</td>
       <td class="mA m2">${n2(x.ema34, x.fech>1000?0:2)}</td>
       <td class="mA m3">${x.ema72==null?"—":n2(x.ema72, x.fech>1000?0:2)}</td>
-      <td style="padding:6px 0 6px 14px"><div style="margin-left:auto;width:150px">${risco(x)}</div></td>
+      <td style="padding:6px 0 6px 14px"><div style="margin-left:auto;width:180px">${risco(x)}</div></td>
       <td class="d mono nulo" style="font-size:12px">${x.liquidez==null?"—":grana(x.liquidez)}</td>
     </tr>`).join("")}
     ${l.map(x=>`<tr>
@@ -4089,7 +4106,7 @@ async function telaScreening(){
       <td class="mA m1">${n2(x.ema17)}</td>
       <td class="mA m2">${n2(x.ema34)}</td>
       <td class="mA m3">${x.ema72==null?"—":n2(x.ema72)}</td>
-      <td style="padding:6px 0 6px 14px"><div style="margin-left:auto;width:150px">${risco(x)}</div></td>
+      <td style="padding:6px 0 6px 14px"><div style="margin-left:auto;width:180px">${risco(x)}</div></td>
       <td class="d mono nulo" style="font-size:12px">${grana(x.liquidez)}</td></tr>`).join("")}
     </tbody></table>`}
 
@@ -4104,7 +4121,7 @@ async function telaScreening(){
       <h4>O desenho</h4>
       <div class="amostra">${exemploRisco()}
         <ul class="chaves">
-          <li><i class="l" style="background:var(--alta)"></i>preço dos 60 últimos pregões</li>
+          <li><i class="l" style="background:var(--alta)"></i>preço dos 90 últimos pregões</li>
           <li><i class="l" style="background:var(--lacre)"></i>ponto do <b>institucional</b> — define a fase</li>
           <li><i class="l" style="background:var(--graf);width:9px"></i>ponto do <b>investidor</b>, hoje</li>
           <li><i class="l" style="background:var(--tinta);width:9px"></i>ponto do <b>trader</b>, hoje</li>
