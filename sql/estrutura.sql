@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict XbDUPkfmwBLS2SoCnPnsg1ziJeRoWwl7i93yFgVpTfVOprhpT2orpPkZJlzT7mS
+\restrict O0Zzrs8YaO1RlUy0eCpblVK6eKOOsaFNAezgd3TELbvov4JgXNaza635PY71Ys4
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.10 (Ubuntu 17.10-1.pgdg24.04+1)
@@ -180,6 +180,16 @@ CREATE TABLE public.lead (
     observacao text,
     criado_em timestamp with time zone DEFAULT now() NOT NULL,
     atualizado_em timestamp with time zone DEFAULT now() NOT NULL,
+    nome text,
+    whatsapp text,
+    horario text,
+    recado text,
+    assuntos text[] DEFAULT '{}'::text[],
+    atendido_em timestamp with time zone,
+    atendido_por uuid,
+    situacao text DEFAULT 'novo'::text NOT NULL,
+    retomar_em date,
+    responsavel uuid,
     CONSTRAINT lead_cep_ok CHECK (((cep IS NULL) OR (cep ~ '^\d{8}$'::text))),
     CONSTRAINT lead_cpf_ok CHECK (((cpf IS NULL) OR public.cpf_valido(cpf))),
     CONSTRAINT lead_origem_ok CHECK ((origem = ANY (ARRAY['cadastro'::text, 'assinatura'::text, 'manual'::text, 'importado'::text]))),
@@ -466,6 +476,29 @@ end $$;
 
 
 --
+-- Name: avisar_lead(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.avisar_lead() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+begin
+  insert into fila_email (destino, assunto, corpo)
+  values (
+    'voce@seuemail.com.br',
+    'Novo pedido de contato — ' || new.nome,
+    'Nome: '     || new.nome                              || E'\n' ||
+    'WhatsApp: ' || new.whatsapp                          || E'\n' ||
+    'E-mail: '   || coalesce(new.email,   '—')            || E'\n' ||
+    'Horário: '  || coalesce(new.horario, '—')            || E'\n' ||
+    'Assuntos: ' || coalesce(array_to_string(new.assuntos, ', '), '—') || E'\n' ||
+    'Recado: '   || coalesce(new.recado,  '—')
+  );
+  return new;
+end $$;
+
+
+--
 -- Name: avisar_seguidores(bigint); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -498,6 +531,29 @@ begin
 
   get diagnostics n = row_count;
   return n;
+end $$;
+
+
+--
+-- Name: barra_atualiza_universo(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.barra_atualiza_universo() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+begin
+  -- a guarda do `data >` faz a carga funda de 90 pregoes nao sobrescrever
+  -- o preco de hoje com o de tres meses atras
+  update universo u
+     set cotacao    = new.fechamento,
+         cotacao_em = new.data,
+         liquidez   = case when new.volume is not null and new.volume > 0
+                           then new.volume * new.fechamento
+                           else u.liquidez end
+   where u.ativo = new.ativo
+     and new.data > coalesce(u.cotacao_em, date '1900-01-01');
+  return new;
 end $$;
 
 
@@ -989,31 +1045,34 @@ begin
      and not coalesce((select admin from perfil where id = auth.uid()), false) then
     raise exception 'so admin pode gravar cotacao (papel: %)', papel;
   end if;
-
-  -- Agora grava o CANDLE INTEIRO na barra, não só o fechamento. Sem
-  -- máxima e mínima o apurar_aposta não tem como saber se o stop ou o
-  -- alvo foram tocados — foi por isso que o Tiro curto nunca apurou.
+  -- Grava o CANDLE INTEIRO na barra, não só o fechamento. Sem máxima e
+  -- mínima o apurar_aposta não tem como saber se o stop ou o alvo foram
+  -- tocados — foi por isso que o Tiro curto nunca apurou.
+  --
+  -- ⚠️ `vol` entrou depois: a liquidez do universo vinha do Yahoo e
+  -- congelou quando ele saiu (200 de 235 papéis com preço de uma semana
+  -- atrás). Com o volume no candle, ela passa a ser medida do MT5 todo
+  -- dia, pelo gatilho barra_universo.
   with e as (
-    select x.ativo, x.data, x.abre, x.max, x.min, x.fech
+    select x.ativo, x.data, x.abre, x.max, x.min, x.fech, x.vol
       from jsonb_to_recordset(dados)
-        as x(ativo text, data date, abre real, max real, min real, fech real)
+        as x(ativo text, data date, abre real, max real, min real, fech real, vol real)
      where x.ativo is not null and x.data is not null and x.fech > 0
   ), g as (
-    insert into barra (ativo, data, abertura, maxima, minima, fechamento)
-    select ativo, data, nullif(abre,0), nullif(max,0), nullif(min,0), fech from e
+    insert into barra (ativo, data, abertura, maxima, minima, fechamento, volume)
+    select ativo, data, nullif(abre,0), nullif(max,0), nullif(min,0), fech, nullif(vol,0) from e
     on conflict (ativo, data) do update
        set abertura = coalesce(excluded.abertura, barra.abertura),
            maxima   = coalesce(excluded.maxima,   barra.maxima),
            minima   = coalesce(excluded.minima,   barra.minima),
+           volume   = coalesce(excluded.volume,   barra.volume),
            fechamento = excluded.fechamento
     returning 1
   )
   select count(*) into n_bar from g;
-
   select min(x.data), max(x.data) into d_min, d_max
     from jsonb_to_recordset(dados)
       as x(ativo text, data date, abre real, max real, min real, fech real);
-
   with a as (
     select distinct x.ativo from jsonb_to_recordset(dados)
       as x(ativo text, data date, abre real, max real, min real, fech real)
@@ -1029,7 +1088,6 @@ begin
     returning 1
   )
   select count(*) into n_osc from g2;
-
   return jsonb_build_object('barras', n_bar, 'oscilacoes', n_osc);
 end $$;
 
@@ -1155,6 +1213,17 @@ $$;
 
 
 --
+-- Name: papel_em_uso(text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.papel_em_uso(p_ativo text) RETURNS integer
+    LANGUAGE sql STABLE SECURITY DEFINER
+    AS $$
+  select count(*)::int from peso_atual where ativo = p_ativo;
+$$;
+
+
+--
 -- Name: pode_mexer(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1199,10 +1268,10 @@ $$;
 
 
 --
--- Name: quant_medias(integer, integer, integer); Type: FUNCTION; Schema: public; Owner: -
+-- Name: quant_medias(integer, integer, integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.quant_medias(p_curta integer DEFAULT 17, p_media integer DEFAULT 34, p_longa integer DEFAULT 72) RETURNS TABLE(ativo text, pregoes integer, fech real, ema17 real, ema34 real, ema72 real, dist real, amplitude real, liquidez real, serie real[], serie72 real[])
+CREATE FUNCTION public.quant_medias(p_curta integer DEFAULT 17, p_media integer DEFAULT 34, p_longa integer DEFAULT 72, p_janela integer DEFAULT 90) RETURNS TABLE(ativo text, pregoes integer, fech real, ema17 real, ema34 real, ema72 real, dist real, amplitude real, liquidez real, serie real[], serie72 real[])
     LANGUAGE plpgsql STABLE
     SET search_path TO 'public'
     AS $$
@@ -1216,55 +1285,53 @@ begin
   k1 := 2.0 / (p_curta + 1);
   k2 := 2.0 / (p_media + 1);
   k3 := 2.0 / (p_longa + 1);
-
   for r in
     select b.ativo as a, count(*) as q,
            (select u.liquidez from universo u where u.ativo = b.ativo) as liq
       from barra b group by b.ativo
   loop
     if r.q < p_media then continue; end if;
-
     e1 := null; e2 := null; e3 := null;
     s1 := 0; s2 := 0; s3 := 0;
     n := 0; amp := 0; ult := null; ser := '{}'; ser3 := '{}';
-
     for v in select b.fechamento as f, b.maxima as mx, b.minima as mn
                from barra b where b.ativo = r.a order by b.data loop
       n := n + 1;
-
       -- Semeia cada média com a média simples dos primeiros N fechamentos:
       -- sem isso, com histórico curto o primeiro valor domina por semanas.
       if n <= p_curta then s1 := s1 + v.f; end if;
       if n =  p_curta then e1 := s1 / p_curta; end if;
       if n >  p_curta then e1 := v.f * k1 + e1 * (1 - k1); end if;
-
       if n <= p_media then s2 := s2 + v.f; end if;
       if n =  p_media then e2 := s2 / p_media; end if;
       if n >  p_media then e2 := v.f * k2 + e2 * (1 - k2); end if;
-
       if n <= p_longa then s3 := s3 + v.f; end if;
       if n =  p_longa then e3 := s3 / p_longa; end if;
       if n >  p_longa then e3 := v.f * k3 + e3 * (1 - k3); end if;
-
       if v.mx is not null and v.mn is not null and v.f > 0 then
         amp := amp + (v.mx - v.mn) / v.f;
       end if;
       ult := v.f;
-      ser  := ser  || v.f;                    -- preço, para o mini gráfico
-      ser3 := ser3 || coalesce(e3, v.f);      -- a média longa, no mesmo passo
+      ser  := ser  || v.f;
+      -- ⚠️ NULL enquanto a média longa não existe. Antes era
+      -- coalesce(e3, v.f) e os primeiros pregões vinham com o PREÇO no
+      -- lugar da média: o gráfico desenhava uma curva colada no preço
+      -- que depois saltava, e parecia média errada.
+      ser3 := ser3 || e3;
     end loop;
-
     if e1 is null or e2 is null or e2 = 0 then continue; end if;
-
     ativo := r.a; pregoes := n; fech := ult;
-    ema17 := e1; ema34 := e2; ema72 := e3;   -- ema72 pode vir nulo
+    ema17 := e1; ema34 := e2; ema72 := e3;
     dist := e1 / e2 - 1;
     amplitude := amp / n;
     liquidez := r.liq;
-    -- só os últimos 60 fechamentos: é o que cabe num gráfico de 90px
-    -- e o suficiente para ver o caminho recente sem pesar a resposta.
-    serie   := ser [greatest(1, array_length(ser ,1) - 59) : array_length(ser ,1)];
-    serie72 := ser3[greatest(1, array_length(ser3,1) - 59) : array_length(ser3,1)];
+    -- ⚠️ A JANELA SAI DO PARÂMETRO, não de um 59 escrito à mão.
+    -- Com 60 barras e média longa de 72, o desenho mostrava um trecho
+    -- em que a curva ainda não existia: ela nascia no meio do gráfico
+    -- ou nem aparecia. A janela precisa ser MAIOR que a média mais
+    -- longa, senão o gráfico contradiz a coluna ao lado.
+    serie   := ser [greatest(1, array_length(ser ,1) - p_janela + 1) : array_length(ser ,1)];
+    serie72 := ser3[greatest(1, array_length(ser3,1) - p_janela + 1) : array_length(ser3,1)];
     return next;
   end loop;
 end $$;
@@ -1863,7 +1930,8 @@ CREATE TABLE public.barra (
     abertura real NOT NULL,
     maxima real NOT NULL,
     minima real NOT NULL,
-    fechamento real NOT NULL
+    fechamento real NOT NULL,
+    volume real
 );
 
 
@@ -1910,6 +1978,8 @@ CREATE TABLE public.perfil (
     bloqueado boolean DEFAULT false NOT NULL,
     nome_publico text,
     exibir text DEFAULT 'apelido'::text NOT NULL,
+    CONSTRAINT apelido_formato CHECK (((apelido ~ '^[A-Za-z0-9._-]+( [A-Za-z0-9._-]+)*$'::text) AND ((char_length(apelido) >= 3) AND (char_length(apelido) <= 24)))),
+    CONSTRAINT apelido_reservado CHECK ((lower(apelido) <> ALL (ARRAY['admin'::text, 'administrador'::text, 'adm'::text, 'root'::text, 'sistema'::text, 'suporte'::text, 'moderador'::text, 'contato'::text, 'oficial'::text, 'saldopositivo'::text, 'saldo-positivo'::text, 'ranking'::text]))),
     CONSTRAINT perfil_exibir_valido CHECK ((exibir = ANY (ARRAY['apelido'::text, 'nome'::text, 'anonimo'::text])))
 );
 
@@ -2152,6 +2222,33 @@ ALTER TABLE public.lead ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
 
 
 --
+-- Name: lead_nota; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.lead_nota (
+    id bigint NOT NULL,
+    lead_id bigint NOT NULL,
+    criado_em timestamp with time zone DEFAULT now() NOT NULL,
+    autor uuid,
+    texto text NOT NULL
+);
+
+
+--
+-- Name: lead_nota_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.lead_nota ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.lead_nota_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
 -- Name: nota; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -2235,7 +2332,10 @@ CREATE TABLE public.posicao (
 CREATE TABLE public.universo (
     ativo text NOT NULL,
     cotacao real,
-    liquidez real
+    liquidez real,
+    tipo text DEFAULT 'acao'::text NOT NULL,
+    nome text,
+    cotacao_em date
 );
 
 
@@ -2454,6 +2554,26 @@ CREATE TABLE public.seguindo (
 
 
 --
+-- Name: universo_estado; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.universo_estado WITH (security_invoker='true') AS
+ SELECT u.ativo,
+    u.tipo,
+    u.nome,
+    u.cotacao,
+    u.liquidez,
+    COALESCE(b.pregoes, (0)::bigint) AS pregoes,
+    b.ultimo
+   FROM (public.universo u
+     LEFT JOIN ( SELECT barra.ativo,
+            count(*) AS pregoes,
+            max(barra.data) AS ultimo
+           FROM public.barra
+          GROUP BY barra.ativo) b ON ((b.ativo = u.ativo)));
+
+
+--
 -- Name: aposta id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -2486,22 +2606,6 @@ ALTER TABLE ONLY public.nota ALTER COLUMN id SET DEFAULT nextval('public.nota_id
 --
 
 ALTER TABLE ONLY public.posicao ALTER COLUMN id SET DEFAULT nextval('public.posicao_id_seq'::regclass);
-
-
---
--- Name: perfil apelido_formato; Type: CHECK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE public.perfil
-    ADD CONSTRAINT apelido_formato CHECK ((apelido ~ '^[A-Za-z0-9._-]{3,24}$'::text)) NOT VALID;
-
-
---
--- Name: perfil apelido_reservado; Type: CHECK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE public.perfil
-    ADD CONSTRAINT apelido_reservado CHECK ((lower(apelido) <> ALL (ARRAY['admin'::text, 'administrador'::text, 'adm'::text, 'root'::text, 'sistema'::text, 'suporte'::text, 'moderador'::text, 'contato'::text, 'oficial'::text, 'saldopositivo'::text, 'saldo-positivo'::text, 'ranking'::text]))) NOT VALID;
 
 
 --
@@ -2582,6 +2686,14 @@ ALTER TABLE ONLY public.fila_email
 
 ALTER TABLE ONLY public.lead
     ADD CONSTRAINT lead_cpf_key UNIQUE (cpf);
+
+
+--
+-- Name: lead_nota lead_nota_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.lead_nota
+    ADD CONSTRAINT lead_nota_pkey PRIMARY KEY (id);
 
 
 --
@@ -2756,6 +2868,13 @@ CREATE INDEX fila_email_pendente ON public.fila_email USING btree (criado_em) WH
 
 
 --
+-- Name: lead_nota_lead; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX lead_nota_lead ON public.lead_nota USING btree (lead_id, criado_em DESC);
+
+
+--
 -- Name: oscilacao_ativo_data_uk; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -2784,10 +2903,24 @@ CREATE TRIGGER aposta_trava BEFORE INSERT ON public.aposta FOR EACH ROW EXECUTE 
 
 
 --
+-- Name: barra barra_universo; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER barra_universo AFTER INSERT OR UPDATE ON public.barra FOR EACH ROW EXECUTE FUNCTION public.barra_atualiza_universo();
+
+
+--
 -- Name: carteira carteira_trava_classe; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER carteira_trava_classe BEFORE UPDATE ON public.carteira FOR EACH ROW EXECUTE FUNCTION public.trava_classe();
+
+
+--
+-- Name: lead lead_avisa; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER lead_avisa AFTER INSERT ON public.lead FOR EACH ROW EXECUTE FUNCTION public.avisar_lead();
 
 
 --
@@ -2854,6 +2987,14 @@ ALTER TABLE ONLY public.assinatura
 
 ALTER TABLE ONLY public.carteira
     ADD CONSTRAINT carteira_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.perfil(id) ON DELETE CASCADE;
+
+
+--
+-- Name: lead_nota lead_nota_lead_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.lead_nota
+    ADD CONSTRAINT lead_nota_lead_id_fkey FOREIGN KEY (lead_id) REFERENCES public.lead(id) ON DELETE CASCADE;
 
 
 --
@@ -3077,11 +3218,42 @@ ALTER TABLE public.fila_email ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.lead ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: lead lead_deixar; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY lead_deixar ON public.lead FOR INSERT TO authenticated, anon WITH CHECK (true);
+
+
+--
 -- Name: lead lead_dono; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY lead_dono ON public.lead TO authenticated USING ((usuario_id = auth.uid())) WITH CHECK ((usuario_id = auth.uid()));
 
+
+--
+-- Name: lead lead_ler; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY lead_ler ON public.lead FOR SELECT TO authenticated USING ((EXISTS ( SELECT 1
+   FROM public.perfil
+  WHERE ((perfil.id = auth.uid()) AND perfil.admin))));
+
+
+--
+-- Name: lead lead_marcar; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY lead_marcar ON public.lead FOR UPDATE TO authenticated USING ((EXISTS ( SELECT 1
+   FROM public.perfil
+  WHERE ((perfil.id = auth.uid()) AND perfil.admin))));
+
+
+--
+-- Name: lead_nota; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.lead_nota ENABLE ROW LEVEL SECURITY;
 
 --
 -- Name: nota n_ins; Type: POLICY; Schema: public; Owner: -
@@ -3106,6 +3278,17 @@ CREATE POLICY n_le ON public.nota FOR SELECT USING ((public.eh_assinante() OR (E
 --
 
 ALTER TABLE public.nota ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: lead_nota nota_admin; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY nota_admin ON public.lead_nota TO authenticated USING ((EXISTS ( SELECT 1
+   FROM public.perfil
+  WHERE ((perfil.id = auth.uid()) AND perfil.admin)))) WITH CHECK ((EXISTS ( SELECT 1
+   FROM public.perfil
+  WHERE ((perfil.id = auth.uid()) AND perfil.admin))));
+
 
 --
 -- Name: oscilacao o_le; Type: POLICY; Schema: public; Owner: -
@@ -3300,8 +3483,19 @@ CREATE POLICY u_le ON public.universo FOR SELECT USING (true);
 ALTER TABLE public.universo ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: universo universo_mexer; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY universo_mexer ON public.universo TO authenticated USING ((EXISTS ( SELECT 1
+   FROM public.perfil
+  WHERE ((perfil.id = auth.uid()) AND perfil.admin)))) WITH CHECK ((EXISTS ( SELECT 1
+   FROM public.perfil
+  WHERE ((perfil.id = auth.uid()) AND perfil.admin))));
+
+
+--
 -- PostgreSQL database dump complete
 --
 
-\unrestrict XbDUPkfmwBLS2SoCnPnsg1ziJeRoWwl7i93yFgVpTfVOprhpT2orpPkZJlzT7mS
+\unrestrict O0Zzrs8YaO1RlUy0eCpblVK6eKOOsaFNAezgd3TELbvov4JgXNaza635PY71Ys4
 
