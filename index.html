@@ -87,6 +87,378 @@ nav .rot{display:none}
 .pill{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;padding:3px 9px;
   border:1px solid var(--lacre);color:var(--ouro2);border-radius:99px;background:var(--ouro-fraco)}
 
+.colar{display:flex;gap:10px;align-items:flex-start;margin-top:6px}
+@media(max-width:620px){.colar{flex-direction:column}}
+.colar textarea{flex:1;margin:0;font-size:13px;text-transform:uppercase}
+.colar .lado{display:flex;gap:8px;flex-direction:column}
+.colar select{margin:0;padding:8px 11px;font-size:13px}
+.colar .bt{white-space:nowrap}
+.tipoSel{margin:0;padding:3px 8px;font-size:11.5px;width:auto;min-width:82px}
+tr.semdado td{opacity:.62}
+tr.semdado:hover td{opacity:1}
+
+.passosC{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+  gap:12px;margin-top:15px}
+.passoC{background:var(--p2);border:1px solid var(--linha);border-radius:4px;padding:20px}
+.passoC .num{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;
+  border-radius:50%;border:1px solid var(--lacre);color:var(--ouro2);
+  font-family:'IBM Plex Mono',monospace;font-size:12px;margin-bottom:10px}
+.passoC h4{font-family:Newsreader,serif;font-weight:500;font-size:17px;margin:0 0 7px;color:var(--tinta)}
+.passoC p{font-size:12.5px;color:var(--t2);line-height:1.6;margin:0}
+
+/* extrato tipado: regra ≠ decisao do autor */
+.ext{display:grid;grid-template-columns:82px 1fr;gap:0 16px;padding:11px 0;
+  border-bottom:1px solid var(--p3)}
+@media(max-width:520px){.ext{grid-template-columns:1fr;gap:4px}}
+.ext .dt{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--graf);padding-top:2px}
+.ext .oq{font-size:12.5px;color:var(--t2);margin-top:5px}
+.ext .motivo{font-size:11px;color:var(--graf);margin-left:8px;font-style:italic}
+.selo2{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.11em;
+  text-transform:uppercase;padding:2px 7px;border-radius:2px;white-space:nowrap;
+  border:1px solid var(--linha2);color:var(--graf)}
+.selo2.reg{border-color:var(--lacre);color:var(--ouro2);background:var(--ouro-fraco)}
+.selo2.dono{border-color:var(--linha2);color:var(--t2)}
+
+/* ══ A RÉGUA ════════════════════════════════════════════════════════ */
+.regua{background:var(--p2);border-left:2px solid var(--lacre);padding:18px 20px;
+  margin:14px 0 6px;border-radius:0 4px 4px 0}
+.regua .oq{font-size:13.5px;color:var(--tinta);max-width:66ch;line-height:1.6}
+.regua .oq b{color:var(--ouro2);font-weight:500}
+.gatilho{display:grid;grid-template-columns:1fr auto;gap:6px 20px;align-items:end;
+  margin-top:16px;max-width:520px}
+.gatilho .quanto{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;
+  font-size:26px;font-weight:500;letter-spacing:-.03em;line-height:1}
+.gatilho .quem{font-size:11.5px;color:var(--graf);margin-top:5px}
+.gatilho .quem b{color:var(--t2);font-weight:500}
+.gatilho .fim{font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--lacre);text-align:right;padding-bottom:3px}
+.trilha{grid-column:1/-1;position:relative;height:26px;margin-top:4px}
+.trilha .via{position:absolute;left:0;right:0;top:11px;height:3px;background:var(--papel);
+  border:1px solid var(--linha2);border-radius:2px}
+.trilha .ate{position:absolute;left:0;top:11px;height:3px;border-radius:2px;
+  background:linear-gradient(90deg,var(--linha2),var(--ouro2))}
+.trilha .pino{position:absolute;top:5px;width:1px;height:15px;background:var(--graf);opacity:.5}
+.trilha .pino.max{background:var(--ouro2);opacity:1;width:2px;height:21px;top:2px;
+  box-shadow:0 0 7px rgba(227,196,92,.7)}
+.trilha .parede{position:absolute;right:0;top:2px;width:2px;height:21px;background:var(--lacre)}
+.trilha .parede::after{content:"";position:absolute;right:0;top:0;width:9px;height:21px;
+  background:repeating-linear-gradient(-45deg,transparent 0 3px,rgba(201,162,39,.28) 3px 4px)}
+.regua .obs{font-size:11.5px;color:var(--graf);margin:12px 0 0;max-width:70ch;line-height:1.6}
+.regua .obs b{color:var(--t2);font-weight:500}
+
+/* ══ UNIVERSO ═══════════════════════════════════════════════════════
+   A lista de papeis era editavel so por SQL, e o unico jeito de
+   descobrir que um simbolo nunca chegou era ler o log do Actions de
+   madrugada. Aqui a coluna PREGOES conta a verdade: papel na lista com
+   zero pregoes e simbolo que o MT5 nao entrega — grafico nunca aberto,
+   ticker trocado ou empresa fechada.
+
+   ⚠️ Inserir aqui NAO faz o MT5 cotar. O EA pede o simbolo; se o
+   grafico diario nunca foi carregado na corretora, volta vazio. A tela
+   mostra quem falta, o Ctrl+U resolve.
+
+   O tipo nao e adivinhado do sufixo: BOVA11 e SANB11 terminam igual e
+   sao coisas diferentes. Quem marca e voce. */
+const TIPOS = [["acao","Ação"],["unit","Unit"],["etf","ETF"],
+               ["bdr","BDR"],["fii","FII"],["indice","Índice"]];
+const rotTipo = k => (TIPOS.find(t=>t[0]===k)||["","—"])[1];
+
+async function telaUniverso(){
+  const q = new URLSearchParams(location.hash.split("?")[1]||"");
+  const ft = q.get("t") || "";
+  const busca = (q.get("q")||"").toUpperCase();
+  app().innerHTML = `<div class="carreg">carregando universo…</div>`;
+
+  const { data, error } = await sb.from("universo_estado").select("*").order("ativo");
+  if(error) return app().innerHTML = aviso("Não consegui ler o universo: " + error.message +
+    " — se falar em relação inexistente, a view universo_estado ainda não foi criada.", true);
+
+  const todos = data || [];
+  const semDado = todos.filter(x => !x.pregoes).length;
+  const conta = {}; TIPOS.forEach(([k]) => conta[k] = todos.filter(x => (x.tipo||"acao")===k).length);
+
+  let l = ft === "faltando" ? todos.filter(x => !x.pregoes)
+        : ft ? todos.filter(x => (x.tipo||"acao") === ft) : todos;
+  if(busca) l = l.filter(x => x.ativo.includes(busca));
+
+  const lk = o => { const p = new URLSearchParams();
+    const t2 = o.t !== undefined ? o.t : ft, q2 = o.q !== undefined ? o.q : busca;
+    if(t2) p.set("t", t2); if(q2) p.set("q", q2);
+    return "#/universo" + (p.toString() ? "?"+p : ""); };
+
+  app().innerHTML = `
+  <div class="cabeca" style="text-align:left">
+    <h1>Universo de papéis</h1>
+    <p>${todos.length} na lista${semDado
+      ? ` · <b style="color:var(--baixa)">${semDado} sem nenhum pregão</b>` : ""}.
+      O robô só pede ao MT5 o que estiver aqui.</p>
+  </div>
+
+  <div class="colar">
+    <textarea id="uCola" rows="2"
+      placeholder="cole os códigos: BOVA11 IVVB11 SMAL11 NUBR33 — espaço, vírgula ou linha"></textarea>
+    <div class="lado">
+      <select id="uTipo">${TIPOS.map(([k,r])=>
+        `<option value="${k}">${r}</option>`).join("")}</select>
+      <button class="bt lacre" id="uAdd">Acrescentar</button>
+    </div>
+  </div>
+  <div id="uMsg" style="font-size:12px;min-height:18px;margin:6px 0 0"></div>
+
+  <div class="abas" style="margin-top:14px">
+    <a href="${lk({t:""})}" class="aba${!ft?" on":""}">Todos<span class="n">${todos.length}</span></a>
+    ${semDado?`<a href="${lk({t:"faltando"})}" class="aba${ft==="faltando"?" on":""}"
+      style="color:var(--baixa)">Sem pregão<span class="n">${semDado}</span></a>`:""}
+    ${TIPOS.filter(([k])=>conta[k]).map(([k,r])=>`<a href="${lk({t:k})}"
+      class="aba${ft===k?" on":""}">${r}<span class="n">${conta[k]}</span></a>`).join("")}
+  </div>
+  <div class="ordena">
+    <input id="uBusca" placeholder="filtrar por código" value="${esc(busca)}"
+      style="width:170px;margin:0;padding:7px 11px;font-size:13px;text-transform:uppercase">
+    <span style="font-size:11.5px;color:var(--graf)">${l.length} de ${todos.length}</span>
+  </div>
+
+  ${!l.length ? `<div class="card"><p style="margin:0;color:var(--t2)">Nada neste filtro.</p></div>`
+  : `<table><thead><tr><th>Papel</th><th>Tipo</th><th class="d">Último preço</th>
+      <th class="d">Negócio/dia</th><th class="d">Pregões</th><th class="d">Último</th>
+      <th></th></tr></thead><tbody>
+    ${l.map(x=>`<tr${!x.pregoes?' class="semdado"':""}>
+      <td class="mono" style="font-weight:500">${esc(x.ativo)}</td>
+      <td><select data-tipo="${esc(x.ativo)}" class="tipoSel">${TIPOS.map(([k,r])=>
+        `<option value="${k}"${(x.tipo||"acao")===k?" selected":""}>${r}</option>`).join("")}</select></td>
+      <td class="d mono">${x.cotacao==null?"—":n2(x.cotacao)}</td>
+      <td class="d mono nulo" style="font-size:12px">${x.liquidez==null?"—":grana(x.liquidez)}</td>
+      <td class="d mono ${x.pregoes?"":"baixa"}">${x.pregoes||"nenhum"}</td>
+      <td class="d mono nulo" style="font-size:11.5px">${x.ultimo?dataBR(x.ultimo):"—"}</td>
+      <td class="d"><button class="bt" data-del="${esc(x.ativo)}"
+        style="padding:4px 10px;font-size:11.5px">remover</button></td>
+    </tr>`).join("")}</tbody></table>
+    <p style="font-size:11.5px;color:var(--graf);margin:12px 0 0;max-width:78ch;line-height:1.6">
+      <b style="color:var(--t2)">Pregões</b> conta o que já chegou do MT5. Zero significa
+      que o robô pediu e não recebeu: gráfico diário nunca carregado na corretora, ticker
+      trocado ou empresa fechada. Acrescentar um código aqui não faz o MT5 cotar — abra o
+      gráfico dele no terminal (Ctrl+U) e o candle vem no fechamento seguinte.</p>`}`;
+
+  const msg = (t, ruim) => { const e = document.getElementById("uMsg");
+    e.style.color = ruim ? "var(--baixa)" : "var(--alta)"; e.textContent = t; };
+
+  document.getElementById("uAdd").onclick = async () => {
+    const bruto = document.getElementById("uCola").value.toUpperCase();
+    const cods = [...new Set(bruto.split(/[^A-Z0-9]+/).filter(x => /^[A-Z]{4}\d{1,2}$/.test(x)))];
+    if(!cods.length) return msg("Nenhum código válido no que foi colado.", true);
+    const tipo = document.getElementById("uTipo").value;
+    const novos = cods.filter(c => !todos.some(x => x.ativo === c));
+    if(!novos.length) return msg(`${cods.length} ${cods.length===1?"código já estava":"códigos já estavam"} na lista.`, true);
+    const bt = document.getElementById("uAdd"); bt.disabled = true; bt.textContent = "…";
+    const { error } = await sb.from("universo").insert(novos.map(a => ({ ativo:a, tipo })));
+    if(error){ bt.disabled = false; bt.textContent = "Acrescentar"; return msg("Não consegui: "+error.message, true); }
+    telaUniverso();
+  };
+
+  document.querySelectorAll("[data-tipo]").forEach(el =>
+    el.onchange = async () => {
+      const { error } = await sb.from("universo").update({ tipo: el.value })
+        .eq("ativo", el.dataset.tipo);
+      msg(error ? "Não consegui salvar: "+error.message : `${el.dataset.tipo} agora é ${rotTipo(el.value)}.`, !!error);
+    });
+
+  document.querySelectorAll("[data-del]").forEach(b =>
+    b.onclick = async () => {
+      const a = b.dataset.del;
+      // ⚠️ Papel dentro de carteira publicada nao pode sair: a carteira
+      // para de apurar e o passado dela fica torto — que e exatamente o
+      // que o site promete que nao acontece.
+      const { data:uso } = await sb.rpc("papel_em_uso", { p_ativo: a });
+      if(uso > 0) return msg(`${a} está em ${uso} ${uso===1?"carteira":"carteiras"} publicadas. `
+        + "Removê-lo faria essas carteiras pararem de apurar.", true);
+      if(!confirm(`Remover ${a} do universo? O histórico já apurado continua na base.`)) return;
+      const { error } = await sb.from("universo").delete().eq("ativo", a);
+      if(error) return msg("Não consegui remover: "+error.message, true);
+      telaUniverso();
+    });
+
+  const bq = document.getElementById("uBusca");
+  if(bq) bq.onkeydown = e => { if(e.key === "Enter") location.hash = lk({ q: bq.value.toUpperCase() }); };
+}
+
+/* ══ CLUBE DE INVESTIMENTOS ═════════════════════════════════════════
+   A pagina responde a pergunta que trava todo mundo: "posso mesmo
+   gerir isso sem ser profissional?". Pode — a Resolucao CVM 11 deixa a
+   gestao com um cotista, se o regulamento permitir. Quase ninguem sabe
+   disso, e e o argumento que abre a conversa.
+   ⚠️ Nada aqui e promessa de rentabilidade. O clube e estrutura, nao
+   produto: o resultado depende do que o grupo comprar. */
+const PASSOS_CLUBE = [
+ ["Junta o grupo","De 3 a 50 pessoas. Amigos, família, colegas de trabalho — não precisa de todo mundo entrando com o mesmo valor. Um estatuto define quanto cada um aporta, com que frequência e como alguém sai."],
+ ["Escolhe quem gere","Pode ser um cotista do próprio grupo, se o estatuto permitir — não é preciso ser profissional. Ou pode ser um gestor contratado. Em qualquer caso, quem decide responde pelo grupo e presta contas."],
+ ["A administradora formaliza","Uma instituição autorizada pela CVM registra o clube na B3, cuida da contabilidade, da custódia, da cota diária e do imposto. É ela que dá existência legal à coisa — o grupo não abre nada sozinho."],
+ ["Começa a valer","Cada aporte vira cota, com valor apurado todo dia. Todo mundo vê o mesmo extrato. Não há como um saber mais que o outro, e é isso que faz o clube durar mais que a amizade."],
+];
+
+const PORQUE_CLUBE = [
+ ["Custo dividido","Taxas menores que fundo de varejo, porque a estrutura é uma só para o grupo inteiro. E aqui a conversa sobre taxa é aberta — você vê o que paga."],
+ ["Decisão perto","Num fundo você aceita o que o gestor fizer. No clube o grupo discute, vota o que está no estatuto e sabe exatamente o que tem na carteira."],
+ ["Aprendizado real","É a diferença entre ler sobre investir e responder por uma decisão junto com outras pessoas. Com dinheiro de verdade, mas dividido — e com regra escrita antes."],
+ ["Transparência","Cota diária, extrato igual para todos, patrimônio auditado pela administradora. Ninguém precisa acreditar em ninguém."],
+];
+
+async function telaClube(){
+  const pintar = (recado="", ruim=false) => {
+    app().innerHTML = `
+    <div class="cabeca" style="text-align:left;max-width:70ch">
+      <h1>Monte um clube de investimentos comigo</h1>
+      <p>De 3 a 50 pessoas, uma carteira só, cota apurada todo dia. É a forma mais
+        barata e mais transparente de um grupo investir junto — e
+        <b>um cotista do próprio grupo pode ser o gestor</b>, sem precisar ser
+        profissional, se o estatuto permitir.</p>
+      <p style="font-size:13px;color:var(--graf);margin-top:10px">Eu ajudo na estrutura:
+        estatuto, escolha da administradora, política de investimento, e o
+        acompanhamento depois que o clube está de pé. Chame quem você quiser.</p>
+    </div>
+
+    <div class="secaoS">
+      <div class="cabsec"><h2>Como se monta</h2>
+        <span>Quatro passos. O grupo faz o primeiro e o segundo; a administradora faz o terceiro.</span></div>
+      <div class="passosC">${PASSOS_CLUBE.map(([t,d],i)=>`
+        <div class="passoC"><span class="num">${i+1}</span>
+          <h4>${t}</h4><p>${d}</p></div>`).join("")}</div>
+    </div>
+
+    <div class="secaoS">
+      <div class="cabsec"><h2>Por que clube, e não fundo</h2>
+        <span>O que muda quando o grupo é dono da estrutura em vez de cliente dela.</span></div>
+      <div class="gradeS">${PORQUE_CLUBE.map(([t,d])=>`
+        <div class="srv" style="cursor:default"><h3>${t}</h3>
+          <div class="oq">${d}</div></div>`).join("")}</div>
+    </div>
+
+    <div class="secaoS">
+      <div class="cabsec"><h2>O que é bom saber antes</h2>
+        <span>As três coisas que costumam pegar as pessoas de surpresa.</span></div>
+      <div class="gradeS">
+        <div class="srv" style="cursor:default"><h3>Dinheiro é de verdade</h3>
+          <div class="oq">Diferente das carteiras do site, aqui o resultado é seu. Clube
+            de investimentos não tem garantia de rentabilidade e pode perder valor. Quem
+            quiser praticar sem risco continua com o ranking, de graça.</div></div>
+        <div class="srv" style="cursor:default"><h3>A regra vem antes do dinheiro</h3>
+          <div class="oq">O estatuto define quem decide, como se entra, como se sai e o
+            que o clube pode comprar. Escrever isso com o grupo sóbrio evita a briga que
+            aparece no primeiro mês ruim.</div></div>
+        <div class="srv" style="cursor:default"><h3>Tem custo fixo</h3>
+          <div class="oq">A administradora cobra para manter a estrutura. Abaixo de um
+            certo patrimônio, esse custo pesa demais sobre o resultado — e nesse caso eu
+            digo para não montar ainda.</div></div>
+      </div>
+    </div>
+
+    <div class="contatoS">
+      <div>
+        <h2 style="font-size:24px;margin:0 0 11px">Quero montar um clube</h2>
+        <p style="color:var(--t2);font-size:14.5px;line-height:1.62;max-width:46ch">
+          Me diga quantas pessoas você já tem em mente e eu explico o caminho — sem
+          custo, sem compromisso e sem você precisar ter tudo decidido.</p>
+        <p style="font-size:11.5px;color:var(--graf);margin-top:14px;max-width:46ch;line-height:1.6">
+          Clube de investimentos é registrado na B3 e administrado por instituição
+          autorizada pela CVM. O Saldo Positivo não administra nem faz a gestão de
+          nenhum clube — nada nesta página é recomendação de investimento.</p>
+      </div>
+      <div>
+        <label>Nome</label><input id="cNome" placeholder="como prefere ser chamado">
+        <label>WhatsApp</label><input id="cTel" placeholder="(31) 90000-0000">
+        <label>E-mail</label><input id="cMail" placeholder="voce@email.com">
+        <label>Quantas pessoas você já tem</label>
+        <select id="cQtd"><option>ainda estou sozinho</option><option>2 ou 3</option>
+          <option>4 a 9</option><option>10 ou mais</option></select>
+        <label>Recado</label>
+        <textarea id="cRec" rows="3" placeholder="opcional — o que o grupo quer fazer"></textarea>
+        <input id="cIsca" tabindex="-1" autocomplete="off"
+          style="position:absolute;left:-9999px;width:1px;height:1px">
+        <label class="lgpd"><input type="checkbox" id="cOk">
+          <span>Autorizo o contato por telefone, WhatsApp ou e-mail sobre o clube. Os
+          dados são usados só para isso e podem ser apagados a qualquer momento.</span></label>
+        <button class="bt lacre" id="cEnv" style="margin-top:12px;width:100%">Quero saber mais</button>
+        <div style="font-size:12px;margin-top:9px;min-height:18px;color:${
+          ruim?"var(--baixa)":"var(--alta)"}">${esc(recado)}</div>
+      </div>
+    </div>`;
+
+    document.getElementById("cEnv").onclick = async () => {
+      const nome = document.getElementById("cNome").value.trim();
+      const tel  = document.getElementById("cTel").value.trim();
+      if(document.getElementById("cIsca").value) return;
+      if(!nome || !tel) return pintar("Falta o nome ou o WhatsApp.", true);
+      if(!document.getElementById("cOk").checked)
+        return pintar("Marque a autorização de contato.", true);
+      const bt = document.getElementById("cEnv");
+      bt.disabled = true; bt.textContent = "enviando…";
+      const { error } = await sb.from("lead").insert({
+        origem: "clube", nome, whatsapp: tel,
+        email:  document.getElementById("cMail").value.trim() || null,
+        recado: `Grupo: ${document.getElementById("cQtd").value}. ` +
+                (document.getElementById("cRec").value.trim() || ""),
+        assuntos: ["clube"] });
+      if(error) return pintar("Não consegui registrar: " + error.message, true);
+      pintar("Pedido registrado. Eu entro em contato em até um dia útil.");
+    };
+  };
+  pintar();
+}
+
+/* ══ CRM DOS PEDIDOS ════════════════════════════════════════════════ */
+.lead{border:1px solid var(--linha);border-radius:4px;background:var(--p2);margin-top:9px}
+.lead.urg{border-left:2px solid var(--baixa)}
+.lead.ab{border-color:var(--linha2)}
+.lead .topo{display:grid;grid-template-columns:1.3fr 1fr auto;gap:16px;align-items:center;
+  padding:13px 16px;cursor:pointer}
+@media(max-width:760px){.lead .topo{grid-template-columns:1fr;gap:7px}}
+.lead .topo:hover{background:var(--p3)}
+.lead .nm{font-size:14px;font-weight:500;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.lead .mt{font-size:11.5px;color:var(--graf);margin-top:2px}
+.lead .ass{display:flex;gap:5px;flex-wrap:wrap}
+.lead .ret{font-size:11.5px;white-space:nowrap;text-align:right}
+.sit{font-size:9px;letter-spacing:.13em;text-transform:uppercase;padding:2px 8px;
+  border-radius:99px;border:1px solid var(--linha2);color:var(--graf)}
+.sit.s-novo{border-color:var(--lacre);color:var(--ouro2)}
+.sit.s-conversando{border-color:var(--graf);color:var(--t2)}
+.sit.s-fechado{border-color:var(--alta);color:var(--alta)}
+.sit.s-perdido{border-color:var(--linha2);color:var(--graf);opacity:.7}
+.lead .corpo{border-top:1px solid var(--linha);padding:14px 16px 16px}
+.lead .rec{font-style:italic;color:var(--t2);font-size:13px;margin:0 0 12px;max-width:70ch}
+.ferramentas{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.ferramentas label{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--graf);margin:0}
+.ferramentas select,.ferramentas input{width:auto;margin:0;padding:6px 10px;font-size:12.5px}
+.ferramentas .wa{font-size:12.5px;color:var(--ouro2);margin-left:auto}
+.anot{display:flex;gap:9px;align-items:flex-start}
+.anot textarea{flex:1;margin:0;font-size:13px}
+.anot .bt{padding:8px 16px;font-size:13px;white-space:nowrap}
+.nt{display:grid;grid-template-columns:96px 1fr;gap:0 14px;padding:9px 0;
+  border-bottom:1px solid var(--linha)}
+.nt .dt{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--graf)}
+.nt .tx{font-size:12.5px;color:var(--t2);white-space:pre-wrap}
+
+/* ══ COMO LER ═══════════════════════════════════════════════════════
+   Tres colunas de largura inteira. A primeira MOSTRA o grafico com a
+   legenda ao lado; descrever cor com palavra, tendo o desenho logo
+   acima, e o jeito mais dificil de explicar a coisa mais simples. */
+.comoler{display:grid;grid-template-columns:1.15fr 1fr 1fr;gap:1px;margin-top:26px;
+  background:var(--linha);border:1px solid var(--linha);border-radius:4px;overflow:hidden}
+@media(max-width:940px){.comoler{grid-template-columns:1fr}}
+.comoler .cel{background:var(--p2);padding:18px 20px}
+.comoler h4{font-family:Newsreader,serif;font-weight:500;font-size:16px;margin:0 0 12px;
+  color:var(--tinta);letter-spacing:-.01em}
+.comoler p{font-size:11.5px;color:var(--graf);margin:12px 0 0;line-height:1.6}
+.comoler p b{color:var(--t2);font-weight:500}
+.amostra{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.chaves{list-style:none;margin:0;padding:0;font-size:11px;color:var(--t2);flex:1;min-width:158px}
+.chaves li{display:flex;align-items:center;gap:8px;padding:2.5px 0}
+.chaves b{color:var(--tinta);font-weight:500}
+.chaves .l{width:16px;height:2px;border-radius:1px;flex:none}
+.comoler dl{margin:0;font-size:11.5px}
+.comoler dt{color:var(--tinta);font-size:12px;margin-top:9px}
+.comoler dt:first-child{margin-top:0}
+.comoler dd{margin:1px 0 0;color:var(--graf);line-height:1.5}
+.comoler .selo2{border-top:1px solid var(--linha);padding-top:11px;margin-top:14px;color:var(--ouro2)}
+
 /* ══ TELA DA CARTEIRA ═══════════════════════════════════════════════ */
 .heroi{display:grid;grid-template-columns:minmax(0,auto) 1fr;gap:34px;align-items:end;
   padding:26px 0 20px;margin-top:16px;border-top:1px solid var(--linha2)}
@@ -168,6 +540,12 @@ nav .rot{display:none}
 .lgpd{display:flex;gap:9px;align-items:flex-start;font-size:11px;color:var(--graf);
   line-height:1.5;margin-top:6px}
 .lgpd input{width:auto;margin:2px 0 0;accent-color:var(--lacre)}
+/* ⚠️ O <label> global do site e caixa alta espacada — bom para rotulo de
+   campo, ilegivel para uma frase de consentimento. Aqui o texto volta a
+   ser texto: minusculas, sem espacamento, entrelinha de leitura. */
+.lgpd, .lgpd span{text-transform:none;letter-spacing:normal;font-size:11.5px;
+  font-weight:400;color:var(--graf);line-height:1.55}
+.lgpd span{display:block}
 
 /* botões */
 .bt{display:inline-block;padding:10px 18px;border:1px solid var(--linha2);border-radius:3px;
@@ -499,7 +877,7 @@ Nada aqui é recomendação — cada carteira é anotação pessoal de quem publ
   <span class="grupo"><span class="rotg">Diversão</span>
     <span class="bloco"><a href="#/tiro-curto">Tiro curto</a><a href="#/placar">Placar</a><a href="#/duelo">Duelo</a></span></span>
   <span class="grupo"><span class="rotg">Ajuda</span>
-    <span class="bloco"><a href="#/como-funciona">Como funciona</a><a href="#/servicos">Serviços</a></span></span>
+    <span class="bloco"><a href="#/como-funciona">Como funciona</a><a href="#/clube">Clube</a><a href="#/servicos">Serviços</a></span></span>
   <span class="dir" id="navDir"></span>
 </nav></div></header>
 
@@ -1915,6 +2293,69 @@ async function telaPublicar(){
    Um traco por pregao apurado, da linha de base para cima ou para
    baixo. Da para CONTAR as marcas — e a imutabilidade virando desenho
    em vez de frase no rodape, e cresce sozinha a cada fechamento. */
+/* ══ A RÉGUA ════════════════════════════════════════════════════════
+   A carteira declarou uma disciplina no nascimento e ela e imutavel.
+   Mostrar a regra e metade; a outra metade e mostrar QUANTO FALTA para
+   ela disparar — a unica coisa da pagina que ainda NAO aconteceu, e a
+   unica que muda enquanto o pregao corre. Sem isso a tela e so um
+   relatorio do que ja foi. */
+function reguaHTML(regra, pesos, decl){
+  if(!regra || !regra.rebalancear) return "";
+  const dec = {}; (decl||[]).forEach(p => dec[p.ativo] = Math.abs(p.peso));
+  const desvios = (pesos||[])
+    .filter(p => dec[p.ativo] != null)
+    .map(p => ({ a:p.ativo, v: Math.abs(Math.abs(p.peso) - dec[p.ativo]) }))
+    .sort((x,y) => y.v - x.v);
+  const pior = desvios[0];
+
+  if(regra.rebalancear === "nunca" || regra.rebalancear === "nao"){
+    return `<div class="regua">
+      <div class="oq"><b>O peso corre solto.</b> Esta carteira declarou que nunca
+        rebalanceia: quem sobe mais que a carteira ganha espaço e fica maior — isso é o
+        resultado aparecendo na composição, não um descuido.</div>
+      ${pior?`<p class="obs">Maior afastamento até aqui: <b>${esc(pior.a)}</b>,
+        ${n2(pior.v,1)} p.p. do que foi declarado. Só volta ao lugar se o autor declarar
+        de novo — e a declaração fica no extrato.</p>`:""}</div>`;
+  }
+  if(regra.rebalancear !== "banda" || !regra.banda_pct){
+    return `<div class="regua">
+      <div class="oq">Rebalanceia <b>${esc(regra.rebalancear)}</b>: na virada do período
+        os pesos voltam ao que foi declarado, sem o autor precisar fazer nada.</div>
+      ${pior?`<p class="obs">Maior afastamento agora: <b>${esc(pior.a)}</b>,
+        ${n2(pior.v,1)} p.p.</p>`:""}</div>`;
+  }
+
+  const b = regra.banda_pct;
+  const frac = pior ? Math.min(pior.v / b, 1) : 0;
+  const armado = pior && pior.v >= b;
+  return `<div class="regua">
+    <div class="oq">Refaz a carteira <b>inteira</b> quando <b>um</b> papel se afastar
+      <b>${n2(b,0)} p.p.</b> do peso declarado. A régua foi escolhida no nascimento da
+      carteira e não pode ser afrouxada depois.</div>
+    ${!pior ? "" : `<div class="gatilho">
+      <div>
+        <div class="quanto" style="color:${armado?"var(--ouro2)":"var(--tinta)"}">${n2(pior.v,1)}
+          <span style="font-size:14px;opacity:.6;letter-spacing:0"> p.p.</span></div>
+        <div class="quem">maior afastamento agora · <b>${esc(pior.a)}</b></div>
+      </div>
+      <div class="fim">dispara em ${n2(b,0)}</div>
+      <div class="trilha">
+        <span class="via"></span>
+        <span class="ate" style="width:${(frac*100).toFixed(1)}%"></span>
+        ${desvios.slice(1).map(d=>`<span class="pino" title="${esc(d.a)} · ${n2(d.v,1)} p.p."
+          style="left:${Math.min(d.v/b*100,100).toFixed(1)}%"></span>`).join("")}
+        <span class="pino max" title="${esc(pior.a)} · ${n2(pior.v,1)} p.p."
+          style="left:${(frac*100).toFixed(1)}%"></span>
+        <span class="parede"></span>
+      </div>
+    </div>
+    <p class="obs">${armado
+      ? "A banda estourou: o rebalanceamento entra no próximo fechamento e a linha vai para o extrato."
+      : `Faltam <b>${n2(b-pior.v,1)} p.p.</b> de afastamento em ${esc(pior.a)} para o
+         rebalanceamento disparar. Cada traço claro é um dos outros papéis.`}</p>`}
+  </div>`;
+}
+
 function fitaGrande(serie){
   const s = (serie||[]).filter(r => r.retorno != null);
   if(!s.length) return `<div class="fita"><div class="trilho"><span class="base"></span></div>
@@ -1960,6 +2401,16 @@ async function telaCarteira(id){
               .gte("data", serie[0].data).order("data")
     : { data: [] };
   // se as regras do banco liberarem, vem; senão volta vazio — é o lacre funcionando
+  // A regra de rebalanceamento nao esta na view `ranking`. Vem direto de
+  // `carteira`, e com maybeSingle para a tela nao quebrar se as colunas
+  // ainda nao existirem nesse projeto.
+  let regra = null;
+  try {
+    const { data:rg } = await sb.from("carteira")
+      .select("rebalancear,banda_pct").eq("id", id).maybeSingle();
+    regra = rg || null;
+  } catch(_) { regra = null; }
+
   const { data:pesos } = await sb.from("peso_atual").select("ativo,peso,marco").eq("carteira_id", id);
   // o declarado da mesma data que está carregada: é a referência de
   // como a carteira começou, antes de o peso andar com o mercado
@@ -1977,6 +2428,14 @@ async function telaCarteira(id){
   const { data:todasPos } = await sb.from("posicao").select("ativo,peso,valida_de")
                                     .eq("carteira_id", id).order("valida_de");
   const extrato = montarExtrato(todasPos);
+  // ⚠️ Julgar quem publica e julgar as ESCOLHAS dele. Acertar porque a
+  // banda disparou nao e o mesmo que acertar porque a pessoa decidiu
+  // trocar um papel. A data casa a declaracao com a linha de
+  // `rebalanceamento`; o que nao casa foi decisao do autor.
+  const rebal = {};
+  { const { data:rb } = await sb.from("rebalanceamento")
+      .select("data,motivo").eq("carteira_id", id);
+    (rb||[]).forEach(r => rebal[String(r.data).slice(0,10)] = r.motivo || ""); }
   let sigo=false, nSeg=0;
   if(eu){
     const { data:sg } = await sb.from("seguidor").select("carteira_id")
@@ -2109,6 +2568,7 @@ async function telaCarteira(id){
     <div style="font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--graf);margin-bottom:10px">
       Papéis e pesos${extrato.length?` · desde ${dataBR(extrato[extrato.length-1].data)}`:""}
       ${extrato.length>1?` · última mudança em ${dataBR(marcoAtual)}`:""}</div>
+    ${reguaHTML(regra, pesos, Object.entries(declarado).map(([ativo,peso])=>({ativo,peso})))}
     <table><thead><tr><th></th><th></th>
       <th class="d" style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--graf)">declarado</th>
       <th class="d" style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--graf)">atual</th>
@@ -2137,16 +2597,27 @@ async function telaCarteira(id){
     ${extrato.length > 1 ? `<div style="margin-top:20px">
       <div style="font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--graf);margin-bottom:9px">
         Extrato · ${extrato.length} ${extrato.length===1?"declaração":"declarações"}</div>
-      ${extrato.map(e=>`<div style="padding:9px 0;border-bottom:1px solid var(--p3)">
-        <span class="mono" style="font-size:11.5px;color:var(--graf)">${dataBR(e.data)}</span>
-        ${e.abertura?`<span class="tag" style="margin-left:7px">abertura</span>`:""}
-        <div style="font-size:12.5px;color:var(--t2);margin-top:4px">
-          ${e.acoes.length ? e.acoes.map(esc).join(" · ")
-                           : "declarou de novo sem mudar peso nenhum"}</div>
-      </div>`).join("")}
-      <p style="font-size:11.5px;color:var(--graf);margin:9px 0 0">
-        Cada linha é uma declaração, com a data em que passou a valer. O que
-        está aqui não pode ser reescrito depois.</p>
+      ${extrato.map(e=>{
+        const dr = String(e.data).slice(0,10);
+        const porRegra = !e.abertura && dr in rebal;
+        return `<div class="ext">
+          <div class="dt">${dataBR(e.data)}</div>
+          <div>
+            <span class="selo2 ${e.abertura?"":porRegra?"reg":"dono"}">${
+              e.abertura ? "abertura"
+              : porRegra ? "rebalanceamento · regra"
+              : "decisão do autor"}</span>
+            ${porRegra && rebal[dr]
+              ? `<span class="motivo">${esc(rebal[dr])}</span>` : ""}
+            <div class="oq">${e.acoes.length ? e.acoes.map(esc).join(" · ")
+              : "declarou de novo sem mudar peso nenhum"}</div>
+          </div>
+        </div>`;}).join("")}
+      <p style="font-size:11.5px;color:var(--graf);margin:11px 0 0;max-width:72ch;line-height:1.6">
+        Cada linha é uma declaração, com a data em que passou a valer, e nenhuma pode ser
+        reescrita depois. A etiqueta separa o que a <b style="color:var(--t2)">regra</b>
+        fez sozinha do que foi <b style="color:var(--t2)">decisão do autor</b> — julgar
+        quem publica é julgar as escolhas dele, não o piloto automático.</p>
     </div>` : ""}
     ${notas?.length?`<div style="margin-top:18px">
       <div style="font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--graf);margin-bottom:8px">Anotações</div>
@@ -3315,7 +3786,7 @@ async function telaPlacar(){
 }
 
 // ═══════════════════════════════════════════ screening
-// Medias exponenciais de 17 e 34 pregoes, calculadas NO BANCO — sao 236
+// Os tres pontos vem calculados DO BANCO — sao 236
 // papeis por 40 pregoes e o PostgREST corta em 1000 linhas por consulta.
 //
 // A tela diz "tendencia de alta" e "tendencia de baixa", nunca "comprado"
@@ -3342,10 +3813,19 @@ async function telaScreening(){
   // aba, de qualquer busca e do corte de liquidez — indice nao e papel,
   // e se um dia entrar no corte a regua some da tela quando alguem
   // marcar a caixinha.
-  const IND_AMPLO = ["IBOV","IBOVESPA","IBXX","IBRX"];
+  // ⚠️ Na tabela `barra` o Ibovespa entra como ^BVSP — mesmo codigo que a
+  // tela da carteira usa como referencia. Sem ele na lista, o indice caia
+  // no meio dos papeis, no fim da tabela, ordenado por liquidez zero.
+  const IND_AMPLO = ["^BVSP","IBOV","IBOVESPA","IBXX","IBRX","IBRA"];
+  // Aceita as duas grafias: o codigo puro da B3 e a versao com ^ que
+  // alguns provedores usam. Basta um deles existir na `barra`.
   const IND_SET = { IFNC:"Financeiro", ICON:"Consumo", IMAT:"Materiais básicos",
     IEEX:"Energia elétrica", INDX:"Industrial", IMOB:"Imobiliário",
-    UTIL:"Utilidade pública", SMLL:"Small caps", IDIV:"Dividendos", IFIX:"Fundos imobiliários" };
+    UTIL:"Utilidade pública", SMLL:"Small caps", IDIV:"Dividendos",
+    IFIX:"Fundos imobiliários", IGCX:"Governança", ITAG:"Tag along",
+    "^IFNC":"Financeiro", "^ICON":"Consumo", "^IMAT":"Materiais básicos",
+    "^IEEX":"Energia elétrica", "^INDX":"Industrial", "^IMOB":"Imobiliário",
+    "^UTIL":"Utilidade pública", "^SMLL":"Small caps", "^IDIV":"Dividendos" };
   const ehIndice = a => IND_AMPLO.includes(a) || IND_SET[a] != null;
 
   // ── OITO ESTADOS ────────────────────────────────────────────────
@@ -3355,7 +3835,7 @@ async function telaScreening(){
   //
   //   17>34>72  preco>17   fortissima alta
   //   17>34>72  preco<17   realizando na alta
-  //   17>72>34             sem tendência (só a de 17 cruzou a longa)
+  //   curto>longo>medio     sem tendência (só o curto cruzou o longo)
   //   17<34, ambas>72, preco>72   possivel saida da alta
   //   17<34, ambas>72, preco<72   saindo da alta, indefinido
   //   17>34, ambas<72, preco<72   possivel saida da baixa
@@ -3365,7 +3845,7 @@ async function telaScreening(){
   //   17<34<72  preco<17   fortissima baixa
   //
   // Os dois estados do meio nao estavam na lista original mas EXISTEM:
-  // so a media de 17 atravessou a de 72 e a de 34 nao acompanhou. Nao da
+  // so o ponto curto atravessou o longo e o medio nao acompanhou. Nao da
   // para dizer direcao — sao SEM TENDENCIA, nao uma virada confirmada.
   // Sem eles o papel cairia num balde errado, calado.
   const estadoDe = x => {
@@ -3403,7 +3883,7 @@ async function telaScreening(){
     saida_baixa:"possível saída da baixa",
     saida_baixa_ind:"saindo da baixa · indefinido",
     baixa_realiza:"realizando na baixa", baixa_max:"fortíssima baixa",
-    alta_sem:"alta · sem a de 72",      baixa_sem:"baixa · sem a de 72" };
+    alta_sem:"alta · sem o institucional", baixa_sem:"baixa · sem o institucional" };
 
   // Verde nos estados de alta, vermelho nos de baixa, neutro nas
   // transicoes — que e justamente onde nao da para afirmar nada.
@@ -3489,6 +3969,17 @@ async function telaScreening(){
   // ⚠️ Nao desenhar tracinho para o ponto forte: a curva dele ja esta
   // ali, e onde ela encosta no fio e a posicao de hoje. Marcar duas
   // vezes so rouba espaco dos outros dois.
+  // Desenho de exemplo do "Como ler": mesma funcao, dados combinados —
+  // mostrar o grafico vale mais que descrever as cores em palavras.
+  const exemploRisco = () => {
+    const v = []; let p = 100;
+    for(let i=0;i<60;i++){ p *= 1 + (i<26?-.004:.007) + Math.sin(i*.9)*.004; v.push(p); }
+    const md = (n)=>{ const k=2/(n+1); let e=v[0]; return v.map(x=>e=x*k+e*(1-k)); };
+    const u = v.length-1;
+    return risco({ ativo:"exemplo", serie:v, serie72:md(72),
+      ema17:md(17)[u], ema34:md(34)[u], ema72:md(72)[u], e:"alta_max" });
+  };
+
   const risco = x => {
     const v = x.serie || [], mF = x.serie72 || [];
     if(v.length < 5) return "";
@@ -3563,7 +4054,7 @@ async function telaScreening(){
 
   ${!l.length ? `<div class="card"><p style="margin:0;color:var(--t2)">
       Nenhum papel neste filtro.${!(data||[]).length
-        ? " O cálculo precisa de 34 pregões de histórico e o robô ainda não juntou tanto."
+        ? " O cálculo precisa de alguns meses de histórico e o robô ainda não juntou tanto."
         : ""}</p></div>`
   : `<table><thead><tr><th>Papel</th><th>Estado</th>
       <th class="d">Fechamento</th><th class="d">Vs. institucional</th>
@@ -3572,7 +4063,7 @@ async function telaScreening(){
       <th class="d">Negócio/dia</th></tr></thead><tbody>
     ${[...(amplo?[amplo]:[]), ...(verSet?setoriais:[])].map(x=>`<tr class="ref${
         x===amplo?"":" set"}">
-      <td class="mono cod">${esc(x.ativo)}${
+      <td class="mono cod">${esc(x.ativo==="^BVSP"?"IBOVESPA":x.ativo.replace("^",""))}${
         IND_SET[x.ativo]?`<span class="nm">${IND_SET[x.ativo]}</span>`:""}</td>
       <td style="font-size:12.5px" class="${tomDe(x.e)}">${ROT[x.e]}</td>
       <td class="d mono">${n2(x.fech, x.fech>1000?0:2)}</td>
@@ -3597,35 +4088,60 @@ async function telaScreening(){
       <td class="d mono nulo" style="font-size:12px">${grana(x.liquidez)}</td></tr>`).join("")}
     </tbody></table>`}
 
-  <div class="card" style="margin-top:16px">
-    <div style="font-size:10px;letter-spacing:.13em;text-transform:uppercase;
-      color:var(--graf);margin-bottom:9px">Como ler</div>
-    <div class="passos" style="margin:0">
-      <div class="passo"><h4 style="margin-top:0">Em alta · em baixa</h4>
-        <p>As três médias empilhadas na mesma direção. Se o preço estiver
-          além da média de 17, a tendência é <b>fortíssima</b>; se estiver
-          aquém, o papel está <b>realizando</b> dentro dela.</p></div>
-      <div class="passo"><h4 style="margin-top:0">Saindo</h4>
-        <p>As curtas se cruzaram mas as duas ainda estão do mesmo lado da de
-          72. Com o preço ainda do lado da tendência, é <b>possível saída</b>;
-          com o preço já do outro lado, <b>indefinido</b>.</p></div>
-      <div class="passo"><h4 style="margin-top:0">Virando · sem tendência</h4>
-        <p>As médias desalinhadas. Se o preço já passou das três, é
-          <b>virando</b> — quem manda é o preço, as médias chegam depois.
-          Se ele está no meio delas, não há direção a afirmar.</p></div>
+  <!-- ══ COMO LER ══════════════════════════════════════════════════
+       Era um paragrafo de sete linhas encostado a esquerda, descrevendo
+       cores com palavras enquanto o desenho estava logo acima — e, pior,
+       escrevendo os periodos das medias que o resto da tela esconde.
+       Agora ocupa a largura toda, em tres colunas, e a primeira MOSTRA
+       o grafico em vez de explica-lo. -->
+  <div class="comoler">
+    <div class="cel">
+      <h4>O desenho</h4>
+      <div class="amostra">${exemploRisco()}
+        <ul class="chaves">
+          <li><i class="l" style="background:var(--alta)"></i>preço dos 60 últimos pregões</li>
+          <li><i class="l" style="background:var(--lacre)"></i>ponto do <b>institucional</b> — define a fase</li>
+          <li><i class="l" style="background:var(--graf);width:9px"></i>ponto do <b>investidor</b>, hoje</li>
+          <li><i class="l" style="background:var(--tinta);width:9px"></i>ponto do <b>trader</b>, hoje</li>
+        </ul></div>
+      <p>Depois do fio é <b>hoje</b>. Da esquerda para a direita — fim da curva,
+        investidor, trader — a escada subindo é alta e descendo é baixa.</p>
     </div>
-    <p style="font-size:11.5px;color:var(--graf);margin:12px 0 0;max-width:74ch">
-      <b>Vs. média longa</b> é quanto o preço está acima ou abaixo da média de 72.
-      <b>17 × 34</b> é a distância entre as duas médias curtas.
-      A coluna <b>17 · 34 · 72</b> traz as três médias nas mesmas cores do
-      gráfico: <span style="color:var(--tinta)">17</span>,
-      <span style="color:var(--graf)">34</span> e
-      <span style="color:var(--ouro2)">72</span>.
-      No gráfico, a linha colorida é o preço e a dourada é a de 72; os traços
-      à direita marcam onde as três estão hoje.
-      ${soLiq ? `${foraDoCorte} papéis que negociam menos de ${LIQ_ROT}
-        estão escondidos: neles a média descola por um pulo isolado e o número
-        engana.` : ""}</p>
+    <div class="cel">
+      <h4>Os três pontos</h4>
+      <p style="margin:0 0 10px">São preços em torno dos quais o mercado
+        <b>mais intermediou negócio</b> — na prática, o preço médio pago por quem passou
+        por ali. Acima do ponto esse pessoal está no lucro; abaixo, no prejuízo, e tende
+        a vender no empate.</p>
+      <dl>
+        <dt>Do trader</dt><dd>o mais recente e o mais frágil: muda de postura assim que o
+          preço cruza.</dd>
+        <dt>Do investidor</dt><dd>prazo intermediário; precisa de mais que um pregão ruim.</dd>
+        <dt>Do institucional</dt><dd>o mais firme. Quem carrega posição grande demora para
+          montar e para desmontar — por isso é ele que define a fase.</dd>
+      </dl>
+      <p><b>É leitura, não medição</b>: o site não sabe quem comprou o quê, mede preço
+        médio por prazo. Os prazos fazem parte do método da casa.</p>
+    </div>
+    <div class="cel">
+      <h4>As fases</h4>
+      <dl>
+        <dt class="alta">fortíssima alta · em baixa</dt><dd>os três na ordem, do trader ao
+          institucional, e o preço além de todos. Se o preço recuou para dentro, é
+          <b>realizando</b>.</dd>
+        <dt>possível saída · saindo</dt><dd>o do trader cruzou o do investidor, e os dois
+          ainda estão do mesmo lado do institucional.</dd>
+        <dt>virando · sem tendência</dt><dd>pontos desalinhados. Se o preço já passou dos
+          três, é virada — quem manda é o preço.</dd>
+      </dl>
+      <p><b>Vs. institucional</b> é quanto o preço está acima ou abaixo do ponto mais
+        firme: é a força do movimento.${soLiq ? ` <b>${foraDoCorte}</b> papéis abaixo de
+        ${LIQ_ROT} estão escondidos — neles o ponto descola por um pulo isolado e o
+        número engana.` : ""}</p>
+      <p class="selo2">É medida, não recomendação: a tela descreve onde o preço está,
+        não diz o que fazer.</p>
+    </div>
+  </div>
   </div>`;
 
   const so = $("#selO");
@@ -4024,8 +4540,12 @@ async function telaServicos(){
         return pintar("Marque a autorização de contato.", true);
       const bt = document.getElementById("sEnv");
       bt.disabled = true; bt.textContent = "enviando…";
+      // ⚠️ A tabela `lead` ja era usada para cadastro de cliente (CPF,
+      // endereco). O campo `origem` separa as duas coisas: sem ele, os
+      // pedidos de servico se misturam com a base cadastral e a tela de
+      // atendimento passa a mostrar gente que nunca pediu contato.
       const { error } = await sb.from("lead").insert({
-        nome, whatsapp: tel,
+        origem: "servicos", nome, whatsapp: tel,
         email:   document.getElementById("sMail").value.trim() || null,
         horario: document.getElementById("sHora").value,
         recado:  document.getElementById("sRec").value.trim() || null,
@@ -4038,51 +4558,138 @@ async function telaServicos(){
   pintar();
 }
 
-/* ══ LEADS ══════════════════════════════════════════════════════════
-   ⚠️ Quem tranca e a RLS no banco, nao esta tela. Se a politica
-   lead_ler cair, esconder o link nao adianta: o PostgREST devolve a
-   tabela para quem pedir. A tela e conveniencia; o lacre e o banco. */
+/* ══ CRM DOS PEDIDOS ════════════════════════════════════════════════
+   O contato NUNCA e apagado nem escondido: marcar como atendido so
+   grava uma data. O que decide o dia de trabalho e a coluna RETOMAR —
+   quem tem data vencida sobe para o topo, porque lead esquecido nao
+   avisa que foi esquecido.
+
+   Cada anotacao vira linha nova em lead_nota. Nada e sobrescrito: seis
+   meses depois voce precisa saber o que foi dito, nao a ultima versao
+   do resumo.
+
+   ⚠️ Quem tranca e a RLS no banco, nao esta tela. */
+const SITUACAO = [["novo","Novo"],["contatado","Contatado"],
+  ["conversando","Em conversa"],["fechado","Fechado"],["perdido","Perdido"]];
+const rotSit = k => (SITUACAO.find(x=>x[0]===k)||["","—"])[1];
+
 async function telaLeads(){
+  const q = new URLSearchParams(location.hash.split("?")[1]||"");
+  const filtro = q.get("s") || "";
+  const aberto = q.get("id") || "";
   app().innerHTML = `<div class="carreg">carregando pedidos…</div>`;
-  const { data, error } = await sb.from("lead")
-    .select("*").order("criado_em", { ascending:false }).limit(200);
+
+  const { data, error } = await sb.from("lead").select("*").in("origem",["servicos","clube"])
+    .order("criado_em", { ascending:false }).limit(400);
   if(error) return app().innerHTML = aviso("Não consegui ler os pedidos: " + error.message +
     " — se falar em permissão, a política lead_ler ainda não está no banco.", true);
-  const l = data || [], abertos = l.filter(x => !x.atendido_em).length;
-  app().innerHTML = `
-  <div class="cabeca" style="text-align:left"><h1>Pedidos de contato</h1>
-    <p>${l.length} ${l.length===1?"pedido":"pedidos"}${
-      abertos?` · <b>${abertos} sem atender</b>`:l.length?" · todos atendidos":""}</p></div>
-  ${!l.length ? `<div class="card"><p style="margin:0;color:var(--t2)">Nenhum pedido ainda.
-      Os que chegarem pela tela de serviços aparecem aqui.</p></div>`
-  : `<table><thead><tr><th>Quando</th><th>Quem</th><th>Contato</th><th>Assuntos</th>
-      <th>Recado</th><th class="d">Situação</th></tr></thead><tbody>
-    ${l.map(x=>`<tr${x.atendido_em?' style="opacity:.5"':""}>
-      <td class="mono" style="font-size:11.5px;color:var(--graf);white-space:nowrap">${dataBR(x.criado_em)}</td>
-      <td style="font-weight:500">${esc(x.nome)}</td>
-      <td style="font-size:12.5px">
-        <a href="https://wa.me/55${esc((x.whatsapp||"").replace(/\D/g,""))}" target="_blank"
-           rel="noopener" style="color:var(--ouro2)">${esc(x.whatsapp)}</a>
-        ${x.email?`<div style="color:var(--graf);font-size:11.5px">${esc(x.email)}</div>`:""}
-        ${x.horario?`<div style="color:var(--graf);font-size:11px">prefere ${esc(x.horario)}</div>`:""}</td>
-      <td style="font-size:11.5px;max-width:240px">${(x.assuntos||[]).map(id=>{
-          const v = SERVICOS.find(w=>w.id===id);
-          return `<span class="tg" style="display:inline-block;margin:1px 3px 1px 0">${
-            v?v.nome:id}</span>`; }).join("") || "—"}</td>
-      <td style="font-size:12px;color:var(--t2);max-width:260px">${esc(x.recado||"—")}</td>
-      <td class="d">${x.atendido_em
-        ? `<span style="font-size:11px;color:var(--graf)">atendido<br>${dataBR(x.atendido_em)}</span>`
-        : `<button class="bt" style="padding:5px 12px;font-size:12px" data-at="${x.id}">marcar atendido</button>`}</td>
-    </tr>`).join("")}</tbody></table>`}`;
 
-  document.querySelectorAll("[data-at]").forEach(b =>
-    b.onclick = async () => { b.disabled = true; b.textContent = "…";
+  let notas = [];
+  if(aberto){
+    const { data:nt } = await sb.from("lead_nota").select("*")
+      .eq("lead_id", aberto).order("criado_em", { ascending:false });
+    notas = nt || [];
+  }
+
+  const hoje = new Date().toISOString().slice(0,10);
+  const todos = data || [];
+  const venceu = x => x.retomar_em && x.retomar_em <= hoje
+    && !["fechado","perdido"].includes(x.situacao);
+  const conta = {};
+  SITUACAO.forEach(([k]) => conta[k] = todos.filter(x => (x.situacao||"novo") === k).length);
+  const aRetomar = todos.filter(venceu).length;
+
+  let l = filtro === "retomar" ? todos.filter(venceu)
+        : filtro ? todos.filter(x => (x.situacao||"novo") === filtro) : todos;
+  // vencidos primeiro; depois os mais recentes
+  l = l.slice().sort((a,b) => (venceu(b)?1:0)-(venceu(a)?1:0)
+    || String(b.criado_em).localeCompare(String(a.criado_em)));
+
+  const lk = o => { const p = new URLSearchParams();
+    const s2 = o.s !== undefined ? o.s : filtro;
+    const i2 = o.id !== undefined ? o.id : aberto;
+    if(s2) p.set("s", s2); if(i2) p.set("id", i2);
+    return "#/leads" + (p.toString() ? "?"+p : ""); };
+
+  app().innerHTML = `
+  <div class="cabeca" style="text-align:left">
+    <h1>Pedidos de contato</h1>
+    <p>${todos.length} ${todos.length===1?"pedido":"pedidos"}${
+      aRetomar?` · <b style="color:var(--baixa)">${aRetomar} para retomar hoje</b>`:""}</p>
+  </div>
+  <div class="abas">
+    <a href="${lk({s:"",id:""})}" class="aba${!filtro?" on":""}">Todos<span class="n">${todos.length}</span></a>
+    ${aRetomar?`<a href="${lk({s:"retomar",id:""})}" class="aba${filtro==="retomar"?" on":""}"
+      style="color:var(--baixa)">Retomar<span class="n">${aRetomar}</span></a>`:""}
+    ${SITUACAO.filter(([k])=>conta[k]).map(([k,r])=>`<a href="${lk({s:k,id:""})}"
+      class="aba${filtro===k?" on":""}">${r}<span class="n">${conta[k]}</span></a>`).join("")}
+  </div>
+
+  ${!l.length ? `<div class="card" style="margin-top:14px"><p style="margin:0;color:var(--t2)">
+      Nenhum pedido aqui. Os que chegarem pela tela de serviços aparecem nesta lista.</p></div>`
+  : l.map(x=>{
+    const ab = String(x.id) === String(aberto);
+    return `<div class="lead${ab?" ab":""}${venceu(x)?" urg":""}">
+      <div class="topo" onclick="location.hash='${ab?lk({id:""}):lk({id:x.id})}'">
+        <div class="quem">
+          <div class="nm">${esc(x.nome||"—")}
+            <span class="sit s-${esc(x.situacao||"novo")}">${rotSit(x.situacao||"novo")}</span></div>
+          <div class="mt">${dataBR(x.criado_em)} · ${esc(x.whatsapp||"—")}${
+            x.email?" · "+esc(x.email):""}${x.horario?" · prefere "+esc(x.horario):""}</div>
+        </div>
+        <div class="ass">${(x.assuntos||[]).slice(0,3).map(id=>{ const v=SERVICOS.find(w=>w.id===id);
+          return `<span class="tg">${v?v.nome:id}</span>`;}).join("")}${
+          (x.assuntos||[]).length>3?`<span class="tg">+${x.assuntos.length-3}</span>`:""}</div>
+        <div class="ret">${x.retomar_em
+          ? `<span style="color:${venceu(x)?"var(--baixa)":"var(--t2)"}">retomar ${dataBR(x.retomar_em)}</span>`
+          : `<span style="color:var(--graf)">sem data</span>`}</div>
+      </div>
+      ${!ab ? "" : `<div class="corpo">
+        ${x.recado?`<p class="rec">“${esc(x.recado)}”</p>`:""}
+        <div class="ferramentas">
+          <label>Situação</label>
+          <select data-sit="${x.id}">${SITUACAO.map(([k,r])=>
+            `<option value="${k}"${(x.situacao||"novo")===k?" selected":""}>${r}</option>`).join("")}</select>
+          <label>Retomar em</label>
+          <input type="date" data-ret="${x.id}" value="${x.retomar_em||""}">
+          <a class="wa" href="https://wa.me/55${esc((x.whatsapp||"").replace(/\D/g,""))}"
+             target="_blank" rel="noopener">abrir no WhatsApp</a>
+        </div>
+        <div class="anot">
+          <textarea id="nvNota" rows="2" placeholder="o que foi conversado — fica registrado com a data"></textarea>
+          <button class="bt" data-nota="${x.id}">Anotar</button>
+        </div>
+        ${notas.length ? notas.map(n=>`<div class="nt">
+            <div class="dt">${dataBR(n.criado_em)} ${String(n.criado_em).slice(11,16)}</div>
+            <div class="tx">${esc(n.texto)}</div></div>`).join("")
+          : `<p style="font-size:11.5px;color:var(--graf);margin:10px 0 0">
+              Nenhuma anotação ainda. O histórico não é sobrescrito: cada linha fica com a data.</p>`}
+      </div>`}
+    </div>`; }).join("")}`;
+
+  const salvar = async (id, campo) => {
+    const { error } = await sb.from("lead").update(campo).eq("id", id);
+    if(error) alert("Não consegui salvar: " + error.message); else telaLeads();
+  };
+  document.querySelectorAll("[data-sit]").forEach(el =>
+    el.onchange = () => salvar(el.dataset.sit, { situacao: el.value }));
+  document.querySelectorAll("[data-ret]").forEach(el =>
+    el.onchange = () => salvar(el.dataset.ret, { retomar_em: el.value || null }));
+  document.querySelectorAll("[data-nota]").forEach(b =>
+    b.onclick = async () => {
+      const t = document.getElementById("nvNota").value.trim();
+      if(!t) return;
+      b.disabled = true; b.textContent = "…";
       const u = (await sb.auth.getUser()).data.user;
-      const { error } = await sb.from("lead")
-        .update({ atendido_em: new Date().toISOString(), atendido_por: u?.id })
-        .eq("id", b.dataset.at);
-      if(error){ b.disabled = false; b.textContent = "erro"; return; }
-      telaLeads(); });
+      const { error } = await sb.from("lead_nota")
+        .insert({ lead_id: +b.dataset.nota, texto: t, autor: u?.id });
+      if(error){ b.disabled = false; b.textContent = "erro"; alert(error.message); return; }
+      // ao anotar, o pedido deixa de ser "novo" sozinho: quem escreveu
+      // uma linha ja falou com a pessoa.
+      await sb.from("lead").update({ situacao: "contatado", atendido_em: new Date().toISOString() })
+        .eq("id", b.dataset.nota).eq("situacao", "novo");
+      telaLeads();
+    });
 }
 
 function rotear(){
@@ -4108,7 +4715,9 @@ function rotear(){
   if(h==="#/assinar")         return telaAssinar();
   if(h==="#/admin")           return telaAdmin();
   if(h==="#/servicos")        return telaServicos();
-  if(h==="#/leads")           return telaLeads();
+  if(h==="#/clube")           return telaClube();
+  if(h.split("?")[0]==="#/universo") return telaUniverso();
+  if(h.split("?")[0]==="#/leads") return telaLeads();
   if(h==="#/conta")           return telaConta();
   if(h==="#/senha")           return telaSenha();
   if(h==="#/nova-senha")      return telaNovaSenha();
