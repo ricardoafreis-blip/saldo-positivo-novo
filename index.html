@@ -81,7 +81,7 @@ nav .rot{display:none}
 .prova .n{font-family:var(--mono,'IBM Plex Mono',monospace);color:var(--tinta);
   font-weight:500;font-size:13px;margin-right:5px}
 .prova .viva{color:var(--ouro2)}
-.prova .selo{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--lacre);
+.prova .pontinho{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--lacre);
   margin-right:7px;vertical-align:1px;box-shadow:0 0 6px rgba(201,162,39,.7)}
 
 .pill{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;padding:3px 9px;
@@ -145,264 +145,6 @@ tr.semdado:hover td{opacity:1}
   background:repeating-linear-gradient(-45deg,transparent 0 3px,rgba(201,162,39,.28) 3px 4px)}
 .regua .obs{font-size:11.5px;color:var(--graf);margin:12px 0 0;max-width:70ch;line-height:1.6}
 .regua .obs b{color:var(--t2);font-weight:500}
-
-/* ══ UNIVERSO ═══════════════════════════════════════════════════════
-   A lista de papeis era editavel so por SQL, e o unico jeito de
-   descobrir que um simbolo nunca chegou era ler o log do Actions de
-   madrugada. Aqui a coluna PREGOES conta a verdade: papel na lista com
-   zero pregoes e simbolo que o MT5 nao entrega — grafico nunca aberto,
-   ticker trocado ou empresa fechada.
-
-   ⚠️ Inserir aqui NAO faz o MT5 cotar. O EA pede o simbolo; se o
-   grafico diario nunca foi carregado na corretora, volta vazio. A tela
-   mostra quem falta, o Ctrl+U resolve.
-
-   O tipo nao e adivinhado do sufixo: BOVA11 e SANB11 terminam igual e
-   sao coisas diferentes. Quem marca e voce. */
-const TIPOS = [["acao","Ação"],["unit","Unit"],["etf","ETF"],
-               ["bdr","BDR"],["fii","FII"],["indice","Índice"]];
-const rotTipo = k => (TIPOS.find(t=>t[0]===k)||["","—"])[1];
-
-async function telaUniverso(){
-  const q = new URLSearchParams(location.hash.split("?")[1]||"");
-  const ft = q.get("t") || "";
-  const busca = (q.get("q")||"").toUpperCase();
-  app().innerHTML = `<div class="carreg">carregando universo…</div>`;
-
-  const { data, error } = await sb.from("universo_estado").select("*").order("ativo");
-  if(error) return app().innerHTML = aviso("Não consegui ler o universo: " + error.message +
-    " — se falar em relação inexistente, a view universo_estado ainda não foi criada.", true);
-
-  const todos = data || [];
-  const semDado = todos.filter(x => !x.pregoes).length;
-  const conta = {}; TIPOS.forEach(([k]) => conta[k] = todos.filter(x => (x.tipo||"acao")===k).length);
-
-  let l = ft === "faltando" ? todos.filter(x => !x.pregoes)
-        : ft ? todos.filter(x => (x.tipo||"acao") === ft) : todos;
-  if(busca) l = l.filter(x => x.ativo.includes(busca));
-
-  const lk = o => { const p = new URLSearchParams();
-    const t2 = o.t !== undefined ? o.t : ft, q2 = o.q !== undefined ? o.q : busca;
-    if(t2) p.set("t", t2); if(q2) p.set("q", q2);
-    return "#/universo" + (p.toString() ? "?"+p : ""); };
-
-  app().innerHTML = `
-  <div class="cabeca" style="text-align:left">
-    <h1>Universo de papéis</h1>
-    <p>${todos.length} na lista${semDado
-      ? ` · <b style="color:var(--baixa)">${semDado} sem nenhum pregão</b>` : ""}.
-      O robô só pede ao MT5 o que estiver aqui.</p>
-  </div>
-
-  <div class="colar">
-    <textarea id="uCola" rows="2"
-      placeholder="cole os códigos: BOVA11 IVVB11 SMAL11 NUBR33 — espaço, vírgula ou linha"></textarea>
-    <div class="lado">
-      <select id="uTipo">${TIPOS.map(([k,r])=>
-        `<option value="${k}">${r}</option>`).join("")}</select>
-      <button class="bt lacre" id="uAdd">Acrescentar</button>
-    </div>
-  </div>
-  <div id="uMsg" style="font-size:12px;min-height:18px;margin:6px 0 0"></div>
-
-  <div class="abas" style="margin-top:14px">
-    <a href="${lk({t:""})}" class="aba${!ft?" on":""}">Todos<span class="n">${todos.length}</span></a>
-    ${semDado?`<a href="${lk({t:"faltando"})}" class="aba${ft==="faltando"?" on":""}"
-      style="color:var(--baixa)">Sem pregão<span class="n">${semDado}</span></a>`:""}
-    ${TIPOS.filter(([k])=>conta[k]).map(([k,r])=>`<a href="${lk({t:k})}"
-      class="aba${ft===k?" on":""}">${r}<span class="n">${conta[k]}</span></a>`).join("")}
-  </div>
-  <div class="ordena">
-    <input id="uBusca" placeholder="filtrar por código" value="${esc(busca)}"
-      style="width:170px;margin:0;padding:7px 11px;font-size:13px;text-transform:uppercase">
-    <span style="font-size:11.5px;color:var(--graf)">${l.length} de ${todos.length}</span>
-  </div>
-
-  ${!l.length ? `<div class="card"><p style="margin:0;color:var(--t2)">Nada neste filtro.</p></div>`
-  : `<table><thead><tr><th>Papel</th><th>Tipo</th><th class="d">Último preço</th>
-      <th class="d">Negócio/dia</th><th class="d">Pregões</th><th class="d">Último</th>
-      <th></th></tr></thead><tbody>
-    ${l.map(x=>`<tr${!x.pregoes?' class="semdado"':""}>
-      <td class="mono" style="font-weight:500">${esc(x.ativo)}</td>
-      <td><select data-tipo="${esc(x.ativo)}" class="tipoSel">${TIPOS.map(([k,r])=>
-        `<option value="${k}"${(x.tipo||"acao")===k?" selected":""}>${r}</option>`).join("")}</select></td>
-      <td class="d mono">${x.cotacao==null?"—":n2(x.cotacao)}</td>
-      <td class="d mono nulo" style="font-size:12px">${x.liquidez==null?"—":grana(x.liquidez)}</td>
-      <td class="d mono ${x.pregoes?"":"baixa"}">${x.pregoes||"nenhum"}</td>
-      <td class="d mono nulo" style="font-size:11.5px">${x.ultimo?dataBR(x.ultimo):"—"}</td>
-      <td class="d"><button class="bt" data-del="${esc(x.ativo)}"
-        style="padding:4px 10px;font-size:11.5px">remover</button></td>
-    </tr>`).join("")}</tbody></table>
-    <p style="font-size:11.5px;color:var(--graf);margin:12px 0 0;max-width:78ch;line-height:1.6">
-      <b style="color:var(--t2)">Pregões</b> conta o que já chegou do MT5. Zero significa
-      que o robô pediu e não recebeu: gráfico diário nunca carregado na corretora, ticker
-      trocado ou empresa fechada. Acrescentar um código aqui não faz o MT5 cotar — abra o
-      gráfico dele no terminal (Ctrl+U) e o candle vem no fechamento seguinte.</p>`}`;
-
-  const msg = (t, ruim) => { const e = document.getElementById("uMsg");
-    e.style.color = ruim ? "var(--baixa)" : "var(--alta)"; e.textContent = t; };
-
-  document.getElementById("uAdd").onclick = async () => {
-    const bruto = document.getElementById("uCola").value.toUpperCase();
-    const cods = [...new Set(bruto.split(/[^A-Z0-9]+/).filter(x => /^[A-Z]{4}\d{1,2}$/.test(x)))];
-    if(!cods.length) return msg("Nenhum código válido no que foi colado.", true);
-    const tipo = document.getElementById("uTipo").value;
-    const novos = cods.filter(c => !todos.some(x => x.ativo === c));
-    if(!novos.length) return msg(`${cods.length} ${cods.length===1?"código já estava":"códigos já estavam"} na lista.`, true);
-    const bt = document.getElementById("uAdd"); bt.disabled = true; bt.textContent = "…";
-    const { error } = await sb.from("universo").insert(novos.map(a => ({ ativo:a, tipo })));
-    if(error){ bt.disabled = false; bt.textContent = "Acrescentar"; return msg("Não consegui: "+error.message, true); }
-    telaUniverso();
-  };
-
-  document.querySelectorAll("[data-tipo]").forEach(el =>
-    el.onchange = async () => {
-      const { error } = await sb.from("universo").update({ tipo: el.value })
-        .eq("ativo", el.dataset.tipo);
-      msg(error ? "Não consegui salvar: "+error.message : `${el.dataset.tipo} agora é ${rotTipo(el.value)}.`, !!error);
-    });
-
-  document.querySelectorAll("[data-del]").forEach(b =>
-    b.onclick = async () => {
-      const a = b.dataset.del;
-      // ⚠️ Papel dentro de carteira publicada nao pode sair: a carteira
-      // para de apurar e o passado dela fica torto — que e exatamente o
-      // que o site promete que nao acontece.
-      const { data:uso } = await sb.rpc("papel_em_uso", { p_ativo: a });
-      if(uso > 0) return msg(`${a} está em ${uso} ${uso===1?"carteira":"carteiras"} publicadas. `
-        + "Removê-lo faria essas carteiras pararem de apurar.", true);
-      if(!confirm(`Remover ${a} do universo? O histórico já apurado continua na base.`)) return;
-      const { error } = await sb.from("universo").delete().eq("ativo", a);
-      if(error) return msg("Não consegui remover: "+error.message, true);
-      telaUniverso();
-    });
-
-  const bq = document.getElementById("uBusca");
-  if(bq) bq.onkeydown = e => { if(e.key === "Enter") location.hash = lk({ q: bq.value.toUpperCase() }); };
-}
-
-/* ══ CLUBE DE INVESTIMENTOS ═════════════════════════════════════════
-   A pagina responde a pergunta que trava todo mundo: "posso mesmo
-   gerir isso sem ser profissional?". Pode — a Resolucao CVM 11 deixa a
-   gestao com um cotista, se o regulamento permitir. Quase ninguem sabe
-   disso, e e o argumento que abre a conversa.
-   ⚠️ Nada aqui e promessa de rentabilidade. O clube e estrutura, nao
-   produto: o resultado depende do que o grupo comprar. */
-const PASSOS_CLUBE = [
- ["Junta o grupo","De 3 a 50 pessoas. Amigos, família, colegas de trabalho — não precisa de todo mundo entrando com o mesmo valor. Um estatuto define quanto cada um aporta, com que frequência e como alguém sai."],
- ["Escolhe quem gere","Pode ser um cotista do próprio grupo, se o estatuto permitir — não é preciso ser profissional. Ou pode ser um gestor contratado. Em qualquer caso, quem decide responde pelo grupo e presta contas."],
- ["A administradora formaliza","Uma instituição autorizada pela CVM registra o clube na B3, cuida da contabilidade, da custódia, da cota diária e do imposto. É ela que dá existência legal à coisa — o grupo não abre nada sozinho."],
- ["Começa a valer","Cada aporte vira cota, com valor apurado todo dia. Todo mundo vê o mesmo extrato. Não há como um saber mais que o outro, e é isso que faz o clube durar mais que a amizade."],
-];
-
-const PORQUE_CLUBE = [
- ["Custo dividido","Taxas menores que fundo de varejo, porque a estrutura é uma só para o grupo inteiro. E aqui a conversa sobre taxa é aberta — você vê o que paga."],
- ["Decisão perto","Num fundo você aceita o que o gestor fizer. No clube o grupo discute, vota o que está no estatuto e sabe exatamente o que tem na carteira."],
- ["Aprendizado real","É a diferença entre ler sobre investir e responder por uma decisão junto com outras pessoas. Com dinheiro de verdade, mas dividido — e com regra escrita antes."],
- ["Transparência","Cota diária, extrato igual para todos, patrimônio auditado pela administradora. Ninguém precisa acreditar em ninguém."],
-];
-
-async function telaClube(){
-  const pintar = (recado="", ruim=false) => {
-    app().innerHTML = `
-    <div class="cabeca" style="text-align:left;max-width:70ch">
-      <h1>Monte um clube de investimentos comigo</h1>
-      <p>De 3 a 50 pessoas, uma carteira só, cota apurada todo dia. É a forma mais
-        barata e mais transparente de um grupo investir junto — e
-        <b>um cotista do próprio grupo pode ser o gestor</b>, sem precisar ser
-        profissional, se o estatuto permitir.</p>
-      <p style="font-size:13px;color:var(--graf);margin-top:10px">Eu ajudo na estrutura:
-        estatuto, escolha da administradora, política de investimento, e o
-        acompanhamento depois que o clube está de pé. Chame quem você quiser.</p>
-    </div>
-
-    <div class="secaoS">
-      <div class="cabsec"><h2>Como se monta</h2>
-        <span>Quatro passos. O grupo faz o primeiro e o segundo; a administradora faz o terceiro.</span></div>
-      <div class="passosC">${PASSOS_CLUBE.map(([t,d],i)=>`
-        <div class="passoC"><span class="num">${i+1}</span>
-          <h4>${t}</h4><p>${d}</p></div>`).join("")}</div>
-    </div>
-
-    <div class="secaoS">
-      <div class="cabsec"><h2>Por que clube, e não fundo</h2>
-        <span>O que muda quando o grupo é dono da estrutura em vez de cliente dela.</span></div>
-      <div class="gradeS">${PORQUE_CLUBE.map(([t,d])=>`
-        <div class="srv" style="cursor:default"><h3>${t}</h3>
-          <div class="oq">${d}</div></div>`).join("")}</div>
-    </div>
-
-    <div class="secaoS">
-      <div class="cabsec"><h2>O que é bom saber antes</h2>
-        <span>As três coisas que costumam pegar as pessoas de surpresa.</span></div>
-      <div class="gradeS">
-        <div class="srv" style="cursor:default"><h3>Dinheiro é de verdade</h3>
-          <div class="oq">Diferente das carteiras do site, aqui o resultado é seu. Clube
-            de investimentos não tem garantia de rentabilidade e pode perder valor. Quem
-            quiser praticar sem risco continua com o ranking, de graça.</div></div>
-        <div class="srv" style="cursor:default"><h3>A regra vem antes do dinheiro</h3>
-          <div class="oq">O estatuto define quem decide, como se entra, como se sai e o
-            que o clube pode comprar. Escrever isso com o grupo sóbrio evita a briga que
-            aparece no primeiro mês ruim.</div></div>
-        <div class="srv" style="cursor:default"><h3>Tem custo fixo</h3>
-          <div class="oq">A administradora cobra para manter a estrutura. Abaixo de um
-            certo patrimônio, esse custo pesa demais sobre o resultado — e nesse caso eu
-            digo para não montar ainda.</div></div>
-      </div>
-    </div>
-
-    <div class="contatoS">
-      <div>
-        <h2 style="font-size:24px;margin:0 0 11px">Quero montar um clube</h2>
-        <p style="color:var(--t2);font-size:14.5px;line-height:1.62;max-width:46ch">
-          Me diga quantas pessoas você já tem em mente e eu explico o caminho — sem
-          custo, sem compromisso e sem você precisar ter tudo decidido.</p>
-        <p style="font-size:11.5px;color:var(--graf);margin-top:14px;max-width:46ch;line-height:1.6">
-          Clube de investimentos é registrado na B3 e administrado por instituição
-          autorizada pela CVM. O Saldo Positivo não administra nem faz a gestão de
-          nenhum clube — nada nesta página é recomendação de investimento.</p>
-      </div>
-      <div>
-        <label>Nome</label><input id="cNome" placeholder="como prefere ser chamado">
-        <label>WhatsApp</label><input id="cTel" placeholder="(31) 90000-0000">
-        <label>E-mail</label><input id="cMail" placeholder="voce@email.com">
-        <label>Quantas pessoas você já tem</label>
-        <select id="cQtd"><option>ainda estou sozinho</option><option>2 ou 3</option>
-          <option>4 a 9</option><option>10 ou mais</option></select>
-        <label>Recado</label>
-        <textarea id="cRec" rows="3" placeholder="opcional — o que o grupo quer fazer"></textarea>
-        <input id="cIsca" tabindex="-1" autocomplete="off"
-          style="position:absolute;left:-9999px;width:1px;height:1px">
-        <label class="lgpd"><input type="checkbox" id="cOk">
-          <span>Autorizo o contato por telefone, WhatsApp ou e-mail sobre o clube. Os
-          dados são usados só para isso e podem ser apagados a qualquer momento.</span></label>
-        <button class="bt lacre" id="cEnv" style="margin-top:12px;width:100%">Quero saber mais</button>
-        <div style="font-size:12px;margin-top:9px;min-height:18px;color:${
-          ruim?"var(--baixa)":"var(--alta)"}">${esc(recado)}</div>
-      </div>
-    </div>`;
-
-    document.getElementById("cEnv").onclick = async () => {
-      const nome = document.getElementById("cNome").value.trim();
-      const tel  = document.getElementById("cTel").value.trim();
-      if(document.getElementById("cIsca").value) return;
-      if(!nome || !tel) return pintar("Falta o nome ou o WhatsApp.", true);
-      if(!document.getElementById("cOk").checked)
-        return pintar("Marque a autorização de contato.", true);
-      const bt = document.getElementById("cEnv");
-      bt.disabled = true; bt.textContent = "enviando…";
-      const { error } = await sb.from("lead").insert({
-        origem: "clube", nome, whatsapp: tel,
-        email:  document.getElementById("cMail").value.trim() || null,
-        recado: `Grupo: ${document.getElementById("cQtd").value}. ` +
-                (document.getElementById("cRec").value.trim() || ""),
-        assuntos: ["clube"] });
-      if(error) return pintar("Não consegui registrar: " + error.message, true);
-      pintar("Pedido registrado. Eu entro em contato em até um dia útil.");
-    };
-  };
-  pintar();
-}
 
 /* ══ CRM DOS PEDIDOS ════════════════════════════════════════════════ */
 .lead{border:1px solid var(--linha);border-radius:4px;background:var(--p2);margin-top:9px}
@@ -479,7 +221,7 @@ async function telaClube(){
 .fita .leg{display:flex;justify-content:space-between;gap:12px;font-size:10.5px;
   color:var(--graf);padding-top:7px}
 .fita .leg .sel{color:var(--ouro2)}
-.fita .selo{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--lacre);
+.fita .pontinho{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--lacre);
   margin-right:5px;vertical-align:1px;box-shadow:0 0 6px rgba(201,162,39,.6)}
 
 .contra{display:flex;flex-wrap:wrap;border-top:1px solid var(--linha);border-bottom:1px solid var(--linha)}
@@ -1840,7 +1582,7 @@ async function telaRanking(){
     <div class="prova">
       <span class="p"><span class="n">${(cs||[]).length}</span>carteiras na disputa</span>
       <span class="p"><span class="n">${maxPregoes}</span>${maxPregoes===1?"pregão apurado":"pregões apurados"}</span>
-      ${ultimoFech?`<span class="p viva"><span class="selo"></span>último fechamento
+      ${ultimoFech?`<span class="p viva"><span class="pontinho"></span>último fechamento
         <span class="n" style="color:var(--ouro2)">${dataBR(ultimoFech)}</span></span>`:""}
     </div>
     <a href="#/publicar" class="bt lacre" style="margin-top:20px">Publicar a minha carteira &rarr;</a>
@@ -2395,7 +2137,7 @@ function reguaHTML(regra, pesos, decl){
 function fitaGrande(serie){
   const s = (serie||[]).filter(r => r.retorno != null);
   if(!s.length) return `<div class="fita"><div class="trilho"><span class="base"></span></div>
-    <div class="leg"><span></span><span class="sel"><i class="selo"></i>nenhum pregão
+    <div class="leg"><span></span><span class="sel"><i class="pontinho"></i>nenhum pregão
       apurado ainda</span><span></span></div></div>`;
   const mx = Math.max(...s.map(r => Math.abs(r.retorno)), .004);
   return `<div class="fita">
@@ -2407,7 +2149,7 @@ function fitaGrande(serie){
           align-self:${r.retorno>=0?"flex-end":"flex-start"};
           margin-${r.retorno>=0?"bottom":"top"}:37px"></i></span>`;}).join("")}</div>
     <div class="leg"><span>${dataBR(s[0].data)}</span>
-      <span class="sel"><i class="selo"></i>${s.length} ${
+      <span class="sel"><i class="pontinho"></i>${s.length} ${
         s.length===1?"pregão apurado":"pregões apurados"} — nenhum pode ser reescrito</span>
       <span>${dataBR(s[s.length-1].data)}</span></div></div>`;
 }
@@ -4731,6 +4473,264 @@ async function telaLeads(){
         .eq("id", b.dataset.nota).eq("situacao", "novo");
       telaLeads();
     });
+}
+
+/* ══ UNIVERSO ═══════════════════════════════════════════════════════
+   A lista de papeis era editavel so por SQL, e o unico jeito de
+   descobrir que um simbolo nunca chegou era ler o log do Actions de
+   madrugada. Aqui a coluna PREGOES conta a verdade: papel na lista com
+   zero pregoes e simbolo que o MT5 nao entrega — grafico nunca aberto,
+   ticker trocado ou empresa fechada.
+
+   ⚠️ Inserir aqui NAO faz o MT5 cotar. O EA pede o simbolo; se o
+   grafico diario nunca foi carregado na corretora, volta vazio. A tela
+   mostra quem falta, o Ctrl+U resolve.
+
+   O tipo nao e adivinhado do sufixo: BOVA11 e SANB11 terminam igual e
+   sao coisas diferentes. Quem marca e voce. */
+const TIPOS = [["acao","Ação"],["unit","Unit"],["etf","ETF"],
+               ["bdr","BDR"],["fii","FII"],["indice","Índice"]];
+const rotTipo = k => (TIPOS.find(t=>t[0]===k)||["","—"])[1];
+
+async function telaUniverso(){
+  const q = new URLSearchParams(location.hash.split("?")[1]||"");
+  const ft = q.get("t") || "";
+  const busca = (q.get("q")||"").toUpperCase();
+  app().innerHTML = `<div class="carreg">carregando universo…</div>`;
+
+  const { data, error } = await sb.from("universo_estado").select("*").order("ativo");
+  if(error) return app().innerHTML = aviso("Não consegui ler o universo: " + error.message +
+    " — se falar em relação inexistente, a view universo_estado ainda não foi criada.", true);
+
+  const todos = data || [];
+  const semDado = todos.filter(x => !x.pregoes).length;
+  const conta = {}; TIPOS.forEach(([k]) => conta[k] = todos.filter(x => (x.tipo||"acao")===k).length);
+
+  let l = ft === "faltando" ? todos.filter(x => !x.pregoes)
+        : ft ? todos.filter(x => (x.tipo||"acao") === ft) : todos;
+  if(busca) l = l.filter(x => x.ativo.includes(busca));
+
+  const lk = o => { const p = new URLSearchParams();
+    const t2 = o.t !== undefined ? o.t : ft, q2 = o.q !== undefined ? o.q : busca;
+    if(t2) p.set("t", t2); if(q2) p.set("q", q2);
+    return "#/universo" + (p.toString() ? "?"+p : ""); };
+
+  app().innerHTML = `
+  <div class="cabeca" style="text-align:left">
+    <h1>Universo de papéis</h1>
+    <p>${todos.length} na lista${semDado
+      ? ` · <b style="color:var(--baixa)">${semDado} sem nenhum pregão</b>` : ""}.
+      O robô só pede ao MT5 o que estiver aqui.</p>
+  </div>
+
+  <div class="colar">
+    <textarea id="uCola" rows="2"
+      placeholder="cole os códigos: BOVA11 IVVB11 SMAL11 NUBR33 — espaço, vírgula ou linha"></textarea>
+    <div class="lado">
+      <select id="uTipo">${TIPOS.map(([k,r])=>
+        `<option value="${k}">${r}</option>`).join("")}</select>
+      <button class="bt lacre" id="uAdd">Acrescentar</button>
+    </div>
+  </div>
+  <div id="uMsg" style="font-size:12px;min-height:18px;margin:6px 0 0"></div>
+
+  <div class="abas" style="margin-top:14px">
+    <a href="${lk({t:""})}" class="aba${!ft?" on":""}">Todos<span class="n">${todos.length}</span></a>
+    ${semDado?`<a href="${lk({t:"faltando"})}" class="aba${ft==="faltando"?" on":""}"
+      style="color:var(--baixa)">Sem pregão<span class="n">${semDado}</span></a>`:""}
+    ${TIPOS.filter(([k])=>conta[k]).map(([k,r])=>`<a href="${lk({t:k})}"
+      class="aba${ft===k?" on":""}">${r}<span class="n">${conta[k]}</span></a>`).join("")}
+  </div>
+  <div class="ordena">
+    <input id="uBusca" placeholder="filtrar por código" value="${esc(busca)}"
+      style="width:170px;margin:0;padding:7px 11px;font-size:13px;text-transform:uppercase">
+    <span style="font-size:11.5px;color:var(--graf)">${l.length} de ${todos.length}</span>
+  </div>
+
+  ${!l.length ? `<div class="card"><p style="margin:0;color:var(--t2)">Nada neste filtro.</p></div>`
+  : `<table><thead><tr><th>Papel</th><th>Tipo</th><th class="d">Último preço</th>
+      <th class="d">Negócio/dia</th><th class="d">Pregões</th><th class="d">Último</th>
+      <th></th></tr></thead><tbody>
+    ${l.map(x=>`<tr${!x.pregoes?' class="semdado"':""}>
+      <td class="mono" style="font-weight:500">${esc(x.ativo)}</td>
+      <td><select data-tipo="${esc(x.ativo)}" class="tipoSel">${TIPOS.map(([k,r])=>
+        `<option value="${k}"${(x.tipo||"acao")===k?" selected":""}>${r}</option>`).join("")}</select></td>
+      <td class="d mono">${x.cotacao==null?"—":n2(x.cotacao)}</td>
+      <td class="d mono nulo" style="font-size:12px">${x.liquidez==null?"—":grana(x.liquidez)}</td>
+      <td class="d mono ${x.pregoes?"":"baixa"}">${x.pregoes||"nenhum"}</td>
+      <td class="d mono nulo" style="font-size:11.5px">${x.ultimo?dataBR(x.ultimo):"—"}</td>
+      <td class="d"><button class="bt" data-del="${esc(x.ativo)}"
+        style="padding:4px 10px;font-size:11.5px">remover</button></td>
+    </tr>`).join("")}</tbody></table>
+    <p style="font-size:11.5px;color:var(--graf);margin:12px 0 0;max-width:78ch;line-height:1.6">
+      <b style="color:var(--t2)">Pregões</b> conta o que já chegou do MT5. Zero significa
+      que o robô pediu e não recebeu: gráfico diário nunca carregado na corretora, ticker
+      trocado ou empresa fechada. Acrescentar um código aqui não faz o MT5 cotar — abra o
+      gráfico dele no terminal (Ctrl+U) e o candle vem no fechamento seguinte.</p>`}`;
+
+  const msg = (t, ruim) => { const e = document.getElementById("uMsg");
+    e.style.color = ruim ? "var(--baixa)" : "var(--alta)"; e.textContent = t; };
+
+  document.getElementById("uAdd").onclick = async () => {
+    const bruto = document.getElementById("uCola").value.toUpperCase();
+    const cods = [...new Set(bruto.split(/[^A-Z0-9]+/).filter(x => /^[A-Z]{4}\d{1,2}$/.test(x)))];
+    if(!cods.length) return msg("Nenhum código válido no que foi colado.", true);
+    const tipo = document.getElementById("uTipo").value;
+    const novos = cods.filter(c => !todos.some(x => x.ativo === c));
+    if(!novos.length) return msg(`${cods.length} ${cods.length===1?"código já estava":"códigos já estavam"} na lista.`, true);
+    const bt = document.getElementById("uAdd"); bt.disabled = true; bt.textContent = "…";
+    const { error } = await sb.from("universo").insert(novos.map(a => ({ ativo:a, tipo })));
+    if(error){ bt.disabled = false; bt.textContent = "Acrescentar"; return msg("Não consegui: "+error.message, true); }
+    telaUniverso();
+  };
+
+  document.querySelectorAll("[data-tipo]").forEach(el =>
+    el.onchange = async () => {
+      const { error } = await sb.from("universo").update({ tipo: el.value })
+        .eq("ativo", el.dataset.tipo);
+      msg(error ? "Não consegui salvar: "+error.message : `${el.dataset.tipo} agora é ${rotTipo(el.value)}.`, !!error);
+    });
+
+  document.querySelectorAll("[data-del]").forEach(b =>
+    b.onclick = async () => {
+      const a = b.dataset.del;
+      // ⚠️ Papel dentro de carteira publicada nao pode sair: a carteira
+      // para de apurar e o passado dela fica torto — que e exatamente o
+      // que o site promete que nao acontece.
+      const { data:uso } = await sb.rpc("papel_em_uso", { p_ativo: a });
+      if(uso > 0) return msg(`${a} está em ${uso} ${uso===1?"carteira":"carteiras"} publicadas. `
+        + "Removê-lo faria essas carteiras pararem de apurar.", true);
+      if(!confirm(`Remover ${a} do universo? O histórico já apurado continua na base.`)) return;
+      const { error } = await sb.from("universo").delete().eq("ativo", a);
+      if(error) return msg("Não consegui remover: "+error.message, true);
+      telaUniverso();
+    });
+
+  const bq = document.getElementById("uBusca");
+  if(bq) bq.onkeydown = e => { if(e.key === "Enter") location.hash = lk({ q: bq.value.toUpperCase() }); };
+}
+
+/* ══ CLUBE DE INVESTIMENTOS ═════════════════════════════════════════
+   A pagina responde a pergunta que trava todo mundo: "posso mesmo
+   gerir isso sem ser profissional?". Pode — a Resolucao CVM 11 deixa a
+   gestao com um cotista, se o regulamento permitir. Quase ninguem sabe
+   disso, e e o argumento que abre a conversa.
+   ⚠️ Nada aqui e promessa de rentabilidade. O clube e estrutura, nao
+   produto: o resultado depende do que o grupo comprar. */
+const PASSOS_CLUBE = [
+ ["Junta o grupo","De 3 a 50 pessoas. Amigos, família, colegas de trabalho — não precisa de todo mundo entrando com o mesmo valor. Um estatuto define quanto cada um aporta, com que frequência e como alguém sai."],
+ ["Escolhe quem gere","Pode ser um cotista do próprio grupo, se o estatuto permitir — não é preciso ser profissional. Ou pode ser um gestor contratado. Em qualquer caso, quem decide responde pelo grupo e presta contas."],
+ ["A administradora formaliza","Uma instituição autorizada pela CVM registra o clube na B3, cuida da contabilidade, da custódia, da cota diária e do imposto. É ela que dá existência legal à coisa — o grupo não abre nada sozinho."],
+ ["Começa a valer","Cada aporte vira cota, com valor apurado todo dia. Todo mundo vê o mesmo extrato. Não há como um saber mais que o outro, e é isso que faz o clube durar mais que a amizade."],
+];
+
+const PORQUE_CLUBE = [
+ ["Custo dividido","Taxas menores que fundo de varejo, porque a estrutura é uma só para o grupo inteiro. E aqui a conversa sobre taxa é aberta — você vê o que paga."],
+ ["Decisão perto","Num fundo você aceita o que o gestor fizer. No clube o grupo discute, vota o que está no estatuto e sabe exatamente o que tem na carteira."],
+ ["Aprendizado real","É a diferença entre ler sobre investir e responder por uma decisão junto com outras pessoas. Com dinheiro de verdade, mas dividido — e com regra escrita antes."],
+ ["Transparência","Cota diária, extrato igual para todos, patrimônio auditado pela administradora. Ninguém precisa acreditar em ninguém."],
+];
+
+async function telaClube(){
+  const pintar = (recado="", ruim=false) => {
+    app().innerHTML = `
+    <div class="cabeca" style="text-align:left;max-width:70ch">
+      <h1>Monte um clube de investimentos comigo</h1>
+      <p>De 3 a 50 pessoas, uma carteira só, cota apurada todo dia. É a forma mais
+        barata e mais transparente de um grupo investir junto — e
+        <b>um cotista do próprio grupo pode ser o gestor</b>, sem precisar ser
+        profissional, se o estatuto permitir.</p>
+      <p style="font-size:13px;color:var(--graf);margin-top:10px">Eu ajudo na estrutura:
+        estatuto, escolha da administradora, política de investimento, e o
+        acompanhamento depois que o clube está de pé. Chame quem você quiser.</p>
+    </div>
+
+    <div class="secaoS">
+      <div class="cabsec"><h2>Como se monta</h2>
+        <span>Quatro passos. O grupo faz o primeiro e o segundo; a administradora faz o terceiro.</span></div>
+      <div class="passosC">${PASSOS_CLUBE.map(([t,d],i)=>`
+        <div class="passoC"><span class="num">${i+1}</span>
+          <h4>${t}</h4><p>${d}</p></div>`).join("")}</div>
+    </div>
+
+    <div class="secaoS">
+      <div class="cabsec"><h2>Por que clube, e não fundo</h2>
+        <span>O que muda quando o grupo é dono da estrutura em vez de cliente dela.</span></div>
+      <div class="gradeS">${PORQUE_CLUBE.map(([t,d])=>`
+        <div class="srv" style="cursor:default"><h3>${t}</h3>
+          <div class="oq">${d}</div></div>`).join("")}</div>
+    </div>
+
+    <div class="secaoS">
+      <div class="cabsec"><h2>O que é bom saber antes</h2>
+        <span>As três coisas que costumam pegar as pessoas de surpresa.</span></div>
+      <div class="gradeS">
+        <div class="srv" style="cursor:default"><h3>Dinheiro é de verdade</h3>
+          <div class="oq">Diferente das carteiras do site, aqui o resultado é seu. Clube
+            de investimentos não tem garantia de rentabilidade e pode perder valor. Quem
+            quiser praticar sem risco continua com o ranking, de graça.</div></div>
+        <div class="srv" style="cursor:default"><h3>A regra vem antes do dinheiro</h3>
+          <div class="oq">O estatuto define quem decide, como se entra, como se sai e o
+            que o clube pode comprar. Escrever isso com o grupo sóbrio evita a briga que
+            aparece no primeiro mês ruim.</div></div>
+        <div class="srv" style="cursor:default"><h3>Tem custo fixo</h3>
+          <div class="oq">A administradora cobra para manter a estrutura. Abaixo de um
+            certo patrimônio, esse custo pesa demais sobre o resultado — e nesse caso eu
+            digo para não montar ainda.</div></div>
+      </div>
+    </div>
+
+    <div class="contatoS">
+      <div>
+        <h2 style="font-size:24px;margin:0 0 11px">Quero montar um clube</h2>
+        <p style="color:var(--t2);font-size:14.5px;line-height:1.62;max-width:46ch">
+          Me diga quantas pessoas você já tem em mente e eu explico o caminho — sem
+          custo, sem compromisso e sem você precisar ter tudo decidido.</p>
+        <p style="font-size:11.5px;color:var(--graf);margin-top:14px;max-width:46ch;line-height:1.6">
+          Clube de investimentos é registrado na B3 e administrado por instituição
+          autorizada pela CVM. O Saldo Positivo não administra nem faz a gestão de
+          nenhum clube — nada nesta página é recomendação de investimento.</p>
+      </div>
+      <div>
+        <label>Nome</label><input id="cNome" placeholder="como prefere ser chamado">
+        <label>WhatsApp</label><input id="cTel" placeholder="(31) 90000-0000">
+        <label>E-mail</label><input id="cMail" placeholder="voce@email.com">
+        <label>Quantas pessoas você já tem</label>
+        <select id="cQtd"><option>ainda estou sozinho</option><option>2 ou 3</option>
+          <option>4 a 9</option><option>10 ou mais</option></select>
+        <label>Recado</label>
+        <textarea id="cRec" rows="3" placeholder="opcional — o que o grupo quer fazer"></textarea>
+        <input id="cIsca" tabindex="-1" autocomplete="off"
+          style="position:absolute;left:-9999px;width:1px;height:1px">
+        <label class="lgpd"><input type="checkbox" id="cOk">
+          <span>Autorizo o contato por telefone, WhatsApp ou e-mail sobre o clube. Os
+          dados são usados só para isso e podem ser apagados a qualquer momento.</span></label>
+        <button class="bt lacre" id="cEnv" style="margin-top:12px;width:100%">Quero saber mais</button>
+        <div style="font-size:12px;margin-top:9px;min-height:18px;color:${
+          ruim?"var(--baixa)":"var(--alta)"}">${esc(recado)}</div>
+      </div>
+    </div>`;
+
+    document.getElementById("cEnv").onclick = async () => {
+      const nome = document.getElementById("cNome").value.trim();
+      const tel  = document.getElementById("cTel").value.trim();
+      if(document.getElementById("cIsca").value) return;
+      if(!nome || !tel) return pintar("Falta o nome ou o WhatsApp.", true);
+      if(!document.getElementById("cOk").checked)
+        return pintar("Marque a autorização de contato.", true);
+      const bt = document.getElementById("cEnv");
+      bt.disabled = true; bt.textContent = "enviando…";
+      const { error } = await sb.from("lead").insert({
+        origem: "clube", nome, whatsapp: tel,
+        email:  document.getElementById("cMail").value.trim() || null,
+        recado: `Grupo: ${document.getElementById("cQtd").value}. ` +
+                (document.getElementById("cRec").value.trim() || ""),
+        assuntos: ["clube"] });
+      if(error) return pintar("Não consegui registrar: " + error.message, true);
+      pintar("Pedido registrado. Eu entro em contato em até um dia útil.");
+    };
+  };
+  pintar();
 }
 
 function rotear(){
