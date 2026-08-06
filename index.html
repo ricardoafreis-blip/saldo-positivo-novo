@@ -618,11 +618,11 @@ input[readonly]{color:var(--t2)}
    cai em cima dos valores — larguras diferentes, so o ultimo encosta na
    borda. Coluna por coluna o alinhamento sai de graca. */
 th.mA{padding-left:12px;width:80px;letter-spacing:.09em}
-th.mA.m1{border-left:1px solid var(--linha)}
+th.mA.m1{border-left:1px solid var(--p3)}
 th.mA.m3{color:var(--lacre)}
 td.mA{font-family:var(--mono,'IBM Plex Mono',monospace);font-variant-numeric:tabular-nums;
   font-size:12px;text-align:right;padding-left:12px}
-td.mA.m1{border-left:1px solid var(--linha);color:var(--tinta)}
+td.mA.m1{border-left:1px solid var(--p3);color:var(--tinta)}
 td.mA.m2{color:var(--t2)}
 td.mA.m3{color:var(--ouro2)}
 
@@ -689,9 +689,12 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
 /* Sem caixa. A faixa cinza fechava os controles num bloco apertado e
    espremia o que vinha antes e depois. Espaço em branco separa melhor
    que borda. */
+/* ⚠️ Era justify-content:center enquanto TUDO abaixo — cabeçalho da
+   tabela, papéis, rodapé — alinha à esquerda. O bloco flutuava no meio
+   e parecia solto: um pedaço longe da margem esquerda, outro longe da
+   direita. Alinhado à esquerda, ele encosta na mesma régua do resto. */
 .ordena{display:flex;gap:14px;align-items:center;flex-wrap:wrap;
-  justify-content:center;padding:14px 0 6px}
-@media(max-width:620px){.ordena{justify-content:flex-start}}
+  justify-content:flex-start;padding:14px 0 6px}
 .selOrdem{width:auto;min-width:190px;margin:0;padding:7px 11px;font-size:13px;
   background:var(--p2);border-color:var(--linha2);cursor:pointer}
 .selOrdem:hover{border-color:var(--graf)}
@@ -3914,8 +3917,10 @@ async function telaScreening(){
     .sort((a,b) => Object.keys(IND_SET).indexOf(a.ativo) - Object.keys(IND_SET).indexOf(b.ativo));
 
   let l = todosCalc.filter(x => !ehIndice(x.ativo));
-  // Onde o preco esta em relacao a media longa: e a forca do movimento.
-  l.forEach(x => { x.forca = (x.ema72 && x.ema72 > 0) ? x.fech/x.ema72 - 1 : null; });
+  // Onde o preco esta em relacao ao ponto mais firme: e a forca do
+  // movimento. ⚠️ Calculado em TODOS, nao so em `l` — os indices saem
+  // da lista de papeis antes daqui e ficavam com a coluna vazia.
+  todosCalc.forEach(x => { x.forca = (x.ema72 && x.ema72 > 0) ? x.fech/x.ema72 - 1 : null; });
 
   // ⚠️ Papel de pouco negocio distorce tudo: a media curta descola por um
   // pulo isolado e ele aparece em primeiro sem significar nada. Foi o que
