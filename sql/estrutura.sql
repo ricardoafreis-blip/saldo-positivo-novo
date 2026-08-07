@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict O0Zzrs8YaO1RlUy0eCpblVK6eKOOsaFNAezgd3TELbvov4JgXNaza635PY71Ys4
+\restrict Pz1CeyzsKoNkTek1pJBiuP3XAjzYP2U7XvMwRnZYqeuYLUkGubk7fHOuy1CsetB
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.10 (Ubuntu 17.10-1.pgdg24.04+1)
@@ -558,6 +558,28 @@ end $$;
 
 
 --
+-- Name: consenso(integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.consenso(min_carteiras integer DEFAULT 5) RETURNS TABLE(ativo text, carteiras integer, comprada integer, vendida integer, peso_medio real, peso_liquido real)
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+  select pa.ativo,
+         count(distinct pa.carteira_id)::int,
+         count(*) filter (where pa.peso > 0)::int,
+         count(*) filter (where pa.peso < 0)::int,
+         avg(abs(pa.peso))::real,
+         avg(pa.peso)::real
+    from peso_atual pa
+    join carteira c on c.id = pa.carteira_id and c.ativa
+   group by pa.ativo
+  having count(distinct pa.carteira_id) >= min_carteiras
+   order by count(distinct pa.carteira_id) desc, avg(abs(pa.peso)) desc;
+$$;
+
+
+--
 -- Name: dar_assinatura(text, integer, real, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -782,11 +804,21 @@ begin
   vira_mes := date_trunc('month', proximo_pregao(dia)) <> date_trunc('month', dia);
   vira_ano := date_trunc('year',  proximo_pregao(dia)) <> date_trunc('year',  dia);
 
-  for c in select id, rebalancear, banda_pct from carteira where ativa loop
+  -- ⚠️ A GUARDA: carteira não apura pregão anterior ao próprio
+  -- nascimento. Sem ela, chamada com data antiga inventa histórico.
+  --
+  -- ⚠️ E a RÉGUA vem da data, não de hoje. O autor pode trocar de
+  -- rebalanceamento quando quiser — o que já foi apurado continua
+  -- apurado pela regra que valia naquele pregão.
+  for c in
+    select c.id,
+           coalesce(g.rebalancear, c.rebalancear) as rebalancear,
+           coalesce(g.banda_pct,   c.banda_pct)   as banda_pct
+      from carteira c
+      left join lateral (select * from regra_em(c.id, dia)) g on true
+     where c.ativa and c.criada_em <= dia
+  loop
 
-    -- Refazer um pregão já fechado: o peso_atual dele já sofreu a deriva
-    -- deste dia. Aplicar de novo dobraria — foi assim que os pesos
-    -- ficaram tortos em 02/08.
     if refazer and jafechou then
       perform refazer_pesos(c.id, dia);
       delete from rebalanceamento where carteira_id = c.id and data = dia;
@@ -811,8 +843,12 @@ begin
     select coalesce(sum(peso) filter (where peso > 0), 0),
           -coalesce(sum(peso) filter (where peso < 0), 0)
       into l, s from peso_atual where carteira_id = c.id;
-    caixa := 100 - (l - s);
-    rende := least(caixa, 100.0);
+
+    -- Caixa é o que sobra do patrimônio depois do que está comprado.
+    -- Era `100 - (l - s)`, que numa vendida de 88,7% dava 188,7%.
+    caixa := greatest(0, least(100, 100 - l));
+    -- O dinheiro da venda a descoberto NÃO rende: fica de margem.
+    rende := greatest(0, 100 - l - s);
 
     select coalesce(sum((pa.peso/100.0) * coalesce(o.valor, 0)), 0)
       into ret
@@ -861,9 +897,7 @@ begin
     n := n + 1;
   end loop;
 
-  -- assinatura vencida deixa de valer no mesmo passo do fechamento
   perform sincronizar_assinantes();
-
   return n;
 end $$;
 
@@ -1045,27 +1079,32 @@ begin
      and not coalesce((select admin from perfil where id = auth.uid()), false) then
     raise exception 'so admin pode gravar cotacao (papel: %)', papel;
   end if;
-  -- Grava o CANDLE INTEIRO na barra, não só o fechamento. Sem máxima e
-  -- mínima o apurar_aposta não tem como saber se o stop ou o alvo foram
-  -- tocados — foi por isso que o Tiro curto nunca apurou.
-  --
-  -- ⚠️ `vol` entrou depois: a liquidez do universo vinha do Yahoo e
-  -- congelou quando ele saiu (200 de 235 papéis com preço de uma semana
-  -- atrás). Com o volume no candle, ela passa a ser medida do MT5 todo
-  -- dia, pelo gatilho barra_universo.
+  -- ⚠️ As MEDIAS vem prontas do MT5, junto do candle. Calcular no banco
+  -- exigia historico suficiente para semear, e com 92 pregoes a media
+  -- longa herdava o nivel dos primeiros fechamentos: no IBOV deu 178.257
+  -- contra os ~174.500 do terminal — ACIMA do preco em vez de abaixo,
+  -- invertendo a fase. O iMA calcula sobre todo o historico do terminal,
+  -- entao o numero e IDENTICO ao que o usuario ve no grafico.
+  -- Efeito colateral bom: os periodos saem do banco e ficam so no .mq5,
+  -- fora do repositorio publico.
   with e as (
-    select x.ativo, x.data, x.abre, x.max, x.min, x.fech, x.vol
+    select x.ativo, x.data, x.abre, x.max, x.min, x.fech, x.vol, x.m1, x.m2, x.m3
       from jsonb_to_recordset(dados)
-        as x(ativo text, data date, abre real, max real, min real, fech real, vol real)
+        as x(ativo text, data date, abre real, max real, min real, fech real,
+             vol real, m1 real, m2 real, m3 real)
      where x.ativo is not null and x.data is not null and x.fech > 0
   ), g as (
-    insert into barra (ativo, data, abertura, maxima, minima, fechamento, volume)
-    select ativo, data, nullif(abre,0), nullif(max,0), nullif(min,0), fech, nullif(vol,0) from e
+    insert into barra (ativo, data, abertura, maxima, minima, fechamento, volume, m1, m2, m3)
+    select ativo, data, nullif(abre,0), nullif(max,0), nullif(min,0), fech,
+           nullif(vol,0), nullif(m1,0), nullif(m2,0), nullif(m3,0) from e
     on conflict (ativo, data) do update
        set abertura = coalesce(excluded.abertura, barra.abertura),
            maxima   = coalesce(excluded.maxima,   barra.maxima),
            minima   = coalesce(excluded.minima,   barra.minima),
            volume   = coalesce(excluded.volume,   barra.volume),
+           m1       = coalesce(excluded.m1, barra.m1),
+           m2       = coalesce(excluded.m2, barra.m2),
+           m3       = coalesce(excluded.m3, barra.m3),
            fechamento = excluded.fechamento
     returning 1
   )
@@ -1268,6 +1307,18 @@ $$;
 
 
 --
+-- Name: proximo_pregao_br(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.proximo_pregao_br() RETURNS date
+    LANGUAGE sql STABLE
+    SET search_path TO 'public'
+    AS $$
+  select proximo_pregao(hoje_br());
+$$;
+
+
+--
 -- Name: quant_medias(integer, integer, integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1297,14 +1348,13 @@ begin
     for v in select b.fechamento as f, b.maxima as mx, b.minima as mn
                from barra b where b.ativo = r.a order by b.data loop
       n := n + 1;
-      -- Semeia cada média com a média simples dos primeiros N fechamentos:
-      -- sem isso, com histórico curto o primeiro valor domina por semanas.
       if n <= p_curta then s1 := s1 + v.f; end if;
       if n =  p_curta then e1 := s1 / p_curta; end if;
       if n >  p_curta then e1 := v.f * k1 + e1 * (1 - k1); end if;
       if n <= p_media then s2 := s2 + v.f; end if;
       if n =  p_media then e2 := s2 / p_media; end if;
       if n >  p_media then e2 := v.f * k2 + e2 * (1 - k2); end if;
+      -- cada média semeada no PRÓPRIO período: é o cálculo correto
       if n <= p_longa then s3 := s3 + v.f; end if;
       if n =  p_longa then e3 := s3 / p_longa; end if;
       if n >  p_longa then e3 := v.f * k3 + e3 * (1 - k3); end if;
@@ -1313,10 +1363,6 @@ begin
       end if;
       ult := v.f;
       ser  := ser  || v.f;
-      -- ⚠️ NULL enquanto a média longa não existe. Antes era
-      -- coalesce(e3, v.f) e os primeiros pregões vinham com o PREÇO no
-      -- lugar da média: o gráfico desenhava uma curva colada no preço
-      -- que depois saltava, e parecia média errada.
       ser3 := ser3 || e3;
     end loop;
     if e1 is null or e2 is null or e2 = 0 then continue; end if;
@@ -1325,11 +1371,6 @@ begin
     dist := e1 / e2 - 1;
     amplitude := amp / n;
     liquidez := r.liq;
-    -- ⚠️ A JANELA SAI DO PARÂMETRO, não de um 59 escrito à mão.
-    -- Com 60 barras e média longa de 72, o desenho mostrava um trecho
-    -- em que a curva ainda não existia: ela nascia no meio do gráfico
-    -- ou nem aparecia. A janela precisa ser MAIOR que a média mais
-    -- longa, senão o gráfico contradiz a coluna ao lado.
     serie   := ser [greatest(1, array_length(ser ,1) - p_janela + 1) : array_length(ser ,1)];
     serie72 := ser3[greatest(1, array_length(ser3,1) - p_janela + 1) : array_length(ser3,1)];
     return next;
@@ -1345,19 +1386,24 @@ CREATE FUNCTION public.recalcular_exposicao(cid bigint) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
-declare
-  l real; s real; marco date;
+declare l real; s real; marco date;
 begin
   select max(valida_de) into marco from posicao where carteira_id = cid;
   select coalesce(sum(peso) filter (where peso > 0), 0),
         -coalesce(sum(peso) filter (where peso < 0), 0)
     into l, s
     from posicao where carteira_id = cid and valida_de = marco;
-
   update carteira set
     bruta    = l + s,
     liquida  = l - s,
-    caixa    = 100 - (l - s),      -- venda a descoberto ENTRA dinheiro
+    -- ⚠️ Era `100 - (l - s)`, com a nota "venda a descoberto ENTRA
+    -- dinheiro". Entra mesmo — mas fica RETIDO como garantia da posição,
+    -- não vira caixa livre. Numa vendida de 88,7% a conta antiga dava
+    -- 188,7% de caixa, e numa long × short com vendido maior que
+    -- comprado passava de 100 também. Caixa é só o que sobra do
+    -- patrimônio depois do que está comprado: nunca acima de 100, nunca
+    -- negativo. A tela já contornava na exibição; o banco guardava errado.
+    caixa    = greatest(0, least(100, 100 - l)),
     n_ativos = (select count(*) from posicao
                  where carteira_id = cid and valida_de = marco)
   where id = cid;
@@ -1377,9 +1423,15 @@ begin
   select coalesce(sum(peso) filter (where peso > 0), 0),
         -coalesce(sum(peso) filter (where peso < 0), 0)
     into l, s from peso_atual where carteira_id = cid;
-
   update carteira set
-    bruta = l + s, liquida = l - s, caixa = 100 - (l - s),
+    bruta = l + s, liquida = l - s,
+    -- ⚠️ Era `100 - (l - s)`: numa vendida de 88,7% isso dá 188,7, e a
+    -- carteira NÃO tem 188% em caixa. O dinheiro que entra da venda a
+    -- descoberto fica retido como garantia, não vira caixa livre. Caixa
+    -- é só o que sobra do patrimônio depois do que está comprado — nunca
+    -- passa de 100, nunca é negativo. A tela já contornava na exibição;
+    -- o banco continuava guardando o número errado.
+    caixa = greatest(0, least(100, 100 - l)),
     n_ativos = (select count(*) from peso_atual where carteira_id = cid)
   where id = cid;
 end $$;
@@ -1427,6 +1479,20 @@ begin
     end if;
   end loop;
 end $$;
+
+
+--
+-- Name: regra_em(bigint, date); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.regra_em(cid bigint, dia date) RETURNS TABLE(rebalancear text, banda_pct real)
+    LANGUAGE sql STABLE
+    SET search_path TO 'public'
+    AS $$
+  select r.rebalancear, r.banda_pct from regra r
+   where r.carteira_id = cid and r.valida_de <= dia
+   order by r.valida_de desc limit 1;
+$$;
 
 
 --
@@ -1931,7 +1997,10 @@ CREATE TABLE public.barra (
     maxima real NOT NULL,
     minima real NOT NULL,
     fechamento real NOT NULL,
-    volume real
+    volume real,
+    m1 real,
+    m2 real,
+    m3 real
 );
 
 
@@ -2510,6 +2579,19 @@ CREATE VIEW public.referencia_viva AS
 
 
 --
+-- Name: regra; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.regra (
+    carteira_id bigint NOT NULL,
+    valida_de date NOT NULL,
+    rebalancear text DEFAULT 'nunca'::text NOT NULL,
+    banda_pct real DEFAULT 5 NOT NULL,
+    declarada_em timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
 -- Name: retorno_parcial; Type: VIEW; Schema: public; Owner: -
 --
 
@@ -2801,6 +2883,14 @@ ALTER TABLE ONLY public.referencia
 
 
 --
+-- Name: regra regra_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.regra
+    ADD CONSTRAINT regra_pkey PRIMARY KEY (carteira_id, valida_de);
+
+
+--
 -- Name: retorno_dia retorno_dia_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3051,6 +3141,14 @@ ALTER TABLE ONLY public.posicao
 
 ALTER TABLE ONLY public.rebalanceamento
     ADD CONSTRAINT rebalanceamento_carteira_id_fkey FOREIGN KEY (carteira_id) REFERENCES public.carteira(id) ON DELETE CASCADE;
+
+
+--
+-- Name: regra regra_carteira_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.regra
+    ADD CONSTRAINT regra_carteira_id_fkey FOREIGN KEY (carteira_id) REFERENCES public.carteira(id) ON DELETE CASCADE;
 
 
 --
@@ -3424,6 +3522,30 @@ CREATE POLICY rebal_le ON public.rebalanceamento FOR SELECT USING (true);
 ALTER TABLE public.rebalanceamento ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: regra; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.regra ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: regra regra_ler; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY regra_ler ON public.regra FOR SELECT TO authenticated, anon USING (true);
+
+
+--
+-- Name: regra regra_minha; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY regra_minha ON public.regra TO authenticated USING ((EXISTS ( SELECT 1
+   FROM public.carteira c
+  WHERE ((c.id = regra.carteira_id) AND (c.usuario_id = auth.uid()))))) WITH CHECK ((EXISTS ( SELECT 1
+   FROM public.carteira c
+  WHERE ((c.id = regra.carteira_id) AND (c.usuario_id = auth.uid())))));
+
+
+--
 -- Name: retorno_dia; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -3497,5 +3619,5 @@ CREATE POLICY universo_mexer ON public.universo TO authenticated USING ((EXISTS 
 -- PostgreSQL database dump complete
 --
 
-\unrestrict O0Zzrs8YaO1RlUy0eCpblVK6eKOOsaFNAezgd3TELbvov4JgXNaza635PY71Ys4
+\unrestrict Pz1CeyzsKoNkTek1pJBiuP3XAjzYP2U7XvMwRnZYqeuYLUkGubk7fHOuy1CsetB
 
