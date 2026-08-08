@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict Pz1CeyzsKoNkTek1pJBiuP3XAjzYP2U7XvMwRnZYqeuYLUkGubk7fHOuy1CsetB
+\restrict Ze5GiBeZpEKYsbeW80XAcSHFN3NdyX5h1RR5EKjdqXyN9hRv7J3XSPTZ6BbSDYh
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.10 (Ubuntu 17.10-1.pgdg24.04+1)
@@ -777,6 +777,7 @@ CREATE FUNCTION public.fechar_dia(d date DEFAULT NULL::date, refazer boolean DEF
     AS $$
 declare
   c        record;
+  reb      text; bnd real;
   cdi_dia  real;
   ret      real;
   l real; s real; caixa real; rende real;
@@ -804,20 +805,19 @@ begin
   vira_mes := date_trunc('month', proximo_pregao(dia)) <> date_trunc('month', dia);
   vira_ano := date_trunc('year',  proximo_pregao(dia)) <> date_trunc('year',  dia);
 
-  -- ⚠️ A GUARDA: carteira não apura pregão anterior ao próprio
-  -- nascimento. Sem ela, chamada com data antiga inventa histórico.
-  --
-  -- ⚠️ E a RÉGUA vem da data, não de hoje. O autor pode trocar de
-  -- rebalanceamento quando quiser — o que já foi apurado continua
-  -- apurado pela regra que valia naquele pregão.
-  for c in
-    select c.id,
-           coalesce(g.rebalancear, c.rebalancear) as rebalancear,
-           coalesce(g.banda_pct,   c.banda_pct)   as banda_pct
-      from carteira c
-      left join lateral (select * from regra_em(c.id, dia)) g on true
-     where c.ativa and c.criada_em <= dia
-  loop
+  -- ⚠️ A GUARDA: carteira não apura pregão anterior ao próprio nascimento.
+  for c in select id, rebalancear, banda_pct from carteira
+            where ativa and criada_em <= dia loop
+
+    -- ⚠️ A RÉGUA VEM DA DATA, não de hoje. O autor troca de
+    -- rebalanceamento quando quiser; o que já foi apurado continua
+    -- apurado pela regra que valia naquele pregão.
+    reb := null; bnd := null;
+    select r.rebalancear, r.banda_pct into reb, bnd
+      from regra r where r.carteira_id = c.id and r.valida_de <= dia
+     order by r.valida_de desc limit 1;
+    reb := coalesce(reb, c.rebalancear);
+    bnd := coalesce(bnd, c.banda_pct);
 
     if refazer and jafechou then
       perform refazer_pesos(c.id, dia);
@@ -845,7 +845,6 @@ begin
       into l, s from peso_atual where carteira_id = c.id;
 
     -- Caixa é o que sobra do patrimônio depois do que está comprado.
-    -- Era `100 - (l - s)`, que numa vendida de 88,7% dava 188,7%.
     caixa := greatest(0, least(100, 100 - l));
     -- O dinheiro da venda a descoberto NÃO rende: fica de margem.
     rende := greatest(0, 100 - l - s);
@@ -873,12 +872,11 @@ begin
 
     motivo := null;
     if m_atual is not null then
-      if    c.rebalancear = 'semanal' and vira_sem then motivo := 'semanal';
-      elsif c.rebalancear = 'mensal'  and vira_mes then motivo := 'mensal';
-      elsif c.rebalancear = 'anual'   and vira_ano then motivo := 'anual';
-      elsif c.rebalancear = 'banda'
-        and fora_da_banda(c.id, m_atual, c.banda_pct) then
-        motivo := 'banda de ' || round(c.banda_pct) || '% estourada';
+      if    reb = 'semanal' and vira_sem then motivo := 'semanal';
+      elsif reb = 'mensal'  and vira_mes then motivo := 'mensal';
+      elsif reb = 'anual'   and vira_ano then motivo := 'anual';
+      elsif reb = 'banda' and fora_da_banda(c.id, m_atual, bnd) then
+        motivo := 'banda de ' || round(bnd) || '% estourada';
       end if;
     end if;
 
@@ -3619,5 +3617,5 @@ CREATE POLICY universo_mexer ON public.universo TO authenticated USING ((EXISTS 
 -- PostgreSQL database dump complete
 --
 
-\unrestrict Pz1CeyzsKoNkTek1pJBiuP3XAjzYP2U7XvMwRnZYqeuYLUkGubk7fHOuy1CsetB
+\unrestrict Ze5GiBeZpEKYsbeW80XAcSHFN3NdyX5h1RR5EKjdqXyN9hRv7J3XSPTZ6BbSDYh
 
