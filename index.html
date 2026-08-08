@@ -113,6 +113,77 @@ header .dir a:hover{color:var(--ouro2)}
 .colar .lado{display:flex;gap:8px;flex-direction:column}
 .colar select{margin:0;padding:8px 11px;font-size:13px}
 .colar .bt{white-space:nowrap}
+/* ══ ABAS DO CRIAR ══════════════════════════════════════════════════
+   Uma de cada vez. Fechada, vira uma linha com o resultado — o que ja
+   foi decidido para de ocupar espaco e de pedir atencao. Alternam por
+   CSS, sem redesenhar: nada digitado se perde. */
+.tituloCart{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+.ab{border:1px solid var(--linha);border-radius:5px;margin-bottom:12px;
+  background:var(--p2);overflow:visible}
+.ab.aberta{border-color:var(--linha2)}
+.ab:not(.aberta){background:transparent}
+.ab .cabAb{display:flex;align-items:center;gap:13px;padding:15px 18px;cursor:pointer}
+.ab .cabAb .n{width:24px;height:24px;border-radius:50%;border:1px solid var(--linha2);
+  display:grid;place-items:center;font-family:'IBM Plex Mono',monospace;font-size:11px;
+  color:var(--graf);flex:none}
+.ab.feita .cabAb .n{border-color:var(--alta);color:var(--alta)}
+.ab.aberta .cabAb .n{border-color:var(--lacre);background:var(--ouro-fraco);color:var(--ouro2)}
+.ab .cabAb .tt{font-family:Newsreader,serif;font-size:19px;color:var(--t2)}
+.ab.aberta .cabAb .tt{color:var(--tinta)}
+.ab .cabAb .rs{font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.06em;
+  color:var(--ouro2)}
+.ab.aberta .cabAb .rs,.ab.aberta .cabAb .ed{display:none}
+.ab .cabAb .ed{margin-left:auto;font-size:11.5px;color:var(--graf)}
+.ab .cabAb:hover .ed{color:var(--ouro2)}
+.ab .corpo{display:none;padding:0 18px 20px}
+.ab.aberta .corpo{display:block}
+.ab .corpo>*{max-width:880px;margin-left:auto;margin-right:auto}
+.subAb{font-size:12.5px;color:var(--graf);margin:0 0 14px;line-height:1.55}
+.subAb b{color:var(--t2);font-weight:500}
+
+.classes{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+@media(max-width:620px){.classes{grid-template-columns:1fr}}
+.cls{background:var(--p2);border:1px solid var(--linha);border-radius:5px;padding:17px 18px;
+  cursor:pointer;transition:border-color .14s,background .14s;position:relative}
+.cls:hover{border-color:var(--linha2);background:var(--p3)}
+.cls.on{border-color:var(--lacre);background:var(--p3)}
+.cls.on::after{content:"\2713";position:absolute;top:13px;right:15px;color:var(--ouro2);font-size:13px}
+.cls h3{font-family:Newsreader,serif;font-size:19px;margin:0 0 8px}
+.cls .rg{font-size:12.5px;color:var(--t2);line-height:1.55}
+
+.reguaCx{background:var(--p2);border:1px solid var(--linha);border-left:2px solid var(--lacre);
+  border-radius:0 5px 5px 0;padding:17px 18px}
+.reguaCx h3{font-size:14px;margin:0 0 3px;color:var(--t2);font-weight:500}
+.reguaCx .ex{font-size:12px;color:var(--graf);margin:0 0 13px}
+.opcs{display:flex;flex-direction:column;gap:7px}
+.opc{display:flex;gap:11px;align-items:center;padding:11px 13px;border-radius:3px;
+  border:1px solid var(--linha);cursor:pointer;transition:.14s}
+.opc:hover{border-color:var(--linha2);background:var(--p3)}
+.opc.on{border-color:var(--lacre);background:var(--ouro-fraco)}
+.opc .rd{width:14px;height:14px;border-radius:50%;border:1px solid var(--linha2);flex:none}
+.opc.on .rd{border-color:var(--lacre);background:radial-gradient(circle,var(--ouro2) 42%,transparent 46%)}
+.opc .tt{font-size:13.5px;color:var(--tinta)}
+.folgaInline{display:flex;gap:5px;margin-left:auto}
+.folgaInline .fg{background:var(--papel);border:1px solid var(--linha2);border-radius:3px;
+  padding:5px 9px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--t2);cursor:pointer}
+.folgaInline .fg:hover{border-color:var(--lacre);color:var(--tinta)}
+.folgaInline .fg.on{border-color:var(--lacre);background:var(--ouro-fraco);color:var(--ouro2)}
+
+/* ══ completar codigo ══════════════════════════════════════════════ */
+.campoCod{position:relative;display:block}
+.sugere{position:absolute;top:100%;left:0;z-index:14;min-width:150px;
+  background:var(--p3);border:1px solid var(--linha2);border-radius:0 0 4px 4px;
+  box-shadow:0 12px 26px rgba(0,0,0,.5);display:flex;flex-direction:column;overflow:hidden}
+.sugere .sg{text-align:left;padding:8px 13px;font-family:'IBM Plex Mono',monospace;
+  font-size:13px;color:var(--t2);letter-spacing:.03em;background:none;border:none;cursor:pointer}
+.sugere .sg b{color:var(--ouro2);font-weight:500}
+.sugere .sg:hover,.sugere .sg.on{background:var(--p2);color:var(--tinta)}
+
+td.ord{width:22px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--graf);
+  text-align:right;padding-right:8px}
+td.pesoFixo{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--t2);
+  padding:3px 7px;white-space:nowrap}
 .tipoSel{margin:0;padding:3px 8px;font-size:11.5px;width:auto;min-width:82px}
 tr.semdado td{opacity:.62}
 tr.semdado:hover td{opacity:1}
@@ -766,6 +837,7 @@ const CDI_ANO = 0.15;
 
 let eu = null;              // perfil logado
 const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
 const app = () => $("#app");
 
 const pct = (v,c=2) => v==null ? "—" : (v>=0?"+":"") + (v*100).toFixed(c).replace(".",",") + "%";
@@ -926,9 +998,10 @@ function gradeHTML(){
   <datalist id="uni">${(UNIVERSO||[]).map(a=>`<option value="${a}">`).join("")}</datalist>
   <table style="width:100%;border-collapse:collapse">
     <thead><tr>
+      <th style="width:22px"></th>
       <th style="text-align:left;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--graf);padding-bottom:4px">Ativo</th>
-      <th style="text-align:right;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--graf);padding-bottom:4px;width:82px">%</th>
-      <th style="text-align:left;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--graf);padding-bottom:4px;width:104px">Posição</th>
+      <th class="colPeso" style="text-align:right;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--graf);padding-bottom:4px;width:82px">%</th>
+      <th class="colLado" style="text-align:left;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--graf);padding-bottom:4px;width:104px">Posição</th>
       <th style="width:30px"></th>
     </tr></thead><tbody id="linhas"></tbody>
   </table>
@@ -979,15 +1052,77 @@ function aplicarLados(){
   });
   resumoGrade();
 }
-function linhaHTML(a,p,lado){
+// ⚠️ NA COMPRADA O PESO NAO E ESCOLHA. A regra da classe ja diz "dez
+// papeis somando 100%", e a unica divisao que satisfaz isso sem casa
+// decimal e 10% em cada. Deixar o campo aberto so cria erro: a pessoa
+// digita 12, 8, 15, soma 103 e descobre no clique. Aqui ela escolhe dez
+// codigos e acabou — o peso e o lado ficam fixos e invisiveis.
+const PESO_FIXO = { diversificada: 10 };
+const pesoFixoDaClasse = () => PESO_FIXO[CLASSE_ATUAL] || null;
+
+/* ⚠️ COMPLETAR ENQUANTO DIGITA, sem escolher nada pela pessoa. Escreveu
+   V, aparecem os que comecam com V; escreveu VA, sobra VALE3. O
+   <datalist> nativo fazia isso, mas cada navegador desenha de um jeito e
+   alguns nem mostram sem clique. Lista propria aparece igual em todo
+   lugar e anda pelo teclado. */
+function sugerirCod(inp){
+  const t = (inp.value||"").trim().toUpperCase();
+  const cx = inp.closest(".campoCod");
+  const velha = cx.querySelector(".sugere");
+  if(velha) velha.remove();
+  if(!t) return;
+  const achados = (UNIVERSO||[]).filter(a => a.startsWith(t)).slice(0, 8);
+  if(!achados.length || (achados.length === 1 && achados[0] === t)) return;
+  const el = document.createElement("span");
+  el.className = "sugere";
+  el.innerHTML = achados.map((a,k)=>
+    `<button type="button" class="sg${k===0?" on":""}" data-pick="${a}"><b>${
+      a.slice(0,t.length)}</b>${a.slice(t.length)}</button>`).join("");
+  cx.appendChild(el);
+  el.querySelectorAll("[data-pick]").forEach(b=>
+    b.onmousedown = ev => { ev.preventDefault();
+      inp.value = b.dataset.pick; el.remove(); conferirLinha(inp); resumoGrade();
+      const linha = inp.closest("tr"), prox = linha && linha.nextElementSibling;
+      const alvo = prox && prox.querySelector(".pa");
+      if(alvo) alvo.focus(); else inp.blur(); });
+}
+
+function tecladoCod(inp, e){
+  const cx = inp.closest(".campoCod"), lista = cx.querySelector(".sugere");
+  if(!lista) return;
+  const bts = [...lista.querySelectorAll(".sg")];
+  let i = bts.findIndex(b => b.classList.contains("on"));
+  if(e.key === "ArrowDown" || e.key === "ArrowUp"){
+    e.preventDefault();
+    bts[i] && bts[i].classList.remove("on");
+    i = (i + (e.key === "ArrowDown" ? 1 : -1) + bts.length) % bts.length;
+    bts[i].classList.add("on");
+  } else if(e.key === "Enter" || e.key === "Tab"){
+    if(bts[i] && inp.value.toUpperCase() !== bts[i].dataset.pick){
+      e.preventDefault();
+      inp.value = bts[i].dataset.pick; lista.remove(); conferirLinha(inp); resumoGrade();
+      const linha = inp.closest("tr"), prox = linha && linha.nextElementSibling;
+      const alvo = prox && prox.querySelector(".pa");
+      if(alvo) alvo.focus();
+    }
+  } else if(e.key === "Escape") lista.remove();
+}
+
+function linhaHTML(a,p,lado,n){
+  const fixo = pesoFixoDaClasse();
   return `<tr>
-    <td style="padding:3px 7px 3px 0"><input list="uni" class="pa" value="${a||""}"
-      placeholder="PETR4" maxlength="6" style="width:100%;text-transform:uppercase;margin:0"></td>
-    <td style="padding:3px 7px"><input class="pp" type="number" step="1" min="0" max="200"
-      value="${p??""}" style="width:100%;text-align:right;margin:0"></td>
-    <td style="padding:3px 7px"><select class="pl" style="width:100%;margin:0">${opcoesLado(lado)}</select></td>
-    <td style="padding:3px 0"><button type="button" class="px bt" title="remover"
-      style="padding:4px 9px;margin:0">×</button></td></tr>`;
+    <td class="ord">${n||""}</td>
+    <td style="padding:3px 7px 3px 0"><span class="campoCod"><input class="pa" value="${a||""}"
+      placeholder="código" maxlength="6" autocomplete="off"
+      style="width:100%;text-transform:uppercase;margin:0"></span></td>
+    ${fixo
+      ? `<td class="pesoFixo" colspan="2">${fixo}%<input class="pp" type="hidden" value="${fixo}">
+           <select class="pl" style="display:none">${opcoesLado("C")}</select></td>`
+      : `<td style="padding:3px 7px"><input class="pp" type="number" step="1" min="0" max="200"
+           value="${p??""}" style="width:100%;text-align:right;margin:0"></td>
+         <td style="padding:3px 7px"><select class="pl" style="width:100%;margin:0">${opcoesLado(lado)}</select></td>`}
+    <td style="padding:3px 0">${fixo ? "" : `<button type="button" class="px bt" title="remover"
+      style="padding:4px 9px;margin:0">\u00d7</button>`}</td></tr>`;
 }
 // Codigo repetido soma num so ativo. Isso e util (da para lancar duas
 // pernas do mesmo papel), mas confunde a contagem: dez linhas com um
@@ -1060,6 +1195,9 @@ function pendenciasClasse(k, pesos){
   return f;
 }
 function resumoGrade(){
+  // ⚠️ As abas mostram o resultado do passo fechado; sem este aviso, o
+  // resumo congela no que estava quando a aba fechou.
+  if(typeof window.__marcarAbas === "function") window.__marcarAbas();
   const pesos = lerGrade(), v = Object.values(pesos);
   const bruta=v.reduce((a,b)=>a+Math.abs(b),0), liq=v.reduce((a,b)=>a+b,0);
   const falta = pendenciasClasse(CLASSE_ATUAL, pesos);
@@ -1082,11 +1220,26 @@ function resumoGrade(){
       ? `<div style="color:var(--baixa);margin-top:5px">Falta para ${nome}:
          ${falta.join(" · ")}</div>`
       : `<div style="color:var(--alta);margin-top:5px">Atende a ${nome}.</div>`;
+  // Na Comprada o peso e fixo: o unico erro possivel e faltar codigo ou
+  // repetir. Falar de "soma 100%" ali so confunde quem nao pode errar.
+  if(pesoFixoDaClasse()){
+    const tot = document.querySelectorAll("#linhas tr").length;
+    const ok  = Object.keys(lerGrade()).length;
+    $("#resumo").innerHTML = ok === tot && !LINHAS_REPETIDAS.length
+      ? `<span style="color:var(--alta)">Os ${tot} papéis estão preenchidos.</span>`
+      : `<span style="color:var(--graf)">${ok} de ${tot} preenchidos${
+          LINHAS_REPETIDAS.length?` · <span style="color:var(--baixa)">repetido: ${
+            LINHAS_REPETIDAS.join(", ")}</span>`:""}</span>`;
+    return;
+  }
   $("#resumo").innerHTML = linha + veredito;
 }
 function conferirLinha(inp){
   const v=(inp.value||"").trim().toUpperCase();
-  inp.style.borderColor = (!v||!UNISET||UNISET.has(v)) ? "" : "var(--baixa)";
+  // ⚠️ Universo vazio nao reprova nada: pintar 246 codigos validos de
+  // vermelho por falha de rede e pior do que nao conferir.
+  const temLista = UNISET && UNISET.size > 0;
+  inp.style.borderColor = (!v || !temLista || UNISET.has(v)) ? "" : "var(--baixa)";
 }
 function ligarGrade(iniciais, classe){
   CLASSE_ATUAL = classe || "";
@@ -1094,18 +1247,40 @@ function ligarGrade(iniciais, classe){
   function religar(){
     tb.querySelectorAll(".px").forEach(b=> b.onclick=()=>{
       if(tb.rows.length>1) b.closest("tr").remove(); resumoGrade(); });
-    tb.querySelectorAll(".pa").forEach(i=> i.oninput=()=>{ conferirLinha(i); resumoGrade(); });
+    // ⚠️ UM oninput SÓ por campo. Antes havia dois: um ligava o completar
+    // e outro, tres linhas abaixo, chamava conferirLinha — e o segundo
+    // apagava o primeiro. A lista de codigos existia e nunca aparecia.
+    tb.querySelectorAll(".pa").forEach(el=>{
+      el.oninput = () => { sugerirCod(el); conferirLinha(el); resumoGrade(); };
+      el.onkeydown = e => tecladoCod(el, e);
+      el.onblur = () => setTimeout(()=>{
+        const cx = el.closest(".campoCod"); const l = cx && cx.querySelector(".sugere");
+        if(l) l.remove();
+      }, 150);
+    });
     tb.querySelectorAll(".pp,.pl").forEach(el=> el.oninput=el.onchange=resumoGrade);
     tb.querySelectorAll(".pa").forEach(conferirLinha);
   }
   tb.innerHTML="";
-  const base=(iniciais&&iniciais.length)?iniciais:[["","","C"]];
-  base.forEach(x=> tb.insertAdjacentHTML("beforeend", linhaHTML(x[0],x[1],x[2])));
+  const fixo = pesoFixoDaClasse();
+  // ⚠️ A Comprada nasce com as DEZ linhas prontas. Uma linha vazia e um
+  // botao "adicionar" fazem a pessoa descobrir sozinha que precisa de
+  // dez — e so no clique final. Com as dez a vista, a tarefa e obvia.
+  let base = (iniciais && iniciais.length) ? iniciais
+           : fixo ? Array.from({length:10}, () => ["", fixo, "C"])
+                  : [["","","C"]];
+  if(fixo && base.length < 10)
+    base = base.concat(Array.from({length:10-base.length}, () => ["", fixo, "C"]));
+  base.forEach((x,i)=> tb.insertAdjacentHTML("beforeend", linhaHTML(x[0],x[1],x[2],i+1)));
   religar(); resumoGrade();
-  $("#btAdd").onclick=()=>{
-    tb.insertAdjacentHTML("beforeend", linhaHTML("","","C"));
-    religar(); tb.querySelector("tr:last-child .pa").focus();
-  };
+  const btA = $("#btAdd");
+  if(btA){
+    btA.style.display = fixo ? "none" : "";
+    btA.onclick=()=>{
+      tb.insertAdjacentHTML("beforeend", linhaHTML("","","C",tb.rows.length+1));
+      religar(); tb.querySelector("tr:last-child .pa").focus();
+    };
+  }
 }
 
 // ═══════════════════════════════════════════ sessão
@@ -1132,8 +1307,9 @@ function pintarNav(){
              esc((eu.apelido||"?").trim().slice(0,2).toUpperCase())}</span>
              <div><div class="ap">${esc(eu.apelido)}</div>
                <div class="sub">${eu.admin?"administrador":"minha conta"}</div></div></div>
-           <a href="#/conta">Minha conta</a>
+           <a href="#/minhas">Minhas carteiras</a>
            <a href="#/publicar">Criar carteira</a>
+           <a href="#/conta">Minha conta</a>
            <a href="#/indicar">Indicar</a>
            ${eu.admin?'<div class="risco"></div><a href="#/admin">Administração</a><a href="#/leads">Pedidos de contato</a>':""}
            <div class="risco"></div>
@@ -1912,72 +2088,84 @@ async function telaPublicar(){
   await universo();
 
   app().innerHTML = `
-  <h1 style="font-size:27px;margin:30px 0 6px">Criar carteira</h1>
-  <p style="color:var(--t2);max-width:58ch;margin-bottom:20px">
-    Escolha a classe primeiro — ela monta a grade no formato certo.
-    Pesos em números inteiros; o que sobra é caixa.</p>
+  <h1 style="font-size:29px;margin:30px 0 20px">Criar carteira</h1>
   ${!count ? aviso("O universo de papéis está vazio. Um admin precisa atualizar em Admin → Atualizar universo.") : ""}
   <div id="erro"></div>
-  <div class="duplo">
-    <form class="card" id="f">
-      <label>Nome da carteira</label><input name="nome" required maxlength="40"
-        placeholder="ex.: Dividendos que eu seguiria">
-      <label>O que você está estudando aqui</label><input name="descricao" maxlength="160">
-      <label>Classe</label>
-      <select name="classe" id="selClasse" required>
-        <option value="">escolha a classe…</option>
-        ${Object.entries(CLASSE).map(([k,v])=>`<option value="${k}">${v.nome}</option>`).join("")}
-      </select>
-      <div id="campoRF" style="display:none">
-        <label>Renda fixa · entre 50% e 80%</label>
-        <input id="rendaFixa" type="number" step="1" min="50" max="80" value="60">
-      </div>
-      <label>Rebalanceamento</label>
-      <select name="rebalancear" id="selReb">
-        <option value="nunca">nunca — o peso corre solto</option>
-        <option value="banda">por banda — refaz a carteira toda quando um papel se afastar</option>
-        <option value="mensal">mensal</option>
-        <option value="semanal">semanal</option>
-        <option value="anual">anual</option>
-      </select>
-      <div id="campoBanda" style="display:none">
-        <label>Banda, em pontos percentuais</label>
-        <input name="banda_pct" type="number" step="1" min="1" max="100" value="5">
-      </div>
 
-      <label>Posições</label>
-      ${gradeHTML()}
-      <label>Anotação desta mudança (opcional)</label><input name="nota" maxlength="200">
-      <button class="bt cheio" id="bt">Criar carteira</button>
-    </form>
-    <div>
-      <div class="card">
-        <h3 style="font-size:15px;margin-bottom:9px" id="tituloAjuda">Como o peso funciona</h3>
-        <div id="ajudaClasse"></div>
-        <p style="font-size:12.5px;color:var(--t2);margin:0">
-          Depois de criada, o peso <b>anda sozinho</b> com o mercado até você
-          declarar mudança.</p>
-        <details style="margin-top:12px">
-          <summary style="cursor:pointer;font-size:12.5px;color:var(--graf)">Detalhes</summary>
-          <div id="detalhesClasse"></div>
-          <p style="font-size:12.5px;color:var(--t2);margin:9px 0 0">
-            Depois de criada você muda o que quiser — nome, papéis, pesos,
-            renda fixa e o próprio rebalanceamento. <b>Só a classe não muda</b>,
-            porque ela define contra quem a carteira é comparada.</p>
-          <p style="font-size:12.5px;color:var(--t2);margin:9px 0 0">
-            Se a carteira perder tudo, ela é encerrada e sai do ranking.</p>
-        </details>
+  <form id="f">
+    <!-- ⚠️ TRES PASSOS, UM DE CADA VEZ. Era um formulario unico com nome,
+         descricao, classe, renda fixa, rebalanceamento, banda e a grade
+         todos a vista — ficha cadastral para uma decisao que deveria ser
+         simples. Aqui cada passo fecha virando uma linha com o resultado.
+         As abas trocam por CSS, sem redesenhar: nada digitado se perde. -->
+    <div class="ab aberta" id="ab1">
+      <div class="cabAb"><i class="n">1</i><span class="tt">Classe</span>
+        <span class="rs" id="rs1"></span><span class="ed">alterar</span></div>
+      <div class="corpo">
+        <p class="subAb">Cada classe disputa o seu próprio pódio.
+          <b>A classe não muda depois.</b></p>
+        <div class="classes">${Object.entries(CLASSE).map(([k,v])=>`
+          <div class="cls" data-cls="${k}">
+            <h3>${v.nome}</h3><div class="rg">${v.regra}</div>
+          </div>`).join("")}</div>
+        <input type="hidden" name="classe" id="selClasse">
       </div>
-      ${minhas?.length?`<details class="card" style="margin-top:13px">
-        <summary style="cursor:pointer;font-size:15px;font-weight:600">Suas carteiras
-          <span style="color:var(--graf);font-weight:400">· ${minhas.length}</span></summary>
-        <div style="height:9px"></div>
-        ${minhas.map(c=>`<div style="padding:6px 0;border-bottom:1px solid var(--p3)">
-          <a href="#/carteira/${c.id}">${esc(c.nome)}</a>
-          <span style="font-size:11px;color:var(--graf)">· desde ${c.criada_em}</span></div>`).join("")}
-      </details>`:""}
     </div>
-  </div>`;
+
+    <div class="ab" id="ab2">
+      <div class="cabAb"><i class="n">2</i><span class="tt">Carteira</span>
+        <span class="rs" id="rs2"></span><span class="ed">alterar</span></div>
+      <div class="corpo">
+        <div id="campoRF" style="display:none">
+          <label>Renda fixa · entre 50% e 80%</label>
+          <input id="rendaFixa" type="number" step="1" min="50" max="80" value="60">
+        </div>
+        <div id="ajudaClasse"></div>
+        ${gradeHTML()}
+        <button type="button" class="bt cheio" id="btSegue" style="margin-top:14px">Continuar</button>
+      </div>
+    </div>
+
+    <div class="ab" id="ab3">
+      <div class="cabAb"><i class="n">3</i><span class="tt">Nome e rebalanceamento</span>
+        <span class="rs" id="rs3"></span><span class="ed">alterar</span></div>
+      <div class="corpo">
+        <div class="duplo">
+          <div>
+            <label>Nome da carteira</label><input name="nome" required maxlength="40"
+              placeholder="ex.: dez que eu carregaria por um ano">
+            <label>Descrição</label><input name="descricao" maxlength="160" placeholder="opcional">
+            <label>Anotação desta mudança (opcional)</label><input name="nota" maxlength="200">
+          </div>
+          <div class="reguaCx">
+            <h3>Rebalanceamento automático</h3>
+            <p class="ex">A carteira retorna aos pesos originais quando:</p>
+            <div class="opcs">
+              ${[["nunca","Nunca — só manual"],["banda","Um papel oscilar do original"],
+                 ["mensal","Mensalmente"],["semanal","Semanalmente"],["anual","Anualmente"]]
+                .map(([k,t])=>`<div class="opc${k==="nunca"?" on":""}" data-reb="${k}">
+                  <i class="rd"></i><span class="tt">${t}</span>
+                  <span class="folgaInline" style="display:none">${[3,5,8,12].map(v=>
+                    `<button type="button" class="fg${v===5?" on":""}" data-bd="${v}">${v}%</button>`).join("")}</span>
+                </div>`).join("")}
+            </div>
+            <input type="hidden" name="rebalancear" id="selReb" value="nunca">
+            <input type="hidden" name="banda_pct" id="bandaVal" value="5">
+          </div>
+        </div>
+        <button class="bt cheio lacre" id="bt" style="margin-top:16px">Criar carteira</button>
+      </div>
+    </div>
+  </form>
+
+  ${minhas?.length?`<details class="card" style="margin-top:16px">
+    <summary style="cursor:pointer;font-size:14px">Suas carteiras
+      <span style="color:var(--graf)">· ${minhas.length}</span></summary>
+    <div style="height:9px"></div>
+    ${minhas.map(c=>`<div style="padding:6px 0;border-bottom:1px solid var(--p3)">
+      <a href="#/carteira/${c.id}">${esc(c.nome)}</a>
+      <span style="font-size:11px;color:var(--graf)">· desde ${c.criada_em}</span></div>`).join("")}
+  </details>`:""}`;
 
   ligarGrade([["","","C"]], "");
 
@@ -1990,10 +2178,73 @@ async function telaPublicar(){
     el.scrollIntoView({ behavior:"smooth", block:"center" });
   };
 
-  $("#selClasse").onchange = e => {
-    const v = CLASSE[e.target.value];
-    // o painel lateral fala da classe escolhida, não de regra genérica
-    $("#tituloAjuda").textContent = v ? `Classe ${v.nome}` : "Como o peso funciona";
+  // ── abas ──────────────────────────────────────────────────────
+  const abrir = n => {
+    [1,2,3].forEach(k=>{
+      const el = $("#ab"+k);
+      el.classList.toggle("aberta", k===n);
+    });
+  };
+  const resumo2 = () => {
+    const p = lerGrade(), n = Object.keys(p).length;
+    if(CLASSE_ATUAL === "sessenta_quarenta")
+      return `${rendaFixaAtual()}% RENDA FIXA · ${n} ${n===1?"PAPEL":"PAPÉIS"}`;
+    if(CLASSE_ATUAL === "long_short"){
+      const c = Object.values(p).filter(x=>x>0).length, v = Object.values(p).filter(x=>x<0).length;
+      return `${c} COMPRADOS · ${v} VENDIDOS`;
+    }
+    return `${n} ${n===1?"PAPEL":"PAPÉIS"}`;
+  };
+  const marcarFeitas = () => {
+    $("#ab1").classList.toggle("feita", !!CLASSE_ATUAL);
+    $("#rs1").textContent = CLASSE_ATUAL ? CLASSE[CLASSE_ATUAL].nome.toUpperCase() : "";
+    const pesos = lerGrade();
+    const ok2 = CLASSE_ATUAL && Object.keys(pesos).length
+                && !pendenciasClasse(CLASSE_ATUAL, pesos).length;
+    $("#ab2").classList.toggle("feita", !!ok2);
+    $("#rs2").textContent = ok2 ? resumo2() : "";
+    $("#btSegue").style.display = ok2 ? "" : "none";
+    const nm = $("[name=nome]").value.trim();
+    $("#ab3").classList.toggle("feita", nm.length >= 3);
+    $("#rs3").textContent = nm ? nm.toUpperCase() : "";
+  };
+  $$(".cabAb").forEach((el,k)=>{
+    el.onclick = () => { const n = k+1;
+      if(n===1 || (n===2 && CLASSE_ATUAL) || (n===3 && CLASSE_ATUAL)) abrir(n); };
+  });
+  $("#btSegue").onclick = () => abrir(3);
+  $("[name=nome]").oninput = marcarFeitas;
+
+  // ── régua ─────────────────────────────────────────────────────
+  $$("[data-reb]").forEach(el=>{
+    el.onclick = () => {
+      $$("[data-reb]").forEach(x=>x.classList.remove("on"));
+      el.classList.add("on");
+      $("#selReb").value = el.dataset.reb;
+      $$("[data-reb] .folgaInline").forEach(x=> x.style.display = "none");
+      const f = el.querySelector(".folgaInline");
+      if(el.dataset.reb === "banda" && f) f.style.display = "flex";
+    };
+  });
+  $$("[data-bd]").forEach(el=>{
+    el.onclick = e => { e.stopPropagation();
+      $$("[data-bd]").forEach(x=>x.classList.remove("on"));
+      el.classList.add("on"); $("#bandaVal").value = el.dataset.bd; };
+  });
+
+  // ── classe: cartões no lugar do <select> ───────────────────────
+  $$("[data-cls]").forEach(el=>{
+    el.onclick = () => {
+      $$("[data-cls]").forEach(x=>x.classList.remove("on"));
+      el.classList.add("on");
+      $("#selClasse").value = el.dataset.cls;
+      trocarClasse(el.dataset.cls);
+      abrir(2);
+    };
+  });
+
+  function trocarClasse(valor){
+    const v = CLASSE[valor];
     $("#ajudaClasse").innerHTML = v
       ? `<p style="font-size:12.5px;color:var(--t2);margin:0 0 9px">${v.regra}</p>`
       : "";
@@ -2001,7 +2252,7 @@ async function telaPublicar(){
     // não há nenhum código digitado, ela também já vem montada no formato
     // da classe — 10 linhas de 10% na Comprada, por exemplo. Se a pessoa
     // já digitou algo, não mexemos: apagar o trabalho dela seria pior.
-    CLASSE_ATUAL = e.target.value || "";
+    CLASSE_ATUAL = valor || "";
     const vazia = ![...document.querySelectorAll("#linhas .pa")]
       .some(i => (i.value||"").trim());
     const molde = {
@@ -2029,17 +2280,14 @@ async function telaPublicar(){
           + "vale na declaração: depois disso o peso anda com o mercado e a soma vendida "
           + "cresce nos dias em que a carteira perde."),
     };
-    $("#detalhesClasse").innerHTML = detalhe[CLASSE_ATUAL] || "";
     if(vazia && molde) ligarGrade(molde, CLASSE_ATUAL);
     else aplicarLados();
     resumoGrade();
-  };
-  $("#rendaFixa").oninput = resumoGrade;
-
-  // a banda so faz sentido na modalidade banda
-  $("#selReb").onchange = e => {
-    $("#campoBanda").style.display = e.target.value === "banda" ? "block" : "none";
-  };
+    marcarFeitas();
+  }
+  $("#rendaFixa").oninput = () => { resumoGrade(); marcarFeitas(); };
+  window.__marcarAbas = marcarFeitas;
+  marcarFeitas();
 
   $("#f").onsubmit = async e=>{
     e.preventDefault();
@@ -2385,7 +2633,14 @@ async function telaCarteira(id){
 
   app().innerHTML = `
   <div style="margin:28px 0 4px">
-    <h1 style="font-size:29px">${esc(c.nome)}</h1>
+    <!-- ⚠️ O botao de editar so aparecia quando a carteira ainda nao
+         tinha posicao em vigor — depois de estrear, sumia, e o dono nao
+         tinha por onde mexer na propria carteira. Agora fica no topo,
+         ao lado do titulo, sempre que for dele. -->
+    <div class="tituloCart">
+      <h1 style="font-size:29px;margin:0">${esc(c.nome)}</h1>
+      ${souDono?`<a href="#/editar/${id}" class="bt lacre" style="flex:none">Editar carteira</a>`:""}
+    </div>
     <div style="margin:8px 0">${tags(c)}${nSeg>=3
       ? `<span class="tag">${nSeg} acompanhando</span>` : ""}</div>
     ${eu && !souDono ? `<button class="bt ${sigo?"lacre":""}" id="btSino" style="margin:2px 0 6px">
@@ -2547,7 +2802,7 @@ async function telaCarteira(id){
         ${souDono
           ? "Sua declaração está registrada e passa a valer no próximo pregão — o peso só entra depois do fechamento. Não é preciso fazer nada."
           : "Esta carteira ainda não teve posição apurada. Ela estreia no próximo pregão."}</p>
-      ${souDono?`<a href="#/editar/${id}" class="bt">Ver o que foi declarado</a>`:""}
+      ${souDono?`<a href="#/editar/${id}" class="bt lacre">Editar carteira</a>`:""}
     </div>`
   : `<div class="trancado"><div class="selo">&#128274;</div>
       <h3 style="font-size:19px;margin-bottom:7px">Papéis e pesos</h3>
@@ -2936,7 +3191,7 @@ const log = t => { const l=$("#log"); if(l) l.innerHTML = aviso(t); };
 
 
 // ═══════════════════════════════════════════ minha conta
-async function telaConta(){
+async function telaConta(soCarteiras){
   if(!eu){ location.hash="#/entrar"; return rotear(); }
   const { data:cs } = await sb.from("carteira").select("*")
       .eq("usuario_id", eu.id).eq("ativa", true).order("criada_em");
@@ -2946,8 +3201,44 @@ async function telaConta(){
         .in("carteira_id", ids).order("data");
     (rs||[]).forEach(r=>{ (dias[r.carteira_id] ||= []).push(r); });
   }
+  const listaCarteiras = `
+  ${!cs?.length?`<div class="card">Nenhuma carteira ainda.
+    <a href="#/publicar" class="bt" style="margin-left:10px">Criar carteira</a></div>`
+  :`<table><thead><tr><th>Carteira</th><th class="d">Desde</th><th class="d">Dias</th>
+      <th class="d">Acumulado</th><th class="d"></th></tr></thead><tbody>
+    ${cs.map(c=>{const s=dias[c.id]||[];const ac=s.length?s[s.length-1].indice/100-1:0;
+      return `<tr><td><b>${esc(c.nome)}</b>
+        <div style="font-size:11px;color:var(--graf)">${esc(c.descricao||"sem descrição")}</div></td>
+      <td class="d mono" style="font-size:11.5px;color:var(--graf)">${c.criada_em}</td>
+      <td class="d mono">${s.length}</td>
+      <td class="d mono ${s.length?cor(ac):"nulo"}">${s.length?pct(ac):"estreia"}</td>
+      <td class="d"><a href="#/editar/${c.id}" class="bt lacre" style="padding:5px 12px;font-size:12px">editar</a>
+        <a href="#/carteira/${c.id}" class="bt" style="padding:5px 12px;font-size:12px;margin-left:5px">ver</a>
+        <button class="bt del-minha" data-cid="${c.id}" data-nome="${esc(c.nome)}"
+          data-dias="${(dias[c.id]||[]).length}"
+          style="padding:5px 12px;font-size:12px;margin-left:5px;border-color:var(--baixa);color:var(--baixa)">
+          ${(dias[c.id]||[]).length ? "encerrar" : "apagar"}</button></td>
+      </tr>`}).join("")}
+    </tbody></table>`}`;
+
+  // ⚠️ Duas telas, um codigo so. Podar o DOM depois de montado nao
+  // funcionava — a regra de "o que guardar" ficava complicada e sobrava
+  // tudo. Aqui cada rota monta o que precisa.
+  if(soCarteiras){
+    app().innerHTML = `
+      <h1 style="font-size:29px;margin:30px 0 6px">Minhas carteiras</h1>
+      <p style="color:var(--t2);margin-bottom:20px">${cs?.length
+        ? `${cs.length} ${cs.length===1?"carteira publicada":"carteiras publicadas"}`
+        : "você ainda não publicou nenhuma"}
+        <a href="#/publicar" class="bt lacre" style="margin-left:12px;padding:6px 14px;font-size:13px">Criar carteira</a></p>
+      <div id="erro"></div>
+      ${listaCarteiras}`;
+    document.querySelectorAll(".del-minha").forEach(b=> b.onclick = ()=> apagarMinha(b));
+    return;
+  }
+
   app().innerHTML = `
-  <h1 style="font-size:27px;margin:30px 0 6px">Minha conta</h1>
+  <h1 style="font-size:29px;margin:30px 0 6px">Minha conta</h1>
   <p style="color:var(--t2);margin-bottom:20px">${esc(eu.apelido)}
     ${eu.admin ? '<span class="pill">admin</span>'
                : eu.assinante ? '<span class="pill">assinante</span>'
@@ -2979,25 +3270,15 @@ async function telaConta(){
     <button class="bt cheio" id="btExibir">Salvar</button>
   </div>
 
+  <!-- ⚠️ A lista de carteiras mora so em #/minhas. Repetida aqui, as
+       duas telas ficavam iguais e ninguem sabia para que servia cada uma. -->
   <h2 style="font-size:19px;margin:26px 0 12px">Suas carteiras</h2>
-  ${!cs?.length?`<div class="card">Nenhuma carteira ainda.
-    <a href="#/publicar" class="bt" style="margin-left:10px">Criar carteira</a></div>`
-  :`<table><thead><tr><th>Carteira</th><th class="d">Desde</th><th class="d">Dias</th>
-      <th class="d">Acumulado</th><th class="d"></th></tr></thead><tbody>
-    ${cs.map(c=>{const s=dias[c.id]||[];const ac=s.length?s[s.length-1].indice/100-1:0;
-      return `<tr><td><b>${esc(c.nome)}</b>
-        <div style="font-size:11px;color:var(--graf)">${esc(c.descricao||"sem descrição")}</div></td>
-      <td class="d mono" style="font-size:11.5px;color:var(--graf)">${c.criada_em}</td>
-      <td class="d mono">${s.length}</td>
-      <td class="d mono ${s.length?cor(ac):"nulo"}">${s.length?pct(ac):"estreia"}</td>
-      <td class="d"><a href="#/editar/${c.id}" class="bt" style="padding:5px 12px;font-size:12px">editar</a>
-        <a href="#/carteira/${c.id}" class="bt" style="padding:5px 12px;font-size:12px;margin-left:5px">ver</a>
-        <button class="bt del-minha" data-cid="${c.id}" data-nome="${esc(c.nome)}"
-          data-dias="${(dias[c.id]||[]).length}"
-          style="padding:5px 12px;font-size:12px;margin-left:5px;border-color:var(--baixa);color:var(--baixa)">
-          ${(dias[c.id]||[]).length ? "encerrar" : "apagar"}</button></td>
-      </tr>`}).join("")}
-    </tbody></table>`}
+  <div class="card"><p style="margin:0;color:var(--t2);font-size:13px">
+    ${cs?.length ? `Você tem ${cs.length} ${cs.length===1?"carteira":"carteiras"}.`
+                 : "Você ainda não publicou nenhuma."}
+    <a href="#/minhas" class="bt" style="margin-left:10px;padding:5px 12px;font-size:12px">Ver e editar</a>
+    <a href="#/publicar" class="bt lacre" style="margin-left:6px;padding:5px 12px;font-size:12px">Criar carteira</a>
+  </p></div>
 
   <h2 style="font-size:19px;margin:32px 0 12px">Encerrar conta</h2>
   <div class="card" style="max-width:560px;border-color:rgba(242,104,95,.3)">
@@ -3072,7 +3353,8 @@ async function telaConta(){
 }
 
 function ligarApagarMinhas(){
-  document.querySelectorAll(".del-minha").forEach(b=> b.onclick = async()=>{
+  document.querySelectorAll(".del-minha").forEach(b=> b.onclick = ()=> apagarMinha(b));
+  async function apagarMinha(b){
     // O front já sabe se a carteira tem dias apurados, então dá para
     // dizer a verdade ANTES de a pessoa confirmar — apagar de vez e
     // encerrar são coisas diferentes.
@@ -3088,8 +3370,8 @@ function ligarApagarMinhas(){
     const { data:oque, error } = await sb.rpc("apagar_carteira", { cid:Number(b.dataset.cid) });
     if(error){ b.disabled=false; return alert(error.message); }
     if(oque === "encerrada") alert("Encerrada. A página dela continua acessível por link.");
-    telaConta();
-  });
+    telaConta(soCarteiras);
+  }
 }
 
 // ═══════════════════════════════════════════ editar carteira
@@ -5034,6 +5316,7 @@ function rotear(){
   if(h==="#/consenso")        return telaConsenso();
   if(h.split("?")[0]==="#/universo") return telaUniverso();
   if(h.split("?")[0]==="#/leads") return telaLeads();
+  if(h==="#/minhas")          return telaConta(true);
   if(h==="#/conta")           return telaConta();
   if(h==="#/senha")           return telaSenha();
   if(h==="#/nova-senha")      return telaNovaSenha();
