@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict Ze5GiBeZpEKYsbeW80XAcSHFN3NdyX5h1RR5EKjdqXyN9hRv7J3XSPTZ6BbSDYh
+\restrict d0T0ZMFaDf79Se03chebEWaf3UTWJvCsKojlAfwAOjd9fTMabw50R5chGjykJKm
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.10 (Ubuntu 17.10-1.pgdg24.04+1)
@@ -776,15 +776,12 @@ CREATE FUNCTION public.fechar_dia(d date DEFAULT NULL::date, refazer boolean DEF
     SET search_path TO 'public'
     AS $$
 declare
-  c        record;
-  reb      text; bnd real;
-  cdi_dia  real;
-  ret      real;
+  c record; reb text; bnd real;
+  cdi_dia real; ret real;
   l real; s real; caixa real; rende real;
-  idx_ant  real;
-  n        int := 0;
-  m_novo   date; m_atual date;
-  dia      date := coalesce(d, (select max(data) from oscilacao), hoje_br());
+  idx_ant real; n int := 0;
+  m_novo date; m_atual date;
+  dia date := coalesce(d, (select max(data) from oscilacao), hoje_br());
   vira_sem boolean; vira_mes boolean; vira_ano boolean;
   jafechou boolean; motivo text;
 begin
@@ -794,24 +791,21 @@ begin
   end if;
 
   cdi_dia := power(1 + taxa_rf_ano()/100.0, 1.0/252) - 1;
-
   jafechou := exists (select 1 from retorno_dia where data = dia);
   if not refazer and jafechou then
-    raise notice 'pregão % já fechado', dia;
-    return 0;
+    raise notice 'pregão % já fechado', dia; return 0;
   end if;
 
   vira_sem := date_trunc('week',  proximo_pregao(dia)) <> date_trunc('week',  dia);
   vira_mes := date_trunc('month', proximo_pregao(dia)) <> date_trunc('month', dia);
   vira_ano := date_trunc('year',  proximo_pregao(dia)) <> date_trunc('year',  dia);
 
-  -- ⚠️ A GUARDA: carteira não apura pregão anterior ao próprio nascimento.
+  -- ⚠️ A GUARDA: carteira não apura pregão anterior ao nascimento dela.
   for c in select id, rebalancear, banda_pct from carteira
             where ativa and criada_em <= dia loop
 
-    -- ⚠️ A RÉGUA VEM DA DATA, não de hoje. O autor troca de
-    -- rebalanceamento quando quiser; o que já foi apurado continua
-    -- apurado pela regra que valia naquele pregão.
+    -- ⚠️ A RÉGUA VEM DA DATA. O autor troca quando quiser; o que já foi
+    -- apurado continua apurado pela regra que valia naquele pregão.
     reb := null; bnd := null;
     select r.rebalancear, r.banda_pct into reb, bnd
       from regra r where r.carteira_id = c.id and r.valida_de <= dia
@@ -844,13 +838,10 @@ begin
           -coalesce(sum(peso) filter (where peso < 0), 0)
       into l, s from peso_atual where carteira_id = c.id;
 
-    -- Caixa é o que sobra do patrimônio depois do que está comprado.
     caixa := greatest(0, least(100, 100 - l));
-    -- O dinheiro da venda a descoberto NÃO rende: fica de margem.
     rende := greatest(0, 100 - l - s);
 
-    select coalesce(sum((pa.peso/100.0) * coalesce(o.valor, 0)), 0)
-      into ret
+    select coalesce(sum((pa.peso/100.0) * coalesce(o.valor, 0)), 0) into ret
       from peso_atual pa
       left join oscilacao o on o.ativo = pa.ativo and o.data = dia
      where pa.carteira_id = c.id;
@@ -892,12 +883,31 @@ begin
     end if;
 
     perform recalcular_exposicao_atual(c.id);
+    -- ⚠️ O resumo é o que o ranking lê. Sem esta linha ele congela no
+    -- dia em que foi semeado e o pódio para de mexer.
+    perform recalcular_resumo(c.id);
     n := n + 1;
   end loop;
 
   perform sincronizar_assinantes();
   return n;
 end $$;
+
+
+--
+-- Name: fitas(text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.fitas(p_classe text DEFAULT NULL::text) RETURNS jsonb
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+  select coalesce(jsonb_object_agg(r.carteira_id, r.fita), '{}'::jsonb)
+    from resumo r
+    join carteira c on c.id = r.carteira_id and c.ativa
+    left join carteira_classe cc on cc.id = c.id
+   where r.fita is not null and (p_classe is null or cc.classe = p_classe);
+$$;
 
 
 --
@@ -1235,6 +1245,40 @@ end $$;
 
 
 --
+-- Name: painel(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.painel() RETURNS jsonb
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+  select jsonb_build_object(
+    'carteiras', coalesce((
+      select jsonb_agg(jsonb_build_object(
+        'id', c.id, 'nome', c.nome, 'classe', cc.classe, 'apelido', p.apelido,
+        'criada_em', c.criada_em, 'n_ativos', c.n_ativos,
+        'bruta', c.bruta, 'liquida', c.liquida, 'caixa', c.caixa,
+        'dias', r.dias, 'acumulado', r.acumulado, 'hoje', r.hoje,
+        'semana', r.semana, 'mes', r.mes, 'sharpe', r.sharpe,
+        'drawdown', r.drawdown, 'vs_ibov', r.vs_ibov))
+      from carteira c
+      join perfil p on p.id = c.usuario_id
+      left join carteira_classe cc on cc.id = c.id
+      left join resumo r on r.carteira_id = c.id
+      where c.ativa), '[]'::jsonb),
+    'pesos', coalesce((
+      select jsonb_agg(jsonb_build_array(pa.carteira_id, pa.ativo, pa.peso))
+      from peso_atual pa
+      join carteira c on c.id = pa.carteira_id and c.ativa), '[]'::jsonb),
+    'vivo', coalesce((
+      select jsonb_object_agg(v.ativo, round(v.valor::numeric, 5))
+      from cotacao_viva v where v.valor is not null), '{}'::jsonb),
+    'quando', (select max(atualizado_em) from cotacao_viva)
+  );
+$$;
+
+
+--
 -- Name: papeis_pendentes(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1432,6 +1476,78 @@ begin
     caixa = greatest(0, least(100, 100 - l)),
     n_ativos = (select count(*) from peso_atual where carteira_id = cid)
   where id = cid;
+end $$;
+
+
+--
+-- Name: recalcular_resumo(bigint); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.recalcular_resumo(cid bigint) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+declare
+  n int; ult date; idx real; ac real; hj real;
+  sem real; ms real; an real; sh real; dd real; vl real; vi real;
+  md real; dp real; f real[];
+begin
+  select count(*), max(data) into n, ult from retorno_dia where carteira_id = cid;
+  if n = 0 then
+    insert into resumo (carteira_id, dias) values (cid, 0)
+    on conflict (carteira_id) do update set dias = 0, atualizado = now();
+    return;
+  end if;
+
+  select indice, retorno into idx, hj from retorno_dia
+   where carteira_id = cid order by data desc limit 1;
+  ac := idx/100.0 - 1;
+
+  -- períodos: composto sobre os últimos N pregões
+  select exp(sum(ln(1+retorno))) - 1 into sem from
+    (select retorno from retorno_dia where carteira_id = cid and retorno > -1
+      order by data desc limit 5) t;
+  select exp(sum(ln(1+retorno))) - 1 into ms from
+    (select retorno from retorno_dia where carteira_id = cid and retorno > -1
+      order by data desc limit 21) t;
+  select exp(sum(ln(1+retorno))) - 1 into an from
+    (select retorno from retorno_dia where carteira_id = cid and retorno > -1
+      and data >= date_trunc('year', ult)) t;
+
+  -- risco: só com histórico suficiente, senão é ruído com cara de número
+  if n >= 20 then
+    select avg(retorno), stddev_samp(retorno) into md, dp
+      from retorno_dia where carteira_id = cid;
+    if dp > 0 then
+      vl := dp * sqrt(252);
+      sh := (md - (power(1 + taxa_rf_ano()/100.0, 1.0/252) - 1)) / dp * sqrt(252);
+    end if;
+  end if;
+
+  select min(q) into dd from (
+    select indice / max(indice) over (order by data) - 1 as q
+      from retorno_dia where carteira_id = cid) t;
+
+  -- contra o Ibovespa, no mesmo período da carteira
+  select ac - (exp(sum(ln(1+o.valor))) - 1) into vi
+    from oscilacao o
+   where o.ativo = 'IBOV'
+     and o.data >= (select min(data) from retorno_dia where carteira_id = cid)
+     and o.data <= ult and o.valor > -1;
+
+  select array_agg(retorno order by data) into f from
+    (select data, retorno from retorno_dia where carteira_id = cid
+      order by data desc limit 24) t;
+
+  insert into resumo (carteira_id, dias, ultima_data, indice, acumulado, hoje,
+                      semana, mes, ano, sharpe, drawdown, vol, vs_ibov, fita, atualizado)
+  values (cid, n, ult, idx, ac, hj, sem, ms, an, sh, coalesce(dd,0), vl, vi, f, now())
+  on conflict (carteira_id) do update set
+    dias=excluded.dias, ultima_data=excluded.ultima_data, indice=excluded.indice,
+    acumulado=excluded.acumulado, hoje=excluded.hoje, semana=excluded.semana,
+    mes=excluded.mes, ano=excluded.ano, sharpe=excluded.sharpe,
+    drawdown=excluded.drawdown, vol=excluded.vol, vs_ibov=excluded.vs_ibov,
+    fita=excluded.fita, atualizado=now();
 end $$;
 
 
@@ -2590,6 +2706,29 @@ CREATE TABLE public.regra (
 
 
 --
+-- Name: resumo; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.resumo (
+    carteira_id bigint NOT NULL,
+    dias integer DEFAULT 0 NOT NULL,
+    ultima_data date,
+    indice real,
+    acumulado real,
+    hoje real,
+    semana real,
+    mes real,
+    ano real,
+    sharpe real,
+    drawdown real,
+    vol real,
+    vs_ibov real,
+    fita real[],
+    atualizado timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
 -- Name: retorno_parcial; Type: VIEW; Schema: public; Owner: -
 --
 
@@ -2889,6 +3028,14 @@ ALTER TABLE ONLY public.regra
 
 
 --
+-- Name: resumo resumo_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.resumo
+    ADD CONSTRAINT resumo_pkey PRIMARY KEY (carteira_id);
+
+
+--
 -- Name: retorno_dia retorno_dia_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3147,6 +3294,14 @@ ALTER TABLE ONLY public.rebalanceamento
 
 ALTER TABLE ONLY public.regra
     ADD CONSTRAINT regra_carteira_id_fkey FOREIGN KEY (carteira_id) REFERENCES public.carteira(id) ON DELETE CASCADE;
+
+
+--
+-- Name: resumo resumo_carteira_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.resumo
+    ADD CONSTRAINT resumo_carteira_id_fkey FOREIGN KEY (carteira_id) REFERENCES public.carteira(id) ON DELETE CASCADE;
 
 
 --
@@ -3544,6 +3699,19 @@ CREATE POLICY regra_minha ON public.regra TO authenticated USING ((EXISTS ( SELE
 
 
 --
+-- Name: resumo; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.resumo ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: resumo resumo_ler; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY resumo_ler ON public.resumo FOR SELECT TO authenticated, anon USING (true);
+
+
+--
 -- Name: retorno_dia; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -3617,5 +3785,5 @@ CREATE POLICY universo_mexer ON public.universo TO authenticated USING ((EXISTS 
 -- PostgreSQL database dump complete
 --
 
-\unrestrict Ze5GiBeZpEKYsbeW80XAcSHFN3NdyX5h1RR5EKjdqXyN9hRv7J3XSPTZ6BbSDYh
+\unrestrict d0T0ZMFaDf79Se03chebEWaf3UTWJvCsKojlAfwAOjd9fTMabw50R5chGjykJKm
 

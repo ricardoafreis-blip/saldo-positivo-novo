@@ -8,7 +8,7 @@ buckets_analytics | 0
 buckets_vectors | 0
 carteira | 80
 conta_arquivada | 0
-cotacao_viva | 247
+cotacao_viva | 246
 custom_oauth_providers | 0
 fechamento | 3896
 fila_email | 2
@@ -38,8 +38,9 @@ peso_atual_backup | 46
 posicao | 560
 rebalanceamento | 216
 referencia | 11
-refresh_tokens | 84
+refresh_tokens | 90
 regra | 80
+resumo | 80
 retorno_dia | 1280
 s3_multipart_uploads | 0
 s3_multipart_uploads_parts | 0
@@ -59,4 +60,4 @@ users | 2
 vector_indexes | 0
 webauthn_challenges | 0
 webauthn_credentials | 0
-(60 rows)
+(61 rows)
