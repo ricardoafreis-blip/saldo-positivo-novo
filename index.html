@@ -885,32 +885,6 @@ async function classes(){
 // solto dentro de telaRanking; telaDuelo nao tinha, e por isso LA toda
 // carteira chegava sem classe e caia no ramo de inferencia do tags(),
 // que produzia "205% em caixa · alavancada 1,1x" numa vendida.
-/* ══ PAINEL: uma leitura para todo o ranking ════════════════════════
-   Guarda por 60s. Mil visitantes abrindo a mesma tela no mesmo minuto
-   fazem UMA chamada cada, nao varias — e como o dado e identico para
-   todos, o cache serve a todos.
-
-   ⚠️ Se a chamada estiver em curso, quem chegar espera a MESMA promessa
-   em vez de abrir outra. Sem isso, quatro repinturas seguidas viram
-   quatro consultas simultaneas. */
-let PAINEL = null, PAINEL_EM = 0, PAINEL_INDO = null;
-const PAINEL_VALE = 60000;
-
-async function painelCache(forcar){
-  const agora = Date.now();
-  if(!forcar && PAINEL && agora - PAINEL_EM < PAINEL_VALE) return PAINEL;
-  if(PAINEL_INDO) return PAINEL_INDO;
-  PAINEL_INDO = (async () => {
-    const { data, error } = await sb.rpc("painel");
-    PAINEL_INDO = null;
-    if(error){ return PAINEL || { erro: error.message, carteiras:[], pesos:[], vivo:{} }; }
-    PAINEL = data || { carteiras:[], pesos:[], vivo:{} };
-    PAINEL_EM = Date.now();
-    return PAINEL;
-  })();
-  return PAINEL_INDO;
-}
-
 async function colarClasse(cs){
   const cl = await classes();
   (cs||[]).forEach(c=>{ const x = cl[c.id];
@@ -1798,53 +1772,50 @@ async function telaRanking(){
   const MINP = Math.max(0, +(q.get("min") || 0) || 0);
   app().innerHTML = `<div class="carreg">carregando ranking…</div>`;
 
-  /* ⚠️ UMA CONSULTA, NAO QUATRO. Antes o ranking buscava a view, a SERIE
-     INTEIRA de retorno_dia de todas as carteiras, o parcial e a
-     oscilacao do Ibovespa — e repetia a cada minuto. Com 80 carteiras de
-     um ano sao ~20 mil linhas por visitante por minuto; com mil pessoas,
-     20 milhoes. Nao e lentidao: e o projeto suspenso.
+  const { data:cs, error } = await sb.from("ranking").select("*");
+  if(error) return app().innerHTML = aviso("Erro ao ler o banco: "+error.message, true);
 
-     Agora vem tudo pronto do `painel()`: uma linha por carteira, com as
-     metricas ja calculadas no fechamento. O parcial do pregao continua
-     ao vivo, somado no navegador com os pesos — assim o podio REORDENA
-     durante o pregao sem o banco fazer conta nenhuma.
-
-     E o resultado e IDENTICO para todo mundo: ninguem precisa de dado
-     proprio, entao o cache de 60s serve a todos os visitantes. */
-  const pn = await painelCache();
-  if(pn.erro) return app().innerHTML = aviso("Erro ao ler o banco: "+pn.erro, true);
-
-  // pesos por carteira, para somar o parcial do dia
-  const pesosDe = {};
-  (pn.pesos||[]).forEach(([cid, ativo, peso]) => {
-    (pesosDe[cid] ||= []).push([ativo, peso]);
+  const ids = (cs||[]).map(c=>c.id);
+  let series = {};
+  if(ids.length){
+    const { data:rs } = await sb.from("retorno_dia").select("carteira_id,data,retorno,indice")
+                                .in("carteira_id", ids).order("data");
+    (rs||[]).forEach(r=>{ (series[r.carteira_id] ||= []).push(r); });
+  }
+  // parcial do pregão em curso: número agregado, calculado no banco,
+  // para o lacre continuar valendo
+  const { data:parc } = await sb.from("retorno_parcial")
+    .select("carteira_id,retorno,atualizado_em,com_cotacao,papeis");
+  const vivo = {}; let quando = null;
+  (parc||[]).forEach(p=>{
+    vivo[p.carteira_id] = p;
+    if(p.atualizado_em && (!quando || p.atualizado_em > quando)) quando = p.atualizado_em;
   });
-  const vivo = pn.vivo || {};
-  const quando = pn.quando || null;
 
-  const cs = (pn.carteiras||[]).map(c => ({ ...c }));
-  const series = {};      // so a tela expandida busca a fita, sob demanda
+  await colarClasse(cs);
+
+  // Ibovespa do periodo, UMA consulta para todas as carteiras. Cada uma
+  // compoe o indice sobre as proprias datas, porque o benchmark comeca
+  // no dia em que ela nasceu — nao no comeco do ano.
+  let oIbov = {};
+  {
+    const datas = Object.values(series).flat().map(r => r.data);
+    if(datas.length){
+      const min = datas.reduce((a,b) => a < b ? a : b);
+      const { data:bv } = await sb.from("oscilacao").select("data,valor")
+        .eq("ativo", "IBOV").gte("data", min).order("data");
+      (bv||[]).forEach(x => { oIbov[x.data] = x.valor; });
+    }
+  }
 
   const conta = {};
   (cs||[]).forEach(c=> conta[c.classe||"sem"] = (conta[c.classe||"sem"]||0) + 1);
 
   let lista = (cs||[]).map(c=>{
-    // ⚠️ O PARCIAL SOMA AQUI, no navegador. E a unica conta que muda
-    // durante o pregao, e ela custa nada: peso vezes variacao, dez
-    // multiplicacoes por carteira. Fazer isso no banco significaria
-    // recalcular tudo a cada visitante, a cada minuto.
-    let hoje = c.hoje, parcial = false;
-    const pp = pesosDe[c.id];
-    if(pp && pp.length){
-      let soma = 0, achou = 0;
-      pp.forEach(([a, w]) => { const v = vivo[a];
-        if(v != null){ soma += (w/100) * v; achou++; } });
-      if(achou){ hoje = soma; parcial = true; }
-    }
-    const m = { dias:c.dias||0, acum:c.acumulado, hoje,
-                sem:c.semana, mes:c.mes, sharpe:c.sharpe,
-                dd:c.drawdown, vsIbov:c.vs_ibov, parcial };
-    return { c, m, s: [] };
+    const s = series[c.id] || [];
+    const m = aplicarParcial(metricas(s), vivo[c.id], s);
+    m.vsIbov = contraIbov(s, oIbov);
+    return { c, m, s };
   });
   if(filtro) lista = lista.filter(x=> (x.c.classe||"sem") === filtro);
 
@@ -2004,9 +1975,6 @@ async function telaRanking(){
       // saiu do ranking ou a aba está escondida: não faz nada
       if((location.hash||"#/").split("?")[0] !== "#/" ) { clearInterval(window.__timerRank); return; }
       if(document.hidden) return;
-      // ⚠️ Forca a releitura: senao o cache de 60s devolve o painel
-      // guardado e o parcial congela na tela.
-      PAINEL_EM = 0;
       const y = window.scrollY;
       telaRanking().then(() => window.scrollTo(0, y));
     }, 60000);
