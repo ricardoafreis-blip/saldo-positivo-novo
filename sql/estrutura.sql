@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict h55BgLEPq54mlgzQYeYZ5T4sZexfockSwXBaOfzfM8Q4jupAe5RzSvjila47mj8
+\restrict HHvvD99Hem568v4fbk6QdJfQhklJXaJ0OqH4mm3KHlJxbhF2yIaevNjTg9hAjKs
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.10 (Ubuntu 17.10-1.pgdg24.04+1)
@@ -3785,5 +3785,5 @@ CREATE POLICY universo_mexer ON public.universo TO authenticated USING ((EXISTS 
 -- PostgreSQL database dump complete
 --
 
-\unrestrict h55BgLEPq54mlgzQYeYZ5T4sZexfockSwXBaOfzfM8Q4jupAe5RzSvjila47mj8
+\unrestrict HHvvD99Hem568v4fbk6QdJfQhklJXaJ0OqH4mm3KHlJxbhF2yIaevNjTg9hAjKs
 
