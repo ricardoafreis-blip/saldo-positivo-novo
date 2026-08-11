@@ -117,6 +117,13 @@ header .dir a:hover{color:var(--ouro2)}
    Uma de cada vez. Fechada, vira uma linha com o resultado — o que ja
    foi decidido para de ocupar espaco e de pedir atencao. Alternam por
    CSS, sem redesenhar: nada digitado se perde. */
+.travadaCx{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:var(--p2);
+  border:1px solid var(--linha2);border-left:2px solid var(--lacre);border-radius:0 4px 4px 0;
+  padding:14px 18px}
+.travadaCx .nm{font-family:Newsreader,serif;font-size:19px}
+.travadaCx .por{font-size:11.5px;color:var(--graf);margin-left:auto;text-align:right;
+  max-width:36ch;line-height:1.45}
+
 .tituloCart{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
 
 .ab{border:1px solid var(--linha);border-radius:5px;margin-bottom:12px;
@@ -885,6 +892,32 @@ async function classes(){
 // solto dentro de telaRanking; telaDuelo nao tinha, e por isso LA toda
 // carteira chegava sem classe e caia no ramo de inferencia do tags(),
 // que produzia "205% em caixa · alavancada 1,1x" numa vendida.
+/* ══ PAINEL: uma leitura para todo o ranking ════════════════════════
+   Guarda por 60s. Mil visitantes abrindo a mesma tela no mesmo minuto
+   fazem UMA chamada cada, nao varias — e como o dado e identico para
+   todos, o cache serve a todos.
+
+   ⚠️ Se a chamada estiver em curso, quem chegar espera a MESMA promessa
+   em vez de abrir outra. Sem isso, quatro repinturas seguidas viram
+   quatro consultas simultaneas. */
+let PAINEL = null, PAINEL_EM = 0, PAINEL_INDO = null;
+const PAINEL_VALE = 60000;
+
+async function painelCache(forcar){
+  const agora = Date.now();
+  if(!forcar && PAINEL && agora - PAINEL_EM < PAINEL_VALE) return PAINEL;
+  if(PAINEL_INDO) return PAINEL_INDO;
+  PAINEL_INDO = (async () => {
+    const { data, error } = await sb.rpc("painel");
+    PAINEL_INDO = null;
+    if(error){ return PAINEL || { erro: error.message, carteiras:[], pesos:[], vivo:{} }; }
+    PAINEL = data || { carteiras:[], pesos:[], vivo:{} };
+    PAINEL_EM = Date.now();
+    return PAINEL;
+  })();
+  return PAINEL_INDO;
+}
+
 async function colarClasse(cs){
   const cl = await classes();
   (cs||[]).forEach(c=>{ const x = cl[c.id];
@@ -1772,50 +1805,53 @@ async function telaRanking(){
   const MINP = Math.max(0, +(q.get("min") || 0) || 0);
   app().innerHTML = `<div class="carreg">carregando ranking…</div>`;
 
-  const { data:cs, error } = await sb.from("ranking").select("*");
-  if(error) return app().innerHTML = aviso("Erro ao ler o banco: "+error.message, true);
+  /* ⚠️ UMA CONSULTA, NAO QUATRO. Antes o ranking buscava a view, a SERIE
+     INTEIRA de retorno_dia de todas as carteiras, o parcial e a
+     oscilacao do Ibovespa — e repetia a cada minuto. Com 80 carteiras de
+     um ano sao ~20 mil linhas por visitante por minuto; com mil pessoas,
+     20 milhoes. Nao e lentidao: e o projeto suspenso.
 
-  const ids = (cs||[]).map(c=>c.id);
-  let series = {};
-  if(ids.length){
-    const { data:rs } = await sb.from("retorno_dia").select("carteira_id,data,retorno,indice")
-                                .in("carteira_id", ids).order("data");
-    (rs||[]).forEach(r=>{ (series[r.carteira_id] ||= []).push(r); });
-  }
-  // parcial do pregão em curso: número agregado, calculado no banco,
-  // para o lacre continuar valendo
-  const { data:parc } = await sb.from("retorno_parcial")
-    .select("carteira_id,retorno,atualizado_em,com_cotacao,papeis");
-  const vivo = {}; let quando = null;
-  (parc||[]).forEach(p=>{
-    vivo[p.carteira_id] = p;
-    if(p.atualizado_em && (!quando || p.atualizado_em > quando)) quando = p.atualizado_em;
+     Agora vem tudo pronto do `painel()`: uma linha por carteira, com as
+     metricas ja calculadas no fechamento. O parcial do pregao continua
+     ao vivo, somado no navegador com os pesos — assim o podio REORDENA
+     durante o pregao sem o banco fazer conta nenhuma.
+
+     E o resultado e IDENTICO para todo mundo: ninguem precisa de dado
+     proprio, entao o cache de 60s serve a todos os visitantes. */
+  const pn = await painelCache();
+  if(pn.erro) return app().innerHTML = aviso("Erro ao ler o banco: "+pn.erro, true);
+
+  // pesos por carteira, para somar o parcial do dia
+  const pesosDe = {};
+  (pn.pesos||[]).forEach(([cid, ativo, peso]) => {
+    (pesosDe[cid] ||= []).push([ativo, peso]);
   });
+  const vivo = pn.vivo || {};
+  const quando = pn.quando || null;
 
-  await colarClasse(cs);
-
-  // Ibovespa do periodo, UMA consulta para todas as carteiras. Cada uma
-  // compoe o indice sobre as proprias datas, porque o benchmark comeca
-  // no dia em que ela nasceu — nao no comeco do ano.
-  let oIbov = {};
-  {
-    const datas = Object.values(series).flat().map(r => r.data);
-    if(datas.length){
-      const min = datas.reduce((a,b) => a < b ? a : b);
-      const { data:bv } = await sb.from("oscilacao").select("data,valor")
-        .eq("ativo", "IBOV").gte("data", min).order("data");
-      (bv||[]).forEach(x => { oIbov[x.data] = x.valor; });
-    }
-  }
+  const cs = (pn.carteiras||[]).map(c => ({ ...c }));
+  const series = {};      // so a tela expandida busca a fita, sob demanda
 
   const conta = {};
   (cs||[]).forEach(c=> conta[c.classe||"sem"] = (conta[c.classe||"sem"]||0) + 1);
 
   let lista = (cs||[]).map(c=>{
-    const s = series[c.id] || [];
-    const m = aplicarParcial(metricas(s), vivo[c.id], s);
-    m.vsIbov = contraIbov(s, oIbov);
-    return { c, m, s };
+    // ⚠️ O PARCIAL SOMA AQUI, no navegador. E a unica conta que muda
+    // durante o pregao, e ela custa nada: peso vezes variacao, dez
+    // multiplicacoes por carteira. Fazer isso no banco significaria
+    // recalcular tudo a cada visitante, a cada minuto.
+    let hoje = c.hoje, parcial = false;
+    const pp = pesosDe[c.id];
+    if(pp && pp.length){
+      let soma = 0, achou = 0;
+      pp.forEach(([a, w]) => { const v = vivo[a];
+        if(v != null){ soma += (w/100) * v; achou++; } });
+      if(achou){ hoje = soma; parcial = true; }
+    }
+    const m = { dias:c.dias||0, acum:c.acumulado, hoje,
+                sem:c.semana, mes:c.mes, sharpe:c.sharpe,
+                dd:c.drawdown, vsIbov:c.vs_ibov, parcial };
+    return { c, m, s: [] };
   });
   if(filtro) lista = lista.filter(x=> (x.c.classe||"sem") === filtro);
 
@@ -1975,6 +2011,9 @@ async function telaRanking(){
       // saiu do ranking ou a aba está escondida: não faz nada
       if((location.hash||"#/").split("?")[0] !== "#/" ) { clearInterval(window.__timerRank); return; }
       if(document.hidden) return;
+      // ⚠️ Forca a releitura: senao o cache de 60s devolve o painel
+      // guardado e o parcial congela na tela.
+      PAINEL_EM = 0;
       const y = window.scrollY;
       telaRanking().then(() => window.scrollTo(0, y));
     }, 60000);
@@ -3435,43 +3474,30 @@ async function telaEditar(id){
   const rfAtual = Math.min(80, Math.max(50, Math.round(100 - brutaAtual)));
 
   app().innerHTML = `
-  <h1 style="font-size:27px;margin:30px 0 4px">Editar carteira</h1>
+  <h1 style="font-size:29px;margin:30px 0 4px">Editar carteira</h1>
   <p style="color:var(--t2);margin-bottom:18px">${esc(c.nome)}</p>
   <div id="erro"></div>
-  <div class="duplo">
-    <div>
-      <div class="card">
-        <h3 style="font-size:16px;margin-bottom:14px">Nome e descrição</h3>
-        <label>Nome</label><input id="nome" maxlength="40" value="${esc(c.nome)}">
-        <label>Descrição</label><input id="desc" maxlength="160" value="${esc(c.descricao||"")}">
-        <button class="bt cheio" id="btNome">Salvar</button>
-      </div>
 
-      <!-- ⚠️ CARTAO PROPRIO. A regua estava enfiada no cartao de nome e
-           descricao, abaixo de dois campos de texto — e ninguem achava.
-           Rebalanceamento nao e metadado: e a disciplina da carteira, e
-           fica ao lado das posicoes, que e o que ela governa. -->
-      <div class="card" style="margin-top:16px;border-left:2px solid var(--lacre)">
-        <h3 style="font-size:16px;margin-bottom:4px">Como a carteira se mantém</h3>
-        <p style="font-size:11.5px;color:var(--graf);margin:0 0 12px;line-height:1.55">
-          O peso anda sozinho: quem sobe mais que a carteira ganha espaço. A régua
-          decide se, e quando, ele volta ao declarado.</p>
-        <label>Rebalanceamento</label>
-        <select id="selRebEd">
-          ${[["nunca","nunca — o peso corre solto"],
-             ["banda","por banda — refaz a carteira toda quando um papel se afastar"],
-             ["mensal","mensal"],["semanal","semanal"],["anual","anual"]]
-            .map(([k,r])=>`<option value="${k}"${c.rebalancear===k?" selected":""}>${r}</option>`).join("")}
-        </select>
-        <div id="campoBandaEd" style="display:${c.rebalancear==="banda"?"block":"none"}">
-          <label>Banda, em pontos percentuais</label>
-          <input id="bandaEd" type="number" step="1" min="1" max="100" value="${Math.round(c.banda_pct||5)}">
-          <p style="font-size:11px;color:var(--graf);margin:6px 0 0">
-            Banda apertada rebalanceia muito: 3 p.p. costuma disparar a cada dois pregões.</p>
-        </div>
-        <button class="bt cheio" id="btRegra" style="margin-top:12px">Mudar a régua</button>
+  <!-- ⚠️ MESMO DESENHO DO CRIAR. Duas telas com formatos diferentes para
+       a mesma tarefa fazem ninguem saber onde as coisas ficam — foi o que
+       aconteceu com o botao de editar, que existia e ninguem achava. -->
+  <div class="ab" id="abE1">
+    <div class="cabAb"><i class="n">1</i><span class="tt">Classe</span>
+      <span class="rs">${(CLASSE[cl?.classe]||{}).nome?.toUpperCase()||"—"}</span>
+      <span class="ed">travada</span></div>
+    <div class="corpo">
+      <div class="travadaCx">
+        <span class="nm">${(CLASSE[cl?.classe]||{}).nome||"sem classe"}</span>
+        <span class="por">a classe não muda: ela define contra quem a carteira é comparada</span>
       </div>
-      <div class="card" style="margin-top:16px">
+    </div>
+  </div>
+
+  <div class="ab aberta" id="abE2">
+    <div class="cabAb"><i class="n">2</i><span class="tt">Carteira</span>
+      <span class="rs" id="rsE2"></span><span class="ed">alterar</span></div>
+    <div class="corpo">
+  <div class="card" style="margin-top:16px">
         <h3 style="font-size:16px;margin-bottom:8px">Declarar novas posições</h3>
         <p style="font-size:12px;color:var(--t2);margin:0 0 14px">
           Isso cria uma declaração de hoje. As de dias anteriores ficam guardadas —
@@ -3490,9 +3516,46 @@ async function telaEditar(id){
         ${gradeHTML()}
         <label>Por que você mudou (fica visível para assinantes)</label>
         <input id="nota" maxlength="200" placeholder="reduzi porque ficou caro demais">
-        <button class="bt cheio" id="btPos">Declarar</button>
+        <button class="bt cheio lacre" id="btPos">Declarar</button>
+    </div>
+  </div>
+
+  <div class="ab" id="abE3">
+    <div class="cabAb"><i class="n">3</i><span class="tt">Nome e rebalanceamento</span>
+      <span class="rs" id="rsE3">${esc(c.nome).toUpperCase()}</span>
+      <span class="ed">alterar</span></div>
+    <div class="corpo">
+      <div class="duplo">
+        <div>
+          <label>Nome da carteira</label><input id="nome" maxlength="40" value="${esc(c.nome)}">
+          <label>Descrição</label><input id="desc" maxlength="160" value="${esc(c.descricao||"")}">
+          <button class="bt cheio" id="btNome" style="margin-top:12px">Salvar nome</button>
+        </div>
+        <div class="reguaCx">
+          <h3>Rebalanceamento automático</h3>
+          <p class="ex">A carteira retorna aos pesos originais quando:</p>
+          <div class="opcs">
+            ${[["nunca","Nunca — só manual"],["banda","Um papel oscilar do original"],
+               ["mensal","Mensalmente"],["semanal","Semanalmente"],["anual","Anualmente"]]
+              .map(([k,t])=>`<div class="opc${c.rebalancear===k?" on":""}" data-rebe="${k}">
+                <i class="rd"></i><span class="tt">${t}</span>
+                <span class="folgaInline" style="display:${
+                  k==="banda"&&c.rebalancear==="banda"?"flex":"none"}">${[3,5,8,12].map(v=>
+                  `<button type="button" class="fg${Math.round(c.banda_pct||5)===v?" on":""}"
+                    data-bde="${v}">${v}%</button>`).join("")}</span>
+              </div>`).join("")}
+          </div>
+          <input type="hidden" id="selRebEd" value="${esc(c.rebalancear||"nunca")}">
+          <input type="hidden" id="bandaEd" value="${Math.round(c.banda_pct||5)}">
+          <button class="bt cheio" id="btRegra" style="margin-top:12px">Mudar a régua</button>
+        </div>
       </div>
-      <div class="card" style="margin-top:16px;border-color:rgba(242,104,95,.35)">
+    </div>
+  </div>
+
+  <div class="duplo">
+    <div>
+      <div class="card" style="border-color:rgba(242,104,95,.35)">
         <h3 style="font-size:16px;margin-bottom:8px">Apagar</h3>
         <p style="font-size:12px;color:var(--t2);margin:0 0 12px">
           Sai do ranking e libera o nome. O histórico de retorno fica guardado.</p>
@@ -3542,8 +3605,29 @@ async function telaEditar(id){
   const elRF = $("#rendaFixa");
   if(elRF) elRF.oninput = resumoGrade;
 
-  $("#selRebEd").onchange = e =>
-    $("#campoBandaEd").style.display = e.target.value === "banda" ? "block" : "none";
+  // ── abas do editar ────────────────────────────────────────────
+  const abrirE = n => [1,2,3].forEach(k=>
+    $("#abE"+k).classList.toggle("aberta", k===n));
+  document.querySelectorAll(".cabAb").forEach((el,k)=> el.onclick = ()=> abrirE(k+1));
+  $("#abE1").classList.add("feita");
+  $("#abE3").classList.add("feita");
+
+  // ── régua em opções, como no criar ────────────────────────────
+  document.querySelectorAll("[data-rebe]").forEach(el=>{
+    el.onclick = () => {
+      document.querySelectorAll("[data-rebe]").forEach(x=>x.classList.remove("on"));
+      el.classList.add("on");
+      $("#selRebEd").value = el.dataset.rebe;
+      document.querySelectorAll("[data-rebe] .folgaInline").forEach(x=> x.style.display="none");
+      const f = el.querySelector(".folgaInline");
+      if(el.dataset.rebe === "banda" && f) f.style.display = "flex";
+    };
+  });
+  document.querySelectorAll("[data-bde]").forEach(el=>{
+    el.onclick = e => { e.stopPropagation();
+      document.querySelectorAll("[data-bde]").forEach(x=>x.classList.remove("on"));
+      el.classList.add("on"); $("#bandaEd").value = el.dataset.bde; };
+  });
 
   $("#btNome").onclick = async()=>{
     const { error } = await sb.rpc("renomear_carteira",
