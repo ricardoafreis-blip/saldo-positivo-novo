@@ -1128,6 +1128,7 @@ async function carregarEu(){
   if(!session){ eu=null; return; }
   const { data } = await sb.from("perfil").select("*").eq("id", session.user.id).single();
   eu = data;
+  if(eu) eu.email = session.user.email;
 }
 function pintarNav(){
   $("#navPub").innerHTML = eu ? `<a href="#/publicar">Criar</a>` : "";
@@ -2939,8 +2940,9 @@ async function telaConta(soCarteiras){
 
   <h2 style="font-size:19px;margin:32px 0 12px">Trocar senha</h2>
   <div class="card" style="max-width:420px">
-    <label>Senha nova</label><input type="password" id="s1" minlength="6">
-    <label>Repita a senha nova</label><input type="password" id="s2" minlength="6">
+    <label>Senha atual</label><input type="password" id="s0" autocomplete="current-password">
+    <label>Senha nova</label><input type="password" id="s1" minlength="6" autocomplete="new-password">
+    <label>Repita a senha nova</label><input type="password" id="s2" minlength="6" autocomplete="new-password">
     <button class="bt cheio" id="btSenha">Trocar senha</button>
   </div>`;
 
@@ -2968,12 +2970,25 @@ async function telaConta(soCarteiras){
   };
 
   $("#btSenha").onclick = async()=>{
-    const a=$("#s1").value, b=$("#s2").value;
+    const bt = $("#btSenha");
+    const atual=$("#s0").value, a=$("#s1").value, b=$("#s2").value;
+    if(!atual)     return $("#erro").innerHTML=aviso("Escreva a senha atual.",true);
     if(a.length<6) return $("#erro").innerHTML=aviso("A senha precisa de pelo menos 6 caracteres.",true);
     if(a!==b)      return $("#erro").innerHTML=aviso("As duas senhas não são iguais.",true);
+    if(a===atual)  return $("#erro").innerHTML=aviso("A senha nova é igual à atual.",true);
+
+    bt.disabled=true; bt.textContent="Conferindo…";
+    const conf = await sb.auth.signInWithPassword({
+      email: eu.email, password: atual });
+    if(conf.error){
+      bt.disabled=false; bt.textContent="Trocar senha";
+      return $("#erro").innerHTML=aviso("A senha atual não confere.",true);
+    }
+
     const { error } = await sb.auth.updateUser({ password:a });
+    bt.disabled=false; bt.textContent="Trocar senha";
     $("#erro").innerHTML = error ? aviso(error.message,true) : aviso("Senha trocada.");
-    $("#s1").value=$("#s2").value="";
+    $("#s0").value=$("#s1").value=$("#s2").value="";
   };
   $("#btEncerrar").onclick = async () => {
     if(!confirm("Encerrar sua conta?\n\nEla sai do site imediatamente e suas "
