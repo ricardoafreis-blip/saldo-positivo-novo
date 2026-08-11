@@ -2038,13 +2038,15 @@ async function telaRanking(){
       el.innerHTML = parado
         ? `<b>A cotação está parada há ${min} minutos.</b> O último dado é de ${hora}.`
           + (eu?.admin ? " Confira se o robô de cotação está no ar." : "")
-        : `Cotação de <b>${hora}</b> (${haQuantoTempo(quando)}).
-           ${emPregao()
-             ? "Atualiza sozinha a cada minuto enquanto o pregão corre. A coluna "
-               + "<b>No dia</b> marcada com • é parcial e muda até o fechamento das 19h."
-             : (ehDiaUtil()
-                ? "Fora do horário de pregão: o próximo movimento é na abertura."
-                : "Sem pregão hoje: o próximo movimento é no próximo dia útil.")}`;
+        // ⚠️ Fora do pregao a linha nao acrescenta nada: dizer "o proximo
+        // movimento e na abertura" e ocupar espaco no alto do ranking com
+        // o obvio. Durante o pregao ela importa, porque explica o ponto
+        // do parcial — entao so aparece nessa hora.
+        : emPregao()
+          ? `Cotação de <b>${hora}</b> (${haQuantoTempo(quando)}). Atualiza sozinha a cada
+             minuto enquanto o pregão corre. A coluna <b>No dia</b> marcada com • é parcial
+             e muda até o fechamento das 19h.`
+          : "";
     };
     pintarLinha();
     clearInterval(window.__timerViva);
@@ -3517,6 +3519,7 @@ async function telaEditar(id){
         <label>Por que você mudou (fica visível para assinantes)</label>
         <input id="nota" maxlength="200" placeholder="reduzi porque ficou caro demais">
         <button class="bt cheio lacre" id="btPos">Declarar</button>
+      </div>
     </div>
   </div>
 
@@ -3606,8 +3609,26 @@ async function telaEditar(id){
   if(elRF) elRF.oninput = resumoGrade;
 
   // ── abas do editar ────────────────────────────────────────────
-  const abrirE = n => [1,2,3].forEach(k=>
-    $("#abE"+k).classList.toggle("aberta", k===n));
+  // ⚠️ O cabecalho recolhido precisa dizer o que tem dentro. Sem isto o
+  // passo 2 fechava mostrando uma faixa vazia: a pessoa nao sabia se
+  // havia carteira ali ou se a tela tinha carregado errado.
+  function marcarE2(){
+    const p = lerGrade(), n = Object.keys(p).length;
+    const txt = c.classe === "sessenta_quarenta"
+      ? `${rendaFixaAtual()}% RENDA FIXA · ${n} ${n===1?"PAPEL":"PAPÉIS"}`
+      : c.classe === "long_short"
+        ? `${Object.values(p).filter(x=>x>0).length} COMPRADOS · `
+          + `${Object.values(p).filter(x=>x<0).length} VENDIDOS`
+        : `${n} ${n===1?"PAPEL":"PAPÉIS"}`;
+    const el = $("#rsE2"); if(el) el.textContent = n ? txt : "";
+    $("#abE2").classList.toggle("feita", n>0 && !pendenciasClasse(c.classe, p).length);
+  }
+  // resumoGrade avisa as abas a cada tecla — aqui quem atende e o editar
+  window.__marcarAbas = marcarE2;
+  marcarE2();
+
+  const abrirE = n => { marcarE2(); [1,2,3].forEach(k=>
+    $("#abE"+k).classList.toggle("aberta", k===n)); };
   document.querySelectorAll(".cabAb").forEach((el,k)=> el.onclick = ()=> abrirE(k+1));
   $("#abE1").classList.add("feita");
   $("#abE3").classList.add("feita");
@@ -5379,6 +5400,13 @@ function rotear(){
   clearInterval(window.__timerCart);
   clearInterval(window.__timerDuelo);
   clearInterval(window.__timerTC);
+  // ⚠️ E o hook de abas tambem. resumoGrade() chama window.__marcarAbas a
+  // cada tecla digitada na grade. Quem saia do Publicar para o Editar
+  // levava junto o marcarFeitas do Publicar, que procura #ab1 — inexistente
+  // no Editar. Dava TypeError na PRIMEIRA linha de resumoGrade, entao o
+  // resumo do rodape da grade nunca mais atualizava. Cada tela registra o
+  // seu; a troca de tela apaga o da anterior.
+  window.__marcarAbas = null;
   const h = (location.hash||"#/").split("?")[0];
   const m = h.match(/^#\/carteira\/(\d+)$/);
   if(m)                       return telaCarteira(m[1]);
