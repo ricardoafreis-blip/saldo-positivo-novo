@@ -3483,11 +3483,11 @@ async function telaEditar(id){
        aconteceu com o botao de editar, que existia e ninguem achava. -->
   <div class="ab" id="abE1">
     <div class="cabAb"><i class="n">1</i><span class="tt">Classe</span>
-      <span class="rs">${(CLASSE[cl?.classe]||{}).nome?.toUpperCase()||"—"}</span>
+      <span class="rs">${((CLASSE[c.classe]||{}).nome||"sem classe").toUpperCase()}</span>
       <span class="ed">travada</span></div>
     <div class="corpo">
       <div class="travadaCx">
-        <span class="nm">${(CLASSE[cl?.classe]||{}).nome||"sem classe"}</span>
+        <span class="nm">${(CLASSE[c.classe]||{}).nome||"sem classe"}</span>
         <span class="por">a classe não muda: ela define contra quem a carteira é comparada</span>
       </div>
     </div>
