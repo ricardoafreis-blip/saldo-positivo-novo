@@ -753,6 +753,32 @@ async function painelCache(forcar){
   return PAINEL_INDO;
 }
 
+let VIVO = null, VIVO_EM = 0, VIVO_INDO = null;
+const VIVO_VALE = 8000;
+const PARCIAL_NO_ACUM = true;
+
+async function vivoCache(forcar){
+  if(!forcar && VIVO && Date.now() - VIVO_EM < VIVO_VALE) return VIVO;
+  if(VIVO_INDO) return VIVO_INDO;
+  VIVO_INDO = (async () => {
+    const { data, error } = await sb.rpc("vivo");
+    VIVO_INDO = null;
+    if(error) return VIVO || { em:null, c:[] };
+    VIVO = data || { em:null, c:[] };
+    VIVO_EM = Date.now();
+    return VIVO;
+  })();
+  return VIVO_INDO;
+}
+
+function parcialPorCarteira(vv){
+  const m = {};
+  ((vv && vv.c) || []).forEach(([cid, retorno, com, papeis]) => {
+    if(com > 0) m[cid] = { retorno: Number(retorno), com, papeis };
+  });
+  return m;
+}
+
 async function colarClasse(cs){
   const cl = await classes();
   (cs||[]).forEach(c=>{ const x = cl[c.id];
@@ -787,7 +813,7 @@ function emPregao(){
   return ehDiaUtil() && p.hora >= 10 && p.hora < 18;
 }
 
-const ATRASO_ALERTA = 6;
+const ATRASO_ALERTA = 2;
 const minutosDe = iso => Math.max(0, Math.round((Date.now() - new Date(iso)) / 60000));
 
 function aplicarParcial(m, parcial, serie){
@@ -1186,6 +1212,21 @@ function filaHTML(naFila, MINP){
     </div></div>`;
 }
 
+function aplicarVivo(m, p){
+  if(!p || p.com <= 0){
+    m.parcial = false;
+    m.acum = m.acumFechado;
+    return m;
+  }
+  m.hoje = p.retorno;
+  m.parcial = true;
+  m.falta = p.papeis - p.com;
+  m.acum = (PARCIAL_NO_ACUM && m.dias)
+    ? (1 + m.acumFechado) * (1 + p.retorno) - 1
+    : m.acumFechado;
+  return m;
+}
+
 function colunasPorClasse(lista, ordem, rotulo){
   const chave = { hoje:"hoje", sem:"sem", mes:"mes", acum:"acum",
                   sharpe:"sharpe", dd:"dd", vsibov:"vsIbov" }[ordem] || "acum";
@@ -1211,7 +1252,7 @@ function colunasPorClasse(lista, ordem, rotulo){
                 : formatar(v)
                   + (valeParcial
                      ? '<sup style="font-size:10px;opacity:.75;margin-left:1px">•</sup>' : "");
-      return `<div class="linhaC" onclick="location.hash='#/carteira/${x.c.id}'">
+      return `<div class="linhaC" data-cid="${x.c.id}" onclick="location.hash='#/carteira/${x.c.id}'">
         <span class="n">${String(i+1).padStart(2,"0")}</span>
         <span class="quem"><div class="nome">${esc(x.c.nome)}</div>
           <div class="autor">${esc(x.c.apelido)}${x.m.dias
@@ -1459,6 +1500,80 @@ function montarExtrato(todas, rebal){
   return eventos.reverse();
 }
 
+let RANK_CTX = null;
+
+function pintarParciais(vv){
+  if(!RANK_CTX) return;
+  const parc = parcialPorCarteira(vv);
+  const { ordem, itens } = RANK_CTX;
+
+  itens.forEach(x => aplicarVivo(x.m, parc[x.c.id]));
+
+  itens.forEach(x => {
+    const tr = document.querySelector(`tr[data-cid="${x.c.id}"]`);
+    if(tr){
+      const d = tr.querySelector(".celDia");
+      if(d){
+        d.className = `d mono celDia ${x.m.dias||x.m.parcial?cor(x.m.hoje):"nulo"}`;
+        d.style.opacity = x.m.parcial ? ".82" : "";
+        d.innerHTML = (x.m.dias||x.m.parcial ? pct(x.m.hoje) : "—")
+          + (x.m.parcial?'<sup style="font-size:11px;opacity:.75;margin-left:1px">•</sup>':"");
+      }
+      const a = tr.querySelector(".celAcum");
+      if(a){
+        a.className = `d mono celAcum ${x.m.dias?cor(x.m.acum):"nulo"}`;
+        a.innerHTML = (x.m.dias?pct(x.m.acum):"estreia")
+          + (x.m.parcial&&x.m.dias&&PARCIAL_NO_ACUM
+             ?'<sup style="font-size:11px;opacity:.75;margin-left:1px">•</sup>':"");
+      }
+    }
+  });
+
+  const chave = { hoje:"hoje", sem:"sem", mes:"mes", acum:"acum",
+                  sharpe:"sharpe", dd:"dd", vsibov:"vsIbov" }[ordem] || "acum";
+  const formatar = v => chave==="sharpe" ? n2(v) : chave==="vsIbov" ? pts(v) : pct(v);
+  const porId = {}; itens.forEach(x => porId[x.c.id] = x);
+
+  document.querySelectorAll(".coluna").forEach(col => {
+    const linhas = [...col.querySelectorAll(".linhaC")];
+    if(!linhas.length) return;
+
+    linhas.forEach(el => {
+      const x = porId[el.dataset.cid]; if(!x) return;
+      const valeParcial = chave === "hoje" && x.m.parcial;
+      const semDados = !x.m.dias && !valeParcial;
+      const v = semDados ? null : x.m[chave];
+      const num = el.querySelector(".num");
+      if(!num) return;
+      num.className = `num ${v==null?"nulo":cor(v)}`;
+      num.innerHTML = semDados ? "estreia" : v==null ? "—"
+        : formatar(v) + ((valeParcial || (chave==="acum" && x.m.parcial && PARCIAL_NO_ACUM))
+            ? '<sup style="font-size:10px;opacity:.75;margin-left:1px">•</sup>' : "");
+    });
+
+    const ordenadas = linhas.slice().sort((p, q) => {
+      const a = porId[p.dataset.cid], b = porId[q.dataset.cid];
+      if(!a || !b) return 0;
+      const va = (a.m.dias || a.m.parcial) ? (a.m[chave] ?? -9) : -99;
+      const vb = (b.m.dias || b.m.parcial) ? (b.m[chave] ?? -9) : -99;
+      return vb - va;
+    });
+    const mudou = ordenadas.some((el, i) => el !== linhas[i]);
+    if(mudou){
+      const pai = linhas[0].parentNode;
+      const marco = linhas[linhas.length-1].nextSibling;
+      ordenadas.forEach((el, i) => {
+        const n = el.querySelector(".n");
+        if(n) n.textContent = String(i+1).padStart(2,"0");
+        pai.insertBefore(el, marco);
+      });
+    }
+  });
+
+  const el = $("#linhaViva");
+  if(el && vv && vv.em) el.dataset.quando = vv.em;
+}
+
 async function telaRanking(){
   const q = new URLSearchParams(location.hash.split("?")[1]||"");
   const ordem = q.get("ordem") || "acum";
@@ -1469,12 +1584,9 @@ async function telaRanking(){
   const pn = await painelCache();
   if(pn.erro) return app().innerHTML = aviso("Erro ao ler o banco: "+pn.erro, true);
 
-  const pesosDe = {};
-  (pn.pesos||[]).forEach(([cid, ativo, peso]) => {
-    (pesosDe[cid] ||= []).push([ativo, peso]);
-  });
-  const vivo = pn.vivo || {};
-  const quando = pn.quando || null;
+  const vv = await vivoCache();
+  const parc = parcialPorCarteira(vv);
+  const quando = vv.em || pn.quando || null;
 
   const cs = (pn.carteiras||[]).map(c => ({ ...c }));
   const series = {};
@@ -1483,17 +1595,11 @@ async function telaRanking(){
   (cs||[]).forEach(c=> conta[c.classe||"sem"] = (conta[c.classe||"sem"]||0) + 1);
 
   let lista = (cs||[]).map(c=>{
-    let hoje = c.hoje, parcial = false;
-    const pp = pesosDe[c.id];
-    if(pp && pp.length){
-      let soma = 0, achou = 0;
-      pp.forEach(([a, w]) => { const v = vivo[a];
-        if(v != null){ soma += (w/100) * v; achou++; } });
-      if(achou){ hoje = soma; parcial = true; }
-    }
-    const m = { dias:c.dias||0, acum:c.acumulado, hoje,
+    const m = { dias:c.dias||0, acum:c.acumulado, hoje:c.hoje,
                 sem:c.semana, mes:c.mes, sharpe:c.sharpe,
-                dd:c.drawdown, vsIbov:c.vs_ibov, parcial };
+                dd:c.drawdown, vsIbov:c.vs_ibov, parcial:false,
+                acumFechado:c.acumulado };
+    aplicarVivo(m, parc[c.id]);
     return { c, m, s: [] };
   });
   if(filtro) lista = lista.filter(x=> (x.c.classe||"sem") === filtro);
@@ -1563,7 +1669,7 @@ async function telaRanking(){
        sharpe:"retorno por unidade de risco · a partir de 20 pregões",
        dd:"maior queda desde o topo"}[ordem] || ""}</span>
   </div>
-  ${quando?`<p id="linhaViva" style="font-size:11.5px;color:var(--graf);margin:0 0 12px"></p>`:""}
+  ${quando && eu?.admin?`<p id="linhaViva" style="font-size:11.5px;color:var(--graf);margin:0 0 12px"></p>`:""}
   ${filtro && CLASSE[filtro] ? `<p style="font-size:12.5px;color:var(--t2);max-width:60ch;margin:-2px 0 15px">
       <b>${CLASSE[filtro].nome}.</b> ${CLASSE[filtro].regra}
       Carteira só é comparada com outra da mesma classe — laranja com laranja.</p>` : ""}
@@ -1598,19 +1704,20 @@ async function telaRanking(){
           <span style="font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--ouro2)">${titulo}</span>
           <span style="font-size:11px;color:var(--graf);margin-left:7px">${grupo.length}
             ${grupo.length===1?"carteira":"carteiras"}</span></td></tr>` : "")
-      + grupo.map((x,i)=>`<tr class="clicavel" onclick="location.hash='#/carteira/${x.c.id}'">
+      + grupo.map((x,i)=>`<tr class="clicavel" data-cid="${x.c.id}" onclick="location.hash='#/carteira/${x.c.id}'">
       <td class="mono pos">${String(i+1).padStart(2,"0")}</td>
       <td class="estica"><span style="font-family:Newsreader,serif;font-weight:500;font-size:15px">${esc(x.c.nome)}</span>
         <div class="meta">${esc(x.c.apelido)} · ${x.c.n_ativos
           ? `${x.c.n_ativos} ativos · ${tags(x.c)}`
           : `estreia no próximo pregão${x.c.classe&&CLASSE[x.c.classe]?" · "+CLASSE[x.c.classe].nome:""}`}</div></td>
-      <td class="d mono ${x.m.dias||x.m.parcial?cor(x.m.hoje):"nulo"}" style="${x.m.parcial?"opacity:.82":""}"
+      <td class="d mono celDia ${x.m.dias||x.m.parcial?cor(x.m.hoje):"nulo"}" style="${x.m.parcial?"opacity:.82":""}"
       title="${x.m.parcial?"parcial — o pregão ainda não fechou":(x.m.dias?"fechado":"ainda não apurou nenhum pregão")}">${
       x.m.dias||x.m.parcial ? pct(x.m.hoje) : "—"}${
       x.m.parcial?'<sup style="font-size:11px;opacity:.75;margin-left:1px">•</sup>':""}</td>
       <td class="d mono ${x.m.sem==null?"nulo":cor(x.m.sem)}">${x.m.sem==null?"—":pct(x.m.sem)}</td>
       <td class="d mono ${x.m.mes==null?"nulo":cor(x.m.mes)}">${x.m.mes==null?"—":pct(x.m.mes)}</td>
-      <td class="d mono ${x.m.dias?cor(x.m.acum):"nulo"}">${x.m.dias?pct(x.m.acum):"estreia"}</td>
+      <td class="d mono celAcum ${x.m.dias?cor(x.m.acum):"nulo"}">${x.m.dias?pct(x.m.acum):"estreia"}${
+      x.m.parcial&&x.m.dias&&PARCIAL_NO_ACUM?'<sup style="font-size:11px;opacity:.75;margin-left:1px">•</sup>':""}</td>
       <td class="d mono ${x.m.vsIbov==null?"nulo":cor(x.m.vsIbov)}"
         title="excesso sobre o Ibovespa medido a partir do primeiro pregão desta carteira; só conta pregão fechado">${
         x.m.vsIbov==null?"—":pts(x.m.vsIbov)}</td>
@@ -1628,22 +1735,33 @@ async function telaRanking(){
   if(sm) sm.onchange = e => location.hash = cauda(ordem, +e.target.value);
 
   clearInterval(window.__timerRank);
+  clearInterval(window.__timerVivo);
+  RANK_CTX = { ordem, filtro, itens: lista };
+
   if(emPregao()){
+    window.__timerVivo = setInterval(async () => {
+      if((location.hash||"#/").split("?")[0] !== "#/"){ clearInterval(window.__timerVivo); return; }
+      if(document.hidden) return;
+      const v = await vivoCache(true);
+      pintarParciais(v);
+    }, 15000);
+
     window.__timerRank = setInterval(() => {
-      if((location.hash||"#/").split("?")[0] !== "#/" ) { clearInterval(window.__timerRank); return; }
+      if((location.hash||"#/").split("?")[0] !== "#/"){ clearInterval(window.__timerRank); return; }
       if(document.hidden) return;
       PAINEL_EM = 0;
       const y = window.scrollY;
       telaRanking().then(() => window.scrollTo(0, y));
-    }, 60000);
+    }, 300000);
   }
 
-  if(quando){
+  if(quando && eu?.admin){
     const pintarLinha = () => {
       const el = $("#linhaViva");
       if(!el) return;
-      const min = minutosDe(quando);
-      const hora = new Date(quando).toLocaleTimeString("pt-BR",
+      const agora = el.dataset.quando || quando;
+      const min = minutosDe(agora);
+      const hora = new Date(agora).toLocaleTimeString("pt-BR",
         {hour:"2-digit",minute:"2-digit",timeZone:"America/Sao_Paulo"});
       const parado = emPregao() && min >= ATRASO_ALERTA;
       el.style.color = parado ? "var(--baixa)" : "var(--graf)";
@@ -1651,14 +1769,14 @@ async function telaRanking(){
         ? `<b>A cotação está parada há ${min} minutos.</b> O último dado é de ${hora}.`
           + (eu?.admin ? " Confira se o robô de cotação está no ar." : "")
         : emPregao()
-          ? `Cotação de <b>${hora}</b> (${haQuantoTempo(quando)}). Atualiza sozinha a cada
-             minuto enquanto o pregão corre. A coluna <b>No dia</b> marcada com • é parcial
+          ? `Cotação de <b>${hora}</b> (${haQuantoTempo(agora)}). Atualiza sozinha a cada
+             15 segundos enquanto o pregão corre. O que está marcado com • é parcial
              e muda até o fechamento das 19h.`
           : "";
     };
     pintarLinha();
     clearInterval(window.__timerViva);
-    window.__timerViva = setInterval(pintarLinha, 30000);
+    window.__timerViva = setInterval(pintarLinha, 15000);
   }
 }
 
@@ -4601,10 +4719,13 @@ async function telaConsenso(){
 
 function rotear(){
   clearInterval(window.__timerRank);
+  clearInterval(window.__timerVivo);
+  clearInterval(window.__timerViva);
   clearInterval(window.__timerCart);
   clearInterval(window.__timerDuelo);
   clearInterval(window.__timerTC);
   window.__marcarAbas = null;
+  RANK_CTX = null;
   const h = (location.hash||"#/").split("?")[0];
   const m = h.match(/^#\/carteira\/(\d+)$/);
   if(m)                       return telaCarteira(m[1]);
