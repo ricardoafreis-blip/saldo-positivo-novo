@@ -753,6 +753,26 @@ async function painelCache(forcar){
   return PAINEL_INDO;
 }
 
+let MK = null, MK_EM = 0, MK_INDO = null;
+const MK_VALE = 8000;
+
+async function mercadoCache(forcar){
+  if(!forcar && MK && Date.now() - MK_EM < MK_VALE) return MK;
+  if(MK_INDO) return MK_INDO;
+  MK_INDO = (async () => {
+    const { data, error } = await sb.rpc("mercado");
+    MK_INDO = null;
+    if(error) return MK || { em:null, p:{} };
+    MK = data || { em:null, p:{} };
+    MK_EM = Date.now();
+    return MK;
+  })();
+  return MK_INDO;
+}
+
+let QM = null, QM_EM = 0;
+const QM_VALE = 600000;
+
 let VIVO = null, VIVO_EM = 0, VIVO_INDO = null;
 const VIVO_VALE = 8000;
 const PARCIAL_NO_ACUM = true;
@@ -3613,10 +3633,18 @@ async function telaPlacar(){
 }
 
 async function telaScreening(){
-  app().innerHTML = `<div class="carreg">calculando as médias…</div>`;
   const JANELA_GRAFICO = 90;
-  const { data, error } = await sb.rpc("quant_medias", { p_janela: JANELA_GRAFICO });
-  if(error) return app().innerHTML = aviso("Erro ao calcular: "+error.message, true);
+  let data;
+  if(QM && Date.now() - QM_EM < QM_VALE){
+    data = QM;
+  } else {
+    app().innerHTML = `<div class="carreg">calculando as médias…</div>`;
+    const r = await sb.rpc("quant_medias", { p_janela: JANELA_GRAFICO });
+    if(r.error) return app().innerHTML = aviso("Erro ao calcular: "+r.error.message, true);
+    data = QM = r.data; QM_EM = Date.now();
+  }
+  const mk = emPregao() ? await mercadoCache() : { em:null, p:{} };
+  const AOVIVO = mk.p || {};
 
   const q = new URLSearchParams(location.hash.split("?")[1]||"");
   const filtro = q.get("t") || "todos";
@@ -3686,7 +3714,14 @@ async function telaScreening(){
   const ordem = q.get("o") || "liq";
   const soLiq = q.get("liq") === "1";
 
-  const todosCalc = (data||[]).map(x => ({ ...x, e: estadoDe(x) }));
+  const todosCalc = (data||[]).map(x => {
+    const v = AOVIVO[x.ativo];
+    const y = (v && v[0] > 0 && v[2] > 0)
+      ? { ...x, fech:v[0], osc:v[1], ema17:v[2], ema34:v[3], ema72:v[4], vivo:true }
+      : { ...x };
+    y.e = estadoDe(y);
+    return y;
+  });
 
   const amplo = todosCalc.find(x => IND_AMPLO.includes(x.ativo)) || null;
   const setoriais = todosCalc.filter(x => IND_SET[x.ativo] != null)
@@ -3821,7 +3856,7 @@ async function telaScreening(){
         x===amplo?"":" set"}">
       <td class="mono cod">${esc(x.ativo==="IBOV"||x.ativo==="^BVSP"?"IBOVESPA":x.ativo.replace("^",""))}${
         IND_SET[x.ativo]?`<span class="nm">${IND_SET[x.ativo]}</span>`:""}</td>
-      <td class="estica ${tomDe(x.e)}" style="font-size:12.5px">${ROT[x.e]}</td>
+      <td class="estica ${tomDe(x.e)}" style="font-size:12.5px">${ROT[x.e]}${x.vivo?'<sup style="font-size:10px;opacity:.7;margin-left:2px" title="parcial — a fase pode mudar até o fechamento">•</sup>':""}</td>
       <td class="d mono">${n2(x.fech, x.fech>1000?0:2)}</td>
       <td class="d mono ${x.forca==null?"nulo":cor(x.forca)}"><b>${
         x.forca==null?"—":pct(x.forca)}</b></td>
@@ -3833,7 +3868,7 @@ async function telaScreening(){
     </tr>`).join("")}
     ${l.map(x=>`<tr>
       <td class="mono" style="font-weight:500">${esc(x.ativo)}</td>
-      <td class="estica ${tomDe(x.e)}" style="font-size:12.5px">${ROT[x.e]}</td>
+      <td class="estica ${tomDe(x.e)}" style="font-size:12.5px">${ROT[x.e]}${x.vivo?'<sup style="font-size:10px;opacity:.7;margin-left:2px" title="parcial — a fase pode mudar até o fechamento">•</sup>':""}</td>
       <td class="d mono">${n2(x.fech)}</td>
       <td class="d mono ${x.forca==null?"nulo":cor(x.forca)}"><b>${
         x.forca==null?"—":pct(x.forca)}</b></td>
@@ -3908,6 +3943,19 @@ async function telaScreening(){
       }, 400);
     };
     if(busca){ bq.focus(); bq.setSelectionRange(bq.value.length, bq.value.length); }
+  }
+
+  clearInterval(window.__timerScr);
+  if(emPregao()){
+    window.__timerScr = setInterval(async () => {
+      if((location.hash||"#/").split("?")[0] !== "#/screening"){
+        clearInterval(window.__timerScr); return; }
+      if(document.hidden) return;
+      if(document.activeElement && document.activeElement.tagName === "INPUT") return;
+      await mercadoCache(true);
+      const y = window.scrollY;
+      telaScreening().then(() => window.scrollTo(0, y));
+    }, 30000);
   }
 }
 
@@ -4724,6 +4772,7 @@ function rotear(){
   clearInterval(window.__timerCart);
   clearInterval(window.__timerDuelo);
   clearInterval(window.__timerTC);
+  clearInterval(window.__timerScr);
   window.__marcarAbas = null;
   RANK_CTX = null;
   const h = (location.hash||"#/").split("?")[0];
