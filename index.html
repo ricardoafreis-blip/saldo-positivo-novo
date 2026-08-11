@@ -6,21 +6,19 @@
 <title>Saldo Positivo — carteiras de estudo</title>
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-/* ══ paleta: azul em camadas + dourado escasso ══════════════════
-   Verde e vermelho são DADO, nunca enfeite. O ouro marca só duas
-   coisas: o lacre e o que está ativo. Se estiver em tudo, vira cassino. */
+
 :root{
-  --papel:#0A1120;      /* fundo — azul quase preto */
-  --p2:#101B2E;         /* superfície elevada */
-  --p3:#16243B;         /* hover / cartão */
-  --linha:#1F3049;      /* divisória */
-  --linha2:#2B4162;     /* divisória mais visível */
-  --tinta:#E9EEF7;      /* texto principal */
-  --t2:#9AAEC8;         /* secundário */
-  --graf:#7189AE;       /* terciário */
+  --papel:#0A1120;
+  --p2:#101B2E;
+  --p3:#16243B;
+  --linha:#1F3049;
+  --linha2:#2B4162;
+  --tinta:#E9EEF7;
+  --t2:#9AAEC8;
+  --graf:#7189AE;
   --dest:#16243B;
-  --lacre:#C9A227;      /* ouro */
-  --ouro2:#E3C45C;      /* ouro claro */
+  --lacre:#C9A227;
+  --ouro2:#E3C45C;
   --ouro-fraco:rgba(201,162,39,.12);
   --alta:#3DD68C;
   --baixa:#F2685F;
@@ -40,21 +38,10 @@ button,input,select,textarea{font-family:inherit;font-size:inherit}
 button{cursor:pointer;border:none;background:none;color:inherit}
 ::selection{background:var(--lacre);color:#0A1120}
 
-/* faixa de aviso */
 .aviso{background:#060C17;color:var(--t2);font-size:11.5px;padding:9px 0;
   border-bottom:1px solid var(--linha)}
 .aviso b{color:var(--tinta);font-weight:500}
 
-/* topo */
-/* ══ CABEÇALHO ══════════════════════════════════════════════════════
-   Dez links em quatro grupos, mais a marca, mais a conta: isso NAO cabe
-   numa linha so em largura nenhuma. Tentar forcar era o que jogava o
-   apelido para uma terceira linha, sozinho na direita — parecendo erro.
-
-   Duas faixas explicitas resolvem: em cima marca e conta, uma em cada
-   ponta; embaixo a navegacao inteira. Cada faixa tem uma funcao — quem
-   eu sou e quem esta logado; para onde eu vou — e o fio entre elas
-   separa as duas leituras. */
 header{border-bottom:1px solid var(--linha);background:linear-gradient(180deg,#0C1425,#0A1120)}
 header .alto{display:flex;align-items:center;justify-content:space-between;gap:20px;
   padding:14px 0 12px}
@@ -74,7 +61,6 @@ nav a,nav button.lnk{font-size:13.5px;color:var(--t2);background:none;
 nav a:hover,nav button.lnk:hover{color:var(--ouro2)}
 nav .divisor,nav .rot{display:none}
 
-/* a conta vive na faixa de cima, encostada na direita */
 header .dir{display:flex;gap:12px;align-items:center;font-size:13px;flex:none}
 header .dir a,header .dir button.lnk{font-size:13px;color:var(--t2);background:none}
 header .dir a:hover{color:var(--ouro2)}
@@ -86,13 +72,11 @@ header .dir a:hover{color:var(--ouro2)}
   nav a{font-size:13px}
 }
 @media(max-width:560px){
-  /* sem espaco para quatro colunas: os grupos empilham e a etiqueta
-     passa a ser o unico separador */
+
   nav{flex-direction:column;gap:9px;padding-bottom:11px}
   nav .grupo+.grupo{margin-left:0;padding-left:0;border-left:none;padding-top:0}
 }
 
-/* a linha de prova da abertura */
 .prova{display:inline-flex;flex-wrap:wrap;margin-top:22px;border:1px solid var(--linha2);
   border-radius:3px;background:var(--p2);overflow:hidden}
 .prova .p{padding:9px 18px;border-right:1px solid var(--linha2);font-size:12px;
@@ -113,10 +97,7 @@ header .dir a:hover{color:var(--ouro2)}
 .colar .lado{display:flex;gap:8px;flex-direction:column}
 .colar select{margin:0;padding:8px 11px;font-size:13px}
 .colar .bt{white-space:nowrap}
-/* ══ ABAS DO CRIAR ══════════════════════════════════════════════════
-   Uma de cada vez. Fechada, vira uma linha com o resultado — o que ja
-   foi decidido para de ocupar espaco e de pedir atencao. Alternam por
-   CSS, sem redesenhar: nada digitado se perde. */
+
 .travadaCx{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:var(--p2);
   border:1px solid var(--linha2);border-left:2px solid var(--lacre);border-radius:0 4px 4px 0;
   padding:14px 18px}
@@ -177,7 +158,6 @@ header .dir a:hover{color:var(--ouro2)}
 .folgaInline .fg:hover{border-color:var(--lacre);color:var(--tinta)}
 .folgaInline .fg.on{border-color:var(--lacre);background:var(--ouro-fraco);color:var(--ouro2)}
 
-/* ══ completar codigo ══════════════════════════════════════════════ */
 .campoCod{position:relative;display:block}
 .sugere{position:absolute;top:100%;left:0;z-index:14;min-width:150px;
   background:var(--p3);border:1px solid var(--linha2);border-radius:0 0 4px 4px;
@@ -204,7 +184,6 @@ tr.semdado:hover td{opacity:1}
 .passoC h4{font-family:Newsreader,serif;font-weight:500;font-size:17px;margin:0 0 7px;color:var(--tinta)}
 .passoC p{font-size:12.5px;color:var(--t2);line-height:1.6;margin:0}
 
-/* extrato tipado: regra ≠ decisao do autor */
 .ext{display:grid;grid-template-columns:82px 1fr;gap:0 16px;padding:11px 0;
   border-bottom:1px solid var(--p3)}
 @media(max-width:520px){.ext{grid-template-columns:1fr;gap:4px}}
@@ -217,7 +196,6 @@ tr.semdado:hover td{opacity:1}
 .selo2.reg{border-color:var(--lacre);color:var(--ouro2);background:var(--ouro-fraco)}
 .selo2.dono{border-color:var(--linha2);color:var(--t2)}
 
-/* ══ A RÉGUA ════════════════════════════════════════════════════════ */
 .regua{background:var(--p2);border-left:2px solid var(--lacre);padding:18px 20px;
   margin:14px 0 6px;border-radius:0 4px 4px 0}
 .regua .oq{font-size:13.5px;color:var(--tinta);max-width:66ch;line-height:1.6}
@@ -244,7 +222,6 @@ tr.semdado:hover td{opacity:1}
 .regua .obs{font-size:11.5px;color:var(--graf);margin:12px 0 0;max-width:70ch;line-height:1.6}
 .regua .obs b{color:var(--t2);font-weight:500}
 
-/* ══ CONSENSO ═══════════════════════════════════════════════════════ */
 .linhaK{display:grid;grid-template-columns:58px 1fr 26px 44px;gap:9px;align-items:center;
   padding:7px 0;border-bottom:1px solid var(--linha)}
 .linhaK .cod{font-family:'IBM Plex Mono',monospace;font-size:12.5px;font-weight:500;
@@ -260,7 +237,6 @@ tr.semdado:hover td{opacity:1}
 .linhaK .duelo .c{background:var(--alta)}
 .linhaK .duelo .v{background:var(--baixa)}
 
-/* ══ CRM DOS PEDIDOS ════════════════════════════════════════════════ */
 .lead{border:1px solid var(--linha);border-radius:4px;background:var(--p2);margin-top:9px}
 .lead.urg{border-left:2px solid var(--baixa)}
 .lead.ab{border-color:var(--linha2)}
@@ -292,15 +268,6 @@ tr.semdado:hover td{opacity:1}
 .nt .dt{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--graf)}
 .nt .tx{font-size:12.5px;color:var(--t2);white-space:pre-wrap}
 
-/* ══ COMO LER ═══════════════════════════════════════════════════════
-   Tres colunas de largura inteira. A primeira MOSTRA o grafico com a
-   legenda ao lado; descrever cor com palavra, tendo o desenho logo
-   acima, e o jeito mais dificil de explicar a coisa mais simples. */
-/* ⚠️ Era 1.15fr 1fr 1fr. O SVG da primeira coluna nao encolhe, entao
-   ela ficava com a largura do desenho e empurrava as outras duas: a do
-   meio caiu para ~14 caracteres e o texto quebrou palavra por palavra.
-   `minmax(0,...)` deixa as colunas cederem, e o piso de 230px garante
-   que nenhuma fique estreita demais para uma frase. */
 .comoler{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
   gap:1px;margin-top:26px;background:var(--linha);border:1px solid var(--linha);
   border-radius:4px;overflow:hidden}
@@ -321,13 +288,11 @@ tr.semdado:hover td{opacity:1}
 .comoler dt{color:var(--tinta);font-size:12px;margin-top:9px}
 .comoler dt:first-child{margin-top:0}
 .comoler dd{margin:1px 0 0;color:var(--graf);line-height:1.5}
-/* o aviso era um .selo2 — classe de etiqueta monoespacada, sem quebra:
-   virava uma faixa de largura fixa estourando a coluna. Aqui e texto. */
+
 .comoler .selo2{display:block;border:none;background:none;padding:11px 0 0;margin-top:14px;
   border-top:1px solid var(--linha);color:var(--ouro2);font-family:inherit;
   font-size:11px;letter-spacing:0;text-transform:none;white-space:normal}
 
-/* ══ TELA DA CARTEIRA ═══════════════════════════════════════════════ */
 .heroi{display:grid;grid-template-columns:minmax(0,auto) 1fr;gap:34px;align-items:end;
   padding:26px 0 20px;margin-top:16px;border-top:1px solid var(--linha2)}
 @media(max-width:760px){.heroi{grid-template-columns:1fr;gap:22px;align-items:start}}
@@ -337,11 +302,10 @@ tr.semdado:hover td{opacity:1}
 .rotulo{font-size:12.5px;color:var(--t2);margin-top:11px}
 .rotulo b{color:var(--tinta);font-weight:500}
 
-/* a fita: da para CONTAR as marcas */
 .fita{position:relative;padding-bottom:16px}
 .fita .trilho{display:flex;align-items:center;gap:2px;height:74px;
   border-bottom:1px solid var(--linha);position:relative}
-/* a curva do acumulado por cima das barras: o destino sobre o caminho */
+
 .fita .acum{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
 .fita .ponta{position:absolute;right:0;transform:translate(calc(100% + 8px),-50%);
   font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;
@@ -373,12 +337,6 @@ tr.semdado:hover td{opacity:1}
 .explica{font-size:11.5px;color:var(--graf);max-width:74ch;margin:10px 0 18px;line-height:1.6}
 .explica b{color:var(--t2);font-weight:500}
 
-/* ══ SERVIÇOS ═══════════════════════════════════════════════════════
-   Treze cartoes numa grade so viram catalogo em que ninguem acha o
-   proprio caso. Agrupados por momento — organizar, proteger, complexo —
-   a pessoa le tres frases e sabe em qual bloco esta. Cada cartao tem
-   borda propria e vao de verdade: a tecnica de fundo com 1px entre
-   celulas so fecha se formarem retangulo perfeito, e sobra buraco. */
 .secaoS{margin-top:32px}
 .cabsec{padding-bottom:12px;border-bottom:1px solid var(--linha2)}
 .cabsec h2{font-size:22px;margin:0 0 5px}
@@ -391,9 +349,7 @@ tr.semdado:hover td{opacity:1}
 .srv:hover{border-color:var(--linha2);background:var(--p3)}
 .srv.on{border-color:var(--lacre);background:var(--p3)}
 .srv h3{font-size:18px;margin:0 0 10px}
-/* Uma enfase por cartao. Ouro no meio do texto corrido, em cinco
-   lugares, deixa de destacar e vira ruido: aqui ele so marca registro
-   e orgao, dentro do bloco de baixo. */
+
 .srv .oq{font-size:13px;color:var(--t2);line-height:1.6;flex:1}
 .srv .oq b{color:var(--tinta);font-weight:500}
 .srv .quem{margin-top:16px;padding-top:13px;border-top:1px solid var(--linha)}
@@ -415,14 +371,11 @@ tr.semdado:hover td{opacity:1}
 .lgpd{display:flex;gap:9px;align-items:flex-start;font-size:11px;color:var(--graf);
   line-height:1.5;margin-top:6px}
 .lgpd input{width:auto;margin:2px 0 0;accent-color:var(--lacre)}
-/* ⚠️ O <label> global do site e caixa alta espacada — bom para rotulo de
-   campo, ilegivel para uma frase de consentimento. Aqui o texto volta a
-   ser texto: minusculas, sem espacamento, entrelinha de leitura. */
+
 .lgpd, .lgpd span{text-transform:none;letter-spacing:normal;font-size:11.5px;
   font-weight:400;color:var(--graf);line-height:1.55}
 .lgpd span{display:block}
 
-/* botões */
 .bt{display:inline-block;padding:10px 18px;border:1px solid var(--linha2);border-radius:3px;
   font-size:13.5px;font-weight:500;text-align:center;color:var(--tinta);transition:.16s}
 .bt:hover{background:var(--p3);border-color:var(--graf)}
@@ -436,28 +389,20 @@ tr.semdado:hover td{opacity:1}
   margin:16px 0;font-size:13px;color:var(--tinta);border-radius:0 3px 3px 0}
 .msg.erro{border-left-color:var(--baixa);background:rgba(242,104,95,.1)}
 
-/* superfícies — elevação em vez de contorno */
 .card{background:var(--p2);border:1px solid var(--linha);padding:22px 24px;border-radius:4px}
 
-/* tabelas — limpas, sem grade pesada */
 table{width:100%;border-collapse:collapse;font-size:13.5px}
-/* ⚠️ Sem padding lateral os cabecalhos ENCOSTAM: "FECHAMENTOVS.
-   INSTITUCIONAL" saia colado, sem um pixel entre as duas palavras. E,
-   como nenhuma coluna absorvia a sobra, o conteudo terminava antes da
-   margem direita e as colunas de numero ficavam espremidas a esquerda —
-   apertado de um lado, vazio do outro. */
+
 th{font-size:9.5px;text-transform:uppercase;letter-spacing:.14em;color:var(--graf);
   text-align:left;padding:0 0 11px;font-weight:500;border-bottom:1px solid var(--linha2)}
 td{padding:13px 0;border-bottom:1px solid var(--linha)}
 th.d,td.d{text-align:right;padding-left:16px}
-/* a coluna que ESTICA. Sem uma folgada, a largura sobrando fica no fim
-   da linha em vez de virar respiro entre as colunas. */
+
 th.estica,td.estica{width:100%;padding-right:16px}
 tr.clicavel{transition:background .14s}
 tr.clicavel:hover{background:var(--p2);cursor:pointer}
 tr.clicavel:hover td:first-child{box-shadow:inset 2px 0 0 var(--lacre)}
 
-/* formulário */
 label{display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.13em;
   color:var(--graf);margin:0 0 7px}
 input,select,textarea{width:100%;padding:11px 13px;border:1px solid var(--linha2);
@@ -470,14 +415,12 @@ input[readonly]{color:var(--t2)}
   border:1px solid var(--linha2);border-radius:99px;color:var(--t2);white-space:nowrap;display:inline-block}
 .tag.al{color:var(--ouro2);border-color:var(--lacre);background:var(--ouro-fraco)}
 
-/* números em destaque — sem caixinhas */
 .grade{display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));
   gap:1px;background:var(--linha);border:1px solid var(--linha);margin:22px 0;border-radius:4px;overflow:hidden}
 .cel{background:var(--p2);padding:15px 16px}
 .cel .v{font-family:'IBM Plex Mono';font-size:20px;font-weight:500;letter-spacing:-.02em}
 .cel .k{font-size:9px;text-transform:uppercase;letter-spacing:.13em;color:var(--graf);margin-top:3px}
 
-/* o lacre — momento de marca */
 .trancado{position:relative;padding:52px 24px;background:var(--p2);text-align:center;
   overflow:hidden;border:1px solid var(--linha);border-radius:4px}
 .trancado::before{content:'';position:absolute;inset:0;opacity:.6;
@@ -491,15 +434,9 @@ input[readonly]{color:var(--t2)}
 .duplo{display:grid;grid-template-columns:1fr 1fr;gap:26px}
 @media(max-width:760px){.duplo{grid-template-columns:1fr}}
 
-/* duas colunas do Tiro curto. A classe era usada no HTML e nao existia
-   no CSS, entao o formulario e o painel de tiros ficavam empilhados. */
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
 @media(max-width:860px){.grid2{grid-template-columns:1fr}}
 
-/* ══ pontos de força: uma coluna por ponto ═══════════════════════════
-   Numa celula so, com os tres separados por ponto, o cabecalho nunca
-   cai em cima dos valores — larguras diferentes, so o ultimo encosta na
-   borda. Coluna por coluna o alinhamento sai de graca. */
 th.mA{padding-left:12px;width:80px;letter-spacing:.09em}
 th.mA.m1{border-left:1px solid var(--p3)}
 th.mA.m3{color:var(--lacre)}
@@ -509,7 +446,6 @@ td.mA.m1{border-left:1px solid var(--p3);color:var(--tinta)}
 td.mA.m2{color:var(--t2)}
 td.mA.m3{color:var(--ouro2)}
 
-/* o corte de liquidez como botao, nao como link solto no canto */
 .chaveL{display:inline-flex;align-items:center;gap:9px;background:var(--p2);
   border:1px solid var(--linha2);border-radius:3px;padding:6px 12px;
   font-size:12.5px;color:var(--t2);white-space:nowrap;text-decoration:none}
@@ -518,10 +454,7 @@ td.mA.m3{color:var(--ouro2)}
 .chaveL .cx{width:14px;height:14px;border:1px solid var(--linha2);border-radius:2px;
   display:flex;align-items:center;justify-content:center;font-size:10px;font-style:normal;flex:none}
 .chaveL.on .cx{border-color:var(--lacre)}
-/* Indice e linha igual as outras: sem fundo, sem barra dourada, sem
-   caixa. Uma faixa cheia acima da tabela vira um segundo cabecalho e
-   empurra o de verdade. O que marca e o codigo em dourado e o fio que
-   fecha embaixo do ultimo indice. */
+
 tr.ref td{padding-top:10px;padding-bottom:10px}
 tr.ref+tr:not(.ref) td{border-top:1px solid var(--linha2)}
 tr.ref .cod{font-weight:600;font-size:13.5px;letter-spacing:.03em;color:var(--ouro2)}
@@ -552,12 +485,6 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
 .chip .n{color:var(--graf);font-size:11px;margin-left:3px}
 .divisor{width:1px;height:13px;background:var(--linha2);flex:none}
 
-
-/* ── recorte e ordenação são hierarquias diferentes ──────────────
-   A classe diz O QUE você está olhando; a ordem diz COMO está
-   listado. Lado a lado, em três grupos, viravam sete opções soltas
-   competindo entre si. Agora a classe é aba (nível de cima) e a
-   ordem é uma linha só, com divisória entre período e qualidade. */
 .abas{display:flex;gap:2px;flex-wrap:wrap;margin:6px 0 0;
   justify-content:center;border-bottom:1px solid var(--linha)}
 @media(max-width:620px){.abas{justify-content:flex-start}}
@@ -569,13 +496,6 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
 .aba .n{font-family:'IBM Plex Mono';font-size:10.5px;color:var(--graf);margin-left:5px}
 .aba.on .n{color:var(--lacre)}
 
-/* Sem caixa. A faixa cinza fechava os controles num bloco apertado e
-   espremia o que vinha antes e depois. Espaço em branco separa melhor
-   que borda. */
-/* ⚠️ Era justify-content:center enquanto TUDO abaixo — cabeçalho da
-   tabela, papéis, rodapé — alinha à esquerda. O bloco flutuava no meio
-   e parecia solto: um pedaço longe da margem esquerda, outro longe da
-   direita. Alinhado à esquerda, ele encosta na mesma régua do resto. */
 .ordena{display:flex;gap:14px;align-items:center;flex-wrap:wrap;
   justify-content:flex-start;padding:14px 0 6px}
 .selOrdem{width:auto;min-width:190px;margin:0;padding:7px 11px;font-size:13px;
@@ -585,10 +505,6 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
   color:var(--graf);opacity:.7;margin-right:2px}
 .ordena .divisor{margin:0 4px}
 
-/* ── janela de confirmação ──────────────────────────────────────
-   Estava injetada no topo de um formulário longo: o resumo aparecia
-   fora da tela e o botão de confirmar ficava lá embaixo, longe do
-   que ele confirma. Agora é uma janela com o botão junto do conteúdo. */
 .modal{position:fixed;inset:0;z-index:50;padding:18px;overflow-y:auto;
   background:rgba(4,9,18,.8);display:grid;place-items:center}
 .modal .cx{width:100%;max-width:450px;background:var(--p2);border-radius:5px;
@@ -602,7 +518,6 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
 @media(max-width:520px){.modal{padding:0;place-items:stretch}
   .modal .cx{max-width:none;max-height:100vh;border-radius:0;border-left:none;border-right:none}}
 
-/* ── explicação do site ─────────────────────────────────────────── */
 .passos{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:16px 0}
 @media(max-width:720px){.passos{grid-template-columns:1fr}}
 .passo{background:var(--p2);border:1px solid var(--linha);border-radius:4px;padding:16px 17px}
@@ -616,29 +531,16 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
 .qa[open] summary::before{content:"−"}
 .qa p{font-size:12.5px;color:var(--t2);margin:9px 0 0 21px;max-width:62ch;line-height:1.6}
 
-/* Abertura de página: título e uma linha de apoio, com respiro embaixo
-   e um fio separando dos controles. Sem isso o texto ficava pendurado à
-   esquerda de um vazio e a página parecia um mural. */
-/* CENTRADO. Encostado à esquerda, o título e o subtítulo ficavam num
-   canto com um vazio enorme à direita, e a página parecia mural. Centrado
-   e com medida limitada, a abertura ganha eixo e o conteúdo abaixo — que
-   é tabela e ocupa a largura toda — passa a pendurar de um ponto claro. */
 .cabeca{padding:36px 0 0;margin-bottom:14px;text-align:center}
-/* Sem max-width no título: 22ch quebrava "Duelo do dia" em duas linhas
-   com meia tela sobrando ao lado. Quem controla a medida é o parágrafo. */
+
 .cabeca h1{font-size:29px;line-height:1.14;margin:0 0 9px}
 .cabeca p{color:var(--t2);font-size:15px;line-height:1.6;margin:0 auto;max-width:62ch}
 .cabeca .apoio{font-size:12px;color:var(--graf);margin-top:9px}
 @media(max-width:620px){.cabeca{text-align:left}
   .cabeca h1,.cabeca p{margin-left:0}}
 
-/* menu da conta: apelido, indicar, admin e sair viravam quatro links
-   soltos na barra, e com as etiquetas dos blocos eles caiam para a
-   linha de baixo. Agora e um so, com o resto dentro. */
 .eu{position:relative}
-/* O apelido era texto solto na ponta e nao parecia clicavel. Agora e um
-   bloco: quadrinho com a inicial, apelido, etiqueta de admin e a seta.
-   Quem olha entende que ali mora a conta, sem precisar descobrir. */
+
 .eu>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:9px;
   font-size:13.5px;color:var(--t2);padding:5px 11px 5px 5px;border-radius:99px;
   border:1px solid var(--linha);background:var(--p2);transition:.15s}
@@ -667,9 +569,6 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
 .eu .gaveta .quem{padding:8px 11px 4px;font-size:11px;color:var(--graf);
   letter-spacing:.06em;text-transform:uppercase}
 
-/* pódio do placar. O ranking foi refeito duas vezes e o placar nunca
-   tinha sido tocado: era uma tabela de seis colunas onde a informação
-   principal — quem está ganhando — não tinha destaque nenhum. */
 .podio{display:flex;gap:12px;flex-wrap:wrap;margin:14px 0 20px}
 .medalha{flex:1;min-width:150px;background:var(--p2);border:1px solid var(--linha);
   border-radius:4px;padding:14px 16px}
@@ -681,7 +580,6 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
 .medalha .nota{font-family:'IBM Plex Mono';font-size:23px;font-weight:500}
 .medalha .sub{font-size:11px;color:var(--graf);margin-top:2px}
 
-/* etiqueta de pontos: verde ganhou, vermelho perdeu */
 .pt{font-family:'IBM Plex Mono';font-size:11px;padding:2px 7px;border-radius:3px;
   border:1px solid var(--linha2);color:var(--t2);white-space:nowrap}
 .pt.b{border-color:rgba(61,214,140,.5);color:var(--alta)}
@@ -692,49 +590,29 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
 .dia .topo{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
 .dia .nota{margin-left:auto;font-family:'IBM Plex Mono';font-size:17px;font-weight:500}
 
-/* posição no ranking em ouro */
 .pos{font-family:'IBM Plex Mono';font-size:12px;color:var(--graf);letter-spacing:.02em}
 
-/* quatro colunas, uma por classe — a regra do laranja com laranja
-   virando desenho: cada classe tem o seu proprio podio */
 .colunas{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:16px}
 @media(max-width:1000px){.colunas{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:620px){.colunas{grid-template-columns:1fr}}
-/* ⚠️ COLUNA EM FLEX, NAO EM BLOCO. Com 3, 2, 2 e 3 carteiras cada
-   coluna terminava numa altura diferente e o rodape — ultima colocada e
-   "ver todas" — ficava boiando logo abaixo da ultima linha. Em flex, o
-   `pe` recebe margin-top:auto e as quatro terminam na MESMA linha, que
-   e o que fazia o desenho parecer equilibrado. */
+
 .coluna{background:var(--p2);border:1px solid var(--linha);border-radius:4px;
   padding:15px 16px;display:flex;flex-direction:column}
 .coluna h3{font-family:Newsreader,serif;font-size:16px;margin:0 0 2px}
 .coluna .qtd{font-size:10.5px;color:var(--graf);letter-spacing:.06em;text-transform:uppercase}
-/* ⚠️ As quatro regras tem comprimentos diferentes (duas linhas na
-   Vendida, quatro na 60/40) e o rotulo do criterio acabava numa altura
-   diferente em cada coluna.
-   `min-height` nao bastava: era so o PISO. Numa largura em que a 60/40
-   estourasse para cinco linhas ela empurrava tudo e as quatro
-   desalinhavam de novo — que e o que aparecia ao expandir a tela.
-   Altura FIXA de quatro linhas, com corte, garante o mesmo degrau em
-   qualquer largura: nem encolhe, nem estoura. Abaixo de 1000px o grid
-   vira duas colunas e a propria linha do grid iguala as alturas. */
+
 .coluna .regra{font-size:11px;color:var(--graf);margin:7px 0 12px;line-height:1.45;
   flex:none;height:calc(1.45em * 3);overflow:hidden;
   display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
 @media(max-width:1000px){.coluna .regra{height:auto;display:block;overflow:visible}}
-/* o rotulo do criterio fecha com um fio: e ele que marca onde comeca a
-   lista, e sem o fio a coluna virava um monte de texto sem degrau */
+
 .coluna .rotc{font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;
   color:var(--graf);text-align:right;padding-bottom:3px;border-bottom:1px solid var(--linha2)}
 .coluna .pe{margin-top:auto}
-/* ── a fita: um traco por pregao apurado ── */
+
 .fitinha{display:inline-flex;align-items:center;gap:1px;height:16px;vertical-align:middle}
 .fitinha i{flex:1;border-radius:.5px}
 
-/* ── a ultima da classe, em silencio ──────────────────────────────
-   Ranking que so mostra vencedor e folheto. A regua fica honesta
-   quando o outro extremo tambem aparece — e so entra quando ha mais
-   de seis, senao a "ultima" seria a sexta e nao diria nada. */
 .ultima{display:flex;align-items:baseline;gap:8px;padding:9px 0 0;margin-top:2px;
   border-top:1px dashed var(--linha2);opacity:.6;font-size:12px;cursor:pointer}
 .ultima:hover{opacity:1}
@@ -742,10 +620,6 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
 .ultima .quem{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--t2)}
 .ultima .num{font-family:'IBM Plex Mono',monospace;font-size:12px;flex:none}
 
-/* ── A FILA ────────────────────────────────────────────────────────
-   Quem publicou ontem nao entra no podio e sumia da tela sem
-   explicacao. Aqui ela aparece com a conta regressiva: nao esta fora,
-   esta a caminho, e da para ver quanto falta. */
 .fila{margin-top:26px;padding-top:20px;border-top:1px solid var(--linha)}
 .fila .cab{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:13px}
 .fila h3{font-family:Newsreader,serif;font-weight:500;font-size:17px;margin:0}
@@ -771,10 +645,7 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
 .linhaC .n{font-family:'IBM Plex Mono';font-size:10.5px;color:var(--graf);flex:none;width:15px}
 .linhaC .quem{flex:1;min-width:0}
 .linhaC .nome{font-size:13px;color:var(--tinta);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-/* ⚠️ Sem nowrap o autor partia no meio — "Tio Patinhas · 63" numa linha
-   e "pregões" na outra — e cada linha da coluna ficava com altura
-   diferente. O ritmo das cinco linhas e o que faz as quatro colunas
-   parecerem uma grade so. */
+
 .linhaC .autor{font-size:10.5px;color:var(--graf);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .linhaC .num{font-family:'IBM Plex Mono';font-size:13px;flex:none}
@@ -782,7 +653,6 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
 .meta{font-size:11.5px;color:var(--graf);margin-top:3px}
 .nulo{color:var(--graf)}
 
-/* faixa de cotacao — le a view faixa_cotacao */
 .faixa{border-bottom:1px solid var(--linha);background:#070E1B;display:none}
 .faixa .in{display:flex;align-items:center;gap:14px;padding:8px 0;
   font-size:11.5px;white-space:nowrap;overflow-x:auto;scrollbar-width:none}
@@ -824,25 +694,15 @@ histórico retroativo.
  · <a href="#/termos" style="color:var(--t2);border-bottom:1px solid var(--linha2)">Termos e privacidade</a></footer>
 
 <script type="module">
-// ═══════════════════════════════════════════════════════════════
-//  CONFIGURAÇÃO — troque só a linha da CHAVE pela sua
-// ═══════════════════════════════════════════════════════════════
 const URL   = "https://ixoucxcbategvjfdgmti.supabase.co";
 const CHAVE = "sb_publishable_p45Gm13xcRkIAMhR_tfkrg_LJHOGTja";
-// ═══════════════════════════════════════════════════════════════
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const sb = createClient(URL, CHAVE);
 
-// Taxa da renda fixa ao ano. TEM QUE SER IGUAL ao que a taxa_rf_ano()
-// devolve no banco, que le de parametro.cdi_ano (hoje 15%). Estava em
-// 0.105 aqui enquanto o banco ja usava outra coisa: o Sharpe do ranking
-// descontava um custo de oportunidade menor que o real e saia inflado.
-// Se mudar a parametro, mude aqui tambem —  ou o Sharpe e o grafico
-// passam a discordar da apuracao.
 const CDI_ANO = 0.15;
 
-let eu = null;              // perfil logado
+let eu = null;
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const app = () => $("#app");
@@ -854,13 +714,6 @@ const cor = v => v>=0 ? "alta" : "baixa";
 const dataBR = d => d ? String(d).slice(0,10).split("-").reverse().join("/") : "";
 
 function aviso(t, erro){ return `<div class="msg${erro?" erro":""}">${esc(t)}</div>`; }
-// As quatro classes. Escolhidas no nascimento da carteira e imutáveis:
-// trocar de classe depois de ver o resultado seria escolher a régua com
-// o jogo já jogado. O banco recusa declaração que viole a classe
-// (valida_classe, banco11) — aqui é só rótulo e filtro.
-// A chave 'diversificada' virou a classe Comprada e 'all_in' foi
-// aposentada (as carteiras existentes foram encerradas). Os limites de
-// 100% e 200% são sempre INCLUSIVE.
 const CLASSE = {
   diversificada:     { nome:"Comprada",
     regra:"Só compra, exatamente 10 papéis somando 100%. Não deixa caixa." },
@@ -872,15 +725,9 @@ const CLASSE = {
     regra:"Só venda a descoberto, até 100% do patrimônio." },
 };
 
-// Uma carteira e vendida quando a classe diz isso ou quando a posicao
-// adotada e inteiramente vendida. Vale para decidir o que NAO mostrar:
-// caixa de vendida e 100 - liquida, que com liquida -104 da 204% e nao
-// significa nada. Estava espalhado em tres lugares com respostas
-// diferentes — agora e uma funcao so.
 const ehVendida = c => c && (c.classe === "vendida"
   || (!c.classe && c.bruta > 0 && c.liquida <= -c.bruta + 0.01));
 
-// A view ranking não tem a coluna classe, então vem de carteira_classe.
 let CACHE_CLASSE = null;
 async function classes(){
   if(CACHE_CLASSE) return CACHE_CLASSE;
@@ -888,18 +735,6 @@ async function classes(){
   CACHE_CLASSE = {}; (data||[]).forEach(x=> CACHE_CLASSE[x.id] = x);
   return CACHE_CLASSE;
 }
-// Cola a classe (e o autor) numa lista vinda da view ranking. Era codigo
-// solto dentro de telaRanking; telaDuelo nao tinha, e por isso LA toda
-// carteira chegava sem classe e caia no ramo de inferencia do tags(),
-// que produzia "205% em caixa · alavancada 1,1x" numa vendida.
-/* ══ PAINEL: uma leitura para todo o ranking ════════════════════════
-   Guarda por 60s. Mil visitantes abrindo a mesma tela no mesmo minuto
-   fazem UMA chamada cada, nao varias — e como o dado e identico para
-   todos, o cache serve a todos.
-
-   ⚠️ Se a chamada estiver em curso, quem chegar espera a MESMA promessa
-   em vez de abrir outra. Sem isso, quatro repinturas seguidas viram
-   quatro consultas simultaneas. */
 let PAINEL = null, PAINEL_EM = 0, PAINEL_INDO = null;
 const PAINEL_VALE = 60000;
 
@@ -925,13 +760,8 @@ async function colarClasse(cs){
   return cs || [];
 }
 
-// data de hoje no fuso de São Paulo, igual ao hoje_br() do banco
 const HOJE_BR = () => new Date().toLocaleDateString("sv-SE", { timeZone:"America/Sao_Paulo" });
 
-// ── quando a cotação foi e quando será ──
-// O robô roda de hora em hora, na virada, das 10h às 18h em dia útil.
-// O cron do GitHub costuma atrasar alguns minutos, então a previsão é
-// "por volta de", nunca cravada.
 const partesBR = d => {
   const f = new Intl.DateTimeFormat("pt-BR", { timeZone:"America/Sao_Paulo",
     hour:"2-digit", minute:"2-digit", weekday:"short", hour12:false }).formatToParts(d);
@@ -950,33 +780,16 @@ function haQuantoTempo(iso){
   return `há ${d} dias`;
 }
 
-// Sabado e domingo nao tem pregao. Feriado da B3 nao esta aqui: para o
-// site, feriado parece dia util sem cotacao nova — a legenda continua
-// correta porque diz a hora do dado, mas a coluna do dia fica vazia.
 const ehDiaUtil = () => !/^(sáb|dom)/i.test(partesBR(new Date()).dia);
 
-// Dentro do horário de pregão? O EA manda cotação a cada 60 segundos
-// enquanto o MetaTrader estiver aberto. Não há mais previsão de "próxima
-// atualização": isso era do tempo do cron do GitHub, que rodava de hora
-// em hora. Hoje, se o número está velho, é porque parou de chegar.
 function emPregao(){
   const p = partesBR(new Date());
   return ehDiaUtil() && p.hora >= 10 && p.hora < 18;
 }
 
-// Quantos minutos tem o dado. Serve de alarme: durante o pregão, cotação
-// parada há mais de alguns minutos quer dizer MetaTrader fechado, EA
-// desanexado ou internet caída — e antes isso passava despercebido,
-// porque a legenda prometia "de hora em hora" e nada parecia errado.
-const ATRASO_ALERTA = 6;      // minutos
+const ATRASO_ALERTA = 6;
 const minutosDe = iso => Math.max(0, Math.round((Date.now() - new Date(iso)) / 60000));
 
-// Decide se o parcial do pregao em curso vale para esta carteira.
-// Exige TRES coisas: ser dia util, existir cotacao viva, e essa cotacao
-// ser de hoje. Sem a terceira, no sabado o site mostrava o parcial de
-// sexta como se o pregao de sabado estivesse em andamento. Converte para
-// o fuso de Sao Paulo antes de comparar: o carimbo vem em UTC, e cortar
-// os 10 primeiros caracteres erra a partir das 21h locais.
 function aplicarParcial(m, parcial, serie){
   if(!parcial || !parcial.atualizado_em) return m;
   const ultimo = serie?.length ? serie[serie.length-1].data : null;
@@ -986,8 +799,6 @@ function aplicarParcial(m, parcial, serie){
     m.hoje = parcial.retorno;
     m.parcial = true;
     m.parcialQuando = parcial.atualizado_em;
-    // com_cotacao < papeis quer dizer que algum papel ainda nao negociou:
-    // o numero existe, mas esta incompleto e nao pode parecer fechado
     if(parcial.papeis != null && parcial.com_cotacao != null
        && parcial.com_cotacao < parcial.papeis){
       m.parcialFalta = parcial.papeis - parcial.com_cotacao;
@@ -998,27 +809,20 @@ function aplicarParcial(m, parcial, serie){
 
 function tags(c){
   const t=[];
-  // Sem classe E sem posicao adotada nao da para deduzir nada: chutar
-  // "so comprada" para uma long & short recem-criada e pior que calar.
   if(c.classe && CLASSE[c.classe]) t.push(CLASSE[c.classe].nome);
   else if(!c.bruta) return "";
   else if(c.liquida>=c.bruta-0.01) t.push("só comprada");
   else if(c.liquida<=-c.bruta+0.01) t.push("só vendida");
   else t.push("long &amp; short");
-  // Alavancagem e caixa so fazem sentido em carteira que compra. Numa
-  // vendida a "liquida" e negativa e a conta 100-liquida passa de 200,
-  // produzindo "209% em caixa" e "alavancada 1,1x" — ambos sem sentido.
   if(!ehVendida(c)){
     if(c.bruta>105) t.push(`alavancada ${n2(c.bruta/100,1)}x`);
     if(c.caixa>1)   t.push(`${n2(c.caixa,0)}% em caixa`);
   } else if(c.bruta>0){
     t.push(`${n2(c.bruta,0)}% vendido`);
   }
-  // Texto miudo, nao pilula: metadado nao pode competir com o numero.
   return t.join(" · ");
 }
 
-// ═══════════════════════════════════════════ grade de posições
 let UNIVERSO=null, UNISET=null;
 async function universo(){
   if(UNIVERSO) return UNIVERSO;
@@ -1041,20 +845,12 @@ function gradeHTML(){
   <button type="button" class="bt" id="btAdd" style="margin-top:9px">Adicionar</button>
   <div id="resumo" style="margin-top:11px;font-size:12px;color:var(--t2)"></div>`;
 }
-// Qual classe a grade esta montando. Define quais lados o select oferece:
-// Comprada e 60/40 so compram; Vendida so vende. Antes a tela aceitava
-// qualquer lado e quem recusava era o banco, depois do clique.
 let CLASSE_ATUAL = "";
-// Na 60/40 a grade vale DENTRO da parte de acoes e soma 100%. Quem
-// converte para % do dinheiro e o site, na hora de salvar. So a tela de
-// criar tem esse campo; na de editar a grade continua em % do dinheiro.
 const modoSleeve = () => CLASSE_ATUAL === "sessenta_quarenta" && !!document.querySelector("#rendaFixa");
 function rendaFixaAtual(){
   const el = document.querySelector("#rendaFixa");
   return el ? Math.min(80, Math.max(50, Math.round(Number(el.value) || 60))) : 60;
 }
-// Converte % da parte de acoes em % do dinheiro, com sobra distribuida
-// para as maiores posicoes — assim a soma bate exata, sem casa decimal.
 function converterSleeve(pesos, rf){
   const parte = 100 - rf;
   const ent = Object.entries(pesos);
@@ -1085,19 +881,9 @@ function aplicarLados(){
   });
   resumoGrade();
 }
-// ⚠️ NA COMPRADA O PESO NAO E ESCOLHA. A regra da classe ja diz "dez
-// papeis somando 100%", e a unica divisao que satisfaz isso sem casa
-// decimal e 10% em cada. Deixar o campo aberto so cria erro: a pessoa
-// digita 12, 8, 15, soma 103 e descobre no clique. Aqui ela escolhe dez
-// codigos e acabou — o peso e o lado ficam fixos e invisiveis.
 const PESO_FIXO = { diversificada: 10 };
 const pesoFixoDaClasse = () => PESO_FIXO[CLASSE_ATUAL] || null;
 
-/* ⚠️ COMPLETAR ENQUANTO DIGITA, sem escolher nada pela pessoa. Escreveu
-   V, aparecem os que comecam com V; escreveu VA, sobra VALE3. O
-   <datalist> nativo fazia isso, mas cada navegador desenha de um jeito e
-   alguns nem mostram sem clique. Lista propria aparece igual em todo
-   lugar e anda pelo teclado. */
 function sugerirCod(inp){
   const t = (inp.value||"").trim().toUpperCase();
   const cx = inp.closest(".campoCod");
@@ -1157,17 +943,11 @@ function linhaHTML(a,p,lado,n){
     <td style="padding:3px 0">${fixo ? "" : `<button type="button" class="px bt" title="remover"
       style="padding:4px 9px;margin:0">\u00d7</button>`}</td></tr>`;
 }
-// Codigo repetido soma num so ativo. Isso e util (da para lancar duas
-// pernas do mesmo papel), mas confunde a contagem: dez linhas com um
-// codigo repetido sao nove papeis. LINHAS_REPETIDAS guarda quais foram,
-// para o conferidor avisar em vez de a pessoa recontar na mao.
 let LINHAS_REPETIDAS = [];
 function lerGrade(){
   const pesos={}, vezes={};
   document.querySelectorAll("#linhas tr").forEach(tr=>{
     const a=(tr.querySelector(".pa").value||"").trim().toUpperCase();
-    // peso e sempre inteiro: 1% de precisao ja e mais fino do que
-    // qualquer carteira de estudo consegue sustentar na pratica
     let w=Math.round(parseFloat(String(tr.querySelector(".pp").value||"").replace(",",".")));
     if(!a||!isFinite(w)||w===0) return;
     w = tr.querySelector(".pl").value==="V" ? -Math.abs(w) : Math.abs(w);
@@ -1177,11 +957,6 @@ function lerGrade(){
   LINHAS_REPETIDAS = Object.keys(vezes).filter(a=>vezes[a]>1);
   return pesos;
 }
-// O que falta para a carteira caber na classe escolhida. Devolve lista
-// de pendencias em portugues — vazia quer dizer que passa.
-// ATENCAO: estas regras sao a leitura do texto de CLASSE. Quem manda de
-// verdade e valida_classe() no banco. Se as duas discordarem, o banco
-// ganha e esta funcao precisa ser corrigida para bater com ele.
 function pendenciasClasse(k, pesos){
   if(!k || !CLASSE[k]) return [];
   const v = Object.values(pesos), n = v.length;
@@ -1194,7 +969,7 @@ function pendenciasClasse(k, pesos){
     f.push(`${LINHAS_REPETIDAS.join(" e ")} ${LINHAS_REPETIDAS.length>1?"aparecem":"aparece"}`
          + ` em mais de uma linha e ${LINHAS_REPETIDAS.length>1?"contam":"conta"} como um papel só`);
 
-  if(k==="diversificada"){                       // Comprada
+  if(k==="diversificada"){
     if(temV)   f.push("Comprada não aceita venda");
     if(n!==10) f.push(`${n} ${n===1?"papel":"papéis"} — Comprada exige exatamente 10`);
     if(Math.round(bruta)!==100)
@@ -1209,7 +984,7 @@ function pendenciasClasse(k, pesos){
       else if(Object.values(converterSleeve(pesos, rf)).some(v => v === 0))
         f.push("algum papel ficou pequeno demais e zerou na conversão — use menos papéis ou pesos maiores");
     } else {
-      const rf = 100 - bruta;                    // tela de editar: % do dinheiro
+      const rf = 100 - bruta;
       if(bruta>100) f.push(`soma ${Math.round(bruta)}% — o limite é 100%`);
       else if(rf<50 || rf>80)
         f.push(`${Math.round(rf)}% em renda fixa — a faixa é de 50% a 80%`);
@@ -1228,8 +1003,6 @@ function pendenciasClasse(k, pesos){
   return f;
 }
 function resumoGrade(){
-  // ⚠️ As abas mostram o resultado do passo fechado; sem este aviso, o
-  // resumo congela no que estava quando a aba fechou.
   if(typeof window.__marcarAbas === "function") window.__marcarAbas();
   const pesos = lerGrade(), v = Object.values(pesos);
   const bruta=v.reduce((a,b)=>a+Math.abs(b),0), liq=v.reduce((a,b)=>a+b,0);
@@ -1241,8 +1014,6 @@ function resumoGrade(){
     linha = `renda fixa <b>${rf}%</b> · ações <b>${100-rf}%</b>`
           + ` · a parte de ações soma <b>${n2(bruta,0)}%</b> de 100%`;
   } else if(CLASSE_ATUAL === "vendida"){
-    // numa vendida "caixa = 100 - liquida" passa de 200 e nao quer dizer
-    // nada: o que importa e quanto foi vendido contra o teto da classe
     linha = `vendido <b>${n2(bruta,0)}%</b> de no máximo 100%`;
   } else {
     linha = `bruta <b>${n2(bruta,0)}%</b> · líquida <b>${n2(liq,0)}%</b> · caixa ${n2(100-liq,0)}%`
@@ -1253,8 +1024,6 @@ function resumoGrade(){
       ? `<div style="color:var(--baixa);margin-top:5px">Falta para ${nome}:
          ${falta.join(" · ")}</div>`
       : `<div style="color:var(--alta);margin-top:5px">Atende a ${nome}.</div>`;
-  // Na Comprada o peso e fixo: o unico erro possivel e faltar codigo ou
-  // repetir. Falar de "soma 100%" ali so confunde quem nao pode errar.
   if(pesoFixoDaClasse()){
     const tot = document.querySelectorAll("#linhas tr").length;
     const ok  = Object.keys(lerGrade()).length;
@@ -1269,8 +1038,6 @@ function resumoGrade(){
 }
 function conferirLinha(inp){
   const v=(inp.value||"").trim().toUpperCase();
-  // ⚠️ Universo vazio nao reprova nada: pintar 246 codigos validos de
-  // vermelho por falha de rede e pior do que nao conferir.
   const temLista = UNISET && UNISET.size > 0;
   inp.style.borderColor = (!v || !temLista || UNISET.has(v)) ? "" : "var(--baixa)";
 }
@@ -1280,9 +1047,6 @@ function ligarGrade(iniciais, classe){
   function religar(){
     tb.querySelectorAll(".px").forEach(b=> b.onclick=()=>{
       if(tb.rows.length>1) b.closest("tr").remove(); resumoGrade(); });
-    // ⚠️ UM oninput SÓ por campo. Antes havia dois: um ligava o completar
-    // e outro, tres linhas abaixo, chamava conferirLinha — e o segundo
-    // apagava o primeiro. A lista de codigos existia e nunca aparecia.
     tb.querySelectorAll(".pa").forEach(el=>{
       el.oninput = () => { sugerirCod(el); conferirLinha(el); resumoGrade(); };
       el.onkeydown = e => tecladoCod(el, e);
@@ -1296,9 +1060,6 @@ function ligarGrade(iniciais, classe){
   }
   tb.innerHTML="";
   const fixo = pesoFixoDaClasse();
-  // ⚠️ A Comprada nasce com as DEZ linhas prontas. Uma linha vazia e um
-  // botao "adicionar" fazem a pessoa descobrir sozinha que precisa de
-  // dez — e so no clique final. Com as dez a vista, a tarefa e obvia.
   let base = (iniciais && iniciais.length) ? iniciais
            : fixo ? Array.from({length:10}, () => ["", fixo, "C"])
                   : [["","","C"]];
@@ -1316,7 +1077,6 @@ function ligarGrade(iniciais, classe){
   }
 }
 
-// ═══════════════════════════════════════════ sessão
 async function carregarEu(){
   const { data:{ session } } = await sb.auth.getSession();
   if(!session){ eu=null; return; }
@@ -1324,12 +1084,7 @@ async function carregarEu(){
   eu = data;
 }
 function pintarNav(){
-  // Publicar pertence ao bloco de investidor; conta, indicacao e admin
-  // sao do usuario, nao do site — ficam agrupados a direita.
   $("#navPub").innerHTML = eu ? `<a href="#/publicar">Criar</a>` : "";
-  // Um item so na barra: o apelido. O resto — indicar, admin, sair —
-  // fica na gaveta. Antes eram quatro links soltos disputando espaco com
-  // a navegacao do site, e quem nao e admin nem via a diferenca.
   $("#navDir").innerHTML = eu
     ? `<details class="eu" id="menuEu">
          <summary><span class="ini">${esc((eu.apelido||"?").trim().slice(0,2).toUpperCase())}</span
@@ -1353,7 +1108,6 @@ function pintarNav(){
        <a href="#/entrar?novo=1" class="bt cheio" style="padding:6px 13px">criar conta</a>`;
   const b=$("#btSair");
   if(b) b.onclick = async()=>{ await sb.auth.signOut(); eu=null; location.hash="#/"; rotear(); };
-  // fecha a gaveta ao clicar fora ou ao navegar
   const men = $("#menuEu");
   if(men){
     document.addEventListener("click", ev => {
@@ -1363,9 +1117,6 @@ function pintarNav(){
   }
 }
 
-// ═══════════════════════════════════════════ métricas
-// Retorno composto dos ultimos k pregoes. Nao usa o indice (que e base
-// 100 desde o inicio): multiplica os retornos diarios do recorte.
 function retornoDe(serie, k){
   if(!serie || !serie.length) return null;
   const jan = serie.slice(-k);
@@ -1377,36 +1128,20 @@ function metricas(serie){
   const r = serie.map(x=>x.retorno), n = r.length;
   const acum = serie[serie.length-1].indice/100 - 1;
   let vol=null, sharpe=null;
-  // Sharpe só com 20 pregões. Com 5 dias, qualquer sequência de sorte
-  // vira número grande e o ranking premia quem acabou de chegar.
   if(n>=20){
     const m = r.reduce((a,b)=>a+b,0)/n;
     vol = Math.sqrt(r.reduce((a,b)=>a+(b-m)**2,0)/(n-1))*Math.sqrt(252);
     if(vol>0){
-      // Média aritmética × 252, não (1+acum)^(252/n). A versão composta
-      // extrapola: +9% em 21 dias virava +183% ao ano e o Sharpe ia a 13.
       const ann = m * 252;
-      // Encolhimento por histórico curto, mesma ideia do termômetro de
-      // palpites: n/(n+40). Com 21 dias vale 34% do valor cheio; com um
-      // ano, 86%. Não é o Sharpe de livro — é Sharpe para ordenar, que
-      // não pode deixar três semanas boas passarem na frente de um ano.
       sharpe = ((ann - CDI_ANO) / vol) * (n / (n + 40));
     }
   }
-  // O pico parte de 100, que e a base do indice. Comecando em zero, o
-  // primeiro pregao virava o proprio pico e a carteira nunca aparecia
-  // abaixo dele: quem caiu no primeiro dia marcava drawdown 0.
   let pico=100, dd=0;
   serie.forEach(x=>{ pico=Math.max(pico,x.indice); dd=Math.min(dd, x.indice/pico-1); });
-  // semana = 5 pregoes, mes = 21. Com serie curta, devolve o que existe.
   return {dias:n, acum, vol, sharpe, dd, hoje:r[n-1],
           sem: retornoDe(serie,5), mes: retornoDe(serie,21)};
 }
 
-// Separa a lista em blocos por classe, na ordem em que CLASSE foi
-// declarada. Cada classe vira um podio proprio: comparar uma 60/40 com
-// uma alavancada pelo mesmo numero e a mesma confusao que a classe
-// imutavel existe para evitar.
 function agrupar(lista){
   const blocos = [];
   Object.entries(CLASSE).forEach(([k,v])=>{
@@ -1418,14 +1153,6 @@ function agrupar(lista){
   return blocos;
 }
 
-// Quatro colunas, uma por classe, dez primeiros de cada. E a visao de
-// capa: com muitas carteiras, uma tabela unica de sete colunas fica
-// ilegivel e — pior — sugere que uma vendida e comparavel com uma
-// alavancada. Aqui a separacao e visual, ninguem precisa ler regra.
-/* Um traco por pregao apurado, os 24 ultimos. E o que faz uma lista de
-   vinte linhas ser VARRIDA em vez de lida: da para achar de longe quem
-   sobe pouco todo dia e quem teve duas semanas boas depois de um tombo
-   — coisa que nenhuma coluna de numero diz. */
 function fitinha(s, larg = 74){
   const u = (s||[]).slice(-24).map(r => r.retorno).filter(v => v != null);
   if(!u.length) return `<span class="fitinha" style="width:${larg}px"></span>`;
@@ -1438,7 +1165,6 @@ function fitinha(s, larg = 74){
   }).join("")}</span>`;
 }
 
-/* A FILA — quem publicou e ainda nao completou o minimo de pregoes. */
 function filaHTML(naFila, MINP){
   if(!MINP || !naFila.length) return "";
   const f = naFila.slice().sort((a,b)=>(b.m.dias||0)-(a.m.dias||0));
@@ -1466,9 +1192,6 @@ function colunasPorClasse(lista, ordem, rotulo){
   const formatar = v => chave==="sharpe" ? n2(v)
                       : chave==="vsIbov" ? pts(v) : pct(v);
   const blocos = Object.entries(CLASSE).map(([k,v])=>{
-    // ⚠️ CINCO, nao dez. Com vinte carteiras por classe, dez linhas dao
-    // 440px de altura por coluna: quatro muros lado a lado e a pagina
-    // perde o folego logo abaixo da abertura. Cinco cabe numa olhada.
     const todas = lista.filter(x => x.c.classe === k);
     return { k, nome:v.nome, regra:v.regra, total: todas.length,
              g: todas.slice(0,5), ultima: todas.length > 6 ? todas[todas.length-1] : null };
@@ -1480,12 +1203,6 @@ function colunasPorClasse(lista, ordem, rotulo){
     <div class="regra">${b.regra}</div>
     <div class="rotc">${rotulo}</div>
     ${b.g.length ? b.g.map((x,i)=>{
-      // Carteira sem nenhum pregao apurado nao vale zero: ela nao comecou.
-      // metricas() devolve acum 0 para serie vazia, e isso saia como
-      // "+0,00%" verde, igual a quem apurou e nao variou. A tabela de
-      // baixo ja dizia "estreia" — as colunas mentiam.
-      // Só a coluna do dia aceita parcial: acumulado, semana, mes,
-      // Sharpe e drawdown so existem com pregao FECHADO.
       const valeParcial = chave === "hoje" && x.m.parcial;
       const semDados = !x.m.dias && !valeParcial;
       const v = semDados ? null : x.m[chave];
@@ -1518,10 +1235,6 @@ function colunasPorClasse(lista, ordem, rotulo){
 `;
 }
 
-// ═══════════════════════════════════════════ faixa de cotação
-// Lê a view faixa_cotacao (índice + maiores altas e baixas do último
-// retrato da cotacao_viva). Não gasta nenhuma chamada de API: o robô já
-// gravou. Se a view ainda não existir no banco, a faixa some sem quebrar.
 async function pintarFaixa(){
   const el = $("#faixa");
   if(!el) return;
@@ -1548,16 +1261,9 @@ async function pintarFaixa(){
   el.style.display = "block";
 }
 
-// Diferenca em PONTOS, para excesso sobre benchmark. Nao usa pct()
-// porque "+0,67%" e "+0,67 pts" sao coisas diferentes: o primeiro
-// sugere retorno, o segundo e distancia entre dois retornos.
 const pts = v => v==null ? "—"
   : (v>=0?"+":"−") + Math.abs(v*100).toFixed(2).replace(".",",") + " pts";
 
-// Quanto a carteira ganhou (ou perdeu) do Ibovespa no periodo DELA.
-// So conta pregao FECHADO: o parcial do dia nao entra, entao este
-// numero anda um dia atras do "No dia" — e tudo bem, porque comparar
-// parcial com indice fechado seria comparar reguas diferentes.
 function contraIbov(serie, oIbov){
   if(!serie || !serie.length) return null;
   let ib = 1, tem = false;
@@ -1565,19 +1271,10 @@ function contraIbov(serie, oIbov){
     if(oIbov[x.data] != null) tem = true;
     ib *= 1 + (oIbov[x.data] ?? 0);
   });
-  if(!tem) return null;                 // sem índice no período: cala
+  if(!tem) return null;
   return (serie[serie.length-1].indice/100 - 1) - (ib - 1);
 }
 
-// ═══════════════════════════════════════════ contra o mercado, em número
-// O grafico so aparece com 2 pregoes ou mais — com um dia apurado nao
-// havia comparacao NENHUMA na tela. Estes numeros valem desde o
-// primeiro pregao e sao a mesma conta que alimenta as curvas.
-//
-// A diferenca e ARITMETICA, em pontos: "ganhou 2,3 pontos do Ibovespa".
-// A versao geometrica ((1+c)/(1+i)-1) e mais correta em periodos longos
-// mas nao e o que a pessoa faz de cabeca, e em janelas curtas as duas
-// dao praticamente o mesmo numero.
 function comparativo(serie, refs){
   if(!serie || !serie.length) return null;
   const oIbov = {};
@@ -1585,7 +1282,7 @@ function comparativo(serie, refs){
   const temIbov = serie.some(x => oIbov[x.data] != null);
   let ib = 1, cd = 1;
   serie.forEach(x => {
-    ib *= 1 + (oIbov[x.data] ?? 0);   // pregão sem cotação não move
+    ib *= 1 + (oIbov[x.data] ?? 0);
     cd *= 1 + CDI_DIA;
   });
   const cart = serie[serie.length-1].indice/100 - 1;
@@ -1625,19 +1322,7 @@ function comparativoHTML(serie, refs){
   </div>`;
 }
 
-// ═══════════════════════════════════════════ grafico
-// Tres curvas em base 100 a partir do primeiro pregao da carteira:
-// a propria carteira, o Ibovespa e a renda fixa.
-// A renda fixa era medida pelo LFTS11, ETF de LFT — so que o papel NAO
-// EXISTE na corretora e nunca entrou na tabela oscilacao, entao a curva
-// caia no estimado todo dia sem ninguem ver. Ficou so o estimado, com a
-// taxa vindo de CDI_ANO, que e a mesma do fallback do fechar_dia.
-// O codigo do site e o simbolo do MT5: um nome so. O ^BVSP era heranca
-// do Yahoo e obrigava traducao no EA e na tela.
 const REFERENCIAS = ["IBOV"];
-// Derivado do CDI_ANO, nao redigitado: duas copias do mesmo numero um dia
-// divergem. Continua havendo uma segunda copia no fechar_dia, no banco —
-// e essa e a que precisa ser unificada pela tabela `parametro`.
 const CDI_DIA = Math.pow(1 + CDI_ANO, 1/252) - 1;
 function grafico(serie, refs){
   if(!serie || serie.length < 2) return "";
@@ -1656,15 +1341,11 @@ function grafico(serie, refs){
   let iv = 100, ic = 100;
   const ibov = [], cdi = [];
   dias.forEach(d => {
-    iv *= 1 + (oIbov[d] ?? 0);   // pregão sem cotação não move a curva
+    iv *= 1 + (oIbov[d] ?? 0);
     ic *= 1 + CDI_DIA;
     ibov.push(iv); cdi.push(ic);
   });
 
-  // ── a maior queda, para MARCAR no desenho ──
-  // Mesma conta de metricas(): pico corrente partindo de 100 e a maior
-  // distancia abaixo dele. Aqui guardamos ONDE aconteceu, para o
-  // drawdown deixar de ser so um numero na tabela.
   let pico = 100, iPico = 0, dd = 0, iTopo = 0, iFundo = 0;
   cart.forEach((v,i) => {
     if(v > pico){ pico = v; iPico = i; }
@@ -1673,9 +1354,6 @@ function grafico(serie, refs){
   });
   const temQueda = dd < -0.0001 && iFundo > iTopo;
 
-  // A carteira ganha COR: verde acima da base, vermelho abaixo. Antes
-  // era branca em qualquer caso e a pessoa tinha de ler o eixo para
-  // saber se estava ganhando ou perdendo.
   const cCart = cart[cart.length-1] >= 100 ? "var(--alta)" : "var(--baixa)";
 
   const L=44, R=10, T=10, B=22, W=560, H=190;
@@ -1687,7 +1365,6 @@ function grafico(serie, refs){
   const linha = arr => arr.map((v,i)=>`${i?"L":"M"}${px(i).toFixed(1)},${py(v).toFixed(1)}`).join("");
   const fim = arr => arr[arr.length-1]/100 - 1;
 
-  // quatro linhas de grade, com o 100 sempre marcado
   const marcas = [lo, (lo+hi)/2, hi, 100].filter(v => v>=lo && v<=hi);
 
   return `<div class="card" style="margin-top:16px">
@@ -1737,14 +1414,6 @@ function grafico(serie, refs){
   </div>`;
 }
 
-// ═══════════════════════════════════════════ extrato
-// Compara cada declaracao com a anterior e descreve em portugues o que
-// mudou. Nao precisa de tabela nova: a posicao ja guarda toda declaracao
-// separada por valida_de — o historico sempre esteve la, so nao aparecia.
-// ⚠️ REBALANCEAMENTO NAO CRIA POSICAO. Ele volta ao marco ja declarado,
-// entao montar o extrato so pela `posicao` fazia 17 disparos de banda
-// sumirem da carteira 42 — e a regua na tela promete registrar quando a
-// banda estourar. Prometia e nao entregava. Agora as duas fontes entram.
 function montarExtrato(todas, rebal){
   const porData = {};
   (todas||[]).forEach(x => { (porData[x.valida_de] ||= {})[x.ativo] = x.peso; });
@@ -1778,9 +1447,6 @@ function montarExtrato(todas, rebal){
     return { data:d, abertura:false, acoes };
   });
 
-  // As linhas da regra entram como eventos proprios, com o motivo que o
-  // fechar_dia gravou. Se cairem no mesmo dia de uma declaracao, viram
-  // uma linha so: foi o mesmo pregao.
   (rebal||[]).forEach(r => {
     const d = String(r.data).slice(0,10);
     const mesmo = eventos.find(e => String(e.data).slice(0,10) === d);
@@ -1790,38 +1456,19 @@ function montarExtrato(todas, rebal){
   });
 
   eventos.sort((a,b) => String(a.data).localeCompare(String(b.data)));
-  return eventos.reverse();          // mais recente em cima
+  return eventos.reverse();
 }
 
-// ═══════════════════════════════════════════ ranking
 async function telaRanking(){
   const q = new URLSearchParams(location.hash.split("?")[1]||"");
   const ordem = q.get("ordem") || "acum";
   const filtro = q.get("classe") || "";
-  // ⚠️ Nasce em ZERO de proposito. Carteira de tres dias no meio do
-  // podio nao mede nada — um pregao bom poe qualquer uma em primeiro —
-  // mas com o site novo, cortar em 30 esvazia o ranking no dia da
-  // estreia. Suba o padrao quando houver historico.
   const MINP = Math.max(0, +(q.get("min") || 0) || 0);
   app().innerHTML = `<div class="carreg">carregando ranking…</div>`;
 
-  /* ⚠️ UMA CONSULTA, NAO QUATRO. Antes o ranking buscava a view, a SERIE
-     INTEIRA de retorno_dia de todas as carteiras, o parcial e a
-     oscilacao do Ibovespa — e repetia a cada minuto. Com 80 carteiras de
-     um ano sao ~20 mil linhas por visitante por minuto; com mil pessoas,
-     20 milhoes. Nao e lentidao: e o projeto suspenso.
-
-     Agora vem tudo pronto do `painel()`: uma linha por carteira, com as
-     metricas ja calculadas no fechamento. O parcial do pregao continua
-     ao vivo, somado no navegador com os pesos — assim o podio REORDENA
-     durante o pregao sem o banco fazer conta nenhuma.
-
-     E o resultado e IDENTICO para todo mundo: ninguem precisa de dado
-     proprio, entao o cache de 60s serve a todos os visitantes. */
   const pn = await painelCache();
   if(pn.erro) return app().innerHTML = aviso("Erro ao ler o banco: "+pn.erro, true);
 
-  // pesos por carteira, para somar o parcial do dia
   const pesosDe = {};
   (pn.pesos||[]).forEach(([cid, ativo, peso]) => {
     (pesosDe[cid] ||= []).push([ativo, peso]);
@@ -1830,16 +1477,12 @@ async function telaRanking(){
   const quando = pn.quando || null;
 
   const cs = (pn.carteiras||[]).map(c => ({ ...c }));
-  const series = {};      // so a tela expandida busca a fita, sob demanda
+  const series = {};
 
   const conta = {};
   (cs||[]).forEach(c=> conta[c.classe||"sem"] = (conta[c.classe||"sem"]||0) + 1);
 
   let lista = (cs||[]).map(c=>{
-    // ⚠️ O PARCIAL SOMA AQUI, no navegador. E a unica conta que muda
-    // durante o pregao, e ela custa nada: peso vezes variacao, dez
-    // multiplicacoes por carteira. Fazer isso no banco significaria
-    // recalcular tudo a cada visitante, a cada minuto.
     let hoje = c.hoje, parcial = false;
     const pp = pesosDe[c.id];
     if(pp && pp.length){
@@ -1855,9 +1498,6 @@ async function telaRanking(){
   });
   if(filtro) lista = lista.filter(x=> (x.c.classe||"sem") === filtro);
 
-  // A fila nao e descarte: e sala de espera com a conta regressiva a
-  // vista. Sumir com quem publicou ontem, sem dizer nada, e o pior jeito
-  // de receber quem acabou de chegar.
   const naFila = MINP ? lista.filter(x => (x.m.dias||0) <  MINP) : [];
   if(MINP)     lista = lista.filter(x => (x.m.dias||0) >= MINP);
 
@@ -1865,23 +1505,11 @@ async function telaRanking(){
                    sem:x=>-(x.m.sem ?? -9), mes:x=>-(x.m.mes ?? -9),
                    sharpe:x=>-(x.m.sharpe ?? -9),
                    vsibov:x=>-(x.m.vsIbov ?? -9) };
-  // Quem nunca apurou vai para o FIM, em qualquer criterio. metricas()
-  // devolve hoje 0 e acum 0 para serie vazia, e zero ganha de qualquer
-  // negativo: uma carteira que nao comecou aparecia em primeiro lugar
-  // com a celula escrita "estreia". Em Semana e Mes isso nao acontecia
-  // porque la o valor e null e cai no fallback -9 — dois dos seis
-  // criterios estavam certos por acidente.
-  // Desempate: a carteira mais antiga ganha. Importa no começo, quando
-  // todas estão em 0,00% e a ordem seria arbitrária.
   const naoApurou = x => (x.m.dias || x.m.parcial) ? 0 : 1;
   lista.sort((a,b)=> naoApurou(a)-naoApurou(b)
     || chaves[ordem](a)-chaves[ordem](b)
     || Date.parse(a.c.criada_em||"2100-01-01") - Date.parse(b.c.criada_em||"2100-01-01"));
 
-  // ⚠️ A abertura vende a DISPUTA, nao o regulamento. O que traz alguem
-  // para publicar e o podio; "ninguem reescreve" e regra, e regra fica
-  // no rodape. Os tres numeros embaixo sao PROVA: existem porque o robo
-  // fechou o pregao de verdade, coisa que promessa nenhuma consegue.
   const maxPregoes = Math.max(0, ...(cs||[]).map(c => c.dias||0));
   const ultimoFech = (cs||[]).map(c => c.ultimo_dia).filter(Boolean).sort().pop();
 
@@ -1992,8 +1620,6 @@ async function telaRanking(){
       <td>${fitinha(x.s, 82)}</td></tr>`).join("")).join("")}
     </tbody></table>`)}`;
 
-  // Os dois seletores navegam pela hash, para o link continuar
-  // compartilhavel — quem manda o endereco manda a MESMA tela.
   const cauda = (o, mi) => `#/?ordem=${o}${mi ? "&min="+mi : ""}${
     filtro ? "&classe="+filtro : ""}`;
   const so = $("#selOrdem");
@@ -2001,47 +1627,29 @@ async function telaRanking(){
   const sm = $("#selMin");
   if(sm) sm.onchange = e => location.hash = cauda(ordem, +e.target.value);
 
-  // ── repinta sozinho enquanto o pregão corre ──
-  // Sem isso a pessoa precisa recarregar para ver o número mexer. Só
-  // roda em dia útil e só enquanto a tela do ranking estiver aberta —
-  // ficar buscando de madrugada não muda nada e gasta o banco à toa.
   clearInterval(window.__timerRank);
   if(emPregao()){
     window.__timerRank = setInterval(() => {
-      // saiu do ranking ou a aba está escondida: não faz nada
       if((location.hash||"#/").split("?")[0] !== "#/" ) { clearInterval(window.__timerRank); return; }
       if(document.hidden) return;
-      // ⚠️ Forca a releitura: senao o cache de 60s devolve o painel
-      // guardado e o parcial congela na tela.
       PAINEL_EM = 0;
       const y = window.scrollY;
       telaRanking().then(() => window.scrollTo(0, y));
     }, 60000);
   }
 
-  // ── legenda da cotação ──
-  // Diz a HORA DO DADO que está na tela. A previsão da próxima é sempre
-  // "por volta de": o cron do GitHub atrasa, e legenda que crava horário
-  // mente para o visitante durante o atraso.
   if(quando){
     const pintarLinha = () => {
       const el = $("#linhaViva");
-      if(!el) return;                       // saiu do ranking: para de mexer
+      if(!el) return;
       const min = minutosDe(quando);
       const hora = new Date(quando).toLocaleTimeString("pt-BR",
         {hour:"2-digit",minute:"2-digit",timeZone:"America/Sao_Paulo"});
       const parado = emPregao() && min >= ATRASO_ALERTA;
       el.style.color = parado ? "var(--baixa)" : "var(--graf)";
-      // O visitante ve o FATO. De onde vem a cotacao e detalhe de
-      // infraestrutura e nao interessa a quem le — e o que fazer a
-      // respeito so o admin pode fazer.
       el.innerHTML = parado
         ? `<b>A cotação está parada há ${min} minutos.</b> O último dado é de ${hora}.`
           + (eu?.admin ? " Confira se o robô de cotação está no ar." : "")
-        // ⚠️ Fora do pregao a linha nao acrescenta nada: dizer "o proximo
-        // movimento e na abertura" e ocupar espaco no alto do ranking com
-        // o obvio. Durante o pregao ela importa, porque explica o ponto
-        // do parcial — entao so aparece nessa hora.
         : emPregao()
           ? `Cotação de <b>${hora}</b> (${haQuantoTempo(quando)}). Atualiza sozinha a cada
              minuto enquanto o pregão corre. A coluna <b>No dia</b> marcada com • é parcial
@@ -2054,7 +1662,6 @@ async function telaRanking(){
   }
 }
 
-// ═══════════════════════════════════════════ entrar / criar conta
 function telaEntrar(){
   const q = new URLSearchParams(location.hash.split("?")[1]||"");
   const novo = q.get("novo"), ref = q.get("ref")||"";
@@ -2094,9 +1701,6 @@ function telaEntrar(){
         bt.disabled=false; bt.textContent="Criar conta"; return;
       }
       r = await sb.auth.signUp({ email, password:senha, options:{ data:{
-        // identidade/credencial/anos saíram da tela em 29/07/2026: eram
-        // autodeclarados e o site não tem como atestar. As colunas continuam
-        // no banco; novo_usuario() põe 'estudante' por padrão.
         apelido: ap, ref,
         nome: f.get("nome").trim(), telefone: f.get("telefone") } } });
     } else {
@@ -2120,7 +1724,6 @@ function telaEntrar(){
   };
 }
 
-// ═══════════════════════════════════════════ publicar
 async function telaPublicar(){
   if(!eu){ location.hash="#/entrar"; return rotear(); }
   const { data:minhas } = await sb.from("carteira").select("*")
@@ -2134,11 +1737,6 @@ async function telaPublicar(){
   <div id="erro"></div>
 
   <form id="f">
-    <!-- ⚠️ TRES PASSOS, UM DE CADA VEZ. Era um formulario unico com nome,
-         descricao, classe, renda fixa, rebalanceamento, banda e a grade
-         todos a vista — ficha cadastral para uma decisao que deveria ser
-         simples. Aqui cada passo fecha virando uma linha com o resultado.
-         As abas trocam por CSS, sem redesenhar: nada digitado se perde. -->
     <div class="ab aberta" id="ab1">
       <div class="cabAb"><i class="n">1</i><span class="tt">Classe</span>
         <span class="rs" id="rs1"></span><span class="ed">alterar</span></div>
@@ -2210,16 +1808,12 @@ async function telaPublicar(){
 
   ligarGrade([["","","C"]], "");
 
-  // Mensagem de erro rola ate a vista. O #erro fica no topo de um
-  // formulario longo: sem isto, o aviso aparece fora da tela e o clique
-  // parece nao ter feito nada.
   const erroPub = t => {
     const el = $("#erro");
     el.innerHTML = aviso(t, true);
     el.scrollIntoView({ behavior:"smooth", block:"center" });
   };
 
-  // ── abas ──────────────────────────────────────────────────────
   const abrir = n => {
     [1,2,3].forEach(k=>{
       const el = $("#ab"+k);
@@ -2256,7 +1850,6 @@ async function telaPublicar(){
   $("#btSegue").onclick = () => abrir(3);
   $("[name=nome]").oninput = marcarFeitas;
 
-  // ── régua ─────────────────────────────────────────────────────
   $$("[data-reb]").forEach(el=>{
     el.onclick = () => {
       $$("[data-reb]").forEach(x=>x.classList.remove("on"));
@@ -2273,7 +1866,6 @@ async function telaPublicar(){
       el.classList.add("on"); $("#bandaVal").value = el.dataset.bd; };
   });
 
-  // ── classe: cartões no lugar do <select> ───────────────────────
   $$("[data-cls]").forEach(el=>{
     el.onclick = () => {
       $$("[data-cls]").forEach(x=>x.classList.remove("on"));
@@ -2289,10 +1881,6 @@ async function telaPublicar(){
     $("#ajudaClasse").innerHTML = v
       ? `<p style="font-size:12.5px;color:var(--t2);margin:0 0 9px">${v.regra}</p>`
       : "";
-    // A grade passa a oferecer só os lados que a classe aceita. Se ainda
-    // não há nenhum código digitado, ela também já vem montada no formato
-    // da classe — 10 linhas de 10% na Comprada, por exemplo. Se a pessoa
-    // já digitou algo, não mexemos: apagar o trabalho dela seria pior.
     CLASSE_ATUAL = valor || "";
     const vazia = ![...document.querySelectorAll("#linhas .pa")]
       .some(i => (i.value||"").trim());
@@ -2303,7 +1891,6 @@ async function telaPublicar(){
       vendida:           [["",50,"V"],["",50,"V"]],
     }[CLASSE_ATUAL];
     $("#campoRF").style.display = CLASSE_ATUAL === "sessenta_quarenta" ? "block" : "none";
-    // detalhe de caixa so faz sentido conforme a classe compre ou venda
     const P = t => `<p style="font-size:12.5px;color:var(--t2);margin:9px 0 0">${t}</p>`;
     const detalhe = {
       diversificada: P("Não há caixa: os dez papéis somam 100% do dinheiro.")
@@ -2339,14 +1926,10 @@ async function telaPublicar(){
     if(!f.get("classe")) return erroPub(
       "Escolha a classe da carteira. Ela define contra quem você é comparado e não muda depois.");
 
-    // As regras da classe conferidas AQUI, antes de ir ao banco, para o
-    // motivo chegar em portugues e nao como excecao do Postgres.
     const falta = pendenciasClasse(f.get("classe"), pesos);
     if(falta.length) return erroPub(
       `Esta carteira ainda não cabe na classe ${CLASSE[f.get("classe")].nome}: ` + falta.join("; ") + ".");
 
-    // na 60/40 o que foi digitado e % da parte de acoes: converte para
-    // % do dinheiro antes de qualquer coisa que va ao banco
     const rfEscolhida = rendaFixaAtual();
     if(f.get("classe") === "sessenta_quarenta" && modoSleeve())
       pesos = converterSleeve(pesos, rfEscolhida);
@@ -2359,11 +1942,6 @@ async function telaPublicar(){
     if(fora.length) return erroPub(
       "Não achei no universo: "+fora.join(", ")+". Ou o código está errado, ou o papel não tem liquidez mínima, ou o universo ainda não foi atualizado.");
 
-    // ── confirmação antes de publicar ──
-    // A classe não muda depois de criada e o histórico começa aqui, então
-    // vale um segundo olhar. Em janela, e não no topo do formulário: ali
-    // o resumo nascia fora da tela e o botão que confirma ficava a uma
-    // rolagem de distância do que ele confirma.
     const cl = CLASSE[f.get("classe")];
     const lista = Object.entries(pesos).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]));
     const liq = Object.values(pesos).reduce((a,b)=>a+b,0);
@@ -2419,8 +1997,6 @@ async function telaPublicar(){
       ok.disabled = true; ok.textContent = "salvando…";
       cx.querySelector("#mVoltar").disabled = true;
 
-      // rebalancear e banda_pct sao imutaveis (trigger trava_classe), entao
-      // este insert e a unica chance de defini-los
       const { data:c, error } = await sb.from("carteira").insert({
         usuario_id: eu.id, nome: f.get("nome").trim(),
         descricao: f.get("descricao")||"", classe: f.get("classe"),
@@ -2434,40 +2010,23 @@ async function telaPublicar(){
           : error.message);
       }
 
-      // Este insert é o que passa pelo porteiro da classe (valida_classe).
-      // Antes o erro era engolido e a carteira ficava criada e VAZIA — foi
-      // assim que nasceu uma "vendida" com quatro papéis comprados.
       const { error: errPos } = await sb.from("posicao").insert(
         Object.entries(pesos).map(([ativo,peso])=>({ carteira_id:c.id, ativo, peso })));
 
       if(errPos){
-        // desfaz a carteira órfã, senão fica lixo na lista da pessoa
         await sb.from("carteira").delete().eq("id", c.id);
         fechar();
-        // se chegou aqui, valida_classe() do banco recusou algo que a tela
-        // deixou passar — as duas listas de regra estao fora de sincronia
         return erroPub("O banco recusou as posições: " + errPos.message);
       }
 
       if(f.get("nota")) await sb.from("nota").insert({ carteira_id:c.id, texto:f.get("nota") });
-      CACHE_CLASSE = null;      // carteira nova: o cache de classes envelheceu
+      CACHE_CLASSE = null;
       fechar();
       location.hash = "#/carteira/"+c.id; rotear();
     };
   };
 }
 
-// ═══════════════════════════════════════════ carteira
-/* ══ A FITA ═════════════════════════════════════════════════════════
-   Um traco por pregao apurado, da linha de base para cima ou para
-   baixo. Da para CONTAR as marcas — e a imutabilidade virando desenho
-   em vez de frase no rodape, e cresce sozinha a cada fechamento. */
-/* ══ A RÉGUA ════════════════════════════════════════════════════════
-   A carteira declarou uma disciplina no nascimento e ela e imutavel.
-   Mostrar a regra e metade; a outra metade e mostrar QUANTO FALTA para
-   ela disparar — a unica coisa da pagina que ainda NAO aconteceu, e a
-   unica que muda enquanto o pregao corre. Sem isso a tela e so um
-   relatorio do que ja foi. */
 function reguaHTML(regra, pesos, decl){
   if(!regra || !regra.rebalancear) return "";
   const dec = {}; (decl||[]).forEach(p => dec[p.ativo] = Math.abs(p.peso));
@@ -2534,11 +2093,6 @@ function fitaGrande(serie){
   const mx = Math.max(...s.map(r => Math.abs(r.retorno)), .004);
   const H = 74, MEIO = H/2;
 
-  // ⚠️ As barras mostram o RITMO — quantos dias para cima, quantos para
-  // baixo, com que força. Não dizem ONDE a carteira chegou: vinte verdes
-  // e treze vermelhas continuam sem responder se ela está ganhando.
-  // A curva do acumulado responde, e as duas juntas contam a história
-  // inteira: o caminho e o destino.
   let acum = 1;
   const cam = s.map(r => { acum *= 1 + r.retorno; return acum - 1; });
   const topo = Math.max(...cam.map(Math.abs), .004);
@@ -2579,24 +2133,14 @@ async function telaCarteira(id){
 
   const { data:serie } = await sb.from("retorno_dia").select("data,retorno,indice")
                                  .eq("carteira_id", id).order("data");
-  // Parcial do pregao em curso, igual ao ranking. Sem isto a caixa "HOJE"
-  // mostrava o ultimo pregao APURADO com rotulo de hoje: numa segunda ao
-  // meio-dia, a pagina dizia o resultado de sexta enquanto o ranking, na
-  // mesma sessao, ja mostrava o parcial. Dois numeros, mesmo rotulo.
   const { data:parcial } = await sb.from("retorno_parcial")
     .select("retorno,atualizado_em,com_cotacao,papeis")
     .eq("carteira_id", id).maybeSingle();
   const m = aplicarParcial(metricas(serie), parcial, serie);
-  // Ibovespa do mesmo periodo, do IBOV que o robo ja grava. Nao custa
-  // chamada de API: e a mesma tabela que alimenta o fechamento.
   const { data:refs } = serie?.length
     ? await sb.from("oscilacao").select("ativo,data,valor").in("ativo", REFERENCIAS)
               .gte("data", serie[0].data).order("data")
     : { data: [] };
-  // se as regras do banco liberarem, vem; senão volta vazio — é o lacre funcionando
-  // A regra de rebalanceamento nao esta na view `ranking`. Vem direto de
-  // `carteira`, e com maybeSingle para a tela nao quebrar se as colunas
-  // ainda nao existirem nesse projeto.
   let regra = null;
   try {
     const { data:rg } = await sb.from("carteira")
@@ -2605,8 +2149,6 @@ async function telaCarteira(id){
   } catch(_) { regra = null; }
 
   const { data:pesos } = await sb.from("peso_atual").select("ativo,peso,marco").eq("carteira_id", id);
-  // o declarado da mesma data que está carregada: é a referência de
-  // como a carteira começou, antes de o peso andar com o mercado
   const marcoAtual = pesos?.[0]?.marco;
   let declarado = {};
   if(marcoAtual){
@@ -2616,18 +2158,9 @@ async function telaCarteira(id){
   }
   const { data:notas } = await sb.from("nota").select("data,texto")
                                  .eq("carteira_id", id).order("data",{ascending:false}).limit(8);
-  // todas as declaracoes, para o extrato. Vem vazio para quem nao tem
-  // acesso: a RLS que protege o peso protege isto tambem.
   const { data:todasPos } = await sb.from("posicao").select("ativo,peso,valida_de")
                                     .eq("carteira_id", id).order("valida_de");
 
-  // ⚠️ BUSCAR ANTES DE USAR. Este bloco estava DEPOIS do montarExtrato:
-  // `let rebalLista` na zona morta temporal derrubava telaCarteira com
-  // ReferenceError e a tela ficava em "carregando..." para sempre.
-  //
-  // Julgar quem publica e julgar as ESCOLHAS dele: acertar porque a
-  // banda disparou nao e o mesmo que acertar porque a pessoa trocou um
-  // papel. A data casa a declaracao com a linha de `rebalanceamento`.
   const rebal = {}; let rebalLista = [];
   { const { data:rb } = await sb.from("rebalanceamento")
       .select("data,motivo").eq("carteira_id", id).order("data");
@@ -2635,10 +2168,6 @@ async function telaCarteira(id){
     rebalLista.forEach(r => rebal[String(r.data).slice(0,10)] = r.motivo || ""); }
 
   const extrato = montarExtrato(todasPos, rebalLista);
-  // ⚠️ Julgar quem publica e julgar as ESCOLHAS dele. Acertar porque a
-  // banda disparou nao e o mesmo que acertar porque a pessoa decidiu
-  // trocar um papel. A data casa a declaracao com a linha de
-  // `rebalanceamento`; o que nao casa foi decisao do autor.
   let sigo=false, nSeg=0;
   if(eu){
     const { data:sg } = await sb.from("seguidor").select("carteira_id")
@@ -2650,12 +2179,6 @@ async function telaCarteira(id){
     nSeg = (cont||[]).find(x=>String(x.carteira_id)===String(id))?.n || 0;
   }catch(e){ nSeg = 0; }
   const podeSeguir = !!eu?.assinante;
-  // Quem pode ver: dono, assinante ou admin. A consulta só devolve
-  // linha se for o dono, então ela não revela autor de carteira
-  // anônima para mais ninguém.
-  // souDono substituiu a comparacao por apelido, que quebrava para quem
-  // escolheu nome publico ou anonimo: o dono via o botao de seguir a
-  // propria carteira porque c.apelido ja nao batia com eu.apelido.
   let souDono = false;
   if(eu){
     const { data:d } = await sb.from("carteira").select("id")
@@ -2664,9 +2187,6 @@ async function telaCarteira(id){
   }
   const podeVer = !!(eu && (souDono || eu.assinante || eu.admin));
 
-  // "Sem posição" e "sem permissão" são coisas diferentes. Antes as
-  // duas caíam no cadeado, e o dono era convidado a assinar a própria
-  // carteira.
   const abre = pesos && pesos.length;
   const maxp = abre ? Math.max(...pesos.map(p=>Math.abs(p.peso))) : 1;
   const esc100 = Math.max(c.bruta,100)*1.06;
@@ -2674,10 +2194,6 @@ async function telaCarteira(id){
 
   app().innerHTML = `
   <div style="margin:28px 0 4px">
-    <!-- ⚠️ O botao de editar so aparecia quando a carteira ainda nao
-         tinha posicao em vigor — depois de estrear, sumia, e o dono nao
-         tinha por onde mexer na propria carteira. Agora fica no topo,
-         ao lado do titulo, sempre que for dele. -->
     <div class="tituloCart">
       <h1 style="font-size:29px;margin:0">${esc(c.nome)}</h1>
       ${souDono?`<a href="#/editar/${id}" class="bt lacre" style="flex:none">Editar carteira</a>`:""}
@@ -2692,12 +2208,6 @@ async function telaCarteira(id){
     <p style="font-size:12px;color:var(--graf)">${esc(c.apelido)}
       · publicada em ${c.criada_em}</p>
   </div>
-  <!-- ══ O HERÓI ═══════════════════════════════════════════════════
-       Seis células de 20px, todas iguais, e o olho nao tem onde pousar:
-       o ACUMULADO — que e a razao de o site existir — tinha o mesmo
-       peso de "dias". Aqui ele vai a 56px, com a fita ao lado, e os
-       indices no MESMO campo de visao: a comparacao e a leitura, nao um
-       cartao 200px abaixo. O resto vira faixa fina. -->
   <div class="heroi">
     <div>
       <div class="numerao ${m.dias?cor(m.acum):"nulo"}">${m.dias?pct(m.acum):"estreia"}</div>
@@ -2759,9 +2269,6 @@ async function telaCarteira(id){
       comprado ${n2((c.bruta+c.liquida)/2,0)}% ·
       vendido ${n2((c.bruta-c.liquida)/2,0)}% ·
       <b>bruta ${n2(c.bruta,0)}%</b> · <b>líquida ${n2(c.liquida,0)}%</b>${
-      // Numa vendida "caixa" seria 100 - liquida, que com liquida -104 da
-      // 204% e nao quer dizer nada: o dinheiro da venda a descoberto fica
-      // como garantia, nao como caixa disponivel. Melhor calar.
       vendida ? "" : ` · caixa ${n2(c.caixa,0)}%`}</div>
     ${vendida && c.bruta > 100.5 ? `<p style="font-size:11.5px;color:var(--graf);margin:7px 0 0">
       A carteira nasceu dentro do limite de 100%. A soma vendida passou disso porque
@@ -2785,9 +2292,6 @@ async function telaCarteira(id){
       <th class="d" style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--graf)">diferença</th></tr></thead>
     <tbody>${pesos.sort((a,b)=>Math.abs(b.peso)-Math.abs(a.peso)).map(p=>{
       const d = declarado[p.ativo];
-      // Tamanho da posição, não diferença com sinal: para uma posição
-      // vendida, ir de -40 para -48 é a posição CRESCER. Comparar
-      // módulos funciona igual nos dois lados.
       const dif = d==null ? null : Math.abs(p.peso) - Math.abs(d);
       return `<tr><td class="mono" style="font-weight:500">${esc(p.ativo)}</td>
       <td><span style="display:block;height:5px;width:${(Math.abs(p.peso)/maxp*100).toFixed(0)}%;
@@ -2862,7 +2366,6 @@ async function telaCarteira(id){
     telaCarteira(id);
   };
 
-  // repinta enquanto o pregao corre, so nesta carteira e so com a aba visivel
   clearInterval(window.__timerCart);
   if(m.parcial && emPregao()){
     window.__timerCart = setInterval(() => {
@@ -2875,7 +2378,6 @@ async function telaCarteira(id){
   }
 }
 
-// ═══════════════════════════════════════════ duelo
 async function telaDuelo(){
   app().innerHTML = `<div class="carreg">carregando…</div>`;
   const { data:cs } = await sb.from("ranking").select("*");
@@ -2886,10 +2388,6 @@ async function telaDuelo(){
                                 .in("carteira_id", ids).order("data");
     (rs||[]).forEach(r=>{ (series[r.carteira_id] ||= []).push(r); });
   }
-  // O parcial de hoje. Sem ele o duelo ficava empatado em 0,00% o dia
-  // inteiro e so ganhava conteudo depois das 19h — justamente quando
-  // ninguem abre. E metricas().hoje sozinho mostra o ULTIMO pregao
-  // apurado: numa segunda de manha, o "Duelo do dia" era o de sexta.
   const { data:parc } = await sb.from("retorno_parcial")
     .select("carteira_id,retorno,atualizado_em,com_cotacao,papeis");
   const vivo = {}; let quando = null;
@@ -2898,9 +2396,6 @@ async function telaDuelo(){
     if(p.atualizado_em && (!quando || p.atualizado_em > quando)) quando = p.atualizado_em;
   });
 
-  // telaDuelo nao colava a classe, entao TODA carteira chegava aqui sem
-  // ela e caia no ramo de inferencia do tags() — que numa vendida
-  // imprimia "205% em caixa · alavancada 1,1x".
   await colarClasse(cs);
 
   const todas = (cs||[]).map(c=>{
@@ -2908,9 +2403,6 @@ async function telaDuelo(){
     return { c, m: aplicarParcial(metricas(s), vivo[c.id], s) };
   });
 
-  // Parear DENTRO da classe: num dia de alta as Compradas ganham das
-  // Vendidas por definicao, nao por merito. Cruzar classes fazia o duelo
-  // medir o mercado, nao quem escolheu melhor.
   const blocos = Object.entries(CLASSE).map(([k,v])=>{
     const l = todas.filter(x => x.c.classe === k).sort((a,b)=> b.m.hoje - a.m.hoje);
     const pares = [];
@@ -2971,7 +2463,6 @@ async function telaDuelo(){
         Falta outra carteira nesta classe para haver duelo.</p>`:""}
     </div>`).join("")}`;
 
-  // repinta enquanto o pregao corre
   clearInterval(window.__timerDuelo);
   if(emPregao()){
     window.__timerDuelo = setInterval(() => {
@@ -2984,7 +2475,6 @@ async function telaDuelo(){
   }
 }
 
-// ═══════════════════════════════════════════ indicar
 async function telaIndicar(){
   if(!eu){ location.hash="#/entrar"; return rotear(); }
   const { data:filhos } = await sb.from("perfil").select("apelido,criado_em,assinante")
@@ -3009,9 +2499,6 @@ async function telaIndicar(){
   </div>`;
 }
 
-// A rota continua existindo porque links antigos apontam para ela, mas
-// nao ha mais cobranca: o site esta aberto. Cobrar antes de haver
-// carteira com track record e vender o que ainda nao existe.
 function telaAssinar(){
   app().innerHTML = `
   <div style="max-width:460px;margin:46px auto;text-align:center">
@@ -3024,7 +2511,6 @@ function telaAssinar(){
   </div>`;
 }
 
-// ═══════════════════════════════════════════ admin
 async function telaAdmin(){
   if(!eu?.admin) return app().innerHTML = aviso("Só para administradores.", true);
   app().innerHTML = `<div class="carreg">carregando…</div>`;
@@ -3033,17 +2519,12 @@ async function telaAdmin(){
   const { data:cts }  = await sb.from("carteira").select("*").order("criada_em",{ascending:false});
   const { count:nu }  = await sb.from("universo").select("*",{count:"exact",head:true});
   const { data:dias } = await sb.from("oscilacao").select("data").order("data",{ascending:false}).limit(1);
-  // ultimo pregao APURADO, que e o que importa saber: a oscilacao pode
-  // ter dado de hoje ainda em formacao sem que nada tenha sido fechado
   const { data:ultFech } = await sb.from("retorno_dia").select("data")
     .order("data",{ascending:false}).limit(1);
-  // índice acumulado de cada carteira: vem em ordem de data, a última grava por cima
   const { data:rets } = await sb.from("retorno_dia").select("carteira_id,indice,data").order("data");
   const acum = {}; (rets||[]).forEach(r=> acum[r.carteira_id] = r.indice/100 - 1);
   let fila = [];
   try{ const { data:fq } = await sb.rpc("admin_fila", { so_pendente:true }); fila = fq||[]; }catch(e){}
-  // vencimento e total pago de cada conta. Se a tabela assinatura ainda
-  // nao existir, a tela continua funcionando sem esta parte.
   let assin = {};
   try{
     const { data:pa } = await sb.from("painel_assinatura").select("*");
@@ -3149,8 +2630,6 @@ async function telaAdmin(){
     };
   });
 
-  // Lanca 30 dias pela funcao do banco, que estende a partir do
-  // vencimento em vez de comecar hoje — renovar nao faz perder dias.
   document.querySelectorAll(".ac-mes").forEach(b=> b.onclick = async()=>{
     const v = prompt(`Quanto ${b.dataset.ape} pagou? (em reais, 0 para cortesia)`, "19");
     if(v === null) return;
@@ -3176,7 +2655,6 @@ async function telaAdmin(){
       bloquear?"Conta bloqueada.":"Conta liberada.");
   });
 
-  // ── carteiras: desenha, ordena, e religa os botões a cada desenho ──
   const linhaCart = c => `<tr style="${c.ativa?"":"opacity:.45"}">
     <td><a href="#/carteira/${c.id}">${esc(c.nome)}</a>
       ${c.ativa?"":' <span class="tag">apagada</span>'}</td>
@@ -3204,7 +2682,7 @@ async function telaAdmin(){
   };
 
   const pintarCart = (o="recente") => {
-    const l = [...(cts||[])];   // "recente" já vem ordenado da consulta
+    const l = [...(cts||[])];
     if(o==="nome")  l.sort((a,b)=> a.nome.localeCompare(b.nome,"pt-BR"));
     if(o==="dono")  l.sort((a,b)=>
       (apelidoDe[a.usuario_id]||"").localeCompare(apelidoDe[b.usuario_id]||"","pt-BR")
@@ -3223,15 +2701,6 @@ async function telaAdmin(){
 
 const log = t => { const l=$("#log"); if(l) l.innerHTML = aviso(t); };
 
-// O raspador do Fundamentus foi removido em 29/07/2026: ele recusa conexão
-// de IP de datacenter e parou de funcionar também pelo navegador. Yahoo,
-// brapi e bolsai sairam em 02/08/2026 — o previousClose vinha undefined e
-// TODAS as oscilacoes gravadas ate ali estavam erradas. Quem manda cotacao
-// agora e o EA SaldoPositivo_MT5 no MetaTrader 5, via mt5_gravar; o banco
-// deriva a oscilacao comparando um pregao com o anterior. O robo so apura.
-
-
-// ═══════════════════════════════════════════ minha conta
 async function telaConta(soCarteiras){
   if(!eu){ location.hash="#/entrar"; return rotear(); }
   const { data:cs } = await sb.from("carteira").select("*")
@@ -3262,9 +2731,6 @@ async function telaConta(soCarteiras){
       </tr>`}).join("")}
     </tbody></table>`}`;
 
-  // ⚠️ Duas telas, um codigo so. Podar o DOM depois de montado nao
-  // funcionava — a regra de "o que guardar" ficava complicada e sobrava
-  // tudo. Aqui cada rota monta o que precisa.
   if(soCarteiras){
     app().innerHTML = `
       <h1 style="font-size:29px;margin:30px 0 6px">Minhas carteiras</h1>
@@ -3311,8 +2777,6 @@ async function telaConta(soCarteiras){
     <button class="bt cheio" id="btExibir">Salvar</button>
   </div>
 
-  <!-- ⚠️ A lista de carteiras mora so em #/minhas. Repetida aqui, as
-       duas telas ficavam iguais e ninguem sabia para que servia cada uma. -->
   <h2 style="font-size:19px;margin:26px 0 12px">Suas carteiras</h2>
   <div class="card"><p style="margin:0;color:var(--t2);font-size:13px">
     ${cs?.length ? `Você tem ${cs.length} ${cs.length===1?"carteira":"carteiras"}.`
@@ -3342,7 +2806,6 @@ async function telaConta(soCarteiras){
     <button class="bt cheio" id="btSenha">Trocar senha</button>
   </div>`;
 
-  // ── como você aparece ──
   $("#selExibir").value = eu.exibir || "apelido";
   $("#nomePublico").value = eu.nome_publico || "";
   const mostraCampo = () => {
@@ -3362,10 +2825,9 @@ async function telaConta(soCarteiras){
     if(error) return $("#erro").innerHTML = aviso(error.message, true);
 
     eu.exibir = modo; eu.nome_publico = nome || null;
-    CACHE_CLASSE = null;              // o autor mudou: refaz o cache
+    CACHE_CLASSE = null;
     $("#erro").innerHTML = aviso("Pronto. É assim que você aparece agora.");
   };
-
 
   $("#btSenha").onclick = async()=>{
     const a=$("#s1").value, b=$("#s2").value;
@@ -3396,9 +2858,6 @@ async function telaConta(soCarteiras){
 function ligarApagarMinhas(){
   document.querySelectorAll(".del-minha").forEach(b=> b.onclick = ()=> apagarMinha(b));
   async function apagarMinha(b){
-    // O front já sabe se a carteira tem dias apurados, então dá para
-    // dizer a verdade ANTES de a pessoa confirmar — apagar de vez e
-    // encerrar são coisas diferentes.
     const temDias = Number(b.dataset.dias||0) > 0;
     const texto = temDias
       ? `Encerrar "${b.dataset.nome}"?\n\nEla já tem ${b.dataset.dias} pregão(ões) apurado(s), `
@@ -3415,7 +2874,6 @@ function ligarApagarMinhas(){
   }
 }
 
-// ═══════════════════════════════════════════ editar carteira
 async function telaEditar(id){
   if(!eu){ location.hash="#/entrar"; return rotear(); }
   const { data:c } = await sb.from("carteira").select("*").eq("id",id).single();
@@ -3425,23 +2883,14 @@ async function telaEditar(id){
       .eq("carteira_id",id).order("valida_de",{ascending:false});
   const { data:serie } = await sb.from("retorno_dia").select("data,retorno,indice")
       .eq("carteira_id",id).order("data",{ascending:false});
-  // Onde o mercado colocou a posicao. Sem isto a grade so sabia mostrar o
-  // DECLARADO — e declarar de novo devolvia todos os pesos ao declarado,
-  // rebalanceando a carteira inteira mesmo com rebalanceamento "nunca".
-  // Trocar dois papeis reequilibrava os outros oito, calado, e o extrato
-  // nao mostrava porque compara declaracao com declaracao.
   const { data:pAtual } = await sb.from("peso_atual").select("ativo,peso")
       .eq("carteira_id",id);
   await universo();
 
-  // declarações agrupadas por data
   const decl={}; (pos||[]).forEach(p=>{ (decl[p.valida_de] ||= []).push(p); });
   const datas=Object.keys(decl).sort().reverse();
   const atual=datas.length?decl[datas[0]]:[];
 
-  // Arredonda para inteiro preservando a soma. O peso atual vem com
-  // casas decimais e arredondar linha a linha faz a soma cair em 99 ou
-  // 101 — o que reprova na Comprada, que exige exatamente 100.
   function inteirosSomando(lista){
     const alvo = Math.round(lista.reduce((a,p)=>a+Math.abs(p.peso),0));
     const base = lista.map(p=>({ ativo:p.ativo, sinal:p.peso<0?-1:1,
@@ -3452,26 +2901,10 @@ async function telaEditar(id){
     return base.filter(b=>b.n>0);
   }
 
-  // A grade parte SEMPRE de onde o mercado deixou os pesos. Antes ela
-  // carregava o declarado, e declarar de novo devolvia todos os papeis
-  // ao peso original — um rebalanceamento completo, calado, mesmo em
-  // carteira com rebalanceamento "nunca". Trocar dois papeis reequilibrava
-  // os outros oito, e o extrato nao mostrava porque compara declaracao
-  // com declaracao.
-  //
-  // Nao ha escolha na tela de proposito: quem quer reequilibrar ja tem o
-  // campo Rebalanceamento acima, que e explicito, fica registrado em nota
-  // e vale para sempre. Um seletor aqui seria uma segunda maneira de
-  // fazer a mesma coisa, com o agravante de que, com pesos inteiros, as
-  // duas opcoes dao a mesma grade enquanto o drift for menor que 1 ponto.
   const baseDeclarada = (atual||[]).map(p=>({ ativo:p.ativo, peso:p.peso }));
   const basePesoAtual = (pAtual||[]).map(p=>({ ativo:p.ativo, peso:p.peso }));
-  // carteira que ainda nao estreou nao tem peso_atual: cai no declarado
   const baseGrade = basePesoAtual.length ? basePesoAtual : baseDeclarada;
 
-  // Na 60/40 a grade da tela de editar tambem passa a valer DENTRO da parte
-  // de acoes. A renda fixa vigente e o que sobra da soma — da MESMA base
-  // que a grade usa, senao o campo abre com um numero e a grade com outro.
   const brutaAtual = baseGrade.reduce((a,p)=>a+Math.abs(p.peso), 0);
   const rfAtual = Math.min(80, Math.max(50, Math.round(100 - brutaAtual)));
 
@@ -3480,9 +2913,6 @@ async function telaEditar(id){
   <p style="color:var(--t2);margin-bottom:18px">${esc(c.nome)}</p>
   <div id="erro"></div>
 
-  <!-- ⚠️ MESMO DESENHO DO CRIAR. Duas telas com formatos diferentes para
-       a mesma tarefa fazem ninguem saber onde as coisas ficam — foi o que
-       aconteceu com o botao de editar, que existia e ninguem achava. -->
   <div class="ab" id="abE1">
     <div class="cabAb"><i class="n">1</i><span class="tt">Classe</span>
       <span class="rs">${((CLASSE[c.classe]||{}).nome||"sem classe").toUpperCase()}</span>
@@ -3588,8 +3018,6 @@ async function telaEditar(id){
     </div>
   </div>`;
 
-  // Monta a grade a partir da base escolhida. Na 60/40 os pesos viram
-  // fatia da parte de acoes (somando 100); nas demais, % do dinheiro.
   function montarGrade(){
     const inteiros = inteirosSomando(baseGrade);
     const bruta = inteiros.reduce((a,b)=>a+b.n, 0);
@@ -3608,10 +3036,6 @@ async function telaEditar(id){
   const elRF = $("#rendaFixa");
   if(elRF) elRF.oninput = resumoGrade;
 
-  // ── abas do editar ────────────────────────────────────────────
-  // ⚠️ O cabecalho recolhido precisa dizer o que tem dentro. Sem isto o
-  // passo 2 fechava mostrando uma faixa vazia: a pessoa nao sabia se
-  // havia carteira ali ou se a tela tinha carregado errado.
   function marcarE2(){
     const p = lerGrade(), n = Object.keys(p).length;
     const txt = c.classe === "sessenta_quarenta"
@@ -3623,7 +3047,6 @@ async function telaEditar(id){
     const el = $("#rsE2"); if(el) el.textContent = n ? txt : "";
     $("#abE2").classList.toggle("feita", n>0 && !pendenciasClasse(c.classe, p).length);
   }
-  // resumoGrade avisa as abas a cada tecla — aqui quem atende e o editar
   window.__marcarAbas = marcarE2;
   marcarE2();
 
@@ -3633,7 +3056,6 @@ async function telaEditar(id){
   $("#abE1").classList.add("feita");
   $("#abE3").classList.add("feita");
 
-  // ── régua em opções, como no criar ────────────────────────────
   document.querySelectorAll("[data-rebe]").forEach(el=>{
     el.onclick = () => {
       document.querySelectorAll("[data-rebe]").forEach(x=>x.classList.remove("on"));
@@ -3655,14 +3077,6 @@ async function telaEditar(id){
       { cid:id, novo_nome:$("#nome").value, nova_desc:$("#desc").value });
     if(error) return $("#erro").innerHTML=aviso(error.message,true);
 
-    // ⚠️ A troca de regra vale do PROXIMO pregao. Ela entra na tabela
-    // `regra`, que guarda o historico com validade — e o fechar_dia le a
-    // que valia em cada dia. O que ja foi apurado continua apurado pela
-    // regra antiga, sem ninguem precisar avisar nada.
-    //
-    // A coluna carteira.rebalancear e o ESPELHO da regra vigente: o
-    // ranking e a regua da tela leem dela sem join. Gravar so nela, como
-    // era antes, deixaria o fechar_dia usando a regra velha.
     const novoReb = $("#selRebEd").value;
     const novaBanda = Math.min(100, Math.max(1, Math.round(Number($("#bandaEd")?.value) || 5)));
     if(novoReb !== c.rebalancear || (novoReb === "banda" && novaBanda !== Math.round(c.banda_pct||5))){
@@ -3681,15 +3095,12 @@ async function telaEditar(id){
     }
     $("#erro").innerHTML=aviso("Salvo."); telaEditar(id);
   };
-  // o cartao da regua tem botao proprio: salvar nome nao deve mexer na
-  // disciplina da carteira, e vice-versa
   const btr = $("#btRegra");
   if(btr) btr.onclick = $("#btNome").onclick;
 
   $("#btPos").onclick = async()=>{
     let brutos = lerGrade();
     if(!Object.keys(brutos).length) return $("#erro").innerHTML=aviso("Nenhuma posição válida.",true);
-    // mesma checagem da tela de criar, antes de ir ao banco
     const falta = pendenciasClasse(c.classe, brutos);
     if(falta.length) return $("#erro").innerHTML=aviso(
       `Ainda não cabe na classe ${CLASSE[c.classe]?.nome||c.classe}: `+falta.join("; ")+".", true);
@@ -3707,8 +3118,6 @@ async function telaEditar(id){
     $("#erro").innerHTML=aviso("Declarado. Passa a valer no próximo pregão."); telaEditar(id);
   };
   $("#btDel").onclick = async()=>{
-    // Era `(dias||[]).length`, e `dias` so existe em telaConta: dava
-    // ReferenceError e o botao morria calado, sem apagar e sem avisar.
     const temDias = (serie||[]).length > 0;
     if(!confirm(temDias
       ? `Encerrar "${c.nome}"?\n\nO histórico fica: ela sai do ranking e a curva congela. Sem reabrir.`
@@ -3719,7 +3128,6 @@ async function telaEditar(id){
   };
 }
 
-// ═══════════════════════════════════════════ esqueci a senha
 function telaSenha(){
   app().innerHTML = `
   <div style="max-width:420px;margin:44px auto">
@@ -3745,7 +3153,6 @@ function telaSenha(){
   };
 }
 
-// ═══════════════════════════════════════════ escolher senha nova
 function telaNovaSenha(){
   app().innerHTML = `
   <div style="max-width:420px;margin:44px auto">
@@ -3769,13 +3176,6 @@ function telaNovaSenha(){
   };
 }
 
-// ═══════════════════════════════════════════ especuladores
-// A outra metade do site. Aqui a pessoa escolhe papel e direção para o
-// PRÓXIMO pregão; stop e alvo o sistema propõe pela volatilidade do
-// próprio papel. Entrada na abertura, saída por stop, alvo ou
-// fechamento. O placar é por DIA, não por operação — quem entra com 10
-// papéis não leva vantagem sobre quem entra com 1.
-
 async function telaTiroCurto(){
   if(!eu){ location.hash="#/entrar"; return rotear(); }
   app().innerHTML = `<div class="carreg">carregando…</div>`;
@@ -3784,15 +3184,11 @@ async function telaTiroCurto(){
   const [uni, mins, hj] = await Promise.all([
     universo(),
     sb.from("aposta").select("id,ativo,direcao").eq("data", prox).order("id"),
-    // os tiros de HOJE, que ja estao valendo — o pregao esta correndo.
-    // A RLS e que filtra por dono: estas consultas nao levam usuario_id
-    // porque o banco ja recusa o que nao e seu.
     sb.from("aposta").select("id,ativo,direcao").eq("data", HOJE_BR()).order("id"),
   ]);
   const pend = mins.data || [];
   const emJogo = hj.data || [];
 
-  // cotacao ao vivo dos papeis em jogo, para acompanhar durante o dia
   let viva = {};
   if(emJogo.length){
     const { data:cv } = await sb.from("cotacao_viva")
@@ -3800,11 +3196,6 @@ async function telaTiroCurto(){
       .in("ativo", [...new Set(emJogo.map(x=>x.ativo))]);
     (cv||[]).forEach(x => { viva[x.ativo] = x; });
   }
-  // A VARIACAO DO DIA, direto do terminal. Era preco/abertura - 1, que
-  // tinha dois problemas: a abertura gravada vinha do leilao em alguns
-  // papeis (ANIM3 marcava -2,25% num dia que o terminal dava +0,92%), e
-  // dia ex-dividendo virava queda falsa. A variacao do MT5 ja vem sobre
-  // a referencia ajustada, entao provento nao conta como perda.
   const aoVivo = emJogo.map(t => {
     const c = viva[t.ativo];
     const deHoje = c?.atualizado_em && new Date(c.atualizado_em)
@@ -3813,8 +3204,6 @@ async function telaTiroCurto(){
       ? c.valor * (t.direcao==="V" ? -1 : 1) : null;
     return { ...t, r, quando: deHoje ? c.atualizado_em : null };
   }).sort((a,b) => (b.r ?? -9) - (a.r ?? -9));
-  // Os limites de cada tiro ja registrado. Sem isto a pessoa registra e
-  // nunca mais ve qual e o seu stop — que e a informacao que mais importa.
   const lim = {};
   await Promise.all(pend.map(async p => {
     const { data } = await sb.rpc("limites_sugeridos", { p_ativo: p.ativo });
@@ -3928,7 +3317,6 @@ async function telaTiroCurto(){
     </div>
   </div>`;
 
-  // enquanto o pregao corre, repinta sozinho: a graca e acompanhar
   if(aoVivo.length){
     const carimbo = () => {
       const el = $("#tcHora");
@@ -3968,18 +3356,12 @@ async function telaTiroCurto(){
     if(!a) return $("#erro").innerHTML = aviso("Escolha um papel.", true);
     if(!UNISET.has(a)) return $("#erro").innerHTML = aviso(`${a} não está no universo.`, true);
 
-    // "Estar no universo" nao e "o robo consegue cotar". ALUP11 estava
-    // no universo, foi aceito, e nunca teve cotacao: o tiro ficou
-    // inapuravel e so apareceu como traco horas depois. O insert poe o
-    // papel na fila (trigger); aqui esperamos o EA responder.
     bt.disabled = true; bt.textContent = "registrando…";
     const { error } = await sb.from("aposta")
       .insert({ data: prox, ativo: a, direcao: $("#apDir").value });
     if(error){ bt.disabled=false; bt.textContent="Registrar tiro";
       return $("#erro").innerHTML = aviso(error.message, true); }
 
-    // ate 8 segundos esperando o EA. Ele olha a fila a cada 3s, entao
-    // na pratica responde na primeira ou segunda tentativa.
     bt.textContent = "conferindo no robô…";
     let estado = "pendente";
     for(let i = 0; i < 8 && estado === "pendente"; i++){
@@ -3989,8 +3371,6 @@ async function telaTiroCurto(){
     }
 
     if(estado === "nao_existe"){
-      // desfaz: melhor recusar agora do que deixar um tiro que nunca
-      // vai pontuar ocupando uma das 10 vagas do pregao
       await sb.from("aposta").delete()
         .eq("data", prox).eq("ativo", a).eq("direcao", $("#apDir").value);
       bt.disabled=false; bt.textContent="Registrar tiro";
@@ -4025,9 +3405,6 @@ async function telaPlacar(){
                    ambiguo:"tocou os dois", gap_favor:"abriu no alvo",
                    gap_contra:"abriu no stop" };
 
-  // Agrupa por pregão. A pontuação conta o DIA, não o tiro — e uma lista
-  // corrida de tiros dizia o contrário do que a regra faz: quem entrou
-  // com dez papéis ocupava dez linhas e parecia ter jogado mais.
   const porDia = {};
   minhas.forEach(t => { (porDia[t.data] ||= []).push(t); });
   const dias = Object.keys(porDia).sort().reverse();
@@ -4117,25 +3494,8 @@ async function telaPlacar(){
       <a href="#/entrar?novo=1" class="bt cheio">Criar conta grátis</a></div>`}`;
 }
 
-// ═══════════════════════════════════════════ screening
-// Os tres pontos vem calculados DO BANCO — sao 236
-// papeis por 40 pregoes e o PostgREST corta em 1000 linhas por consulta.
-//
-// A tela diz "tendencia de alta" e "tendencia de baixa", nunca "comprado"
-// ou "vendido": o primeiro descreve onde o preco esta, o segundo e sinal
-// de operacao. Num site assinado por analista credenciado a diferenca
-// nao e estetica.
-//
-// So a janela DIARIA existe. Para 15 minutos e 1 hora o EA precisaria
-// mandar candles intradiarios — tabela nova e outro volume de dado.
 async function telaScreening(){
   app().innerHTML = `<div class="carreg">calculando as médias…</div>`;
-  // ⚠️ A janela esteve em 58 enquanto a media longa era CALCULADA no
-  // banco: ela so passava a existir depois de acumular o periodo, e com
-  // 92 pregoes carregados a curva nascia no meio do desenho. Agora as
-  // medias vem prontas do MT5, calculadas sobre anos de historico, e
-  // existem desde o primeiro pregao gravado — a janela pode ser a que
-  // o desenho pede, nao a que o calculo aguenta.
   const JANELA_GRAFICO = 90;
   const { data, error } = await sb.rpc("quant_medias", { p_janela: JANELA_GRAFICO });
   if(error) return app().innerHTML = aviso("Erro ao calcular: "+error.message, true);
@@ -4145,19 +3505,7 @@ async function telaScreening(){
   const busca  = (q.get("q") || "").toUpperCase();
   const verSet = q.get("set") === "1";
 
-  // ── ÍNDICES ─────────────────────────────────────────────────────
-  // O Ibovespa nao e mais um papel da lista: e a REGUA. Papel em alta
-  // com o indice em baixa e uma informacao, com o indice em alta e
-  // outra. Por isso ele fica fixo no alto da tabela, fora de qualquer
-  // aba, de qualquer busca e do corte de liquidez — indice nao e papel,
-  // e se um dia entrar no corte a regua some da tela quando alguem
-  // marcar a caixinha.
-  // ⚠️ ^BVSP continua reconhecido de proposito: se sobrar linha antiga em
-  // alguma tabela, o indice ainda e tratado como regua em vez de cair no
-  // meio dos papeis, no fim da lista, ordenado por liquidez nula.
   const IND_AMPLO = ["IBOV","^BVSP","IBOVESPA","IBXX","IBRX","IBRA"];
-  // Aceita as duas grafias: o codigo puro da B3 e a versao com ^ que
-  // alguns provedores usam. Basta um deles existir na `barra`.
   const IND_SET = { IFNC:"Financeiro", ICON:"Consumo", IMAT:"Materiais básicos",
     IEEX:"Energia elétrica", INDX:"Industrial", IMOB:"Imobiliário",
     UTIL:"Utilidade pública", SMLL:"Small caps", IDIV:"Dividendos",
@@ -4167,59 +3515,27 @@ async function telaScreening(){
     "^UTIL":"Utilidade pública", "^SMLL":"Small caps", "^IDIV":"Dividendos" };
   const ehIndice = a => IND_AMPLO.includes(a) || IND_SET[a] != null;
 
-  // ── OITO ESTADOS ────────────────────────────────────────────────
-  // A ordem das tres medias diz em que FASE o papel esta; a posicao do
-  // PRECO diz se ele empurra o movimento ou descansa dentro dele.
-  // Da alta mais forte para a baixa mais forte:
-  //
-  //   17>34>72  preco>17   fortissima alta
-  //   17>34>72  preco<17   realizando na alta
-  //   curto>longo>medio     sem tendência (só o curto cruzou o longo)
-  //   17<34, ambas>72, preco>72   possivel saida da alta
-  //   17<34, ambas>72, preco<72   saindo da alta, indefinido
-  //   17>34, ambas<72, preco<72   possivel saida da baixa
-  //   17>34, ambas<72, preco>72   saindo da baixa, indefinido
-  //   34>72>17             sem tendência (espelho do de cima)
-  //   17<34<72  preco>17   realizando na baixa
-  //   17<34<72  preco<17   fortissima baixa
-  //
-  // Os dois estados do meio nao estavam na lista original mas EXISTEM:
-  // so o ponto curto atravessou o longo e o medio nao acompanhou. Nao da
-  // para dizer direcao — sao SEM TENDENCIA, nao uma virada confirmada.
-  // Sem eles o papel cairia num balde errado, calado.
   const estadoDe = x => {
     const a = x.ema17, b = x.ema34, c = x.ema72, p = x.fech;
     if(c == null) return a >= b ? "alta_sem" : "baixa_sem";
-    // ⚠️ Faltava um degrau. A regra so olhava se o preco estava acima ou
-    // abaixo da CURTA: o BBDC4 apareceu como "realizando na alta" com o
-    // preco abaixo das TRES e 2,39% abaixo do institucional. Realizacao
-    // e recuo DENTRO da tendencia; quem perdeu a referencia mais firme
-    // esta saindo dela, nao realizando.
     if(a >= b && b >= c){
       if(p >= a) return "alta_max";
-      if(p >= c) return "alta_realiza";   // recuou, mas segura a longa
-      return "saida_alta";                // perdeu as tres
+      if(p >= c) return "alta_realiza";
+      return "saida_alta";
     }
     if(a <  b && b <  c){
       if(p <= a) return "baixa_max";
-      if(p <= c) return "baixa_realiza";  // repicou, mas nao passou a longa
-      return "saida_baixa";               // passou as tres
+      if(p <= c) return "baixa_realiza";
+      return "saida_baixa";
     }
     if(a <  b && a >= c && b >= c) return p >= c ? "saida_alta"  : "saida_alta_ind";
     if(a >= b && a <  c && b <  c) return p <= c ? "saida_baixa" : "saida_baixa_ind";
-    // Médias desalinhadas, mas o PREÇO já passou de todas as três: isso é
-    // virada, não indefinição. Quem manda é o preço — as médias são o
-    // rastro dele, e chegam depois.
     const teto = Math.max(a,b,c), piso = Math.min(a,b,c);
     if(p >= teto) return "virando_alta";
     if(p <= piso) return "virando_baixa";
     return a >= c ? "indef_alta" : "indef_baixa";
   };
 
-  // Escala continua: 0 e a alta mais forte, 9 a baixa mais forte. Assim
-  // "por estado" ordena de verdade, em vez de agrupar por nome.
-  // Os indefinidos ficam no MEIO da escala, entre a alta e a baixa: eles
-  // nao sao um degrau da tendencia, sao a ausencia dela.
   const GRAU = { alta_max:0, alta_realiza:1, virando_alta:2, saida_alta:3,
                  saida_alta_ind:4, alta_sem:4.4,
                  indef_alta:5, indef_baixa:5.1,
@@ -4237,14 +3553,11 @@ async function telaScreening(){
     baixa_realiza:"realizando na baixa", baixa_max:"fortíssima baixa",
     alta_sem:"alta · sem o institucional", baixa_sem:"baixa · sem o institucional" };
 
-  // Verde nos estados de alta, vermelho nos de baixa, neutro nas
-  // transicoes — que e justamente onde nao da para afirmar nada.
   const TOM = { alta_max:"alta", alta_realiza:"alta", alta_sem:"alta",
                 virando_alta:"alta", virando_baixa:"baixa",
                 baixa_max:"baixa", baixa_realiza:"baixa", baixa_sem:"baixa" };
   const tomDe = e => TOM[e] || "nulo";
 
-  // Quatro abas, nao dez botoes.
   const GRUPO = { alta_max:"alta", alta_realiza:"alta", alta_sem:"alta",
                   saida_alta:"saindo_alta", saida_alta_ind:"saindo_alta",
                   baixa_max:"baixa", baixa_realiza:"baixa", baixa_sem:"baixa",
@@ -4253,31 +3566,18 @@ async function telaScreening(){
                   virando_alta:"virando", virando_baixa:"virando" };
 
   const ordem = q.get("o") || "liq";
-  // Desligado por padrão: esconder papel sem avisar é decidir pela
-  // pessoa. Quem não quer ver os de pouco negócio marca a caixa.
   const soLiq = q.get("liq") === "1";
 
   const todosCalc = (data||[]).map(x => ({ ...x, e: estadoDe(x) }));
 
-  // Os indices saem da lista de papeis e viram REGUA: fora das abas, da
-  // busca, da ordenacao e do corte de liquidez.
   const amplo = todosCalc.find(x => IND_AMPLO.includes(x.ativo)) || null;
   const setoriais = todosCalc.filter(x => IND_SET[x.ativo] != null)
     .sort((a,b) => Object.keys(IND_SET).indexOf(a.ativo) - Object.keys(IND_SET).indexOf(b.ativo));
 
   let l = todosCalc.filter(x => !ehIndice(x.ativo));
-  // Onde o preco esta em relacao ao ponto mais firme: e a forca do
-  // movimento. ⚠️ Calculado em TODOS, nao so em `l` — os indices saem
-  // da lista de papeis antes daqui e ficavam com a coluna vazia.
   todosCalc.forEach(x => { x.forca = (x.ema72 && x.ema72 > 0) ? x.fech/x.ema72 - 1 : null; });
 
-  // ⚠️ Papel de pouco negocio distorce tudo: a media curta descola por um
-  // pulo isolado e ele aparece em primeiro sem significar nada. Foi o que
-  // pos AZEV3 no topo. Corte de R$ 5 milhoes de volume por dia.
   const LIQ_MIN = 5000000;
-  // ⚠️ O texto do corte sai do PROPRIO numero. Escrito a mao em tres
-  // lugares, um dia o corte muda e a tela promete o valor antigo — foi
-  // exatamente o que aconteceu com o CDI_ANO.
   const LIQ_ROT = n2(LIQ_MIN/1e6, LIQ_MIN%1e6?1:0) + " MM/dia";
   const foraDoCorte = todosCalc.filter(x => !ehIndice(x.ativo)
     && x.liquidez != null && x.liquidez < LIQ_MIN).length;
@@ -4290,8 +3590,6 @@ async function telaScreening(){
   if(filtro !== "todos") l = l.filter(x => GRUPO[x.e] === filtro);
   if(busca) l = l.filter(x => x.ativo.includes(busca));
 
-  // O padrao e LIQUIDEZ. Ordenar por distancia entre as medias punha na
-  // frente o papel mais esticado, que costuma ser o de menos negocio.
   const ordenar = {
     liq:    (a,b) => (b.liquidez ?? 0) - (a.liquidez ?? 0),
     estado: (a,b) => GRAU[a.e] - GRAU[b.e] || (b.liquidez ?? 0) - (a.liquidez ?? 0),
@@ -4313,18 +3611,6 @@ async function telaScreening(){
     : v >= 1e6 ? n2(v/1e6,0) + " mi"
     : n2(v/1e3,0) + " mil";
 
-  // Mini grafico: o PRECO dos ultimos 60 pregoes e o ponto FORTE como
-  // curva — e ele que define a fase. Os outros dois entram como tracos
-  // depois do fio, escalonados do mais firme para o mais recente: no
-  // mesmo x eles se cobrem justamente quando estao proximos, que e o
-  // caso em que a leitura importa. Escalonados, a ordem vira INCLINACAO
-  // — escada subindo e alta, descendo e baixa.
-  //
-  // ⚠️ Nao desenhar tracinho para o ponto forte: a curva dele ja esta
-  // ali, e onde ela encosta no fio e a posicao de hoje. Marcar duas
-  // vezes so rouba espaco dos outros dois.
-  // Desenho de exemplo do "Como ler": mesma funcao, dados combinados —
-  // mostrar o grafico vale mais que descrever as cores em palavras.
   const exemploRisco = () => {
     const v = []; let p = 100;
     for(let i=0;i<60;i++){ p *= 1 + (i<26?-.004:.007) + Math.sin(i*.9)*.004; v.push(p); }
@@ -4337,13 +3623,8 @@ async function telaScreening(){
   const risco = x => {
     const v = x.serie || [], mF = x.serie72 || [];
     if(v.length < 5) return "";
-    // ⚠️ A janela veio de 60 para 90 pregoes (a media longa e de 72: com
-    // 60 o desenho mostrava um trecho em que a curva ainda nem existia).
-    // Noventa tracos em 150px viram borrao — a largura acompanha.
     const W = 180, H = 36, P = 2, FAIXA = 26;
-    const fim = W - P - FAIXA;                 // o fio: aqui acaba o passado
-    // A curva longa vem NULA nos pregoes em que ainda nao existia. So
-    // desenhamos o trecho definido — e so ele entra na escala.
+    const fim = W - P - FAIXA;
     const iF = mF.findIndex(n => n != null);
     const temF = iF >= 0 && mF.length === v.length;
     const valF = temF ? mF.slice(iF).filter(n => n != null) : [];
@@ -4445,12 +3726,6 @@ async function telaScreening(){
       <td class="d mono nulo" style="font-size:12px">${grana(x.liquidez)}</td></tr>`).join("")}
     </tbody></table>`}
 
-  <!-- ══ COMO LER ══════════════════════════════════════════════════
-       Era um paragrafo de sete linhas encostado a esquerda, descrevendo
-       cores com palavras enquanto o desenho estava logo acima — e, pior,
-       escrevendo os periodos das medias que o resto da tela esconde.
-       Agora ocupa a largura toda, em tres colunas, e a primeira MOSTRA
-       o grafico em vez de explica-lo. -->
   <div class="comoler">
     <div class="cel">
       <h4>O desenho</h4>
@@ -4518,9 +3793,6 @@ async function telaScreening(){
   }
 }
 
-// ═══════════════════════════════════════════ como funciona
-// O site nao explicava a si mesmo em lugar nenhum: quem chegava via
-// link caia num ranking de nomes sem saber o que estava vendo.
 function telaComo(){
   const P = (q,r) => `<details class="qa"><summary>${q}</summary><p>${r}</p></details>`;
   app().innerHTML = `
@@ -4613,10 +3885,6 @@ function telaComo(){
   </div>`;
 }
 
-// ═══════════════════════════════════════════ termos e privacidade
-// Site brasileiro que guarda nome, telefone e e-mail precisa dizer o que
-// faz com isso. Nao e formalidade: e a LGPD, e vira problema depois que
-// ja tem gente dentro.
 function telaTermos(){
   app().innerHTML = `
   <div style="max-width:70ch;margin:34px 0">
@@ -4680,7 +3948,6 @@ function telaTermos(){
   </div>`;
 }
 
-// ═══════════════════════════════════════════ rotas
 const GRUPOS_S=[
  ["organizar","Organizar","Para quem está montando a base: saber para onde vai o dinheiro antes de decidir onde investir."],
  ["proteger","Proteger e transmitir","Para quem já tem o que perder — e quer que o patrimônio atravesse separação, sociedade e sucessão inteiro."],
@@ -4812,16 +4079,8 @@ const SERVICOS=[
         responde por qual parte.`},
 ];
 
-
 const escolhidosS = new Set();
 
-/* ══ SERVIÇOS ═══════════════════════════════════════════════════════
-   A pagina nao vende: ela EXPLICA. Cada cartao diz o que e, para quem
-   serve e — o que falta em todo site do ramo — QUAL REGISTRO o
-   profissional precisa ter. Essa ultima linha e o que separa a pagina
-   de um classificado: ela ensina a pessoa a cobrar credencial de quem
-   for atende-la.
-   ⚠️ O site NAO presta nenhum destes servicos e nao recebe por eles. */
 async function telaServicos(){
   const pintar = (recado="", ruim=false) => {
     app().innerHTML = `
@@ -4868,8 +4127,6 @@ async function telaServicos(){
           <option>Fim do dia</option><option>Qualquer horário</option></select>
         <label>Recado</label>
         <textarea id="sRec" rows="3" placeholder="opcional — em uma linha, o que você quer resolver"></textarea>
-        <!-- isca: robo preenche, gente nao ve. Sem isso o insert aberto
-             enche a tabela de lixo em minutos. -->
         <input id="sIsca" tabindex="-1" autocomplete="off"
           style="position:absolute;left:-9999px;width:1px;height:1px">
         <label class="lgpd"><input type="checkbox" id="sOk">
@@ -4894,16 +4151,12 @@ async function telaServicos(){
     document.getElementById("sEnv").onclick = async () => {
       const nome = document.getElementById("sNome").value.trim();
       const tel  = document.getElementById("sTel").value.trim();
-      if(document.getElementById("sIsca").value) return;            // robô
+      if(document.getElementById("sIsca").value) return;
       if(!nome || !tel) return pintar("Falta o nome ou o WhatsApp.", true);
       if(!document.getElementById("sOk").checked)
         return pintar("Marque a autorização de contato.", true);
       const bt = document.getElementById("sEnv");
       bt.disabled = true; bt.textContent = "enviando…";
-      // ⚠️ A tabela `lead` ja era usada para cadastro de cliente (CPF,
-      // endereco). O campo `origem` separa as duas coisas: sem ele, os
-      // pedidos de servico se misturam com a base cadastral e a tela de
-      // atendimento passa a mostrar gente que nunca pediu contato.
       const { error } = await sb.from("lead").insert({
         origem: "servicos", nome, whatsapp: tel,
         email:   document.getElementById("sMail").value.trim() || null,
@@ -4918,17 +4171,6 @@ async function telaServicos(){
   pintar();
 }
 
-/* ══ CRM DOS PEDIDOS ════════════════════════════════════════════════
-   O contato NUNCA e apagado nem escondido: marcar como atendido so
-   grava uma data. O que decide o dia de trabalho e a coluna RETOMAR —
-   quem tem data vencida sobe para o topo, porque lead esquecido nao
-   avisa que foi esquecido.
-
-   Cada anotacao vira linha nova em lead_nota. Nada e sobrescrito: seis
-   meses depois voce precisa saber o que foi dito, nao a ultima versao
-   do resumo.
-
-   ⚠️ Quem tranca e a RLS no banco, nao esta tela. */
 const SITUACAO = [["novo","Novo"],["contatado","Contatado"],
   ["conversando","Em conversa"],["fechado","Fechado"],["perdido","Perdido"]];
 const rotSit = k => (SITUACAO.find(x=>x[0]===k)||["","—"])[1];
@@ -4961,7 +4203,6 @@ async function telaLeads(){
 
   let l = filtro === "retomar" ? todos.filter(venceu)
         : filtro ? todos.filter(x => (x.situacao||"novo") === filtro) : todos;
-  // vencidos primeiro; depois os mais recentes
   l = l.slice().sort((a,b) => (venceu(b)?1:0)-(venceu(a)?1:0)
     || String(b.criado_em).localeCompare(String(a.criado_em)));
 
@@ -5044,27 +4285,12 @@ async function telaLeads(){
       const { error } = await sb.from("lead_nota")
         .insert({ lead_id: +b.dataset.nota, texto: t, autor: u?.id });
       if(error){ b.disabled = false; b.textContent = "erro"; alert(error.message); return; }
-      // ao anotar, o pedido deixa de ser "novo" sozinho: quem escreveu
-      // uma linha ja falou com a pessoa.
       await sb.from("lead").update({ situacao: "contatado", atendido_em: new Date().toISOString() })
         .eq("id", b.dataset.nota).eq("situacao", "novo");
       telaLeads();
     });
 }
 
-/* ══ UNIVERSO ═══════════════════════════════════════════════════════
-   A lista de papeis era editavel so por SQL, e o unico jeito de
-   descobrir que um simbolo nunca chegou era ler o log do Actions de
-   madrugada. Aqui a coluna PREGOES conta a verdade: papel na lista com
-   zero pregoes e simbolo que o MT5 nao entrega — grafico nunca aberto,
-   ticker trocado ou empresa fechada.
-
-   ⚠️ Inserir aqui NAO faz o MT5 cotar. O EA pede o simbolo; se o
-   grafico diario nunca foi carregado na corretora, volta vazio. A tela
-   mostra quem falta, o Ctrl+U resolve.
-
-   O tipo nao e adivinhado do sufixo: BOVA11 e SANB11 terminam igual e
-   sao coisas diferentes. Quem marca e voce. */
 const TIPOS = [["acao","Ação"],["unit","Unit"],["etf","ETF"],
                ["bdr","BDR"],["fii","FII"],["indice","Índice"]];
 const rotTipo = k => (TIPOS.find(t=>t[0]===k)||["","—"])[1];
@@ -5171,9 +4397,6 @@ async function telaUniverso(){
   document.querySelectorAll("[data-del]").forEach(b =>
     b.onclick = async () => {
       const a = b.dataset.del;
-      // ⚠️ Papel dentro de carteira publicada nao pode sair: a carteira
-      // para de apurar e o passado dela fica torto — que e exatamente o
-      // que o site promete que nao acontece.
       const { data:uso } = await sb.rpc("papel_em_uso", { p_ativo: a });
       if(uso > 0) return msg(`${a} está em ${uso} ${uso===1?"carteira":"carteiras"} publicadas. `
         + "Removê-lo faria essas carteiras pararem de apurar.", true);
@@ -5187,13 +4410,6 @@ async function telaUniverso(){
   if(bq) bq.onkeydown = e => { if(e.key === "Enter") location.hash = lk({ q: bq.value.toUpperCase() }); };
 }
 
-/* ══ CLUBE DE INVESTIMENTOS ═════════════════════════════════════════
-   A pagina responde a pergunta que trava todo mundo: "posso mesmo
-   gerir isso sem ser profissional?". Pode — a Resolucao CVM 11 deixa a
-   gestao com um cotista, se o regulamento permitir. Quase ninguem sabe
-   disso, e e o argumento que abre a conversa.
-   ⚠️ Nada aqui e promessa de rentabilidade. O clube e estrutura, nao
-   produto: o resultado depende do que o grupo comprar. */
 const PASSOS_CLUBE = [
  ["Junta o grupo","De 3 a 50 pessoas. Amigos, família, colegas de trabalho — não precisa de todo mundo entrando com o mesmo valor. Um estatuto define quanto cada um aporta, com que frequência e como alguém sai."],
  ["Escolhe quem gere","Pode ser um cotista do próprio grupo, se o estatuto permitir — não é preciso ser profissional. Ou pode ser um gestor contratado. Em qualquer caso, quem decide responde pelo grupo e presta contas."],
@@ -5310,15 +4526,6 @@ async function telaClube(){
   pintar();
 }
 
-/* ══ CONSENSO ═══════════════════════════════════════════════════════
-   Os papeis mais carregados por quem publica. E o unico numero do site
-   que nenhum concorrente tem, porque so existe se voce apura carteiras.
-
-   ⚠️ A composicao e o conteudo PAGO. Um agregado com poucas carteiras
-   denuncia o individual: "3 carteiras tem PETR4" com 4 carteiras no ar
-   e quase a lista de cada uma. Por isso a funcao `consenso` tem piso —
-   nenhuma linha aparece com menos de MIN carteiras por tras — e o piso
-   e regra, nao enfeite. Nunca baixar para "mostrar alguma coisa". */
 const MIN_CONSENSO = 5;
 
 async function telaConsenso(){
@@ -5331,8 +4538,6 @@ async function telaConsenso(){
   const comprados = l.filter(x => x.peso_liquido > 0).slice(0, 12);
   const vendidos  = l.filter(x => x.peso_liquido < 0)
                      .sort((a,b) => a.peso_liquido - b.peso_liquido).slice(0, 12);
-  // ⚠️ A leitura mais interessante das tres: papel que UNS compram e
-  // OUTROS vendem. E onde o desacordo esta, e desacordo e o que ensina.
   const briga = l.filter(x => x.comprada > 0 && x.vendida > 0)
                  .sort((a,b) => Math.min(b.comprada,b.vendida) - Math.min(a.comprada,a.vendida))
                  .slice(0, 8);
@@ -5395,17 +4600,10 @@ async function telaConsenso(){
 }
 
 function rotear(){
-  // toda troca de tela para os timers da tela anterior
   clearInterval(window.__timerRank);
   clearInterval(window.__timerCart);
   clearInterval(window.__timerDuelo);
   clearInterval(window.__timerTC);
-  // ⚠️ E o hook de abas tambem. resumoGrade() chama window.__marcarAbas a
-  // cada tecla digitada na grade. Quem saia do Publicar para o Editar
-  // levava junto o marcarFeitas do Publicar, que procura #ab1 — inexistente
-  // no Editar. Dava TypeError na PRIMEIRA linha de resumoGrade, entao o
-  // resumo do rodape da grade nunca mais atualizava. Cada tela registra o
-  // seu; a troca de tela apaga o da anterior.
   window.__marcarAbas = null;
   const h = (location.hash||"#/").split("?")[0];
   const m = h.match(/^#\/carteira\/(\d+)$/);
@@ -5417,7 +4615,6 @@ function rotear(){
   if(h==="#/como-funciona")   return telaComo();
   if(h==="#/termos")          return telaTermos();
   if(h==="#/screening")       return telaScreening();
-  // rota antiga continua valendo: link já compartilhado não pode quebrar
   if(h==="#/tiro-curto" || h==="#/apostar") return telaTiroCurto();
   if(h==="#/placar")          return telaPlacar();
   if(h==="#/indicar")         return telaIndicar();
@@ -5448,7 +4645,6 @@ addEventListener("hashchange", rotear);
       <b>publishable</b> do Supabase (a que começa com <b class="mono">sb_publishable_</b>).</p></div>`;
     return;
   }
-  // se o link de recuperação trouxe sessão, manda escolher senha nova
   if(location.hash.includes("type=recovery")) location.hash = "#/nova-senha";
   await carregarEu(); pintarNav(); rotear();
   pintarFaixa();
