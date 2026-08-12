@@ -416,11 +416,27 @@ tr.semdado:hover td{opacity:1}
 table{width:100%;border-collapse:collapse;font-size:13.5px}
 
 th{font-size:9.5px;text-transform:uppercase;letter-spacing:.14em;color:var(--graf);
-  text-align:left;padding:0 0 11px;font-weight:500;border-bottom:1px solid var(--linha2)}
+  text-align:left;padding:0 0 11px;font-weight:500;border-bottom:1px solid var(--linha2);
+  white-space:nowrap}
 td{padding:13px 0;border-bottom:1px solid var(--linha)}
+/* só onde há número de duas linhas: alinha pelo topo e usa a mesma métrica,
+   senão a segunda linha fica meio dígito fora da primeira */
+.tabScr td{vertical-align:top}
+.sub{display:block;font-size:10px;line-height:1.35;margin-top:2px;
+  font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;
+  letter-spacing:-.01em;opacity:.55}
 th.d,td.d{text-align:right;padding-left:16px}
 
 th.estica,td.estica{width:100%;padding-right:16px}
+/* "IBOVESPA" encostava em "fortíssima baixa" e viravam uma palavra só */
+.tabScr th:first-child,.tabScr td:first-child{white-space:nowrap;padding-right:14px}
+.tabScr th.estica,.tabScr td.estica{padding-left:0;width:1%;white-space:nowrap}
+/* a sobra da largura vai para a coluna do gráfico, que é elástica —
+   assim nenhuma coluna de texto fica com um vão no meio */
+.tabScr th.graf,.tabScr td.graf{width:100%}
+/* espaçamento uniforme: toda coluna numérica respira o mesmo tanto */
+.tabScr th.d,.tabScr td.d{padding-left:18px}
+.tabScr th.mA,.tabScr td.mA{padding-left:18px;width:auto}
 tr.clicavel{transition:background .14s}
 tr.clicavel:hover{background:var(--p2);cursor:pointer}
 tr.clicavel:hover td:first-child{box-shadow:inset 2px 0 0 var(--lacre)}
@@ -459,7 +475,9 @@ input[readonly]{color:var(--t2)}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
 @media(max-width:860px){.grid2{grid-template-columns:1fr}}
 
-th.mA{padding-left:12px;width:80px;letter-spacing:.09em}
+/* o cabeçalho herdava text-align:left do th enquanto a célula era right:
+   número e rótulo nunca batiam. Agora os dois à direita. */
+th.mA{padding-left:12px;width:80px;letter-spacing:.09em;text-align:right}
 th.mA.m1{border-left:1px solid var(--p3)}
 th.mA.m3{color:var(--lacre)}
 td.mA{font-family:var(--mono,'IBM Plex Mono',monospace);font-variant-numeric:tabular-nums;
@@ -662,6 +680,193 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
   background:transparent;border-style:dashed}
 .carta.mais span{font-family:inherit;font-size:10.5px;margin-top:2px}
 
+/* provocações do planejamento sucessório */
+.provoca{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.provoca .pv{background:var(--p2);border:1px solid var(--linha);border-radius:5px;
+  padding:13px 15px}
+.provoca .pv b{font-family:Newsreader,serif;font-size:15.5px;color:var(--tinta);
+  font-weight:500;line-height:1.32;display:block}
+.provoca .pv p{font-size:12.5px;color:var(--t2);line-height:1.55;margin:7px 0 0}
+@media(max-width:760px){.provoca{grid-template-columns:1fr}}
+
+/* casos do planejamento sucessório */
+.casos{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:4px}
+.caso{display:flex;align-items:flex-start;gap:8px;cursor:pointer;
+  padding:9px 11px;border:1px solid var(--linha);border-radius:5px;
+  background:var(--p2);font-size:12.5px;color:var(--t2);line-height:1.4;
+  transition:border-color .14s,color .14s}
+.caso:hover{border-color:var(--linha2)}
+.caso.on{border-color:var(--lacre);color:var(--tinta)}
+.caso input{width:14px;height:14px;margin:1px 0 0;flex:none;accent-color:var(--lacre)}
+@media(max-width:620px){.casos{grid-template-columns:1fr}}
+
+/* página: por que investir é difícil */
+.apr{max-width:74ch;margin:0 auto 38px}
+.apr h2{font-family:Newsreader,serif;font-size:25px;color:var(--tinta);
+  margin:0 0 14px;line-height:1.24;font-weight:500}
+.apP{font-size:14px;color:var(--t2);line-height:1.68;margin:0 0 12px}
+.apLeg{font-size:11px;color:var(--graf);text-align:center;margin:7px 0 0;
+  letter-spacing:.06em}
+.apLinks{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+
+.duasL{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.duasL .lg{background:var(--p2);border:1px solid var(--linha);border-radius:6px;
+  padding:16px 17px 14px}
+.duasL .lgOuro{border-color:rgba(201,162,39,.3)}
+.duasL .rot{display:block;font-size:9.5px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--graf);margin-bottom:5px}
+.duasL b{font-family:Newsreader,serif;font-size:19px;color:var(--tinta);
+  font-weight:500;display:block;margin-bottom:8px}
+.duasL p{font-size:13px;color:var(--t2);line-height:1.6;margin:0 0 9px}
+.duasL .ex{font-size:12.5px;color:var(--graf);border-top:1px solid var(--linha);
+  padding-top:9px;margin:0}
+.duasL .lgOuro .ex{color:var(--ouro2)}
+
+.escada{display:flex;align-items:flex-end;gap:4px;height:140px;margin-top:14px}
+.escada .deg{flex:1;background:linear-gradient(180deg,var(--alta),rgba(0,0,0,0));
+  border-radius:3px 3px 0 0;position:relative;opacity:.85}
+.escada .deg span{position:absolute;top:-16px;left:0;right:0;text-align:center;
+  font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--t2)}
+
+.tabVolta{margin-top:12px}
+.cabV{display:grid;grid-template-columns:70px 1fr 92px;gap:10px;
+  font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--graf);padding-bottom:7px;border-bottom:1px solid var(--linha2)}
+.cabV span:last-child{text-align:right}
+.lnV{display:grid;grid-template-columns:70px 1fr 92px;gap:10px;
+  align-items:center;padding:7px 0;border-bottom:1px solid var(--linha)}
+.lnV .perc{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--t2)}
+.lnV .barra{height:7px;background:var(--p3);border-radius:4px;overflow:hidden}
+.lnV .barra i{display:block;height:100%;background:var(--graf);border-radius:4px}
+.lnV .ganho{font-family:'IBM Plex Mono',monospace;font-size:13px;
+  text-align:right;color:var(--t2)}
+.lnV.grave .perc,.lnV.grave .ganho{color:var(--baixa);font-weight:500}
+.lnV.grave .barra i{background:var(--baixa)}
+
+.juros{margin-top:14px}
+.cabJ{display:grid;grid-template-columns:66px 1fr 78px 76px;gap:10px;
+  font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--graf);
+  padding-bottom:7px;border-bottom:1px solid var(--linha2)}
+.cabJ span:last-child,.cabJ span:nth-child(3){text-align:right}
+.lnJ{display:grid;grid-template-columns:66px 1fr 78px 76px;gap:10px;
+  align-items:center;padding:9px 0;border-bottom:1px solid var(--linha)}
+.lnJ .tJ{font-size:12.5px;color:var(--t2)}
+.lnJ .bJ{display:flex;height:14px;border-radius:3px;overflow:hidden}
+.lnJ .bJ i{display:block;height:100%}
+.bg{background:var(--graf);opacity:.5}
+.bj{background:var(--lacre)}
+.lnJ .vJ{font-family:'IBM Plex Mono',monospace;font-size:12px;
+  color:var(--ouro2);text-align:right}
+.lnJ .tot{font-family:'IBM Plex Mono',monospace;font-size:13px;
+  color:var(--tinta);text-align:right}
+.legJ{display:flex;gap:16px;margin-top:9px;font-size:11px;color:var(--graf)}
+.legJ i.q{display:inline-block;width:9px;height:9px;border-radius:2px;
+  margin-right:5px;vertical-align:0}
+@media(max-width:620px){
+  .cabJ,.lnJ{grid-template-columns:52px 1fr 62px}
+  .cabJ span:last-child,.lnJ .tot{display:none}
+}
+
+.citacao{border-left:2px solid var(--lacre);padding:11px 0 11px 15px;
+  font-family:Newsreader,serif;font-size:17px;line-height:1.5;color:var(--tinta);
+  margin-top:14px}
+
+@media(max-width:760px){
+  .duasL{grid-template-columns:1fr}
+  .apr h2{font-size:21px}
+  .escada{height:110px;gap:2px}
+  .escada .deg span{font-size:8.5px;top:-14px}
+  .cabV,.lnV{grid-template-columns:56px 1fr 74px;gap:7px}
+}
+
+/* abertura das primeiras visitas */
+.abertura{max-width:72ch;margin:44px auto 0;text-align:center}
+.ab1{font-size:12px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--graf);margin:0 0 12px}
+.ab2{font-family:Newsreader,serif;font-size:34px;line-height:1.22;
+  color:var(--tinta);margin:0 0 16px;font-weight:500}
+.ab3{font-size:14.5px;color:var(--t2);line-height:1.68;margin:0 auto 26px;max-width:60ch}
+.ab4{font-size:13px;color:var(--graf);line-height:1.6;margin:22px auto 0;max-width:56ch}
+
+.passosAb{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;
+  text-align:left;margin-top:4px}
+.passosAb .pAb{background:var(--p2);border:1px solid var(--linha);border-radius:5px;
+  padding:13px 13px 12px}
+.passosAb .nAb{display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;
+  color:var(--lacre);letter-spacing:.16em;margin-bottom:5px}
+.passosAb b{font-family:Newsreader,serif;font-size:16px;font-weight:500;
+  color:var(--tinta);display:block;margin-bottom:4px}
+.passosAb .dAb{font-size:11.5px;color:var(--t2);line-height:1.45}
+
+.promessa{margin:34px 0 0;padding:22px 0 0;border-top:1px solid var(--linha2);text-align:left}
+.pTit{font-family:Newsreader,serif;font-size:23px;color:var(--tinta);
+  margin:0 0 4px;line-height:1.3;text-align:center}
+.pSub{font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--graf);margin:0 0 16px;text-align:center}
+.pGrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.pIt{background:var(--p2);border:1px solid var(--linha);border-radius:5px;padding:12px 14px}
+.pIt b{display:block;font-size:13.5px;color:var(--ouro2);margin-bottom:4px;font-weight:500}
+.pIt span{font-size:12px;color:var(--t2);line-height:1.55}
+.pFim{font-size:12.5px;color:var(--graf);line-height:1.6;margin:14px auto 0;
+  max-width:62ch;text-align:center}
+@media(max-width:760px){.pGrid{grid-template-columns:1fr}.pTit{font-size:20px}}
+
+.botoesAb{display:flex;gap:10px;justify-content:center;margin-top:26px;flex-wrap:wrap}
+.naoVer{display:block;margin:16px auto 40px;background:none;border:none;
+  color:var(--graf);font-size:11.5px;font-family:inherit;cursor:pointer;
+  text-decoration:underline;text-underline-offset:3px;opacity:.75;
+  transition:opacity .14s,color .14s}
+.naoVer:hover{opacity:1;color:var(--t2)}
+@media(max-width:860px){.passosAb{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:620px){
+  .abertura{margin-top:26px}
+  .ab2{font-size:25px}
+  .passosAb{grid-template-columns:1fr;gap:6px}
+  .botoesAb .bt{width:100%}
+}
+
+/* as portas de entrada, para quem chega sem conta */
+.entrada{margin:30px 0 10px}
+.euPer{font-family:Newsreader,serif;font-size:26px;color:var(--tinta);
+  text-align:center;margin:0 0 18px;line-height:1.25}
+.portas{display:grid;grid-template-columns:repeat(5,1fr);gap:9px}
+.portas .pt{display:flex;flex-direction:column;gap:5px;text-decoration:none;
+  background:var(--p2);border:1px solid var(--linha);border-radius:6px;
+  padding:16px 15px 13px;transition:border-color .16s,transform .16s,background .16s}
+.portas .pt:hover{border-color:var(--linha2);background:var(--p3);transform:translateY(-2px)}
+.portas .ptFim{border-color:rgba(201,162,39,.3)}
+.portas .ptFim:hover{border-color:var(--lacre)}
+.portas .q{font-family:Newsreader,serif;font-size:15.5px;color:var(--t2);
+  font-style:italic;line-height:1.3}
+.portas .r{font-size:14px;color:var(--tinta);font-weight:500;line-height:1.3;flex:1}
+.portas .vai{font-size:10.5px;color:var(--graf);letter-spacing:.02em;transition:color .16s}
+.portas .pt:hover .vai{color:var(--ouro2)}
+@media(max-width:1000px){.portas{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:620px){
+  .portas{grid-template-columns:1fr;gap:7px}
+  .euPer{font-size:22px;margin-bottom:14px}
+  .portas .pt{padding:13px 14px 11px;gap:3px}
+  .portas .q{font-size:14.5px}
+}
+
+/* faixa de papéis mais operados, no topo do ranking */
+.faixaK{display:flex;align-items:center;gap:6px;flex-wrap:wrap;
+  padding:11px 0 2px;margin-bottom:2px}
+.rotK{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--graf);margin-right:2px}
+.chipK{display:inline-flex;align-items:baseline;gap:5px;text-decoration:none;
+  padding:4px 9px;border-radius:99px;border:1px solid var(--linha2);
+  background:var(--p2);transition:border-color .14s,background .14s}
+.chipK:hover{border-color:var(--c);background:var(--p3)}
+.chipK b{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--tinta);font-weight:500}
+.chipK i{font-style:normal;font-size:10.5px;color:var(--c)}
+.verK{font-size:11.5px;color:var(--graf);text-decoration:none;margin-left:auto}
+.verK:hover{color:var(--ouro2)}
+@media(max-width:620px){
+  .faixaK{gap:5px}
+  .verK{margin-left:0;width:100%;padding-top:4px}
+}
+
 .linhaC{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid var(--linha);
   transition:background .14s}
 
@@ -803,7 +1008,7 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
     <span class="grupo"><span class="rotg">Diversão</span>
       <span class="bloco"><a href="#/tiro-curto">Tiro curto</a><a href="#/placar">Placar</a><a href="#/duelo">Duelo</a></span></span>
     <span class="grupo"><span class="rotg">Aprender</span>
-      <span class="bloco"><a href="#/como-funciona">Como funciona</a></span></span>
+      <span class="bloco"><a href="#/aprender">Por que é difícil</a><a href="#/como-funciona">Como funciona</a></span></span>
     <span class="grupo"><span class="rotg">Com a gente</span>
       <span class="bloco"><a href="#/planejar">Planejamento</a><a href="#/clube">Clube de investimentos</a><a href="#/servicos">Serviços</a></span></span>
   </nav>
@@ -878,6 +1083,20 @@ async function painelCache(forcar){
     return PAINEL;
   })();
   return PAINEL_INDO;
+}
+
+let CONS = null, CONS_EM = 0, CONS_INDO = null;
+async function consensoCache(){
+  if(CONS && Date.now() - CONS_EM < 300000) return CONS;
+  if(CONS_INDO) return CONS_INDO;
+  CONS_INDO = (async () => {
+    const { data, error } = await sb.rpc("consenso", { min_carteiras: 5 });
+    CONS_INDO = null;
+    if(error) return CONS || [];
+    CONS = data || []; CONS_EM = Date.now();
+    return CONS;
+  })();
+  return CONS_INDO;
 }
 
 let MK = null, MK_EM = 0, MK_INDO = null;
@@ -1650,6 +1869,30 @@ function montarExtrato(todas, rebal){
 
 let RANK_CTX = null;
 
+async function pintarConsenso(){
+  const el = $("#faixaCons"); if(!el) return;
+  const l = await consensoCache();
+  if(!l || !l.length) return;
+  if(!$("#faixaCons")) return;
+
+  const comp = l.filter(x => x.peso_liquido > 0).slice(0, 6);
+  const vend = l.filter(x => x.peso_liquido < 0)
+                .sort((a,b) => a.peso_liquido - b.peso_liquido).slice(0, 4);
+  if(!comp.length && !vend.length) return;
+
+  const chip = (x, cor) => `<a href="#/consenso" class="chipK" style="--c:${cor}">
+    <b>${esc(x.ativo)}</b><i>${x.carteiras}</i></a>`;
+
+  $("#faixaCons").innerHTML = `
+  <div class="faixaK">
+    ${comp.length ? `<span class="rotK">mais comprados</span>
+      ${comp.map(x => chip(x,"var(--alta)")).join("")}` : ""}
+    ${vend.length ? `<span class="rotK" style="margin-left:6px">mais vendidos</span>
+      ${vend.map(x => chip(x,"var(--baixa)")).join("")}` : ""}
+    <a href="#/consenso" class="verK">ver tudo &rarr;</a>
+  </div>`;
+}
+
 function pintarParciais(vv){
   if(!RANK_CTX) return;
   const parc = parcialPorCarteira(vv);
@@ -1726,7 +1969,7 @@ function pintarParciais(vv){
 
 async function telaRanking(){
   const q = new URLSearchParams(location.hash.split("?")[1]||"");
-  const ordem = q.get("ordem") || "acum";
+  const ordem = q.get("ordem") || "vsibov";
   const filtro = q.get("classe") || "";
   const MINP = Math.max(0, +(q.get("min") || 0) || 0);
   app().innerHTML = `<div class="carreg">carregando ranking…</div>`;
@@ -1784,6 +2027,38 @@ async function telaRanking(){
     </div>
     <a href="#/publicar" class="bt lacre" style="margin-top:20px">Publicar a minha carteira &rarr;</a>
   </div>
+
+  ${eu ? "" : `
+  <div class="entrada">
+    <p class="euPer">Você veio fazer o quê?</p>
+    <div class="portas">
+      <a href="#/aprender" class="pt">
+        <span class="q">“Não entendo nada disso.”</span>
+        <span class="r">Então a gente ensina.</span>
+        <span class="vai">por que é difícil &rarr;</span>
+      </a>
+      <a href="#/tiro-curto" class="pt">
+        <span class="q">“Só quero me divertir.”</span>
+        <span class="r">Vamos nos divertir.</span>
+        <span class="vai">jogos e palpites &rarr;</span>
+      </a>
+      <a href="#/publicar" class="pt">
+        <span class="q">“Quero competir.”</span>
+        <span class="r">Vamos competir.</span>
+        <span class="vai">publicar carteira &rarr;</span>
+      </a>
+      <a href="#/planejar" class="pt">
+        <span class="q">“Quero me planejar.”</span>
+        <span class="r">Vamos planejar.</span>
+        <span class="vai">montar o meu plano &rarr;</span>
+      </a>
+      <a href="#/servicos" class="pt ptFim">
+        <span class="q">“Quero aplicar meu dinheiro.”</span>
+        <span class="r">Vamos aplicar.</span>
+        <span class="vai">com quem tem registro &rarr;</span>
+      </a>
+    </div>
+  </div>`}
   <div class="abas">
     <a href="#/?ordem=${ordem}" class="aba${!filtro?" on":""}">Todas<span class="n">${(cs||[]).length}</span></a>
     ${Object.entries(CLASSE).filter(([k])=>conta[k]).map(([k,v])=>
@@ -1791,7 +2066,6 @@ async function telaRanking(){
         class="aba${filtro===k?" on":""}">${v.nome}<span class="n">${conta[k]}</span></a>`).join("")}
     ${conta.sem?`<a href="#/?ordem=${ordem}&classe=sem"
       class="aba${filtro==="sem"?" on":""}">Sem classe<span class="n">${conta.sem}</span></a>`:""}
-    <a href="#/consenso" class="aba" style="margin-left:auto">O que estão comprando</a>
   </div>
   <div class="ordena">
     <span class="rot">no pódio, a partir de</span>
@@ -1818,6 +2092,9 @@ async function telaRanking(){
        vsibov:"quanto ganhou do índice, em pontos",
        sharpe:"retorno por unidade de risco · a partir de 20 pregões",
        dd:"maior queda desde o topo"}[ordem] || ""}</span>
+    <span class="divisor"></span>
+    <a href="#/consenso" style="font-size:12px;color:var(--graf)"
+      >Maiores posições das carteiras &rarr;</a>
   </div>
   ${quando && eu?.admin?`<p id="linhaViva" style="font-size:11.5px;color:var(--graf);margin:0 0 12px"></p>`:""}
   ${filtro && CLASSE[filtro] ? `<p style="font-size:12.5px;color:var(--t2);max-width:60ch;margin:-2px 0 15px">
@@ -1825,10 +2102,9 @@ async function telaRanking(){
       Carteira só é comparada com outra da mesma classe — laranja com laranja.</p>` : ""}
   ${!eu ? `<div class="chamada">
       <div>
-        <h3 style="font-size:18px;margin-bottom:5px">Tudo aberto, de graça.</h3>
+        <h3 style="font-size:18px;margin-bottom:5px">Comece pelo começo.</h3>
         <p style="color:var(--t2);margin:0;font-size:13.5px;max-width:52ch">
-          Crie sua conta para publicar suas carteiras e ver os papéis e os pesos
-          de todas as outras. Sem cobrança.</p>
+          Leva cinco minutos, e você não precisa saber nada antes de começar.</p>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
         <a href="#/entrar?novo=1" class="bt cheio">Criar conta grátis</a>
@@ -2258,7 +2534,7 @@ async function telaPublicar(){
                caixa <b>${n2(100-liq,0)}%</b> · ${lista.length} ${lista.length===1?"papel":"papéis"}`}</div>
         <p style="font-size:11.5px;color:var(--graf);margin:12px 0 0;line-height:1.55">
           A classe <b>não muda</b> depois de criada, e a carteira passa a valer
-          a partir do próximo pregão. Publicar de novo com outro nome é sempre
+          a partir do próximo pregão. Publicar de novo com outro nome continua
           possível; mudar esta, não.</p>
       </div>
       <div class="pe">
@@ -2462,14 +2738,16 @@ async function telaCarteira(id){
     const { data:cont } = await sb.rpc("seguidores_por_carteira");
     nSeg = (cont||[]).find(x=>String(x.carteira_id)===String(id))?.n || 0;
   }catch(e){ nSeg = 0; }
-  const podeSeguir = !!eu?.assinante;
+  const podeSeguir = !!eu;
   let souDono = false;
   if(eu){
     const { data:d } = await sb.from("carteira").select("id")
       .eq("id", id).eq("usuario_id", eu.id).maybeSingle();
     souDono = !!d;
   }
-  const podeVer = !!(eu && (souDono || eu.assinante || eu.admin));
+  // a assinatura está desligada: quem tem conta vê. Deixar o texto pedindo
+  // assinante enquanto o admin diz que não há assinatura confunde quem chega.
+  const podeVer = !!eu;
 
   const abre = pesos && pesos.length;
   const maxp = abre ? Math.max(...pesos.map(p=>Math.abs(p.peso))) : 1;
@@ -2486,8 +2764,7 @@ async function telaCarteira(id){
       ? `<span class="tag">${nSeg} acompanhando</span>` : ""}</div>
     ${eu && !souDono ? `<button class="bt ${sigo?"lacre":""}" id="btSino" style="margin:2px 0 6px">
       ${sigo ? "acompanhando · avisar quando mudar"
-             : podeSeguir ? "acompanhar mudanças"
-                          : "acompanhar mudanças · assinante"}</button>` : ""}
+             : "acompanhar mudanças"}</button>` : ""}
     ${c.descricao?`<p style="color:var(--t2);font-style:italic;max-width:60ch">“${esc(c.descricao)}”</p>`:""}
     <p style="font-size:12px;color:var(--graf)">${esc(c.apelido)}
       · publicada em ${c.criada_em}</p>
@@ -2504,9 +2781,9 @@ async function telaCarteira(id){
   </div>
   ${(()=>{ const k = comparativo(serie, refs); return !k ? "" : `<div class="contra">
     <div class="i forte"><div class="n ${k.vsIbov==null?"nulo":cor(k.vsIbov)}">${
-      k.vsIbov==null?"—":pts(k.vsIbov)+" pts"}</div>
+      k.vsIbov==null?"—":pts(k.vsIbov)}</div>
       <div class="k">contra o Ibovespa</div></div>
-    <div class="i"><div class="n ${cor(k.vsCdi)}">${pts(k.vsCdi)} pts</div>
+    <div class="i"><div class="n ${cor(k.vsCdi)}">${pts(k.vsCdi)}</div>
       <div class="k">contra o CDI</div></div>
     <div class="i"><div class="n ${k.ibov==null?"nulo":cor(k.ibov)}">${
       k.ibov==null?"—":pct(k.ibov)}</div>
@@ -2636,7 +2913,7 @@ async function telaCarteira(id){
   : `<div class="trancado"><div class="selo">&#128274;</div>
       <h3 style="font-size:19px;margin-bottom:7px">Papéis e pesos</h3>
       <p style="color:var(--t2);max-width:36ch;margin:0 auto 16px">
-        Para ver o que tem dentro é preciso ter conta. É de graça, e já
+        Para ver o que tem dentro é preciso ter conta. A mesma conta
         permite publicar as suas.</p>
       <a href="#/entrar?novo=1" class="bt cheio">Criar conta grátis</a>
       </div>`}`;
@@ -2789,7 +3066,7 @@ function telaAssinar(){
     <h1 style="font-size:29px;margin-bottom:9px">Está tudo aberto</h1>
     <p style="color:var(--t2);margin-bottom:20px">
       Não há assinatura por enquanto. Todas as carteiras — papéis, pesos e
-      anotações — aparecem para quem tem conta, de graça.</p>
+      anotações — aparecem para quem tem conta.</p>
     ${eu ? '<a href="#/" class="bt cheio">Ver o ranking</a>'
          : '<a href="#/entrar?novo=1" class="bt cheio">Criar conta grátis</a>'}
   </div>`;
@@ -3324,7 +3601,7 @@ async function telaEditar(id){
           somando 100%.</p>` : ""}
         <label>Posições</label>
         ${gradeHTML()}
-        <label>Por que você mudou (fica visível para assinantes)</label>
+        <label>Por que você mudou (fica visível para quem abrir a carteira)</label>
         <input id="nota" maxlength="200" placeholder="reduzi porque ficou caro demais">
         <button class="bt cheio lacre" id="btPos">Declarar</button>
       </div>
@@ -3953,12 +4230,18 @@ async function telaScreening(){
 
   const ordem = q.get("o") || "liq";
   const soLiq = q.get("liq") === "1";
+  const corteMi = Math.max(0, +(q.get("mm") || 5) || 5);
 
   const todosCalc = (data||[]).map(x => {
     const v = AOVIVO[x.ativo];
     const y = (v && v[0] > 0 && v[2] > 0)
       ? { ...x, fech:v[0], osc:v[1], ema17:v[2], ema34:v[3], ema72:v[4], vivo:true }
       : { ...x };
+    // giro de hoje quando o pregão está correndo; a média de 21 dias é a
+    // referência de fundo e continua guardada em .liqMedia
+    y.liqMedia = x.liquidez;
+    if(v && v[5] > 0){ y.liquidez = Number(v[5]); y.giroHoje = true; }
+    y.avat = (y.giroHoje && y.liqMedia > 0) ? y.liquidez / y.liqMedia : null;
     y.e = estadoDe(y);
     return y;
   });
@@ -3970,11 +4253,15 @@ async function telaScreening(){
   let l = todosCalc.filter(x => !ehIndice(x.ativo));
   todosCalc.forEach(x => { x.forca = (x.ema72 && x.ema72 > 0) ? x.fech/x.ema72 - 1 : null; });
 
-  const LIQ_MIN = 5000000;
-  const LIQ_ROT = n2(LIQ_MIN/1e6, LIQ_MIN%1e6?1:0) + " MM/dia";
+  const LIQ_MIN = corteMi * 1e6;
+  const LIQ_ROT = n2(corteMi, corteMi % 1 ? 1 : 0) + " MM";
+  // mede o que a coluna mostra: giro de hoje com o pregão aberto, média de
+  // 21 pregões fora dele. De manhã cedo quase ninguém passou do corte ainda —
+  // é justamente isso que mostra onde o dinheiro está entrando primeiro.
+  const liqBase = x => x.liquidez;
   const foraDoCorte = todosCalc.filter(x => !ehIndice(x.ativo)
-    && x.liquidez != null && x.liquidez < LIQ_MIN).length;
-  if(soLiq) l = l.filter(x => x.liquidez == null || x.liquidez >= LIQ_MIN);
+    && liqBase(x) != null && liqBase(x) < LIQ_MIN).length;
+  if(soLiq) l = l.filter(x => liqBase(x) == null || liqBase(x) >= LIQ_MIN);
 
   const conta = { todos: l.length };
   ["alta","saindo_alta","virando","indefinido","saindo_baixa","baixa"].forEach(g =>
@@ -3985,6 +4272,7 @@ async function telaScreening(){
 
   const ordenar = {
     liq:    (a,b) => (b.liquidez ?? 0) - (a.liquidez ?? 0),
+    avat:   (a,b) => (b.avat ?? -9) - (a.avat ?? -9),
     estado: (a,b) => GRAU[a.e] - GRAU[b.e] || (b.liquidez ?? 0) - (a.liquidez ?? 0),
     forca:  (a,b) => (b.forca ?? -9) - (a.forca ?? -9),
     dist:   (a,b) => b.dist - a.dist,
@@ -3994,15 +4282,20 @@ async function telaScreening(){
   l.sort(ordenar);
 
   const link = (o={}) => {
-    const a = { t:filtro, o:ordem, q:busca, liq:soLiq?"1":"", ...o };
+    const a = { t:filtro, o:ordem, q:busca, liq:soLiq?"1":"",
+                mm:corteMi===5?"":String(corteMi), ...o };
     const p = Object.entries(a).filter(([,v]) => v && v !== "todos")
       .map(([k,v]) => `${k}=${encodeURIComponent(v)}`);
     return "#/screening" + (p.length ? "?" + p.join("&") : "?t=todos");
   };
+  // distância do preço até cada um dos três pontos, para ir sob o valor
+  const dp = (fech, ponto) => (ponto > 0 && fech > 0)
+    ? `<span class="sub ${cor(fech/ponto - 1)}">${pct(fech/ponto - 1)}</span>` : "";
+
   const grana = v => v == null ? "—"
-    : v >= 1e9 ? n2(v/1e9,1) + " bi"
-    : v >= 1e6 ? n2(v/1e6,0) + " mi"
-    : n2(v/1e3,0) + " mil";
+    : v >= 1e9 ? "R$ " + n2(v/1e9,1) + " bi"
+    : v >= 1e6 ? "R$ " + n2(v/1e6,0) + " mi"
+    : "R$ " + n2(v/1e3,0) + " mil";
 
   const exemploRisco = () => {
     const v = []; let p = 100;
@@ -4065,7 +4358,9 @@ async function telaScreening(){
   <div class="ordena">
     <span class="rot">ordenar por</span>
     <select id="selO" class="selOrdem">
-      ${[["liq","Mais negociados"],["estado","Da alta mais forte à baixa mais forte"],
+      ${[["liq","Mais negociados"],
+         ["avat","%MMVol — volume acima do normal"],
+         ["estado","Da alta mais forte à baixa mais forte"],
          ["forca","Mais acima da média longa"],
          ["dist","Médias mais afastadas"],["amp","Mais oscilam por dia"],["cod","Código"]]
         .map(([k,r])=>`<option value="${k}"${ordem===k?" selected":""}>${r}</option>`).join("")}
@@ -4073,13 +4368,16 @@ async function telaScreening(){
     <input id="qBusca" placeholder="filtrar por código" value="${esc(busca)}"
       style="width:160px;margin:0;padding:7px 11px;font-size:13px;text-transform:uppercase">
     <span class="divisor"></span>
-    <a href="${link({liq:soLiq?"":"1"})}" class="chaveL${soLiq?" on":""}"
+    <select id="selMM" class="selOrdem" style="min-width:186px"
       title="papel de pouco negócio tem ponto que descola por um pulo isolado">
-      <i class="cx">${soLiq?"✓":""}</i>Só acima ${LIQ_ROT}${
-        foraDoCorte?` <span class="n">−${foraDoCorte}</span>`:""}</a>
+      <option value="0"${!soLiq?" selected":""}>VOLUME SEM FILTRO</option>
+      ${[0.5,1,2,5,10,20,50,100].map(v=>`<option value="${v}"${
+        soLiq&&corteMi===v?" selected":""}>VOLUME MÍNIMO ${n2(v, v%1?1:0)} MM</option>`).join("")}
+    </select>${soLiq&&foraDoCorte?`<span style="font-size:11.5px;color:var(--graf)"
+      >−${foraDoCorte}</span>`:""}
     ${setoriais.length?`<a href="${link({set:verSet?"":"1"})}" class="chaveL${verSet?" on":""}"
       title="os índices setoriais da B3, entre o Ibovespa e o primeiro papel">
-      <i class="cx">${verSet?"✓":""}</i>Mostrar índices setoriais
+      <i class="cx">${verSet?"✓":""}</i>Índices setoriais
       <span class="n2">${setoriais.length}</span></a>`:""}
   </div>
 
@@ -4087,36 +4385,46 @@ async function telaScreening(){
       Nenhum papel neste filtro.${!(data||[]).length
         ? " O cálculo precisa de alguns meses de histórico e o robô ainda não juntou tanto."
         : ""}</p></div>`
-  : `<div class="rolagem"><table><thead><tr><th>Papel</th><th class="estica">Estado</th>
-      <th class="d">Fechamento</th><th class="d some">Vs. institucional</th>
+  : `<div class="rolagem"><table class="tabScr"><thead><tr><th>Papel</th><th class="estica">Estado</th>
+      <th class="d">Preço</th><th class="d">No dia</th>
       <th class="d mA m1 some">Trader</th><th class="d mA m2 some">Investidor</th><th class="d mA m3 some">Institucional</th>
-      <th class="d some" style="width:196px;padding-left:14px">${JANELA_GRAFICO} pregões</th>
-      <th class="d some">Negócio/dia</th></tr></thead><tbody>
+      <th class="d some graf" style="min-width:196px;padding-left:18px">${JANELA_GRAFICO} pregões</th>
+      <th class="d some" title="volume financeiro negociado hoje">Volume</th>
+      <th class="d some" title="volume de hoje sobre a média móvel dos últimos 21 pregões — 1,0 é o normal do papel"
+        >%MMVol</th></tr></thead><tbody>
     ${[...(amplo?[amplo]:[]), ...(verSet?setoriais:[])].map(x=>`<tr class="ref${
         x===amplo?"":" set"}">
       <td class="mono cod">${esc(x.ativo==="IBOV"||x.ativo==="^BVSP"?"IBOVESPA":x.ativo.replace("^",""))}${
         IND_SET[x.ativo]?`<span class="nm">${IND_SET[x.ativo]}</span>`:""}</td>
       <td class="estica ${tomDe(x.e)}" style="font-size:12.5px">${ROT[x.e]}${x.vivo?'<sup style="font-size:10px;opacity:.7;margin-left:2px" title="parcial — a fase pode mudar até o fechamento">•</sup>':""}</td>
-      <td class="d mono">${n2(x.fech, x.fech>1000?0:2)}</td>
-      <td class="d mono some ${x.forca==null?"nulo":cor(x.forca)}"><b>${
-        x.forca==null?"—":pct(x.forca)}</b></td>
-      <td class="mA m1 some">${n2(x.ema17, x.fech>1000?0:2)}</td>
-      <td class="mA m2 some">${n2(x.ema34, x.fech>1000?0:2)}</td>
-      <td class="mA m3 some">${x.ema72==null?"—":n2(x.ema72, x.fech>1000?0:2)}</td>
-      <td class="some" style="padding:6px 0 6px 14px"><div style="margin-left:auto;width:180px">${risco(x)}</div></td>
+      <td class="d mono" style="white-space:nowrap">${n2(x.fech, x.fech>1000?0:2)}</td>
+      <td class="d mono ${x.osc==null?"nulo":cor(x.osc)}"><b>${
+        x.osc==null?"—":pct(x.osc)}</b></td>
+      <td class="mA m1 some" style="white-space:nowrap">${
+        n2(x.ema17, x.fech>1000?0:2)}${dp(x.fech, x.ema17)}</td>
+      <td class="mA m2 some" style="white-space:nowrap">${
+        n2(x.ema34, x.fech>1000?0:2)}${dp(x.fech, x.ema34)}</td>
+      <td class="mA m3 some" style="white-space:nowrap">${
+        x.ema72==null?"—":n2(x.ema72, x.fech>1000?0:2)}${dp(x.fech, x.ema72)}</td>
+      <td class="some graf" style="padding:6px 0 6px 18px"><div style="margin-left:auto;width:180px">${risco(x)}</div></td>
       <td class="d mono nulo some" style="font-size:12px">${x.liquidez==null?"—":grana(x.liquidez)}</td>
     </tr>`).join("")}
     ${l.map(x=>`<tr>
       <td class="mono" style="font-weight:500">${esc(x.ativo)}</td>
       <td class="estica ${tomDe(x.e)}" style="font-size:12.5px">${ROT[x.e]}${x.vivo?'<sup style="font-size:10px;opacity:.7;margin-left:2px" title="parcial — a fase pode mudar até o fechamento">•</sup>':""}</td>
-      <td class="d mono">${n2(x.fech)}</td>
-      <td class="d mono some ${x.forca==null?"nulo":cor(x.forca)}"><b>${
-        x.forca==null?"—":pct(x.forca)}</b></td>
-      <td class="mA m1 some">${n2(x.ema17)}</td>
-      <td class="mA m2 some">${n2(x.ema34)}</td>
-      <td class="mA m3 some">${x.ema72==null?"—":n2(x.ema72)}</td>
-      <td class="some" style="padding:6px 0 6px 14px"><div style="margin-left:auto;width:180px">${risco(x)}</div></td>
-      <td class="d mono nulo some" style="font-size:12px">${grana(x.liquidez)}</td></tr>`).join("")}
+      <td class="d mono" style="white-space:nowrap">${n2(x.fech)}</td>
+      <td class="d mono ${x.osc==null?"nulo":cor(x.osc)}"><b>${
+        x.osc==null?"—":pct(x.osc)}</b></td>
+      <td class="mA m1 some" style="white-space:nowrap">${n2(x.ema17)}${dp(x.fech, x.ema17)}</td>
+      <td class="mA m2 some" style="white-space:nowrap">${n2(x.ema34)}${dp(x.fech, x.ema34)}</td>
+      <td class="mA m3 some" style="white-space:nowrap">${
+        x.ema72==null?"—":n2(x.ema72)}${dp(x.fech, x.ema72)}</td>
+      <td class="some graf" style="padding:6px 0 6px 18px"><div style="margin-left:auto;width:180px">${risco(x)}</div></td>
+      <td class="d mono nulo some" style="font-size:12px;white-space:nowrap">${grana(x.liquidez)}</td>
+      <td class="d mono some" style="font-size:12px;white-space:nowrap;${
+        x.avat==null?"opacity:.45" : x.avat>=2?"color:var(--ouro2)"
+        : x.avat>=1.3?"color:var(--alta)" : ""}">${
+        x.avat==null?"—":n2(x.avat,1)+"×"}</td></tr>`).join("")}
     </tbody></table></div>`}
 
   <div class="comoler">
@@ -4147,6 +4455,12 @@ async function telaScreening(){
       </dl>
       <p><b>É leitura, não medição</b>: o site não sabe quem comprou o quê, mede preço
         médio por prazo. Os prazos fazem parte do método da casa.</p>
+      <h4 style="margin-top:16px">%MMVol</h4>
+      <p style="margin:0">O volume financeiro de hoje dividido pela <b>média móvel
+        dos últimos 21 pregões</b> daquele mesmo papel. <b>1,0×</b> é o dia normal
+        dele. Acima de <b>2,0×</b> é o dobro do costume — e é aí que costuma haver
+        alguma coisa acontecendo que o preço ainda não contou. Serve para separar
+        movimento com dinheiro atrás de movimento sem.</p>
     </div>
     <div class="cel">
       <h4>As fases</h4>
@@ -4162,8 +4476,9 @@ async function telaScreening(){
         <dt>virando · sem tendência</dt><dd>pontos desalinhados. Se o preço já passou dos
           três, é virada — quem manda é o preço.</dd>
       </dl>
-      <p><b>Vs. institucional</b> é quanto o preço está acima ou abaixo do ponto mais
-        firme: é a força do movimento.${soLiq ? ` <b>${foraDoCorte}</b> papéis abaixo de
+      <p><b>Sob cada ponto</b> vai a distância do preço até ele. Perto de zero, o preço
+        está encostado naquele ponto e é ali que o movimento se decide; bem acima dos
+        três, o papel está esticado.${soLiq ? ` <b>${foraDoCorte}</b> papéis abaixo de
         ${LIQ_ROT} estão escondidos — neles o ponto descola por um pulo isolado e o
         número engana.` : ""}</p>
       <p class="selo2">É medida, não recomendação: a tela descreve onde o preço está,
@@ -4171,6 +4486,10 @@ async function telaScreening(){
     </div>
   </div>
   </div>`;
+
+  const smm = $("#selMM");
+  if(smm) smm.onchange = e => { const v = +e.target.value;
+    location.hash = link({ mm: v ? String(v) : "", liq: v ? "1" : "" }); };
 
   const so = $("#selO");
   if(so) so.onchange = e => location.hash = link({ o: e.target.value });
@@ -4275,8 +4594,8 @@ function telaComo(){
   <div style="max-width:74ch">
   ${P("O que é aberto e o que é fechado?",
      "Rentabilidade, queda máxima, alavancagem e exposição são públicas para "
-   + "qualquer visitante — é o risco que cada um está correndo. Os papéis, os "
-   + "pesos e as anotações de cada mudança são de quem assina. Publicar é grátis.")}
+   + "qualquer visitante — é o risco que cada um está correndo. Para ver os "
+   + "papéis, os pesos e as anotações de cada mudança, basta ter conta.")}
   ${P("Por que a minha carteira começa em zero?",
      "Não há histórico retroativo. A rentabilidade conta a partir do dia em que "
    + "a carteira é publicada, porque um resultado montado olhando para trás não "
@@ -4294,7 +4613,7 @@ function telaComo(){
      "É quanto a carteira ganhou ou perdeu do índice no período dela, em pontos. "
    + "O benchmark é medido a partir do dia em que a carteira nasceu, não do começo "
    + "do ano — quem escolhe um dia de partida bom escolhe também um índice fácil, "
-   + "e é por isso que o número de pregões fica sempre visível ao lado.")}
+   + "e é por isso que o número de pregões fica visível ao lado.")}
   ${P("E o Tiro curto?",
      "É a parte de palpite de curto prazo, separada das carteiras. Você escolhe "
    + "papel e direção para o próximo pregão, e a pontuação é por dia, não por "
@@ -4307,15 +4626,11 @@ function telaComo(){
 
   <h2 style="font-size:20px;margin:38px 0 6px">Uma hora o simulador acaba</h2>
   <div style="max-width:74ch">
-    <p style="color:var(--t2);font-size:14px;line-height:1.6;margin:0 0 12px">
+    <p style="color:var(--t2);font-size:14px;line-height:1.6;margin:0 0 16px">
       Depois de alguns meses aqui você vai saber uma coisa que quase ninguém
       sabe sobre si mesmo: <b>você é um bom gestor do seu próprio dinheiro, ou
-      não é?</b> As duas respostas são úteis, e nenhuma delas custou nada
-      para ser descoberta.</p>
-    <p style="color:var(--t2);font-size:14px;line-height:1.6;margin:0 0 16px">
-      Se a resposta for sim, siga sozinho — o site continua aberto e de graça.
-      Se for não, ou se você quiser dividir a decisão com alguém, existem dois
-      caminhos legais para sair do simulado:</p>
+      não é?</b> Se for, siga sozinho. Se não for, ou se quiser dividir a
+      decisão com alguém, há dois caminhos para sair do simulado:</p>
   </div>
 
   <div class="classes">
@@ -4338,27 +4653,20 @@ function telaComo(){
   </div>
 
   <p style="color:var(--graf);font-size:12.5px;line-height:1.55;max-width:74ch;margin:14px 0 0">
-    O ranking, o screening e os jogos são gratuitos e continuam assim. Contratar
-    serviço não melhora a sua posição em nenhum deles — se melhorasse, o ranking
+    Contratar serviço não melhora a sua posição em nenhum deles — se melhorasse, o ranking
     não valeria nada, e é o ranking que dá sentido ao resto.</p>
 
   <h2 style="font-size:20px;margin:38px 0 6px">Sala de aula</h2>
   <div style="max-width:74ch">
     <p style="color:var(--t2);font-size:14px;line-height:1.6;margin:0 0 12px">
-      A melhor forma de aprender mercado é ter uma posição e ver o que acontece
-      com ela. É isso que este site faz — e é por isso que ele funciona bem
-      dentro de uma turma.</p>
-    <p style="color:var(--t2);font-size:14px;line-height:1.6;margin:0 0 12px">
-      Estamos abrindo a <b>área de ensino</b>: o professor cria a turma, cada
-      aluno publica a sua carteira, e a turma tem o seu próprio ranking. Turmas
-      podem se enfrentar entre si — colégio contra colégio, sala contra sala —
-      com o professor acompanhando quem entrou, quem mudou de posição e por quê.
-      A carteira vira lição de casa que se corrige sozinha, todo dia, com a
-      cotação real.</p>
+      Aprende-se mercado tendo uma posição e vendo o que acontece com ela — por
+      isso isto funciona bem dentro de uma turma. O professor cria a turma, cada
+      aluno publica a sua carteira, e a turma tem o seu ranking. Turmas se
+      enfrentam entre si, colégio contra colégio. <b>A carteira vira lição de
+      casa que se corrige sozinha, todo dia, com a cotação real.</b></p>
     <p style="color:var(--t2);font-size:14px;line-height:1.6;margin:0 0 12px">
       Junto vem o <b>conteúdo</b>: aulas e cursos, uns abertos, outros pagos —
-      como em qualquer escola. Quem quiser só a competição fica na competição,
-      que é de graça.</p>
+      como em qualquer escola. Quem quiser só a competição fica na competição.</p>
     <p style="color:var(--t2);font-size:13.5px;line-height:1.6;margin:0 0 4px">
       <b style="color:var(--ouro2)">Ainda não está no ar.</b> Estamos montando
       com as primeiras turmas. Se você dá aula — em colégio, faculdade, curso
@@ -4381,7 +4689,7 @@ function telaComo(){
 
   <div class="chamada" style="margin-top:30px">
     <div>
-      <h3 style="font-size:17px;margin-bottom:4px">Publicar é de graça</h3>
+      <h3 style="font-size:17px;margin-bottom:4px">Publique a sua</h3>
       <p style="color:var(--t2);margin:0;font-size:13px;max-width:50ch">
         Crie a conta e registre a primeira carteira — ela começa a contar no
         próximo pregão.</p>
@@ -4422,7 +4730,7 @@ function telaTermos(){
       Usamos esses dados para operar o site e falar com você sobre a sua conta.
       <b>Não vendemos nem repassamos para terceiros.</b></p>
 
-    <h2 style="font-size:19px;margin:26px 0 8px">O que fica registrado para sempre</h2>
+    <h2 style="font-size:19px;margin:26px 0 8px">O que fica registrado</h2>
     <p style="color:var(--t2);font-size:13.5px;line-height:1.65">
       O histórico de uma carteira apurada <b>não é apagado nem reescrito</b>,
       nem por quem publicou. É o que dá sentido ao ranking: sem isso, bastaria
@@ -4601,7 +4909,7 @@ function resumoDe(html){
 
 // ── Planejamento ────────────────────────────────────────────────
 const PL = { idade:35, ate:100, apos:65, renda:"", gasto:"", tem:"", quer:"",
-             jaTem:"", real:5, passo:1, feito:false, metas:[] };
+             jaTem:"", suc:"", casos:[], real:5, passo:1, feito:false, metas:[] };
 
 const rs = v => v==null||!isFinite(v) ? "—"
   : "R$ " + Math.round(v).toLocaleString("pt-BR");
@@ -4663,12 +4971,29 @@ function contasPL(){
     else                            veredito = "falta";
   }
 
+  // curva ano a ano: acumula até parar, depois saca o que falta
+  const curva = [];
+  let saldo = PL.tem;
+  for(let k = 0; k <= (PL.ate - PL.idade); k++){
+    const idadeK = PL.idade + k;
+    if(k > 0){
+      if(idadeK <= PL.apos) saldo = saldo * (1 + r) + sobra * 12;
+      else                  saldo = saldo * (1 + r) - quer12;
+      (PL.metas||[]).forEach(mt => {
+        if(Number(mt.idade) === idadeK) saldo -= Number(mt.valor)||0; });
+    }
+    curva.push({ idade: idadeK, v: Math.max(0, saldo) });
+  }
+  const acabaEm = curva.find(x => x.idade > PL.apos && x.v <= 0);
+
   return { anos, m, sobra, projetado, preservar, consumir, dura, veredito, saques,
-           precisaTirar,
+           precisaTirar, curva, acabaEm,
            taxaPoupanca: PL.renda > 0 ? sobra / PL.renda : 0,
            aportePreservar: precisa(preservar), aporteConsumir: precisa(consumir),
            rendaPossivel: projetado * r / 12 };
 }
+
+
 
 function telaPlanejar(){
   const c = contasPL();
@@ -4678,7 +5003,7 @@ function telaPlanejar(){
       ${dica?`placeholder="${dica}"`:""}>`;
 
   const passo = (n,tit,dentro) => `
-    <div class="ab${PL.passo===n?" aberta":""}${PL.passo>n?" feita":""}">
+    <div class="ab${PL.passo===n?" aberta":""}${PL.passo>n?" feita":""}" id="abP${n}">
       <div class="cabAb" data-passo="${n}"><i class="n">${n}</i>
         <span class="tt">${tit}</span></div>
       <div class="corpo">${dentro}</div>
@@ -4686,11 +5011,11 @@ function telaPlanejar(){
 
   app().innerHTML = `
   <div class="cabeca" style="text-align:left;max-width:66ch">
-    <h1>Monte o seu planejamento</h1>
-    <p>Cinco perguntas e a conta que quase ninguém fez: <b>com o que você tem
+    <h1>Monte o seu plano</h1>
+    <p>Seis perguntas e a conta que quase ninguém fez: <b>com o que você tem
       hoje e o que consegue guardar, dá para parar de trabalhar quando você
-      quer?</b> Nada fica salvo — é uma conta na tela, e some quando você
-      fechar a página.</p>
+      quer?</b> Depois, a segunda conta que ninguém faz — a de quando você não
+      estiver mais aqui. Nada fica salvo: some quando você fechar a página.</p>
   </div>
 
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:22px"
@@ -4699,9 +5024,11 @@ function telaPlanejar(){
       ${passo(1,"Você", `
         ${campo("pIdade","Sua idade hoje",PL.idade)}
         ${campo("pApos","Com que idade quer poder parar",PL.apos)}
+        ${campo("pAte","A conta vai até que idade",PL.ate)}
         <p style="font-size:11.5px;color:var(--graf);margin:9px 0 0">
-          A conta vai até os ${PL.ate} anos. Viver mais que o dinheiro é o
-          risco que ninguém calcula.</p>`)}
+          Quem tem 35 hoje tem chance real de passar dos 90 — por isso o padrão
+          é 100. Botar 80 para o número ficar bonito é enganar a si mesmo:
+          viver mais que o dinheiro é o risco que ninguém calcula.</p>`)}
 
       ${passo(2,"Quanto entra e quanto sai", `
         ${campo("pRenda","Renda líquida por mês",PL.renda,"8.000")}
@@ -4760,10 +5087,12 @@ function telaPlanejar(){
         ${PL.feito?"Refazer a conta":"Ver o resultado"}</button>
     </div>
 
-    <div id="pRes">${PL.feito ? resultadoPL(c) : `
+    <div id="pRes">${PL.feito ? (faltaPL().length ? pedirPL(faltaPL()) : resultadoPL(c)) : `
       <div class="card" style="color:var(--graf);font-size:13px">
         Preencha ao lado e o resultado aparece aqui.</div>`}</div>
-  </div>`;
+  </div>
+
+  `;
 
   document.querySelectorAll("[data-passo]").forEach(el =>
     el.onclick = () => { PL.passo = PL.passo === +el.dataset.passo ? 0 : +el.dataset.passo;
@@ -4775,6 +5104,32 @@ function telaPlanejar(){
   document.querySelectorAll(".mX").forEach(el =>
     el.onclick = () => { lerPL(); PL.metas.splice(+el.dataset.i,1); telaPlanejar(); });
 
+  document.querySelectorAll(".cSuc").forEach(el =>
+    el.onchange = () => { const id = el.dataset.c;
+      PL.casos = el.checked ? [...new Set([...PL.casos, id])]
+                            : PL.casos.filter(x => x !== id);
+      el.closest(".caso").classList.toggle("on", el.checked);
+      const r = $("#sucRes"); if(r) r.innerHTML = sucessaoHTML(); });
+
+  const bs = $("#irSuc");
+  if(bs) bs.onclick = () => {
+    // a parte sucessória não usa esses números; preencho o mínimo para
+    // liberar a tela e o Ricardo cai direto onde ele quer
+    if(!(PL.renda>0)) PL.renda = 1;
+    if(!(PL.gasto>0)) PL.gasto = 1;
+    if(!(PL.quer >0)) PL.quer  = 1;
+    PL.soSuc = true; telaPlanejar();
+    const a = $("#sucAncora"); if(a) a.scrollIntoView({behavior:"smooth"});
+  };
+
+  const es = $("#pSuc");
+  if(es) es.oninput = () => { PL.suc = numPL(es);
+    const r = $("#sucRes"); if(r) r.innerHTML = sucessaoHTML(); };
+
+  document.querySelectorAll(".irPasso").forEach(el =>
+    el.onclick = () => { lerPL(); PL.passo = +el.dataset.ir; telaPlanejar();
+      const a = $("#abP"+PL.passo); if(a) a.scrollIntoView({behavior:"smooth",block:"center"}); });
+
   $("#pCalc").onclick = () => { lerPL(); PL.feito = true; PL.passo = 0; telaPlanejar();
     const r = $("#pRes"); if(r && innerWidth < 900) r.scrollIntoView({behavior:"smooth"}); };
 }
@@ -4782,9 +5137,10 @@ function telaPlanejar(){
 function lerPL(){
   const p = id => { const el = $("#"+id); return el ? numPL(el) : null; };
   const v = {};
-  ["pIdade","pApos","pRenda","pGasto","pTem","pQuer","pJa"].forEach(id => v[id] = p(id));
+  ["pIdade","pApos","pAte","pRenda","pGasto","pTem","pQuer","pJa"].forEach(id => v[id] = p(id));
   if(v.pIdade)  PL.idade = Math.min(90, Math.max(14, v.pIdade));
   if(v.pApos)   PL.apos  = Math.min(95, Math.max(PL.idade, v.pApos));
+  if(v.pAte)    PL.ate   = Math.min(120, Math.max(PL.apos + 1, v.pAte));
   if(v.pRenda != null) PL.renda = v.pRenda;
   if(v.pGasto != null) PL.gasto = v.pGasto;
   if(v.pTem   != null) PL.tem   = v.pTem;
@@ -4796,7 +5152,229 @@ function lerPL(){
     const i = +el.dataset.i; if(PL.metas[i]) PL.metas[i].idade = numPL(el); });
   document.querySelectorAll(".mValor").forEach(el => {
     const i = +el.dataset.i; if(PL.metas[i]) PL.metas[i].valor = numPL(el); });
+  const sc = $("#pSuc"); if(sc) PL.suc = numPL(sc);
   const s = $("#pReal"); if(s) PL.real = +s.value;
+}
+
+function graficoPL(c){
+  const d = c.curva || [];
+  if(d.length < 2) return "";
+  const L = 640, A = 168, pb = 20;
+  const mx = Math.max(...d.map(x => x.v), 1);
+  const px = i => (i / (d.length - 1)) * L;
+  const py = v => A - pb - (v / mx) * (A - pb - 8);
+
+  const linha = d.map((x,i) => `${i?"L":"M"}${px(i).toFixed(1)},${py(x.v).toFixed(1)}`).join(" ");
+  const area  = linha + ` L${L},${A-pb} L0,${A-pb} Z`;
+  const iPara = d.findIndex(x => x.idade === PL.apos);
+  const xPara = iPara >= 0 ? px(iPara) : null;
+  const cor = c.veredito === "falta" ? "var(--baixa)"
+            : c.veredito === "consome" ? "var(--ouro2)" : "var(--alta)";
+
+  const marcas = (PL.metas||[]).map(mt => {
+    const i = d.findIndex(x => x.idade === Number(mt.idade));
+    if(i < 0 || !(Number(mt.valor)>0)) return "";
+    return `<line x1="${px(i).toFixed(1)}" y1="${py(d[i].v).toFixed(1)}"
+      x2="${px(i).toFixed(1)}" y2="${A-pb}" stroke="var(--linha2)" stroke-dasharray="2 3"/>
+      <circle cx="${px(i).toFixed(1)}" cy="${py(d[i].v).toFixed(1)}" r="3"
+        fill="var(--papel)" stroke="var(--ouro2)" stroke-width="1.4"/>`;
+  }).join("");
+
+  return `
+  <div class="card" style="margin-top:12px;padding-bottom:9px">
+    <div style="font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+      color:var(--graf);margin-bottom:2px">Seu patrimônio, ano a ano</div>
+    <div style="font-size:11.5px;color:var(--graf);margin-bottom:8px">
+      em dinheiro de hoje · o topo é ${rs(mx)}</div>
+    <svg viewBox="0 0 ${L} ${A}" style="width:100%;height:auto;display:block"
+      preserveAspectRatio="none">
+      <defs><linearGradient id="gPL" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="${cor}" stop-opacity=".26"/>
+        <stop offset="100%" stop-color="${cor}" stop-opacity="0"/>
+      </linearGradient></defs>
+      <line x1="0" y1="${A-pb}" x2="${L}" y2="${A-pb}" stroke="var(--linha)"/>
+      <path d="${area}" fill="url(#gPL)"/>
+      <path d="${linha}" fill="none" stroke="${cor}" stroke-width="1.8"
+        stroke-linejoin="round"/>
+      ${xPara==null?"":`<line x1="${xPara.toFixed(1)}" y1="4" x2="${xPara.toFixed(1)}"
+        y2="${A-pb}" stroke="var(--lacre)" stroke-dasharray="3 3" stroke-width="1"/>`}
+      ${marcas}
+    </svg>
+    <div style="display:flex;justify-content:space-between;font-size:10.5px;
+      color:var(--graf);font-family:'IBM Plex Mono',monospace;margin-top:1px">
+      <span>${PL.idade}</span>
+      ${xPara==null?"":`<span style="color:var(--ouro2)">para aos ${PL.apos}</span>`}
+      <span>${PL.ate}</span>
+    </div>
+    <p style="font-size:12px;color:var(--t2);line-height:1.55;margin:9px 0 0">
+      ${c.acabaEm
+        ? `A linha chega a zero aos <b style="color:var(--baixa)">${c.acabaEm.idade}</b>
+           anos. Daí em diante você dependeria só do que já recebe.`
+        : `A linha não chega a zero até os ${PL.ate}. O dinheiro dura o que
+           você precisa que ele dure.`}
+      ${(PL.metas||[]).length ? " Os pontos marcam os planos do caminho." : ""}</p>
+  </div>`;
+}
+
+const CASOS = [
+  { id:"filhos", t:"Tenho filhos de mais de um casamento",
+    p:"Herdeiro necessário de união diferente não abre mão do que é dele, e o cônjuge atual também tem direito. É a combinação que mais transforma inventário em processo de anos — e cada ano é mais custo e mais bem parado." },
+  { id:"terra", t:"Tenho fazenda, gado ou terra",
+    p:"Terra e rebanho não se dividem em quatro sem alguém sair perdendo, e não se vendem em trinta dias por preço justo. Enquanto o inventário corre, a atividade precisa continuar: tem safra, tem trato, tem funcionário." },
+  { id:"imoveis", t:"Boa parte do que tenho são imóveis",
+    p:"Imóvel é o ativo mais difícil de virar dinheiro com pressa. Vendido às pressas, sai por bem menos — e o desconto costuma ser maior do que toda a economia que qualquer planejamento tributário traria." },
+  { id:"empresa", t:"Sou sócio de uma empresa",
+    p:"As cotas travam junto. Dependendo do contrato social, os sócios podem ter preferência ou o direito de comprar por valor de balanço, que quase nunca é o valor real. E a folha de pagamento não espera o inventário." },
+  { id:"gente", t:"Tem gente que depende financeiramente de mim",
+    p:"Filho na escola, pai idoso, cônjuge sem renda própria. Essa é a despesa que não pode atrasar um mês sequer — e é justamente a que ninguém consegue pagar com bem travado." },
+  { id:"fora", t:"Tenho bens ou conta no exterior",
+    p:"Bem lá fora costuma exigir um processo próprio no país onde está, com regra e custo de lá, em paralelo ao daqui. Sem estrutura montada em vida, a família descobre isso no pior momento." },
+  { id:"liquido", t:"Dinheiro parado eu quase não tenho",
+    p:"É o caso mais comum de quem construiu patrimônio: tudo está aplicado ou investido em algo produtivo. No papel a família é rica; na prática, não tem com o que pagar a conta que chega primeiro." }
+];
+
+function sucessaoHTML(){
+  const v = Number(PL.suc)||0;
+  if(v <= 0) return `<p style="font-size:12.5px;color:var(--graf);margin:0">
+    Escreva um valor acima para ver a conta.</p>`;
+
+  const hon  = v * 0.06;   // honorários de inventário, faixa comum das tabelas da OAB
+  const imp  = v * 0.05;   // ITCMD: varia por estado, hoje entre 2% e 8%
+  const cart = v * 0.015;  // custas, cartório, certidões
+  const total = hon + imp + cart;
+
+  const it = (r, q, d) => `<div style="display:flex;justify-content:space-between;
+    gap:12px;padding:8px 0;border-bottom:1px solid var(--linha)">
+    <span style="flex:1"><b style="font-size:13px">${r}</b>
+      <span style="display:block;font-size:11.5px;color:var(--graf);line-height:1.45">${d}</span></span>
+    <b class="mono" style="font-size:13px;color:var(--baixa);white-space:nowrap">${q}</b></div>`;
+
+  const meus = CASOS.filter(x => PL.casos.includes(x.id));
+
+  return `
+  ${!meus.length ? "" : `<div style="margin-bottom:14px">
+    ${meus.map(x=>`<div style="padding:9px 0 9px 11px;border-left:2px solid var(--lacre);
+      margin-bottom:7px">
+      <b style="font-size:12.5px;color:var(--ouro2)">${x.t}</b>
+      <p style="font-size:12.5px;color:var(--t2);line-height:1.55;margin:3px 0 0">${x.p}</p>
+    </div>`).join("")}</div>`}
+
+  ${it("Honorários do inventário", rs(hon),
+       "cerca de 6% na faixa usual das tabelas da OAB; chega a 10% em caso disputado")}
+  ${it("ITCMD", rs(imp),
+       "o imposto estadual sobre herança varia de 2% a 8% conforme o estado — aqui a 5%")}
+  ${it("Custas, cartório e certidões", rs(cart), "e o processo pode levar de um a quatro anos")}
+  <div style="display:flex;justify-content:space-between;gap:12px;padding:11px 0 0">
+    <b style="font-size:13.5px">Caixa necessário, antes de receber</b>
+    <b class="mono" style="font-size:16px;color:var(--baixa)">${rs(total)}</b></div>
+
+  <p style="font-size:13px;color:var(--t2);line-height:1.6;margin:13px 0 0">
+    E isso é só o processo. Enquanto ele corre, alguém precisa continuar
+    pagando a folha da empresa, a escola, o condomínio e a própria vida da
+    família — <b>com os bens travados</b>. Quem não tem esse dinheiro à mão
+    vende ativo às pressas, e quem vende com pressa vende barato.</p>
+
+  <div style="margin-top:16px;padding:15px 17px;border:1px solid rgba(201,162,39,.32);
+    border-radius:5px;background:linear-gradient(180deg,rgba(201,162,39,.07),transparent)">
+    <b style="font-size:14.5px;color:var(--ouro2)">O que resolve esse buraco é
+      dinheiro que chega rápido e não entra no inventário</b>
+    <p style="font-size:13px;color:var(--t2);line-height:1.6;margin:7px 0 0">
+      É o que um seguro de vida faz: o capital vai direto ao beneficiário, em
+      semanas, porque o Código Civil diz que ele não integra a herança. Em
+      dezembro de 2024 o STF ainda decidiu que não incide ITCMD sobre esse
+      repasse — não é herança, é contrato feito em vida. Um capital na ordem de
+      <b>${rs(total)}</b> cobre a conta do processo; acima disso, é a família
+      respirando enquanto o resto está travado.</p>
+
+    <div style="margin-top:13px;border-top:1px solid rgba(201,162,39,.22);padding-top:11px">
+      ${[["É dinheiro que volta",
+          "Muita gente paga a vida inteira um seguro que vence todo ano, encarece com a idade e nunca devolve nada — e some justamente se ela parar de pagar aos setenta. O vitalício resgatável funciona ao contrário: passado o prazo de carência, costumeiramente dez anos, você resgata em vida. Se a fase de risco passou, vira complemento de aposentadoria."],
+         ["O risco é avaliado na entrada, não na saída",
+          "A seguradora analisa sua saúde uma vez, quando você contrata. Aceito, o contrato vale enquanto você pagar — mesmo que apareça um câncer aos sessenta. O seguro anual é recontratado a cada renovação: sobe de preço e pode não ser renovado, e você descobre isso quando ninguém mais quer vender para você."],
+         ["Por isso ele pede exames antes",
+          "O seguro barato entra só com uma declaração, sem exame — parece fácil, e é por isso que a discussão fica guardada para a hora do sinistro. Com exame, a seguradora avaliou, sabia o que aceitava, e aceitou: não tem o que alegar depois. Ter uma condição de saúde raramente é recusa — costuma ser prêmio maior e seguro feito."],
+         ["As cláusulas, que é onde mora o problema",
+          "Suicídio não é coberto nos dois primeiros anos de contrato, e esse prazo é objetivo. A causa da morte se discute: um carro que sai da pista sem marca de frenagem foi acidente ou infarto ao volante? A seguradora tem interesse na versão mais barata, e a família descobre isso logo depois do enterro."]]
+        .map(([t,d])=>`<div style="padding:9px 0;border-bottom:1px solid rgba(201,162,39,.14)">
+          <b style="font-size:12.5px;color:var(--tinta)">${t}</b>
+          <p style="font-size:12.5px;color:var(--t2);line-height:1.55;margin:3px 0 0">${d}</p>
+        </div>`).join("")}
+    </div>
+
+    <p style="font-size:12.5px;color:var(--ouro2);line-height:1.6;margin:11px 0 0">
+      Ler a apólice antes de assinar é trabalho de quem entende. Cláusula ruim
+      se resolve na contratação; depois, só na Justiça.</p>
+    <p style="font-size:11.5px;color:var(--graf);line-height:1.55;margin:7px 0 0">
+      Esses produtos costumam ter proteções que um investimento comum não tem,
+      inclusive quanto a credores e em separação — mas depende do caso, e há
+      decisões nos dois sentidos. É pergunta para advogado.</p>
+  </div>
+  <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--linha)">
+    <p style="font-family:Newsreader,serif;font-size:17px;line-height:1.45;
+      color:var(--tinta);margin:0 0 8px">
+      Em quarenta anos de mercado, nunca ouvi ninguém dizer que o pai errou
+      ao deixar um seguro.</p>
+    <p style="font-size:13px;color:var(--t2);line-height:1.6;margin:0">
+      O que se ouve é o contrário, e com a mesma emoção: <i>“meu pai
+      pensou em mim”</i>. Ninguém agradece a economia de imposto que o
+      planejamento trouxe — mas todo mundo lembra de quem deixou a conta
+      resolvida na hora em que a família não tinha cabeça para resolver nada.</p>
+  </div>
+
+  <div class="chamada" style="margin-top:14px">
+    <div>
+      <h3 style="font-size:16px;margin-bottom:3px">Vamos resolver o seu caso</h3>
+      <p style="color:var(--t2);margin:0;font-size:12.5px;max-width:48ch">
+        Advogado para a holding e o testamento, especialista em seguro para a
+        liquidez, e quem entende de estrutura no exterior se for o seu caso.
+        Cada um com registro na sua área.</p>
+    </div>
+    <a href="#/servicos" class="bt lacre">Falar com quem faz</a>
+  </div>
+
+  <p style="font-size:11.5px;color:var(--graf);line-height:1.55;margin:12px 0 0">
+    Percentuais de referência, para dar ordem de grandeza. O ITCMD muda por
+    estado e há propostas de alteração; honorários variam com a complexidade e
+    com o acordo entre herdeiros.</p>`;
+}
+
+function faltaPL(){
+  const f = [];
+  if(!(PL.renda > 0))                    f.push([2,"quanto entra por mês"]);
+  if(!(PL.gasto > 0))                    f.push([2,"quanto sai por mês"]);
+  if(!(PL.quer  > 0))                    f.push([4,"quanto quer receber quando parar"]);
+  return f;
+}
+
+function pedirPL(f){
+  return `
+  <div class="card" style="border-left:2px solid var(--ouro2)">
+    <div style="font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+      color:var(--graf);margin-bottom:5px">Ainda não dá para fechar a conta</div>
+    <h3 style="font-family:Newsreader,serif;font-size:20px;margin:0 0 10px;
+      color:var(--ouro2)">Falta ${f.length===1?"um dado":"preencher "+f.length+" campos"}</h3>
+    <div>${f.map(([n,q])=>`
+      <button type="button" class="irPasso" data-ir="${n}"
+        style="display:flex;width:100%;align-items:center;gap:10px;text-align:left;
+        background:none;border:none;border-bottom:1px solid var(--linha);
+        padding:9px 0;cursor:pointer;color:inherit;font:inherit">
+        <i style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;
+          color:var(--lacre);font-style:normal">0${n}</i>
+        <span style="flex:1;font-size:13.5px;color:var(--t2)">${q}</span>
+        <span style="font-size:11px;color:var(--graf)">preencher &rarr;</span>
+      </button>`).join("")}</div>
+    <p style="font-size:12px;color:var(--graf);line-height:1.55;margin:11px 0 0">
+      Sem isso a conta sai errada e parece certa, que é pior do que não sair.</p>
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <b style="font-size:13.5px">Não quer preencher isso agora?</b>
+    <p style="font-size:12.5px;color:var(--t2);line-height:1.6;margin:5px 0 10px">
+      A segunda parte desta página não depende da conta de aposentadoria: é o
+      que acontece com o seu patrimônio quando você não estiver aqui. Costuma
+      ser mais urgente, e leva dois minutos.</p>
+    <button type="button" class="bt" id="irSuc">Ver a parte sucessória &rarr;</button>
+  </div>`;
 }
 
 function resultadoPL(c){
@@ -4804,7 +5382,7 @@ function resultadoPL(c){
     preserva:["var(--alta)","Dá, e ainda sobra",
       `Aos ${PL.apos} você teria <b>${rs(c.projetado)}</b>. Isso rende
        ${rs(c.rendaPossivel)} por mês <b>sem encostar no principal</b> — você
-       tira o que quer, para sempre, e o patrimônio continua lá.`],
+       tira o que quer, e o patrimônio continua de pé.`],
     consome:["var(--ouro2)","Dá, gastando o que juntou",
       `Aos ${PL.apos} você teria <b>${rs(c.projetado)}</b>. Dá para tirar
        ${rs(c.precisaTirar)} por mês até os ${PL.ate}, mas consumindo o principal:
@@ -4833,6 +5411,8 @@ function resultadoPL(c){
       ${V[1]}</h3>
     <p style="color:var(--t2);font-size:13.5px;line-height:1.6;margin:0">${V[2]}</p>
   </div>
+
+  ${graficoPL(c)}
 
   <div class="card" style="margin-top:12px">
     <div style="font-size:10px;letter-spacing:.16em;text-transform:uppercase;
@@ -4886,6 +5466,117 @@ function resultadoPL(c){
       não tem.</p>
   </div>
 
+  <div class="card" style="margin-top:12px">
+    <div style="font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+      color:var(--graf);margin-bottom:6px">E depois de você</div>
+    <p style="color:var(--t2);font-size:13.5px;line-height:1.6;margin:0 0 10px">
+      ${c.acabaEm
+        ? `Do jeito que está, o patrimônio se esgota aos ${c.acabaEm.idade} —
+           não sobra nada para deixar, e o assunto vira outro: como não faltar
+           antes disso.`
+        : `Aos ${PL.ate} ainda sobrariam cerca de
+           <b>${rs((c.curva[c.curva.length-1]||{}).v)}</b>. Isso é herança, e
+           herança tem custo e tem fila.`}</p>
+    <p style="color:var(--t2);font-size:13px;line-height:1.6;margin:0 0 10px">
+      No Brasil o ITCMD varia por estado e há proposta de subir. Inventário
+      judicial costuma levar anos e consumir parte do que ficou; o extrajudicial
+      é mais rápido, mas exige herdeiros de acordo e nenhum menor envolvido.
+      Enquanto corre, os bens ficam travados — e é aí que a família vende mal,
+      com pressa.</p>
+    <p style="color:var(--t2);font-size:13px;line-height:1.6;margin:0 0 12px">
+      O caminho depende do <b>tipo de bem</b>, e é aqui que muita gente erra:</p>
+
+    <div style="border-top:1px solid var(--linha)">
+      <div style="padding:10px 0;border-bottom:1px solid var(--linha)">
+        <b style="font-size:13px">Imóveis e empresa</b>
+        <p style="font-size:12.5px;color:var(--t2);line-height:1.55;margin:3px 0 0">
+          Holding familiar. As cotas é que passam adiante, não a matrícula de
+          cada imóvel — o que evita inventário sobre cada bem, organiza a
+          gestão e costuma reduzir a conta tributária.</p>
+      </div>
+      <div style="padding:10px 0;border-bottom:1px solid var(--linha)">
+        <b style="font-size:13px">Dinheiro e investimentos</b>
+        <p style="font-size:12.5px;color:var(--t2);line-height:1.55;margin:3px 0 0">
+          Holding não serve bem aqui. Para patrimônio financeiro há o seguro
+          resgatável — com prazo costumeiro de dez anos —, que você pode
+          resgatar em vida e que, não sendo herança, vai direto ao beneficiário
+          sem entrar no inventário. É liquidez para a família justamente
+          enquanto o resto está travado.</p>
+      </div>
+      <div style="padding:10px 0">
+        <b style="font-size:13px">O que muda tudo</b>
+        <p style="font-size:12.5px;color:var(--t2);line-height:1.55;margin:3px 0 0">
+          Se há herdeiros necessários, se é primeiro ou segundo casamento, qual
+          o regime de bens, se existem filhos de uniões diferentes, se você tem
+          sócios e o que diz o contrato social. Segundo casamento com filhos do
+          primeiro é o caso clássico em que não planejar termina em briga.</p>
+      </div>
+    </div>
+
+    <p style="color:var(--graf);font-size:12.5px;line-height:1.6;margin:12px 0 0">
+      Nenhum desses caminhos serve a todos, e a escolha errada custa mais do
+      que não ter feito nada.</p>
+  </div>
+
+
+  <div class="card" style="margin-top:12px" id="sucAncora">
+    <div style="font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+      color:var(--graf);margin-bottom:5px">A conta que ninguém faz</div>
+    <h3 style="font-family:Newsreader,serif;font-size:20px;margin:0 0 3px">
+      Quatro perguntas. Se você tiver resposta para as quatro, pule esta parte.</h3>
+    <p style="color:var(--graf);font-size:12.5px;margin:0 0 14px">
+      Não são hipóteses de manual. É o que acontece.</p>
+
+    <div class="provoca">
+      <div class="pv">
+        <b>Se você morrer hoje, quem paga a escola do seu filho no mês que vem?</b>
+        <p>A pergunta não é se você tem patrimônio — é se a sua família tem
+          <b>renda</b> na semana seguinte. São coisas diferentes. Conta
+          bloqueia, aluguel deixa de ser repassado, empresa entra em disputa.
+          E a mensalidade vence no dia cinco do mesmo jeito.</p>
+      </div>
+      <div class="pv">
+        <b>Você tem filhos de casamentos diferentes?</b>
+        <p>Então tem herdeiros necessários com interesses opostos, e um cônjuge
+          atual que também tem direito. Cada um com seu advogado e sua pressa:
+          quem precisa de dinheiro quer vender, quem não precisa quer esperar.
+          Isso dura anos.</p>
+      </div>
+      <div class="pv">
+        <b>Se o seu patrimônio for bloqueado amanhã, como você se vira?</b>
+        <p>Discussão trabalhista, tributária, uma garantia que você deu por
+          alguém. Não precisa ser culpa sua para o dinheiro parar. A pergunta
+          é o que sobra <b>fora</b> do que pode ser alcançado.</p>
+      </div>
+      <div class="pv">
+        <b>E se o casamento acabar?</b>
+        <p>Metade do que foi construído entra na conta, dependendo do regime.
+          O que fica de fora, e como isso foi montado, é decisão que se toma
+          antes — nunca durante.</p>
+      </div>
+    </div>
+
+    <p style="color:var(--t2);font-size:13.5px;line-height:1.6;margin:16px 0 12px">
+      O que essas quatro têm em comum: <b>não é falta de patrimônio, é falta de
+      liquidez na hora errada.</b> Os bens travam no mesmo dia; as despesas não
+      travam nenhum dia. E a conta do inventário precisa ser paga <b>antes</b>
+      de a família receber qualquer coisa.</p>
+
+    <p style="font-size:13px;color:var(--tinta);margin:0 0 8px">
+      <b>Marque o que é o seu caso.</b> Cada item muda o tamanho do problema.</p>
+    <div class="casos">${CASOS.map(x=>`
+      <label class="caso${PL.casos.includes(x.id)?" on":""}">
+        <input type="checkbox" class="cSuc" data-c="${x.id}"
+          ${PL.casos.includes(x.id)?"checked":""}>
+        <span>${x.t}</span></label>`).join("")}</div>
+
+    <label style="font-size:12px;color:var(--graf);margin-top:14px;display:block">
+      Patrimônio total, somando tudo — imóveis, empresa, investimentos</label>
+    <input id="pSuc" inputmode="decimal" value="${PL.suc||""}"
+      placeholder="10.000.000" style="max-width:260px">
+    <div id="sucRes" style="margin-top:12px">${sucessaoHTML()}</div>
+  </div>
+
   <h3 style="font-family:Newsreader,serif;font-size:20px;margin:26px 0 4px">
     Agora vem a parte que a conta não faz</h3>
   <p style="color:var(--t2);font-size:13.5px;line-height:1.6;margin:0 0 14px">
@@ -4902,15 +5593,14 @@ function resultadoPL(c){
         `${PL.real}% acima da inflação é a média longa de uma carteira montada
          para o seu prazo — não é o rendimento da poupança nem o de um CDB
          qualquer. Quanto maior o prazo, mais a bolsa costuma pesar. Você pode
-         estudar isso de graça aqui mesmo: <a href="#/">publique uma carteira</a>,
+         estudar isso aqui mesmo: <a href="#/">publique uma carteira</a>,
          veja como ela se comporta com cotação real, e compare com quem está
          na frente.`],
        ["Dá para pagar menos imposto no caminho?",
-        `Costuma dar, e o efeito é grande em prazo longo. PGBL abate da base do
-         IR até o limite da lei para quem declara completa, previdência tem
-         tabela regressiva que cai com o tempo, e a ordem em que se vende
-         posição muda o quanto fica com o Fisco. Cada caso é um caso — o que
-         serve para quem declara simplificado não serve para quem declara
+        `Costuma dar, e em prazo longo o efeito é grande: PGBL abate da base do
+         IR de quem declara completa, previdência tem tabela que cai com o
+         tempo, e a ordem em que se vende posição muda o que fica com o Fisco.
+         O que serve para quem declara simplificado não serve para quem declara
          completa.`],
        ["Existe profissional que monta isso?",
         `Existe, e são categorias diferentes com registros diferentes:
@@ -4920,7 +5610,7 @@ function resultadoPL(c){
          precisa ter.`],
        ["E se eu não quiser ninguém?",
         `Perfeitamente possível, e muita gente faz. Este site continua aberto
-         de graça: publique carteiras, acompanhe as suas por meses, e descubra
+         publique carteiras, acompanhe as suas por meses, e descubra
          se você é bom nisso antes de ter dinheiro de verdade em jogo. Se for,
          não precisa de mais ninguém.`]]
       .map(([q,r])=>`<details class="qa"><summary>${q}</summary><p>${r}</p></details>`).join("")}
@@ -5253,14 +5943,14 @@ async function telaUniverso(){
 
   ${!l.length ? `<div class="card"><p style="margin:0;color:var(--t2)">Nada neste filtro.</p></div>`
   : `<table><thead><tr><th>Papel</th><th>Tipo</th><th class="d">Último preço</th>
-      <th class="d">Negócio/dia</th><th class="d">Pregões</th><th class="d">Último</th>
+      <th class="d" title="valor antigo da tabela universo — não é o giro calculado no Screening">Liquidez (antiga)</th><th class="d">Pregões</th><th class="d">Último</th>
       <th></th></tr></thead><tbody>
     ${l.map(x=>`<tr${!x.pregoes?' class="semdado"':""}>
       <td class="mono" style="font-weight:500">${esc(x.ativo)}</td>
       <td><select data-tipo="${esc(x.ativo)}" class="tipoSel">${TIPOS.map(([k,r])=>
         `<option value="${k}"${(x.tipo||"acao")===k?" selected":""}>${r}</option>`).join("")}</select></td>
       <td class="d mono">${x.cotacao==null?"—":n2(x.cotacao)}</td>
-      <td class="d mono nulo" style="font-size:12px">${x.liquidez==null?"—":grana(x.liquidez)}</td>
+      <td class="d mono nulo" style="font-size:12px">${x.liquidez==null?"—":n2(x.liquidez/1e6,1)+" mi"}</td>
       <td class="d mono ${x.pregoes?"":"baixa"}">${x.pregoes||"nenhum"}</td>
       <td class="d mono nulo" style="font-size:11.5px">${x.ultimo?dataBR(x.ultimo):"—"}</td>
       <td class="d"><button class="bt" data-del="${esc(x.ativo)}"
@@ -5362,7 +6052,7 @@ async function telaClube(){
         <div class="srv" style="cursor:default"><h3>Dinheiro é de verdade</h3>
           <div class="oq">Diferente das carteiras do site, aqui o resultado é seu. Clube
             de investimentos não tem garantia de rentabilidade e pode perder valor. Quem
-            quiser praticar sem risco continua com o ranking, de graça.</div></div>
+            quiser praticar sem risco continua com o ranking.</div></div>
         <div class="srv" style="cursor:default"><h3>A regra vem antes do dinheiro</h3>
           <div class="oq">O estatuto define quem decide, como se entra, como se sai e o
             que o clube pode comprar. Escrever isso com o grupo sóbrio evita a briga que
@@ -5462,7 +6152,7 @@ async function telaConsenso(){
 
   app().innerHTML = `
   <div class="cabeca" style="text-align:left;max-width:66ch">
-    <h1>O que estão comprando</h1>
+    <h1>Maiores posições das carteiras</h1>
     <p>Os papéis que mais aparecem nas carteiras publicadas, somando todas as classes.
       Não é recomendação nem previsão: é o retrato do que as pessoas escolheram, e o
       retrato muda todo pregão.</p>
@@ -5500,6 +6190,279 @@ async function telaConsenso(){
   </p>`;
 }
 
+// ── abertura ────────────────────────────────────────────────────
+// Fica aparecendo até a pessoa dizer que não quer mais. Contador
+// escondido decide pelo usuário; um botão deixa a escolha com ele.
+function aberturaDispensada(){
+  try { return localStorage.getItem("sp_abertura") === "nao"; } catch(e){ return true; }
+}
+function dispensarAbertura(){
+  try { localStorage.setItem("sp_abertura", "nao"); } catch(e){}
+}
+
+function telaAprender(){
+  const volta = p => (1/(1-p/100) - 1) * 100;
+  const linhas = [1,5,10,20,30,50,70,80,90];
+
+  const dobra = [];
+  for(let i=0, v=1; i<=10; i++, v*=2) dobra.push(v);
+
+  app().innerHTML = `
+  <div class="cabeca" style="text-align:left;max-width:70ch">
+    <h1>Por que investir é difícil</h1>
+    <p>Não é falta de informação, e não é falta de inteligência. É que o
+      mercado funciona numa lógica que a vida inteira nos ensinou a ignorar.</p>
+  </div>
+
+  <div class="apr">
+    <h2>A vida ensina uma lógica. O mercado usa outra.</h2>
+    <div class="duasL">
+      <div class="lg">
+        <span class="rot">o que a vida ensina</span>
+        <b>Lógica linear</b>
+        <p>Cada evento vale <b>um</b>. De 1 a 1000 você vai de um em um. Você
+          precisa tirar 8 em 10 na prova. Precisa vender para 8 em cada 10
+          pessoas que te procuram. Errar duas de dez é aceitável, e o esforço
+          compensa proporcionalmente: quem faz mais, colhe mais.</p>
+        <p class="ex">Aqui, <b>persistir é virtude</b>. Quem desiste não
+          chega — e a vida inteira nos treina para isso.</p>
+      </div>
+      <div class="lg lgOuro">
+        <span class="rot">o que o mercado usa</span>
+        <b>Lógica logarítmica</b>
+        <p>Os eventos <b>não valem igual</b>. Você pode acertar noventa vezes
+          seguidas e uma única vez apagar tudo. Não adianta ganhar 100% em
+          noventa operações se numa delas você perde 100%: acabou o jogo, e
+          não há nonagésima primeira.</p>
+        <p class="ex">Aqui, <b>persistir no erro é ruína</b>. E é exatamente
+          o instinto que nos trouxe até aqui.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="apr">
+    <h2>O ganho é generoso. A perda é impiedosa.</h2>
+    <p class="apP">Dobrar o dinheiro dez vezes transforma 1 em 1.024. É por isso
+      que o tempo é o maior aliado de quem investe:</p>
+    <div class="escada">
+      ${dobra.map((v,i)=>`<div class="deg" style="height:${
+        Math.max(9, (Math.log2(v)+1)/11*100)}%" title="${i} dobras: ${v}×">
+        <span>${v}</span></div>`).join("")}
+    </div>
+    <p class="apLeg">cada degrau é uma vez que o dinheiro dobrou</p>
+
+    <p class="apP" style="margin-top:26px">Só que a queda não desfaz na mesma
+      moeda. <b>Para voltar ao ponto de partida, o ganho necessário cresce muito
+      mais rápido que a perda sofrida:</b></p>
+    <div class="tabVolta">
+      <div class="cabV"><span>se você perde</span><span>precisa ganhar para voltar</span></div>
+      ${linhas.map(p=>{
+        const v = volta(p);
+        const grave = p >= 50;
+        return `<div class="lnV${grave?" grave":""}">
+          <span class="perc">−${p}%</span>
+          <span class="barra"><i style="width:${Math.min(100, v/9)}%"></i></span>
+          <span class="ganho">+${v.toFixed(0)}%</span></div>`;
+      }).join("")}
+    </div>
+    <p class="apP" style="margin-top:16px">Perder 1% custa 1% para voltar —
+      simétrico, indolor. Perder metade exige <b>dobrar</b> o que sobrou.
+      Perder 80% exige multiplicar por cinco. Perder 90%, por dez.
+      <b>É por isso que não perder muito importa mais do que ganhar muito.</b></p>
+  </div>
+
+  <div class="apr">
+    <h2>Fomos talhados para o contrário disso</h2>
+    <p class="apP">Persistência, lealdade, não largar a mão de quem está mal —
+      essas são as virtudes que nos fizeram sobreviver como espécie. E são
+      exatamente as que quebram uma carteira.</p>
+    <p class="apP">Segurar o papel que cai porque "uma hora volta" é lealdade.
+      Dobrar a aposta no que deu errado é persistência. Ter dificuldade de
+      admitir o erro é humano. O mercado cobra caro pelas três.</p>
+    <div class="citacao">
+      O gestor é o profissional pago para <b>mudar de ideia sem aviso</b> — e
+      para deixar pelo meio do caminho o que não presta. Não é falta de
+      convicção: é o trabalho.
+    </div>
+  </div>
+
+  <div class="apr">
+    <h2>O que fazer com isso, na prática</h2>
+    <div class="duasL">
+      <div class="lg">
+        <span class="rot">para quem tem pouco</span>
+        <b>Ganhar mais do que perde</b>
+        <p>Uma relação de <b>três para um</b>, no mínimo: quando acerta, ganha
+          três vezes o que perde quando erra. Com isso dá para errar mais da
+          metade das vezes e ainda terminar no azul. É o oposto da escola, onde
+          o que conta é a taxa de acerto.</p>
+        <p class="ex">Com pouco dinheiro não dá para diversificar de verdade —
+          então a defesa é o tamanho do erro, não a quantidade deles.</p>
+      </div>
+      <div class="lg">
+        <span class="rot">para quem tem muito</span>
+        <b>Diversificação e fundamento</b>
+        <p>Com patrimônio maior, a defesa é espalhar: papéis mais líquidos e
+          menos líquidos, setores diferentes, e <b>rebalancear</b> — vender um
+          pedaço do que subiu, comprar do que ficou para trás. Isso obriga a
+          fazer o que o instinto não deixa.</p>
+        <p class="ex">Coisa boa que cai é oportunidade. Mas <b>nem todo papel
+          que cai é bom</b> — uns caem porque são ruins, e esses não se
+          levantam. Separar os dois é o trabalho inteiro.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="apr">
+    <h2>A estratégia inteira cabe em duas palavras</h2>
+    <p class="apP"><b>Poupar e esperar.</b> Não é frase de efeito — é onde o
+      dinheiro de verdade é feito. Quem guarda mil reais por mês e deixa render
+      6% ao ano acima da inflação chega assim:</p>
+
+    <div class="juros">
+      <div class="cabJ"><span>tempo</span><span>o que você guardou</span>
+        <span>o que o juro fez</span><span>total</span></div>
+      ${[[10,120000,162473],[20,240000,453439],[30,360000,974513],[40,480000,1907678]]
+        .map(([anos,guardou,total])=>{
+          const juro = total - guardou, pj = juro/total*100;
+          return `<div class="lnJ">
+            <span class="tJ">${anos} anos</span>
+            <span class="bJ">
+              <i class="bg" style="width:${(1-pj/100)*100}%"></i>
+              <i class="bj" style="width:${pj}%"></i></span>
+            <span class="vJ">${pj.toFixed(0)}% do total</span>
+            <span class="tot">R$ ${Math.round(total/1000)} mil</span></div>`;
+        }).join("")}
+      <div class="legJ">
+        <span><i class="q bg"></i>o que saiu do seu bolso</span>
+        <span><i class="q bj"></i>o que o juro trouxe</span></div>
+    </div>
+
+    <p class="apP" style="margin-top:16px">Repare no que acontece com o tempo.
+      Em dez anos, três quartos do bolo ainda são <b>o seu esforço</b>. Em
+      trinta, <b>63% já é juro</b> — o dinheiro trabalhando mais que você. Em
+      quarenta, três quartos. <b>O mesmo aporte, a mesma taxa: o que muda é
+      quanto tempo você deixou quieto.</b></p>
+    <p class="apP">É por isso que começar cedo vale mais do que acertar o papel.
+      Dez anos a menos custam mais caro que uma escolha ruim — e são
+      irrecuperáveis, porque tempo não se compra.</p>
+    <p class="apP">Depois de anos assim, chega o dia em que o rendimento do mês
+      passa a ser maior do que você conseguiria guardar no mês. Dali em diante,
+      trabalhar vira escolha. <b>É esse o ponto que o planejamento calcula —
+      quando ele chega, no seu caso.</b></p>
+    <div class="apLinks">
+      <a href="#/planejar" class="bt lacre">Ver quando chega, para você &rarr;</a>
+    </div>
+  </div>
+
+  <div class="apr">
+    <h2>E a diversificação é o que te salva quando você erra</h2>
+    <p class="apP">Porque você vai errar. Todo mundo erra — a diferença é
+      quanto custa cada erro. Com dez papéis, um que vá a zero custa 10% do
+      total e os outros nove seguem trabalhando. Com dois papéis, o mesmo erro
+      leva metade de tudo, e você cai naquela tabela lá em cima: precisando de
+      100% só para voltar ao ponto de partida.</p>
+    <p class="apP"><b>Diversificar não é indecisão, é seguro.</b> Você não sabe
+      qual das dez está errada — se soubesse, não a teria comprado. O que dá
+      para garantir é que nenhuma delas sozinha derrube o conjunto.</p>
+
+    <div class="citacao">
+      Rebalancear é vender um pedaço do que subiu e comprar do que ficou para
+      trás. Parece contra a intuição, e é exatamente por isso que funciona:
+      obriga a realizar lucro e a comprar barato, que são as duas coisas que
+      ninguém faz sozinho.
+    </div>
+
+    <p class="apP" style="margin-top:16px">Mas há um limite que o rebalanceamento
+      não cobre. <b>Fruta podre tem que sair do cesto.</b> Comprar mais de um
+      papel que cai porque "ficou barato" só funciona se ele for bom e o preço
+      estiver errado. Se a empresa é que está errada, você está aumentando a
+      posição no que vai continuar caindo — e a fruta podre acaba estragando o
+      resto do cesto.</p>
+    <p class="apP">Separar o papel bom que caiu do papel que caiu porque é ruim
+      é o trabalho inteiro, e é onde entra estudar fundamento. Quando não dá
+      para separar, o tamanho da posição responde por você: pequena o bastante
+      para que estar errado não seja fatal.</p>
+  </div>
+
+  <div class="apr">
+    <h2>A lição zero, que vem antes de todas</h2>
+    <p class="apP">Nada disto funciona sem a primeira parte: <b>ter o que
+      investir</b>. Ajustar a despesa à receita, e não o contrário. Nenhuma
+      técnica compensa aporte que não existe, e a maior parte de quem chega ao
+      fim da vida com patrimônio chegou por aqui — não por acerto genial.</p>
+    <p class="apP">Junte as três coisas e está feito: <b>poupar todo mês, deixar
+      o juro trabalhar por décadas, e não deixar nenhum erro sozinho ser grande
+      o bastante para apagar o resto.</b> É simples de escrever e difícil de
+      cumprir — porque exige fazer a mesma coisa por vinte anos e resistir a
+      mexer quando o mercado assusta.</p>
+    <div class="apLinks">
+      <a href="#/planejar" class="bt lacre">Montar o meu plano &rarr;</a>
+      <a href="#/publicar" class="bt">Treinar com uma carteira</a>
+    </div>
+    <p class="apP" style="margin-top:18px;font-size:13px;color:var(--graf)">
+      E se algo acontecer com você antes de a conta fechar, um seguro leva a
+      família ao ponto onde o plano ia chegar. É a única peça que não depende
+      de tempo — está em <a href="#/planejar">planejamento</a>.</p>
+  </div>`;
+}
+
+function telaAbertura(){
+  app().innerHTML = `
+  <div class="abertura">
+    <p class="ab1">Ninguém nasce sabendo investir.</p>
+    <h1 class="ab2">E quase todo mundo aprende do jeito caro:<br>
+      com dinheiro de verdade.</h1>
+    <p class="ab3">Aqui é o contrário. Você monta a carteira que faria, o pregão
+      real diz se você estava certo, e o erro custa só o orgulho. Depois de
+      alguns meses você vai saber uma coisa sobre si mesmo que quase ninguém
+      sabe: <b>se leva jeito para isso ou não.</b> As duas respostas valem —
+      e nenhuma delas custou caro para ser descoberta.</p>
+
+    <div class="passosAb">
+      ${[["Entender","o que é ação, carteira e risco — sem jargão"],
+         ["Brincar","palpite do dia, duelo, placar. Erra-se mais fácil jogando"],
+         ["Treinar","sua carteira, cotação real da B3, sem dinheiro em risco"],
+         ["Competir","o mesmo ranking para amador e profissional"],
+         ["Decidir","seguir sozinho, ou com quem tem registro para fazer isso"]]
+        .map(([t,d],i)=>`<div class="pAb">
+          <span class="nAb">0${i+1}</span>
+          <b>${t}</b><span class="dAb">${d}</span></div>`).join("")}
+    </div>
+
+    <div class="promessa">
+      <p class="pTit">E se um dia você quiser ajuda de gente, não de tela</p>
+      <p class="pSub">O que você pode cobrar da gente:</p>
+      <div class="pGrid">
+        ${[["Registro, sem exceção","Assessor, gestor, planejador, advogado — cada um com registro na CVM, no Banco Central, na ANBIMA ou na ANCORD. Quem não tem, não trabalha conosco."],
+           ["Primeiro o seu caso, depois o produto","A conversa começa por quanto você tem, quem depende de você e o que te tira o sono. Produto que não resolve um problema seu não deveria ser oferecido."],
+           ["A letra miúda lida antes","Carência, exclusão, prazo de resgate, cláusula de suicídio, o que a apólice não cobre. Isso se resolve na contratação — depois, só na Justiça."],
+           ["O incômodo dito na cara","Se a conta não fecha, você vai ouvir que não fecha. Se o que você quer não existe, você vai ouvir isso também."],
+           ["Nada aqui compra posição","Contratar serviço não melhora o seu lugar no ranking. Se melhorasse, o ranking não valeria nada — e é ele que dá sentido ao resto."],
+           ["O nosso passado também não se apaga","A régua que vale para a sua carteira vale para quem trabalha aqui: resultado apurado sozinho, dia após dia, à vista de todos."]]
+          .map(([t,d])=>`<div class="pIt"><b>${t}</b><span>${d}</span></div>`).join("")}
+      </div>
+      <p class="pFim">Vender é como a casa se paga — está escrito lá em
+        <a href="#/como-funciona">Como funciona</a>, sem rodeio. O que não dá é
+        vender o que não serve: dá dinheiro uma vez e custa o cliente.</p>
+    </div>
+
+    <p class="ab4">O passado não se apaga aqui — nem o seu. É o que separa isto
+      de um print de lucro no Telegram.</p>
+
+    <div class="botoesAb">
+      <button type="button" class="bt cheio lacre" id="abVamos">Vamos lá &rarr;</button>
+      <button type="button" class="bt" id="abPular">Ir direto para o ranking</button>
+    </div>
+    <button type="button" class="naoVer" id="abNunca">não quero mais ver isto</button>
+  </div>`;
+
+  $("#abVamos").onclick = () => { location.hash = "#/como-funciona"; };
+  $("#abPular").onclick = () => { location.hash = "#/?r=1"; rotear(); };
+  $("#abNunca").onclick = () => { dispensarAbertura();
+    location.hash = "#/?r=1"; rotear(); };
+}
+
 function rotear(){
   clearInterval(window.__timerRank);
   clearInterval(window.__timerVivo);
@@ -5513,10 +6476,18 @@ function rotear(){
   const h = (location.hash||"#/").split("?")[0];
   const m = h.match(/^#\/carteira\/(\d+)$/);
   if(m)                       return telaCarteira(m[1]);
-  if(h==="#/"||h==="")        return telaRanking();
+  if(h==="#/"||h===""){
+    // quem não tem conta vê a abertura até dizer que não quer mais.
+    // O r=1 é o "ir direto" desta visita, sem dispensar de vez.
+    const q0 = new URLSearchParams((location.hash||"").split("?")[1]||"");
+    if(!eu && !aberturaDispensada() && q0.get("r") !== "1") return telaAbertura();
+    return telaRanking();
+  }
   if(h==="#/entrar")          return telaEntrar();
   if(h==="#/publicar")        return telaPublicar();
   if(h==="#/duelo")           return telaDuelo();
+  if(h==="#/abertura")        return telaAbertura();
+  if(h==="#/aprender")        return telaAprender();
   if(h==="#/como-funciona")   return telaComo();
   if(h==="#/termos")          return telaTermos();
   if(h==="#/screening")       return telaScreening();
