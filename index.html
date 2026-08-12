@@ -341,29 +341,51 @@ tr.semdado:hover td{opacity:1}
 .cabsec{padding-bottom:12px;border-bottom:1px solid var(--linha2)}
 .cabsec h2{font-size:22px;margin:0 0 5px}
 .cabsec span{display:block;font-size:12.5px;color:var(--graf);line-height:1.55;max-width:74ch}
-.gradeS{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));
-  gap:12px;margin-top:15px;align-items:start}
-.srv{background:var(--p2);border:1px solid var(--linha);border-radius:4px;
-  padding:22px 22px 18px;display:flex;flex-direction:column;cursor:pointer;
-  transition:border-color .14s,background .14s}
-.srv:hover{border-color:var(--linha2);background:var(--p3)}
-.srv.on{border-color:var(--lacre);background:var(--p3)}
-.srv h3{font-size:18px;margin:0 0 10px}
+/* ── serviços ──────────────────────────────────────────────────
+   Eram 17 cartões abertos ao mesmo tempo num grid: parede de texto,
+   alturas desiguais, e o texto bom se perdia. Agora cada um abre
+   quando a pessoa quer. */
+.gradeS{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));
+  gap:10px;margin-top:15px;align-items:start}
+.srv{background:var(--p2);border:1px solid var(--linha);border-radius:5px;
+  padding:0;overflow:hidden;transition:border-color .14s,background .14s}
+.srv:hover{border-color:var(--linha2)}
+.srv.on{border-color:var(--lacre)}
 
-.srv .oq{font-size:13px;color:var(--t2);line-height:1.6;flex:1}
+.srv .cab{padding:15px 17px;cursor:pointer;display:flex;align-items:flex-start;gap:11px}
+.srv .cab:hover{background:var(--p3)}
+.srv h3{font-family:Newsreader,serif;font-size:17px;margin:0;flex:1;line-height:1.25}
+.srv .seta{flex:none;color:var(--graf);font-size:11px;margin-top:4px;
+  transition:transform .16s}
+.srv.aberto .seta{transform:rotate(90deg)}
+.srv .resumo{font-size:12px;color:var(--graf);line-height:1.5;
+  margin:5px 0 0;padding:0 17px 15px}
+.srv.aberto .resumo{display:none}
+
+.srv .miolo{display:none;padding:0 17px 15px;border-top:1px solid var(--linha)}
+.srv.aberto .miolo{display:block}
+.srv .oq{font-size:13px;color:var(--t2);line-height:1.62;padding-top:13px}
 .srv .oq b{color:var(--tinta);font-weight:500}
-.srv .quem{margin-top:16px;padding-top:13px;border-top:1px solid var(--linha)}
+.srv .quem{margin-top:14px;padding-top:12px;border-top:1px solid var(--linha)}
 .srv .rotq{display:block;font-size:8px;letter-spacing:.2em;text-transform:uppercase;
   color:var(--graf);opacity:.65;margin-bottom:5px}
 .srv .txq{font-size:11.5px;color:var(--graf);line-height:1.55}
 .srv .txq b{color:var(--ouro2);font-weight:500}
-.srv .escolher{font-size:11px;color:var(--graf);margin-top:12px;display:flex;align-items:center;gap:7px}
-.srv .cx{width:13px;height:13px;border:1px solid var(--linha2);border-radius:2px;
+
+.srv .escolher{font-size:11.5px;color:var(--graf);margin:14px 17px 15px;
+  display:flex;align-items:center;gap:8px;cursor:pointer;
+  border:1px solid var(--linha2);border-radius:4px;padding:9px 12px;
+  transition:border-color .14s,color .14s}
+.srv .escolher:hover{border-color:var(--lacre);color:var(--ouro2)}
+.srv .cx{width:14px;height:14px;border:1px solid var(--linha2);border-radius:2px;
   display:flex;align-items:center;justify-content:center;font-size:9px;font-style:normal;flex:none}
 .srv.on .cx{border-color:var(--lacre);color:var(--ouro2);background:var(--ouro-fraco)}
-.srv.on .escolher{color:var(--ouro2)}
+.srv.on .escolher{color:var(--ouro2);border-color:var(--lacre)}
 .contatoS{display:grid;grid-template-columns:1fr 1fr;gap:38px;margin-top:44px;
-  padding-top:30px;border-top:1px solid var(--linha2)}
+  padding:30px 26px 26px;border:1px solid var(--linha2);border-radius:6px;
+  background:linear-gradient(180deg,var(--p2),var(--papel))}
+@media(max-width:620px){.contatoS{padding:22px 16px 20px;margin-top:32px}
+  .gradeS{grid-template-columns:1fr}}
 @media(max-width:800px){.contatoS{grid-template-columns:1fr;gap:24px}}
 .tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 .tg{font-size:11.5px;padding:4px 10px;border-radius:99px;border:1px solid var(--lacre);
@@ -640,15 +662,36 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
   background:transparent;border-style:dashed}
 .carta.mais span{font-family:inherit;font-size:10.5px;margin-top:2px}
 
-.linhaC{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid var(--linha)}
-.linhaC:hover{background:var(--p3);cursor:pointer}
-.linhaC .n{font-family:'IBM Plex Mono';font-size:10.5px;color:var(--graf);flex:none;width:15px}
+.linhaC{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid var(--linha);
+  transition:background .14s}
+
+/* ── hierarquia por posição ───────────────────────────────────────
+   As cinco linhas eram iguais e a leitura ficava plana. Agora a
+   primeira ocupa mais espaço e as três primeiras ganham medalha. */
+.linhaC.p1{padding:13px 11px 13px 9px;margin:0 -11px 2px -9px;border-bottom:none;
+  border:1px solid rgba(201,162,39,.34);border-radius:4px;
+  background:linear-gradient(180deg,rgba(201,162,39,.11),rgba(201,162,39,0))}
+.linhaC.p1 .nome{font-family:Newsreader,serif;font-size:16px;font-weight:500}
+.linhaC.p1 .num{font-size:19px;font-weight:500}
+.linhaC.p2 .num,.linhaC.p3 .num{font-size:14px}
+
+/* a medalha substitui o número cru nos três primeiros */
+.linhaC .n{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--graf);
+  flex:none;width:15px}
+.linhaC.p1 .n,.linhaC.p2 .n,.linhaC.p3 .n{
+  width:21px;height:21px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:10.5px;font-weight:600;color:#0A1120}
+.linhaC.p1 .n{background:var(--lacre);box-shadow:0 0 13px rgba(201,162,39,.45)}
+.linhaC.p2 .n{background:#9FB0C4}
+.linhaC.p3 .n{background:#B08155}
 .linhaC .quem{flex:1;min-width:0}
 .linhaC .nome{font-size:13px;color:var(--tinta);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 .linhaC .autor{font-size:10.5px;color:var(--graf);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .linhaC .num{font-family:'IBM Plex Mono';font-size:13px;flex:none}
+.linhaC:hover{background:var(--p3);cursor:pointer}
+.linhaC.p1:hover{background:linear-gradient(180deg,rgba(201,162,39,.18),rgba(201,162,39,.04))}
 .vazio{font-size:11.5px;color:var(--graf);padding:10px 0 2px}
 .meta{font-size:11.5px;color:var(--graf);margin-top:3px}
 .nulo{color:var(--graf)}
@@ -661,6 +704,90 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
 .faixa .sep{width:1px;height:11px;background:var(--linha2);flex:none}
 .faixa .hr{margin-left:auto;color:var(--graf);padding-left:18px}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* ───────── celular ───────── */
+@media(max-width:900px){.planoG{grid-template-columns:1fr!important;gap:18px}}
+@media(max-width:620px){
+  .w{padding:0 15px}
+
+  /* a tabela rola dentro do proprio quadro, sem arrastar a pagina */
+  .rolagem{overflow-x:auto;-webkit-overflow-scrolling:touch;
+    margin:0 -15px;padding:0 15px;
+    scrollbar-width:thin}
+  .rolagem table{min-width:560px}
+  /* o colspan continua 11 no HTML; no celular so 5 colunas existem */
+  td.tituloG{padding-left:0}
+
+  /* 11 colunas nao cabem: some o que da para ver na tela da carteira */
+  th.some,td.some{display:none}
+
+  table{font-size:12.5px}
+  td{padding:11px 0}
+  th.d,td.d{padding-left:11px}
+
+  h1{font-size:25px!important}
+  .cabeca p{font-size:13.5px}
+
+  /* filtros empilham em vez de espremer */
+  .ordena{flex-direction:column;align-items:stretch;gap:9px}
+  .ordena .selOrdem{width:100%}
+
+  /* alvo de toque: nada abaixo de 44px */
+  .bt{padding:11px 16px}
+  nav a{padding:5px 0;display:inline-block}
+
+  .prova{display:flex;width:100%}
+  .prova .p{flex:1;padding:9px 11px;text-align:center;font-size:11px}
+}
+
+/* iOS da zoom sozinho em campo com fonte < 16px */
+@media(max-width:820px){
+  input,select,textarea{font-size:16px}
+}
+
+/* ───────── a grade de posições no celular ─────────
+   Cinco colunas numa tabela espremiam o campo de código a ~100px,
+   que é justamente onde se digita. No celular cada papel vira um
+   cartão: código numa linha inteira, peso e posição embaixo. */
+@media(max-width:620px){
+  #linhas,#linhas tr,#linhas td{display:block;width:auto}
+  #linhas tr{position:relative;border:1px solid var(--linha);border-radius:5px;
+    padding:11px 44px 11px 12px;margin-bottom:9px;background:var(--p2)}
+  #linhas td{padding:0!important}
+
+  #linhas td.ord{position:absolute;left:auto;right:12px;top:11px;
+    font-size:11px;color:var(--graf)}
+
+  #linhas .pa{font-size:17px!important;letter-spacing:.04em;padding:9px 10px}
+
+  /* peso e posição dividem a linha de baixo */
+  #linhas tr{display:flex;flex-wrap:wrap;gap:8px}
+  #linhas td:nth-child(2){flex:1 1 100%}
+  #linhas td:nth-child(3){flex:0 0 96px}
+  #linhas td:nth-child(4){flex:1 1 120px}
+  #linhas td:nth-child(5){position:absolute;right:8px;bottom:11px}
+  #linhas td.pesoFixo{flex:1 1 100%;text-align:left;padding:2px 0 0!important}
+
+  #linhas .px{padding:7px 12px!important}
+  #linhas .pp,#linhas .pl{padding:9px 10px}
+
+  /* a tabela some do cabeçalho: o cartão se explica sozinho */
+  .gradeCab{display:none}
+  #btAdd{width:100%;padding:12px}
+
+  /* tela da carteira: a coluna da barra some e a barra vira faixa
+     larga logo abaixo do papel, que lê melhor num aparelho estreito */
+  .tbPesos td.colBarra,.tbPesos th.colBarra{display:none}
+  .tbPesos tr{display:grid;grid-template-columns:1fr auto;
+    align-items:baseline;padding:9px 0;border-bottom:1px solid var(--linha)}
+  .tbPesos thead{display:none}
+  .tbPesos td{padding:0!important;border:none!important}
+  .tbPesos td:first-child{font-size:14px}
+
+  /* grades de coluna fixa: 3 colunas em 375px dão 110px cada */
+  .passos{grid-template-columns:1fr;gap:11px}
+  .classes{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
@@ -678,7 +805,7 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
     <span class="grupo"><span class="rotg">Aprender</span>
       <span class="bloco"><a href="#/como-funciona">Como funciona</a></span></span>
     <span class="grupo"><span class="rotg">Com a gente</span>
-      <span class="bloco"><a href="#/clube">Clube de investimentos</a><a href="#/servicos">Serviços</a></span></span>
+      <span class="bloco"><a href="#/planejar">Planejamento</a><a href="#/clube">Clube de investimentos</a><a href="#/servicos">Serviços</a></span></span>
   </nav>
 </div></header>
 
@@ -880,7 +1007,7 @@ function gradeHTML(){
   return `
   <datalist id="uni">${(UNIVERSO||[]).map(a=>`<option value="${a}">`).join("")}</datalist>
   <table style="width:100%;border-collapse:collapse">
-    <thead><tr>
+    <thead class="gradeCab"><tr>
       <th style="width:22px"></th>
       <th style="text-align:left;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--graf);padding-bottom:4px">Ativo</th>
       <th class="colPeso" style="text-align:right;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--graf);padding-bottom:4px;width:82px">%</th>
@@ -978,7 +1105,7 @@ function linhaHTML(a,p,lado,n){
   return `<tr>
     <td class="ord">${n||""}</td>
     <td style="padding:3px 7px 3px 0"><span class="campoCod"><input class="pa" value="${a||""}"
-      placeholder="código" maxlength="6" autocomplete="off"
+      placeholder="código do papel" maxlength="6" autocomplete="off"
       style="width:100%;text-transform:uppercase;margin:0"></span></td>
     ${fixo
       ? `<td class="pesoFixo" colspan="2">${fixo}%<input class="pp" type="hidden" value="${fixo}">
@@ -1273,8 +1400,8 @@ function colunasPorClasse(lista, ordem, rotulo){
                 : formatar(v)
                   + (valeParcial
                      ? '<sup style="font-size:10px;opacity:.75;margin-left:1px">•</sup>' : "");
-      return `<div class="linhaC" data-cid="${x.c.id}" onclick="location.hash='#/carteira/${x.c.id}'">
-        <span class="n">${String(i+1).padStart(2,"0")}</span>
+      return `<div class="linhaC${i<3?" p"+(i+1):""}" data-cid="${x.c.id}" onclick="location.hash='#/carteira/${x.c.id}'">
+        <span class="n">${i<3 ? i+1 : String(i+1).padStart(2,"0")}</span>
         <span class="quem"><div class="nome">${esc(x.c.nome)}</div>
           <div class="autor">${esc(x.c.apelido)}${x.m.dias
             ? ` · ${x.m.dias} ${x.m.dias===1?"pregão":"pregões"}`
@@ -1585,7 +1712,9 @@ function pintarParciais(vv){
       const marco = linhas[linhas.length-1].nextSibling;
       ordenadas.forEach((el, i) => {
         const n = el.querySelector(".n");
-        if(n) n.textContent = String(i+1).padStart(2,"0");
+        if(n) n.textContent = i < 3 ? String(i+1) : String(i+1).padStart(2,"0");
+        el.classList.remove("p1","p2","p3");
+        if(i < 3) el.classList.add("p"+(i+1));
         pai.insertBefore(el, marco);
       });
     }
@@ -1643,10 +1772,10 @@ async function telaRanking(){
   app().innerHTML = `
   <div class="cabeca">
     <h1>Quem monta a melhor carteira do Brasil?</h1>
-    <p>${Object.values(CLASSE).map(v=>v.nome).join(", ")}: <b>cada estilo disputa o seu
-      próprio pódio</b>. Simule, estude e aprenda <b>num ambiente real, sem risco de
-      perda financeira</b>: veja quem está na frente, entenda como chegou lá e publique
-      a sua para entrar na disputa.</p>
+    <p>Publique a sua e dispute com todo mundo — <b>amadores e profissionais no mesmo
+      ranking</b>, como no mercado de verdade. Cotação real da B3, <b>sem dinheiro real
+      em risco</b>. Veja quem está na frente, abra a carteira dele e entenda como chegou
+      lá. <a href="#/como-funciona" style="color:var(--ouro2)">Como funciona</a>.</p>
     <div class="prova">
       <span class="p"><span class="n">${(cs||[]).length}</span>carteiras na disputa</span>
       <span class="p"><span class="n">${maxPregoes}</span>${maxPregoes===1?"pregão apurado":"pregões apurados"}</span>
@@ -1715,13 +1844,13 @@ async function telaRanking(){
       <h3 style="margin-bottom:8px">Nenhuma carteira ainda</h3>
       <p style="color:var(--t2)">Publique a primeira — o ranking começa a contar a partir de hoje.</p>
       <a href="#/publicar" class="bt cheio" style="margin-top:12px">Criar carteira</a></div>`
-  : `<table><thead><tr><th></th><th class="estica">Carteira</th><th class="d">Dia</th>
-      <th class="d">Semana</th><th class="d">Mês</th><th class="d">Desde o início</th>
-      <th class="d">vs Ibovespa</th>
-      <th class="d">Sharpe</th><th class="d">Drawdown</th>
-      <th class="d">Dias</th><th style="width:86px">24 pregões</th></tr></thead><tbody>
+  : `<div class="rolagem"><table><thead><tr><th></th><th class="estica">Carteira</th><th class="d">Dia</th>
+      <th class="d some">Semana</th><th class="d some">Mês</th><th class="d">Desde o início</th>
+      <th class="d some">vs Ibovespa</th>
+      <th class="d some">Sharpe</th><th class="d some">Drawdown</th>
+      <th class="d">Dias</th><th class="some" style="width:86px">24 pregões</th></tr></thead><tbody>
     ${(filtro ? [["", lista]] : agrupar(lista)).map(([titulo, grupo]) => (titulo
-      ? `<tr><td colspan="11" style="padding:16px 0 6px">
+      ? `<tr><td colspan="11" class="tituloG" style="padding:16px 0 6px">
           <span style="font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--ouro2)">${titulo}</span>
           <span style="font-size:11px;color:var(--graf);margin-left:7px">${grupo.length}
             ${grupo.length===1?"carteira":"carteiras"}</span></td></tr>` : "")
@@ -1735,18 +1864,18 @@ async function telaRanking(){
       title="${x.m.parcial?"parcial — o pregão ainda não fechou":(x.m.dias?"fechado":"ainda não apurou nenhum pregão")}">${
       x.m.dias||x.m.parcial ? pct(x.m.hoje) : "—"}${
       x.m.parcial?'<sup style="font-size:11px;opacity:.75;margin-left:1px">•</sup>':""}</td>
-      <td class="d mono ${x.m.sem==null?"nulo":cor(x.m.sem)}">${x.m.sem==null?"—":pct(x.m.sem)}</td>
-      <td class="d mono ${x.m.mes==null?"nulo":cor(x.m.mes)}">${x.m.mes==null?"—":pct(x.m.mes)}</td>
+      <td class="d mono some ${x.m.sem==null?"nulo":cor(x.m.sem)}">${x.m.sem==null?"—":pct(x.m.sem)}</td>
+      <td class="d mono some ${x.m.mes==null?"nulo":cor(x.m.mes)}">${x.m.mes==null?"—":pct(x.m.mes)}</td>
       <td class="d mono celAcum ${x.m.dias?cor(x.m.acum):"nulo"}">${x.m.dias?pct(x.m.acum):"estreia"}${
       x.m.parcial&&x.m.dias&&PARCIAL_NO_ACUM?'<sup style="font-size:11px;opacity:.75;margin-left:1px">•</sup>':""}</td>
-      <td class="d mono ${x.m.vsIbov==null?"nulo":cor(x.m.vsIbov)}"
+      <td class="d mono some ${x.m.vsIbov==null?"nulo":cor(x.m.vsIbov)}"
         title="excesso sobre o Ibovespa medido a partir do primeiro pregão desta carteira; só conta pregão fechado">${
         x.m.vsIbov==null?"—":pts(x.m.vsIbov)}</td>
-      <td class="d mono ${x.m.sharpe==null?"nulo":""}">${n2(x.m.sharpe)}</td>
-      <td class="d mono ${x.m.dd<0?"baixa":"nulo"}">${!x.m.dias?"—":(x.m.dd<0?pct(x.m.dd):"0,00%")}</td>
+      <td class="d mono some ${x.m.sharpe==null?"nulo":""}">${n2(x.m.sharpe)}</td>
+      <td class="d mono some ${x.m.dd<0?"baixa":"nulo"}">${!x.m.dias?"—":(x.m.dd<0?pct(x.m.dd):"0,00%")}</td>
       <td class="d mono nulo">${x.m.dias}</td>
-      <td>${fitinha(x.s, 82)}</td></tr>`).join("")).join("")}
-    </tbody></table>`)}`;
+      <td class="some">${fitinha(x.s, 82)}</td></tr>`).join("")).join("")}
+    </tbody></table></div>`)}`;
 
   const cauda = (o, mi) => `#/?ordem=${o}${mi ? "&min="+mi : ""}${
     filtro ? "&classe="+filtro : ""}`;
@@ -1854,7 +1983,23 @@ function telaEntrar(){
       bt.disabled=false; bt.textContent="Criar conta"; return;
     }
     if(novo && !r.data.session){
-      app().innerHTML = aviso("Conta criada. Confirme o e-mail que o Supabase enviou e depois entre.");
+      app().innerHTML = `
+      <div style="max-width:520px;margin:42px auto">
+        <h1 style="font-size:29px;margin-bottom:8px">Conta criada</h1>
+        <p style="color:var(--t2);margin-bottom:6px">
+          Falta só confirmar o e-mail. Enviamos um link para <b>${esc(email)}</b> —
+          clique nele e depois entre normalmente.</p>
+        <p style="color:var(--t2);margin-bottom:22px;font-size:13px">
+          O link pode demorar alguns minutos. Enquanto isso, o site inteiro está
+          aberto para você olhar: só publicar carteira precisa de conta.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <a href="#/" class="bt cheio">Ver o ranking</a>
+          <a href="#/screening" class="bt">Screening</a>
+          <a href="#/como-funciona" class="bt">Como funciona</a>
+        </div>
+        <p style="margin-top:20px;font-size:13px;color:var(--graf)">
+          Já confirmou? <a href="#/entrar" style="color:var(--ouro2)">Entrar</a></p>
+      </div>`;
       return;
     }
     await carregarEu(); pintarNav();
@@ -2425,19 +2570,19 @@ async function telaCarteira(id){
       Papéis e pesos${extrato.length?` · desde ${dataBR(extrato[extrato.length-1].data)}`:""}
       ${extrato.length>1?` · última mudança em ${dataBR(marcoAtual)}`:""}</div>
     ${reguaHTML(regra, pesos, Object.entries(declarado).map(([ativo,peso])=>({ativo,peso})))}
-    <table><thead><tr><th></th><th></th>
-      <th class="d" style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--graf)">declarado</th>
+    <table class="tbPesos"><thead><tr><th></th><th class="colBarra"></th>
+      <th class="d some" style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--graf)">declarado</th>
       <th class="d" style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--graf)">atual</th>
       <th class="d" style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--graf)">diferença</th></tr></thead>
     <tbody>${pesos.sort((a,b)=>Math.abs(b.peso)-Math.abs(a.peso)).map(p=>{
       const d = declarado[p.ativo];
       const dif = d==null ? null : Math.abs(p.peso) - Math.abs(d);
       return `<tr><td class="mono" style="font-weight:500">${esc(p.ativo)}</td>
-      <td><span style="display:block;height:5px;width:${(Math.abs(p.peso)/maxp*100).toFixed(0)}%;
+      <td class="colBarra"><span style="display:block;height:5px;width:${(Math.abs(p.peso)/maxp*100).toFixed(0)}%;
         background:${p.peso<0?"var(--baixa)":"var(--alta)"}"></span></td>
-      <td class="d mono" style="color:var(--graf);font-size:12px">${d==null?"—":n2(d)+"%"}</td>
+      <td class="d mono some" style="color:var(--graf);font-size:12px">${d==null?"—":n2(d)+"%"}</td>
       <td class="d mono ${p.peso<0?"baixa":""}">${n2(p.peso)}%</td>
-      <td class="d mono" style="font-size:11.5px;color:var(--graf)">
+      <td class="d mono some" style="font-size:11.5px;color:var(--graf)">
         ${dif==null?"—":(dif>0?"+":"")+n2(dif)}</td></tr>`}).join("")}
     </tbody></table>
     <p style="font-size:11.5px;color:var(--graf);margin:9px 0 0">
@@ -2655,6 +2800,13 @@ async function telaAdmin(){
   app().innerHTML = `<div class="carreg">carregando…</div>`;
 
   const { data:us }   = await sb.rpc("admin_contas");
+  const { data:leadsU } = await sb.from("lead")
+    .select("usuario_id,nome_completo,telefone,nome,whatsapp")
+    .not("usuario_id","is",null);
+  const dadosDe = {};
+  (leadsU||[]).forEach(x => dadosDe[x.usuario_id] = {
+    nome: x.nome_completo || x.nome || "",
+    tel:  x.telefone || x.whatsapp || "" });
   const { data:cts }  = await sb.from("carteira").select("*").order("criada_em",{ascending:false});
   const { count:nu }  = await sb.from("universo").select("*",{count:"exact",head:true});
   const { data:dias } = await sb.from("oscilacao").select("data").order("data",{ascending:false}).limit(1);
@@ -2718,12 +2870,15 @@ async function telaAdmin(){
   <details class="card">
     <summary style="cursor:pointer;font-size:15px;font-weight:600">
       Contas <span style="color:var(--graf);font-weight:400">· ${(us||[]).length}</span></summary>
-    <table style="margin-top:12px"><thead><tr><th>Apelido</th><th>E-mail</th><th class="d">Assinatura</th><th class="d">Ações</th></tr></thead><tbody>
+    <table style="margin-top:12px"><thead><tr><th>Apelido</th><th>Contato</th><th class="d">Assinatura</th><th class="d">Ações</th></tr></thead><tbody>
     ${(us||[]).map(x=>`<tr style="${x.bloqueado?"opacity:.45":""}">
       <td><b>${esc(x.apelido)}</b>${x.admin?' <span class="tag al">admin</span>':""}
         ${x.bloqueado?' <span class="tag">bloqueada</span>':""}
         <div style="font-size:11px;color:var(--graf)">${x.n_carteiras} carteiras</div></td>
-      <td style="font-size:12px">${esc(x.email||"—")}</td>
+      <td style="font-size:12px">${esc(x.email||"—")}
+        ${dadosDe[x.id]?.nome?`<div style="color:var(--t2)">${esc(dadosDe[x.id].nome)}</div>`:""}
+        ${dadosDe[x.id]?.tel?`<div style="color:var(--graf);font-family:'IBM Plex Mono',monospace;font-size:11px">${
+          esc(dadosDe[x.id].tel)}</div>`:""}</td>
       <td class="d">${(() => {
         const a = assin[x.id];
         const venc = a?.vence_em;
@@ -2747,7 +2902,10 @@ async function telaAdmin(){
         <button class="bt ac-ape" data-uid="${x.id}" data-ape="${esc(x.apelido)}"
           style="padding:4px 10px;font-size:12px;margin-left:5px">apelido</button>
         ${x.id!==eu.id?`<button class="bt ac-blo" data-uid="${x.id}" data-blo="${x.bloqueado?1:0}"
-          style="padding:4px 10px;font-size:12px;margin-left:5px">${x.bloqueado?"liberar":"bloquear"}</button>`:""}
+          style="padding:4px 10px;font-size:12px;margin-left:5px">${x.bloqueado?"liberar":"bloquear"}</button>
+        <button class="bt ac-del" data-uid="${x.id}" data-ape="${esc(x.apelido)}"
+          data-cart="${x.n_carteiras}"
+          style="padding:4px 10px;font-size:12px;margin-left:5px;border-color:#7A2E2E;color:#E88">excluir</button>`:""}
       </td></tr>`).join("")}
     </tbody></table>
   </details>`;
@@ -2759,7 +2917,8 @@ async function telaAdmin(){
   };
 
   document.querySelectorAll("[data-uid]").forEach(b=>{
-    if(b.classList.contains("ac-ape") || b.classList.contains("ac-blo")) return;
+    if(b.classList.contains("ac-ape") || b.classList.contains("ac-blo")
+       || b.classList.contains("ac-del")) return;
     b.onclick = async()=>{
       b.disabled = true;
       const { error } = await sb.rpc("definir_assinante",
@@ -2785,6 +2944,16 @@ async function telaAdmin(){
     const n = prompt("Novo apelido:", b.dataset.ape);
     if(n===null || !n.trim()) return;
     chamar("admin_trocar_apelido", { quem:b.dataset.uid, novo:n.trim() }, "Apelido trocado.");
+  });
+
+  document.querySelectorAll(".ac-del").forEach(b=> b.onclick = async ()=>{
+    const ape = b.dataset.ape, nc = +b.dataset.cart || 0;
+    if(!confirm(`Excluir a conta "${ape}"?\n\n`
+      + (nc ? `Ela tem ${nc} ${nc===1?"carteira":"carteiras"} — o histórico delas sai do `
+              + `ranking junto e não volta.\n\n` : "")
+      + "Isto apaga a conta de vez. Não dá para desfazer.")) return;
+    if(prompt('Para confirmar, escreva EXCLUIR em maiúsculas:') !== "EXCLUIR") return;
+    chamar("admin_excluir_conta", { quem:b.dataset.uid }, `Conta "${ape}" excluída.`);
   });
 
   document.querySelectorAll(".ac-blo").forEach(b=> b.onclick = ()=>{
@@ -2842,6 +3011,10 @@ const log = t => { const l=$("#log"); if(l) l.innerHTML = aviso(t); };
 
 async function telaConta(soCarteiras){
   if(!eu){ location.hash="#/entrar"; return rotear(); }
+  const { data:ml } = await sb.from("lead")
+      .select("id,nome,nome_completo,telefone,whatsapp")
+      .eq("usuario_id", eu.id).maybeSingle();
+  const meuLead = ml || null;
   const { data:cs } = await sb.from("carteira").select("*")
       .eq("usuario_id", eu.id).eq("ativa", true).order("criada_em");
   const ids=(cs||[]).map(c=>c.id); let dias={};
@@ -2890,6 +3063,26 @@ async function telaConta(soCarteiras){
                : eu.assinante ? '<span class="pill">assinante</span>'
                               : '<span class="pill">grátis</span>'}</p>
   <div id="erro"></div>
+
+  <h2 style="font-size:19px;margin:26px 0 12px">Seus dados</h2>
+  <div class="card" style="max-width:560px">
+    <p style="font-size:12.5px;color:var(--t2);margin:0 0 13px">
+      Nada disto aparece no site. Serve para você recuperar a conta e para a
+      gente falar com você, se você tiver pedido contato.</p>
+    <label>Apelido <span style="color:var(--graf);font-weight:400">— este sim aparece</span></label>
+    <input id="dApelido" maxlength="24" value="${esc(eu.apelido||"")}">
+    <label>Nome completo</label>
+    <input id="dNome" maxlength="80" value="${esc(meuLead?.nome_completo || meuLead?.nome || "")}">
+    <label>Telefone com DDD</label>
+    <input id="dTel" maxlength="20" value="${esc(meuLead?.telefone || meuLead?.whatsapp || "")}">
+    <label>E-mail</label>
+    <input value="${esc(eu.email||"")}" disabled
+      style="opacity:.6;cursor:not-allowed">
+    <p style="font-size:11.5px;color:var(--graf);margin:8px 0 13px">
+      O e-mail é a chave da sua conta e não muda por aqui — se precisar trocar,
+      fale com a gente.</p>
+    <button class="bt cheio" id="btDados">Salvar dados</button>
+  </div>
 
   <h2 style="font-size:19px;margin:26px 0 12px">Como você aparece</h2>
   <div class="card" style="max-width:560px">
@@ -2967,6 +3160,38 @@ async function telaConta(soCarteiras){
     eu.exibir = modo; eu.nome_publico = nome || null;
     CACHE_CLASSE = null;
     $("#erro").innerHTML = aviso("Pronto. É assim que você aparece agora.");
+  };
+
+  $("#btDados").onclick = async()=>{
+    const bt = $("#btDados");
+    const ape = $("#dApelido").value.trim();
+    const nom = $("#dNome").value.trim();
+    const tel = $("#dTel").value.trim();
+    if(ape.length < 3) return $("#erro").innerHTML=aviso("O apelido precisa de 3 letras ou mais.",true);
+
+    bt.disabled=true; bt.textContent="Salvando…";
+    let ruim = null;
+
+    if(ape !== eu.apelido){
+      const { error } = await sb.from("perfil").update({ apelido:ape }).eq("id", eu.id);
+      if(error) ruim = /duplicate|unique/i.test(error.message)
+        ? "Esse apelido já está em uso." : error.message;
+      else eu.apelido = ape;
+    }
+
+    if(!ruim){
+      const campos = { nome_completo:nom || null, telefone:tel || null };
+      const { error } = meuLead
+        ? await sb.from("lead").update(campos).eq("id", meuLead.id)
+        : await sb.from("lead").insert({ ...campos, usuario_id:eu.id,
+            email:eu.email, origem:"cadastro" });
+      if(error) ruim = error.message;
+    }
+
+    bt.disabled=false; bt.textContent="Salvar dados";
+    if(ruim) return $("#erro").innerHTML=aviso(ruim,true);
+    $("#erro").innerHTML=aviso("Dados salvos.");
+    pintarNav();
   };
 
   $("#btSenha").onclick = async()=>{
@@ -3585,13 +3810,13 @@ async function telaPlacar(){
 
   ${lista.length > 3 ? `<table style="margin-bottom:10px">
     <thead><tr><th></th><th>Quem</th><th class="d">Pontos/dia</th>
-    <th class="d">Dias</th><th class="d">Tiros</th><th class="d">Nota</th></tr></thead>
+    <th class="d some">Dias</th><th class="d some">Tiros</th><th class="d">Nota</th></tr></thead>
     <tbody>${lista.slice(3).map((x,i)=>`<tr>
       <td class="mono pos">${String(i+4).padStart(2,"0")}</td>
       <td style="font-weight:500">${esc(x.apelido)}</td>
       <td class="d mono ${cor(x.media_dia)}"><b>${x.media_dia>0?"+":""}${n2(x.media_dia)}</b></td>
-      <td class="d mono">${x.dias}</td>
-      <td class="d mono nulo">${x.operacoes}</td>
+      <td class="d mono some">${x.dias}</td>
+      <td class="d mono nulo some">${x.operacoes}</td>
       <td class="d mono ${cor(x.nota)}">${x.nota>0?"+":""}${n2(x.nota)}</td></tr>`).join("")}
     </tbody></table>` : ""}
 
@@ -3862,37 +4087,37 @@ async function telaScreening(){
       Nenhum papel neste filtro.${!(data||[]).length
         ? " O cálculo precisa de alguns meses de histórico e o robô ainda não juntou tanto."
         : ""}</p></div>`
-  : `<table><thead><tr><th>Papel</th><th class="estica">Estado</th>
-      <th class="d">Fechamento</th><th class="d">Vs. institucional</th>
-      <th class="d mA m1">Trader</th><th class="d mA m2">Investidor</th><th class="d mA m3">Institucional</th>
-      <th class="d" style="width:196px;padding-left:14px">${JANELA_GRAFICO} pregões</th>
-      <th class="d">Negócio/dia</th></tr></thead><tbody>
+  : `<div class="rolagem"><table><thead><tr><th>Papel</th><th class="estica">Estado</th>
+      <th class="d">Fechamento</th><th class="d some">Vs. institucional</th>
+      <th class="d mA m1 some">Trader</th><th class="d mA m2 some">Investidor</th><th class="d mA m3 some">Institucional</th>
+      <th class="d some" style="width:196px;padding-left:14px">${JANELA_GRAFICO} pregões</th>
+      <th class="d some">Negócio/dia</th></tr></thead><tbody>
     ${[...(amplo?[amplo]:[]), ...(verSet?setoriais:[])].map(x=>`<tr class="ref${
         x===amplo?"":" set"}">
       <td class="mono cod">${esc(x.ativo==="IBOV"||x.ativo==="^BVSP"?"IBOVESPA":x.ativo.replace("^",""))}${
         IND_SET[x.ativo]?`<span class="nm">${IND_SET[x.ativo]}</span>`:""}</td>
       <td class="estica ${tomDe(x.e)}" style="font-size:12.5px">${ROT[x.e]}${x.vivo?'<sup style="font-size:10px;opacity:.7;margin-left:2px" title="parcial — a fase pode mudar até o fechamento">•</sup>':""}</td>
       <td class="d mono">${n2(x.fech, x.fech>1000?0:2)}</td>
-      <td class="d mono ${x.forca==null?"nulo":cor(x.forca)}"><b>${
+      <td class="d mono some ${x.forca==null?"nulo":cor(x.forca)}"><b>${
         x.forca==null?"—":pct(x.forca)}</b></td>
-      <td class="mA m1">${n2(x.ema17, x.fech>1000?0:2)}</td>
-      <td class="mA m2">${n2(x.ema34, x.fech>1000?0:2)}</td>
-      <td class="mA m3">${x.ema72==null?"—":n2(x.ema72, x.fech>1000?0:2)}</td>
-      <td style="padding:6px 0 6px 14px"><div style="margin-left:auto;width:180px">${risco(x)}</div></td>
-      <td class="d mono nulo" style="font-size:12px">${x.liquidez==null?"—":grana(x.liquidez)}</td>
+      <td class="mA m1 some">${n2(x.ema17, x.fech>1000?0:2)}</td>
+      <td class="mA m2 some">${n2(x.ema34, x.fech>1000?0:2)}</td>
+      <td class="mA m3 some">${x.ema72==null?"—":n2(x.ema72, x.fech>1000?0:2)}</td>
+      <td class="some" style="padding:6px 0 6px 14px"><div style="margin-left:auto;width:180px">${risco(x)}</div></td>
+      <td class="d mono nulo some" style="font-size:12px">${x.liquidez==null?"—":grana(x.liquidez)}</td>
     </tr>`).join("")}
     ${l.map(x=>`<tr>
       <td class="mono" style="font-weight:500">${esc(x.ativo)}</td>
       <td class="estica ${tomDe(x.e)}" style="font-size:12.5px">${ROT[x.e]}${x.vivo?'<sup style="font-size:10px;opacity:.7;margin-left:2px" title="parcial — a fase pode mudar até o fechamento">•</sup>':""}</td>
       <td class="d mono">${n2(x.fech)}</td>
-      <td class="d mono ${x.forca==null?"nulo":cor(x.forca)}"><b>${
+      <td class="d mono some ${x.forca==null?"nulo":cor(x.forca)}"><b>${
         x.forca==null?"—":pct(x.forca)}</b></td>
-      <td class="mA m1">${n2(x.ema17)}</td>
-      <td class="mA m2">${n2(x.ema34)}</td>
-      <td class="mA m3">${x.ema72==null?"—":n2(x.ema72)}</td>
-      <td style="padding:6px 0 6px 14px"><div style="margin-left:auto;width:180px">${risco(x)}</div></td>
-      <td class="d mono nulo" style="font-size:12px">${grana(x.liquidez)}</td></tr>`).join("")}
-    </tbody></table>`}
+      <td class="mA m1 some">${n2(x.ema17)}</td>
+      <td class="mA m2 some">${n2(x.ema34)}</td>
+      <td class="mA m3 some">${x.ema72==null?"—":n2(x.ema72)}</td>
+      <td class="some" style="padding:6px 0 6px 14px"><div style="margin-left:auto;width:180px">${risco(x)}</div></td>
+      <td class="d mono nulo some" style="font-size:12px">${grana(x.liquidez)}</td></tr>`).join("")}
+    </tbody></table></div>`}
 
   <div class="comoler">
     <div class="cel">
@@ -3979,15 +4204,30 @@ function telaComo(){
   app().innerHTML = `
   <div style="max-width:74ch;margin:34px 0 0">
     <h1 style="font-size:31px;line-height:1.18;margin-bottom:10px">
-      Um caderno de estudo, aberto.</h1>
-    <p style="color:var(--t2);font-size:14.5px;line-height:1.6;margin:0 0 6px">
-      Qualquer pessoa publica uma carteira de ações aqui. A partir do dia
-      seguinte, o sistema apura sozinho o resultado de cada pregão — e
-      ninguém consegue mudar o que já passou, nem quem publicou.</p>
+      Aprenda a investir no lugar onde ninguém perde dinheiro.</h1>
+    <p style="color:var(--t2);font-size:14.5px;line-height:1.6;margin:0 0 10px">
+      Você publica uma carteira de ações. A partir do dia seguinte, o sistema
+      apura sozinho o resultado de cada pregão — com a cotação real da B3 — e
+      ninguém consegue mudar o que já passou, nem quem publicou. Não há dinheiro
+      real: o que está em jogo é o seu acerto.</p>
     <p style="color:var(--t2);font-size:14.5px;line-height:1.6;margin:0">
-      Não é recomendação de investimento e não há dinheiro real envolvido.
-      É um lugar para registrar o que você faria e descobrir, com o tempo,
-      se teria dado certo.</p>
+      Aqui não existe uma sala para iniciantes e outra para profissionais.
+      Todo mundo disputa no mesmo lugar, como no mercado de verdade.</p>
+  </div>
+
+  <div class="card" style="max-width:74ch;margin-top:22px;border-left:2px solid var(--lacre)">
+    <h3 style="font-family:Newsreader,serif;font-size:19px;margin:0 0 8px">
+      Existe amador excelente e existe profissional questionável.</h3>
+    <p style="color:var(--t2);font-size:14px;line-height:1.6;margin:0 0 8px">
+      Não é opinião. Segundo o levantamento SPIVA, da S&amp;P Dow Jones, quase
+      <b>9 em cada 10 fundos de ações brasileiros ficaram abaixo do seu índice
+      de referência em dez anos</b> — gente com mesa, equipe e taxa de
+      administração perdendo para o próprio mercado que se propôs a bater.</p>
+    <p style="color:var(--t2);font-size:14px;line-height:1.6;margin:0">
+      Isso não quer dizer que profissional não sirva. Quer dizer que crachá não
+      é resultado. O que separa um do outro é o histórico — e histórico é
+      exatamente o que este site constrói, dia após dia, sem deixar ninguém
+      apagar os dias ruins.</p>
   </div>
 
   <div class="passos">
@@ -4004,6 +4244,20 @@ function telaComo(){
       <p>O resultado de um pregão apurado não é reescrito. Mudar de ideia
         vale do dia seguinte em diante, e a mudança aparece no extrato.</p></div>
   </div>
+
+  <h2 style="font-size:20px;margin:36px 0 4px">Não é só carteira</h2>
+  <p style="color:var(--t2);font-size:13.5px;line-height:1.6;max-width:74ch;margin:0 0 14px">
+    Carteira se mede em meses. Para os dias em que dá vontade de jogar, tem o
+    <a href="#/tiro-curto">Tiro curto</a> — palpite de direção para o próximo
+    pregão, com pontuação por dia —, o <a href="#/duelo">Duelo</a>, que põe duas
+    carteiras frente a frente, e o <a href="#/placar">Placar</a>. Tem também o
+    <a href="#/screening">Screening</a>, que mostra em que fase cada papel da
+    bolsa está, e o <a href="#/consenso">consenso</a>, que revela quais papéis
+    aparecem em mais carteiras no momento.</p>
+  <p style="color:var(--t2);font-size:13.5px;line-height:1.6;max-width:74ch;margin:0 0 14px">
+    E dá para olhar quem está ganhando: abrir a carteira do primeiro colocado,
+    ver os papéis, os pesos, e o extrato de cada mudança que ele fez no
+    caminho. Copiar não vale nota — mas entender por que funcionou vale muito.</p>
 
   <h2 style="font-size:20px;margin:34px 0 4px">As quatro classes</h2>
   <p style="color:var(--t2);font-size:13px;max-width:66ch;margin:0 0 14px">
@@ -4049,6 +4303,80 @@ function telaComo(){
      "Não. Nada aqui é recomendação, e nenhuma carteira publicada é análise "
    + "profissional — cada uma é anotação pessoal de quem a publicou. O site não "
    + "movimenta dinheiro e não tem corretora associada.")}
+  </div>
+
+  <h2 style="font-size:20px;margin:38px 0 6px">Uma hora o simulador acaba</h2>
+  <div style="max-width:74ch">
+    <p style="color:var(--t2);font-size:14px;line-height:1.6;margin:0 0 12px">
+      Depois de alguns meses aqui você vai saber uma coisa que quase ninguém
+      sabe sobre si mesmo: <b>você é um bom gestor do seu próprio dinheiro, ou
+      não é?</b> As duas respostas são úteis, e nenhuma delas custou nada
+      para ser descoberta.</p>
+    <p style="color:var(--t2);font-size:14px;line-height:1.6;margin:0 0 16px">
+      Se a resposta for sim, siga sozinho — o site continua aberto e de graça.
+      Se for não, ou se você quiser dividir a decisão com alguém, existem dois
+      caminhos legais para sair do simulado:</p>
+  </div>
+
+  <div class="classes">
+    <div class="coluna">
+      <h3>Trabalhar com um profissional</h3>
+      <div class="regra" style="margin-top:8px">
+        Assessores, consultores, gestores e economistas registrados e
+        fiscalizados — CVM, Banco Central, ANBIMA, ANCORD. A conta fica na
+        corretora, no seu nome, e você acompanha tudo.</div>
+      <a href="#/servicos" class="bt" style="margin-top:11px">Ver os serviços</a>
+    </div>
+    <div class="coluna">
+      <h3>Clube de investimento</h3>
+      <div class="regra" style="margin-top:8px">
+        Um grupo de amigos ou de sócios reunindo recursos numa estrutura
+        regulada, com um gestor escolhido pelo próprio grupo. Funciona como um
+        fundo, na escala de quem está começando.</div>
+      <a href="#/clube" class="bt" style="margin-top:11px">Entender o clube</a>
+    </div>
+  </div>
+
+  <p style="color:var(--graf);font-size:12.5px;line-height:1.55;max-width:74ch;margin:14px 0 0">
+    O ranking, o screening e os jogos são gratuitos e continuam assim. Contratar
+    serviço não melhora a sua posição em nenhum deles — se melhorasse, o ranking
+    não valeria nada, e é o ranking que dá sentido ao resto.</p>
+
+  <h2 style="font-size:20px;margin:38px 0 6px">Sala de aula</h2>
+  <div style="max-width:74ch">
+    <p style="color:var(--t2);font-size:14px;line-height:1.6;margin:0 0 12px">
+      A melhor forma de aprender mercado é ter uma posição e ver o que acontece
+      com ela. É isso que este site faz — e é por isso que ele funciona bem
+      dentro de uma turma.</p>
+    <p style="color:var(--t2);font-size:14px;line-height:1.6;margin:0 0 12px">
+      Estamos abrindo a <b>área de ensino</b>: o professor cria a turma, cada
+      aluno publica a sua carteira, e a turma tem o seu próprio ranking. Turmas
+      podem se enfrentar entre si — colégio contra colégio, sala contra sala —
+      com o professor acompanhando quem entrou, quem mudou de posição e por quê.
+      A carteira vira lição de casa que se corrige sozinha, todo dia, com a
+      cotação real.</p>
+    <p style="color:var(--t2);font-size:14px;line-height:1.6;margin:0 0 12px">
+      Junto vem o <b>conteúdo</b>: aulas e cursos, uns abertos, outros pagos —
+      como em qualquer escola. Quem quiser só a competição fica na competição,
+      que é de graça.</p>
+    <p style="color:var(--t2);font-size:13.5px;line-height:1.6;margin:0 0 4px">
+      <b style="color:var(--ouro2)">Ainda não está no ar.</b> Estamos montando
+      com as primeiras turmas. Se você dá aula — em colégio, faculdade, curso
+      livre ou por conta própria — e quer entrar nessa primeira leva,
+      <a href="#/servicos" style="color:var(--ouro2)">fale com a gente</a>.</p>
+  </div>
+
+  <h2 style="font-size:20px;margin:38px 0 6px">Como o site se paga</h2>
+  <div style="max-width:74ch">
+    <p style="color:var(--t2);font-size:14px;line-height:1.6;margin:0 0 10px">
+      Cotação custa, servidor custa, e quem faz isso trabalha. O Saldo Positivo
+      se sustenta de quatro formas: os <a href="#/servicos">serviços</a> de quem
+      quiser trabalhar com profissional, os <a href="#/clube">clubes</a>, os
+      cursos pagos da área de ensino e, eventualmente, patrocínio.</p>
+    <p style="color:var(--t2);font-size:14px;line-height:1.6;margin:0">
+      Nada disso muda uma linha do ranking. Ninguém compra posição, ninguém
+      compra destaque, e nenhuma carteira publicada aqui é recomendação de
+      investimento — o que decide é o resultado, apurado sozinho, todo pregão.</p>
   </div>
 
   <div class="chamada" style="margin-top:30px">
@@ -4262,28 +4590,387 @@ const SERVICOS=[
 
 const escolhidosS = new Set();
 
+const abertosS = new Set();
+function resumoDe(html){
+  const txt = String(html).replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim();
+  const corte = txt.search(/\.\s/);
+  let r = corte > 0 ? txt.slice(0, corte+1) : txt;
+  if(r.length > 118) r = r.slice(0,115).replace(/\s+\S*$/,"") + "…";
+  return r;
+}
+
+// ── Planejamento ────────────────────────────────────────────────
+const PL = { idade:35, ate:100, apos:65, renda:"", gasto:"", tem:"", quer:"",
+             jaTem:"", real:5, passo:1, feito:false, metas:[] };
+
+const rs = v => v==null||!isFinite(v) ? "—"
+  : "R$ " + Math.round(v).toLocaleString("pt-BR");
+const numPL = el => { const v = Number(String(el.value).replace(/[^\d,-]/g,"").replace(",","."));
+  return isFinite(v) ? v : 0; };
+
+function contasPL(){
+  const r = PL.real/100;
+  const anos = Math.max(0, PL.apos - PL.idade);
+  const m = Math.max(1, PL.ate - PL.apos);
+  const sobra = Math.max(0, PL.renda - PL.gasto);
+  // o que a pessoa ja vai receber (INSS, aluguel) nao precisa sair do bolo
+  const precisaTirar = Math.max(0, PL.quer - PL.jaTem);
+  const quer12 = precisaTirar * 12;
+
+  // acumulação em termos reais: patrimônio de hoje + aportes anuais
+  const cresce = Math.pow(1 + r, anos);
+  const fator = r === 0 ? anos : (cresce - 1) / r;
+
+  // cada objetivo do caminho é um saque: sai na idade dele e deixa de render
+  let saques = 0;
+  (PL.metas||[]).forEach(mt => {
+    const q = Number(mt.valor)||0, quando = Number(mt.idade)||0;
+    if(q <= 0) return;
+    const faltam = quando - PL.idade;
+    if(faltam < 0 || faltam > anos) return;
+    saques += q * Math.pow(1 + r, anos - faltam);
+  });
+
+  const projetado = PL.tem * cresce + sobra * 12 * fator - saques;
+
+  // quanto precisa aos {apos}: viver só de juros, ou consumir o principal
+  const preservar = quer12 / r;
+  const consumir  = quer12 * (1 - Math.pow(1 + r, -m)) / r;
+
+  // aporte mensal necessário para cada um
+  const precisa = alvo => {
+    if(anos <= 0) return null;
+    const falta = alvo - PL.tem * cresce;
+    if(falta <= 0) return 0;
+    return falta / (fator * 12);
+  };
+
+  // quanto duraria o que ele vai ter, tirando o que quer tirar
+  let dura = null;
+  if(projetado > 0 && quer12 > 0){
+    const juros = projetado * r;
+    if(juros >= quer12) dura = Infinity;
+    else {
+      const x = 1 - (projetado * r) / quer12;
+      dura = x <= 0 ? Infinity : -Math.log(x) / Math.log(1 + r);
+    }
+  }
+
+  let veredito = "sem_meta";
+  if(quer12 > 0){
+    if(projetado >= preservar)      veredito = "preserva";
+    else if(projetado >= consumir)  veredito = "consome";
+    else                            veredito = "falta";
+  }
+
+  return { anos, m, sobra, projetado, preservar, consumir, dura, veredito, saques,
+           precisaTirar,
+           taxaPoupanca: PL.renda > 0 ? sobra / PL.renda : 0,
+           aportePreservar: precisa(preservar), aporteConsumir: precisa(consumir),
+           rendaPossivel: projetado * r / 12 };
+}
+
+function telaPlanejar(){
+  const c = contasPL();
+  const campo = (id,rot,val,dica="") => `
+    <label>${rot}</label>
+    <input id="${id}" inputmode="decimal" value="${val===""?"":val}"
+      ${dica?`placeholder="${dica}"`:""}>`;
+
+  const passo = (n,tit,dentro) => `
+    <div class="ab${PL.passo===n?" aberta":""}${PL.passo>n?" feita":""}">
+      <div class="cabAb" data-passo="${n}"><i class="n">${n}</i>
+        <span class="tt">${tit}</span></div>
+      <div class="corpo">${dentro}</div>
+    </div>`;
+
+  app().innerHTML = `
+  <div class="cabeca" style="text-align:left;max-width:66ch">
+    <h1>Monte o seu planejamento</h1>
+    <p>Cinco perguntas e a conta que quase ninguém fez: <b>com o que você tem
+      hoje e o que consegue guardar, dá para parar de trabalhar quando você
+      quer?</b> Nada fica salvo — é uma conta na tela, e some quando você
+      fechar a página.</p>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:22px"
+       class="planoG">
+    <div>
+      ${passo(1,"Você", `
+        ${campo("pIdade","Sua idade hoje",PL.idade)}
+        ${campo("pApos","Com que idade quer poder parar",PL.apos)}
+        <p style="font-size:11.5px;color:var(--graf);margin:9px 0 0">
+          A conta vai até os ${PL.ate} anos. Viver mais que o dinheiro é o
+          risco que ninguém calcula.</p>`)}
+
+      ${passo(2,"Quanto entra e quanto sai", `
+        ${campo("pRenda","Renda líquida por mês",PL.renda,"8.000")}
+        ${campo("pGasto","Gasto por mês, tudo somado",PL.gasto,"6.000")}
+        <p style="font-size:11.5px;color:var(--graf);margin:9px 0 0">
+          Sem chutar para baixo. O gasto que você esquece é justamente o que
+          derruba a projeção.</p>`)}
+
+      ${passo(3,"O que você já tem", `
+        ${campo("pTem","Investimentos e reserva, hoje",PL.tem,"50.000")}
+        <p style="font-size:11.5px;color:var(--graf);margin:9px 0 0">
+          Só o que está investido ou guardado. Imóvel onde você mora não
+          entra: ele não paga sua conta de luz.</p>`)}
+
+      ${passo(4,"Quanto quer receber por mês", `
+        ${campo("pQuer","Renda mensal quando parar",PL.quer,"10.000")}
+        ${campo("pJa","Do que já vai receber: INSS, aluguel, pensão",PL.jaTem,"2.500")}
+        <p style="font-size:11.5px;color:var(--graf);margin:9px 0 0">
+          Em dinheiro de hoje — a conta corrige a inflação por dentro. A segunda
+          linha é o que entra sem você tirar do investimento; só a diferença
+          precisa vir do patrimônio.</p>`)}
+
+      ${passo(5,"Outros planos pelo caminho", `
+        <p style="font-size:12.5px;color:var(--t2);margin:0 0 11px;line-height:1.55">
+          Casa, faculdade de filho, viagem grande. Cada um é uma retirada na
+          idade que você marcar — e deixa de render daí em diante.</p>
+        <div id="pMetas">${(PL.metas||[]).map((mt,i)=>`
+          <div style="display:grid;grid-template-columns:1fr 66px 1fr 30px;gap:7px;
+            align-items:center;margin-bottom:7px">
+            <input class="mNome" data-i="${i}" value="${esc(mt.nome||"")}" placeholder="o quê">
+            <input class="mIdade" data-i="${i}" inputmode="numeric"
+              value="${mt.idade||""}" placeholder="idade">
+            <input class="mValor" data-i="${i}" inputmode="decimal"
+              value="${mt.valor||""}" placeholder="quanto">
+            <button type="button" class="bt mX" data-i="${i}"
+              style="padding:6px 9px;margin:0">&times;</button>
+          </div>`).join("")}</div>
+        <button type="button" class="bt" id="pAddMeta" style="margin-top:4px">
+          Adicionar plano</button>`)}
+
+      ${passo(6,"Quanto render por ano, acima da inflação", `
+        <label>Retorno real ao ano</label>
+        <select id="pReal">
+          ${[["3","3% — conservador, quase tudo em renda fixa"],
+             ["4","4% — mistura, com pouca bolsa"],
+             ["5","5% — equilibrado"],
+             ["6","6% — bolsa relevante, oscila mais"],
+             ["7","7% — arrojado, aguenta anos ruins"]]
+            .map(([v,r])=>`<option value="${v}"${+v===PL.real?" selected":""}>${r}</option>`).join("")}
+        </select>
+        <p style="font-size:11.5px;color:var(--graf);margin:9px 0 0">
+          É o ganho <b>acima</b> da inflação. Ninguém entrega isso todo ano —
+          é média longa, e ela varia.</p>`)}
+
+      <button class="bt cheio lacre" id="pCalc" style="margin-top:14px;width:100%">
+        ${PL.feito?"Refazer a conta":"Ver o resultado"}</button>
+    </div>
+
+    <div id="pRes">${PL.feito ? resultadoPL(c) : `
+      <div class="card" style="color:var(--graf);font-size:13px">
+        Preencha ao lado e o resultado aparece aqui.</div>`}</div>
+  </div>`;
+
+  document.querySelectorAll("[data-passo]").forEach(el =>
+    el.onclick = () => { PL.passo = PL.passo === +el.dataset.passo ? 0 : +el.dataset.passo;
+      lerPL(); telaPlanejar(); });
+
+  const bm = $("#pAddMeta");
+  if(bm) bm.onclick = () => { lerPL(); PL.metas.push({nome:"",idade:PL.idade+5,valor:""});
+    telaPlanejar(); };
+  document.querySelectorAll(".mX").forEach(el =>
+    el.onclick = () => { lerPL(); PL.metas.splice(+el.dataset.i,1); telaPlanejar(); });
+
+  $("#pCalc").onclick = () => { lerPL(); PL.feito = true; PL.passo = 0; telaPlanejar();
+    const r = $("#pRes"); if(r && innerWidth < 900) r.scrollIntoView({behavior:"smooth"}); };
+}
+
+function lerPL(){
+  const p = id => { const el = $("#"+id); return el ? numPL(el) : null; };
+  const v = {};
+  ["pIdade","pApos","pRenda","pGasto","pTem","pQuer","pJa"].forEach(id => v[id] = p(id));
+  if(v.pIdade)  PL.idade = Math.min(90, Math.max(14, v.pIdade));
+  if(v.pApos)   PL.apos  = Math.min(95, Math.max(PL.idade, v.pApos));
+  if(v.pRenda != null) PL.renda = v.pRenda;
+  if(v.pGasto != null) PL.gasto = v.pGasto;
+  if(v.pTem   != null) PL.tem   = v.pTem;
+  if(v.pQuer  != null) PL.quer  = v.pQuer;
+  if(v.pJa    != null) PL.jaTem = v.pJa;
+  document.querySelectorAll(".mNome").forEach(el => {
+    const i = +el.dataset.i; if(PL.metas[i]) PL.metas[i].nome = el.value; });
+  document.querySelectorAll(".mIdade").forEach(el => {
+    const i = +el.dataset.i; if(PL.metas[i]) PL.metas[i].idade = numPL(el); });
+  document.querySelectorAll(".mValor").forEach(el => {
+    const i = +el.dataset.i; if(PL.metas[i]) PL.metas[i].valor = numPL(el); });
+  const s = $("#pReal"); if(s) PL.real = +s.value;
+}
+
+function resultadoPL(c){
+  const V = {
+    preserva:["var(--alta)","Dá, e ainda sobra",
+      `Aos ${PL.apos} você teria <b>${rs(c.projetado)}</b>. Isso rende
+       ${rs(c.rendaPossivel)} por mês <b>sem encostar no principal</b> — você
+       tira o que quer, para sempre, e o patrimônio continua lá.`],
+    consome:["var(--ouro2)","Dá, gastando o que juntou",
+      `Aos ${PL.apos} você teria <b>${rs(c.projetado)}</b>. Dá para tirar
+       ${rs(c.precisaTirar)} por mês até os ${PL.ate}, mas consumindo o principal:
+       o dinheiro acaba junto com a conta. Para viver só de juros e não
+       encostar no principal, precisaria de ${rs(c.preservar)}.`],
+    falta:["var(--baixa)","Assim não fecha",
+      `Aos ${PL.apos} você teria <b>${rs(c.projetado)}</b>, e para tirar
+       ${rs(c.precisaTirar)} por mês até os ${PL.ate} precisaria de
+       <b>${rs(c.consumir)}</b>. Falta ${rs(c.consumir - c.projetado)}.`],
+    sem_meta:["var(--graf)","Falta dizer quanto você quer receber",
+      "Preencha o passo 4 para a conta fechar."]
+  }[c.veredito];
+
+  const linha = (r,v,cor="") => `<div style="display:flex;justify-content:space-between;
+    gap:12px;padding:7px 0;border-bottom:1px solid var(--linha);font-size:13px">
+    <span style="color:var(--t2)">${r}</span>
+    <b class="mono" style="${cor?`color:${cor}`:""}">${v}</b></div>`;
+
+  const falta = c.veredito === "falta" || c.veredito === "consome";
+
+  return `
+  <div class="card" style="border-left:2px solid ${V[0]}">
+    <div style="font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+      color:var(--graf);margin-bottom:5px">Diagnóstico</div>
+    <h3 style="font-family:Newsreader,serif;font-size:22px;margin:0 0 9px;color:${V[0]}">
+      ${V[1]}</h3>
+    <p style="color:var(--t2);font-size:13.5px;line-height:1.6;margin:0">${V[2]}</p>
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <div style="font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+      color:var(--graf);margin-bottom:8px">Onde você está hoje</div>
+    ${linha("Sobra por mês", rs(c.sobra), c.sobra<=0?"var(--baixa)":"")}
+    ${linha("Da sua renda, você guarda", (c.taxaPoupanca*100).toFixed(0)+"%",
+      c.taxaPoupanca<0.1?"var(--baixa)":c.taxaPoupanca>=0.2?"var(--alta)":"")}
+    ${linha("Anos até os "+PL.apos, c.anos)}
+    ${PL.jaTem>0 ? linha("Do que você quer, já está garantido",
+      rs(PL.jaTem)+"/mês","var(--alta)") : ""}
+    ${PL.jaTem>0 ? linha("Precisa vir do investimento", rs(c.precisaTirar)+"/mês") : ""}
+    ${c.saques>0 ? linha("Custo dos outros planos, aos "+PL.apos,
+      "− "+rs(c.saques),"var(--ouro2)") : ""}
+    ${linha("Patrimônio projetado", rs(c.projetado))}
+    ${c.dura===Infinity
+      ? linha("Quanto o dinheiro dura","não acaba","var(--alta)")
+      : c.dura!=null ? linha("Quanto o dinheiro dura",
+          Math.round(c.dura)+" anos — até os "+Math.round(PL.apos+c.dura),
+          PL.apos+c.dura < PL.ate ? "var(--baixa)":"var(--alta)") : ""}
+  </div>
+
+  ${!falta ? "" : `
+  <div class="card" style="margin-top:12px">
+    <div style="font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+      color:var(--graf);margin-bottom:8px">O que muda o resultado</div>
+    <p style="color:var(--t2);font-size:13px;line-height:1.55;margin:0 0 10px">
+      Três alavancas, e você escolhe qual dá para puxar:</p>
+    ${linha("Guardar por mês, para o dinheiro durar até os "+PL.ate,
+      c.aporteConsumir==null?"—":rs(c.aporteConsumir),
+      c.aporteConsumir>c.sobra?"var(--ouro2)":"var(--alta)")}
+    ${linha("Guardar por mês, para viver só de juros",
+      c.aportePreservar==null?"—":rs(c.aportePreservar),
+      c.aportePreservar>c.sobra?"var(--ouro2)":"var(--alta)")}
+    ${linha("Hoje você guarda", rs(c.sobra))}
+    <p style="color:var(--graf);font-size:12px;line-height:1.55;margin:11px 0 0">
+      Se o número acima é maior do que você consegue guardar, as outras duas
+      alavancas são <b>trabalhar alguns anos a mais</b> ou <b>aceitar uma renda
+      menor</b>. Mude os campos ao lado e veja o efeito de cada uma.</p>
+  </div>`}
+
+  <div class="card" style="margin-top:12px;border-color:var(--linha2)">
+    <p style="color:var(--graf);font-size:12px;line-height:1.6;margin:0">
+      <b style="color:var(--t2)">Como a conta é feita.</b> Tudo em dinheiro de
+      hoje: o retorno que você escolheu já é o que sobra acima da inflação, então
+      os valores mantêm o poder de compra. O patrimônio cresce pelo que você tem
+      mais o que guarda, e a renda na aposentadoria sai dos ${PL.real}% ao ano
+      sobre o que sobrou. Os planos do caminho saem na idade que você marcou e
+      deixam de render daí em diante — por isso R$ 100 mil gastos aos 50 custam
+      bem mais que R$ 100 mil aos 64. É aritmética, não previsão: não é
+      recomendação de investimento, e a realidade tem anos ruins que a conta
+      não tem.</p>
+  </div>
+
+  <h3 style="font-family:Newsreader,serif;font-size:20px;margin:26px 0 4px">
+    Agora vem a parte que a conta não faz</h3>
+  <p style="color:var(--t2);font-size:13.5px;line-height:1.6;margin:0 0 14px">
+    ${c.veredito==="falta"
+      ? `Saber que falta é metade do caminho. A outra metade é fazer os
+         ${rs(c.aporteConsumir)} por mês virarem realidade — e é aí que
+         aparecem as perguntas de verdade:`
+      : `A conta diz que dá. Só que ela assume ${PL.real}% ao ano acima da
+         inflação todo santo ano, e isso não cai do céu — sai de onde o
+         dinheiro está aplicado. As perguntas que sobram:`}</p>
+
+  <div>
+    ${[["Em que aplicar para render isso?",
+        `${PL.real}% acima da inflação é a média longa de uma carteira montada
+         para o seu prazo — não é o rendimento da poupança nem o de um CDB
+         qualquer. Quanto maior o prazo, mais a bolsa costuma pesar. Você pode
+         estudar isso de graça aqui mesmo: <a href="#/">publique uma carteira</a>,
+         veja como ela se comporta com cotação real, e compare com quem está
+         na frente.`],
+       ["Dá para pagar menos imposto no caminho?",
+        `Costuma dar, e o efeito é grande em prazo longo. PGBL abate da base do
+         IR até o limite da lei para quem declara completa, previdência tem
+         tabela regressiva que cai com o tempo, e a ordem em que se vende
+         posição muda o quanto fica com o Fisco. Cada caso é um caso — o que
+         serve para quem declara simplificado não serve para quem declara
+         completa.`],
+       ["Existe profissional que monta isso?",
+        `Existe, e são categorias diferentes com registros diferentes:
+         planejador financeiro para o plano, assessor para a carteira, gestor
+         para quem prefere dar mandato e não decidir. A página de
+         <a href="#/servicos">serviços</a> explica cada um e qual registro ele
+         precisa ter.`],
+       ["E se eu não quiser ninguém?",
+        `Perfeitamente possível, e muita gente faz. Este site continua aberto
+         de graça: publique carteiras, acompanhe as suas por meses, e descubra
+         se você é bom nisso antes de ter dinheiro de verdade em jogo. Se for,
+         não precisa de mais ninguém.`]]
+      .map(([q,r])=>`<details class="qa"><summary>${q}</summary><p>${r}</p></details>`).join("")}
+  </div>
+
+  <div class="chamada" style="margin-top:16px">
+    <div>
+      <h3 style="font-size:16px;margin-bottom:3px">Quer discutir esses números?</h3>
+      <p style="color:var(--t2);margin:0;font-size:12.5px;max-width:46ch">
+        Deixe o contato e um profissional registrado retorna. Ele olha o caso
+        inteiro — imposto, sucessão, e o que uma conta de cinco campos não
+        pega. Sem custo e sem compromisso.</p>
+    </div>
+    <a href="#/servicos" class="bt lacre">Falar com alguém</a>
+  </div>`;
+}
+
 async function telaServicos(){
   const pintar = (recado="", ruim=false) => {
     app().innerHTML = `
-    <div class="cabeca" style="text-align:left;max-width:72ch">
+    <div class="cabeca" style="text-align:left;max-width:70ch">
       <h1>O que cada um desses serviços é, de verdade</h1>
-      <p>Treze palavras que aparecem em anúncio o tempo todo e quase nunca vêm
-        explicadas. Aqui elas estão em português, com o que cada uma faz, para quem
-        serve e — principalmente — <b>qual registro o profissional precisa ter</b>.</p>
-      <p style="font-size:13px;color:var(--graf);margin-top:10px">O Saldo Positivo não
-        presta nenhum deles. Se quiser conversar com alguém, marque os assuntos e deixe
-        um contato: um profissional habilitado retorna. Sem custo e sem compromisso.</p>
+      <p>Palavras que aparecem em anúncio o tempo todo e quase nunca vêm explicadas.
+        Aqui elas estão em português: o que cada uma faz, para quem serve e —
+        principalmente — <b>qual registro o profissional precisa ter</b> para
+        exercê-la.</p>
+      <p style="font-size:13.5px;color:var(--t2);margin-top:12px;line-height:1.6">
+        Leia por curiosidade, mesmo que não queira contratar nada. Saber a diferença
+        entre um assessor e um gestor, e saber que ambos precisam de registro, já
+        evita a maior parte das histórias que terminam mal.</p>
+      <p style="font-size:12.5px;color:var(--graf);margin-top:12px">
+        ${SERVICOS.length} serviços · toque para abrir · marque os que te interessam e
+        peça contato no fim da página</p>
     </div>
     ${GRUPOS_S.map(([gid,tit,sub])=>`
     <div class="secaoS">
       <div class="cabsec"><h2>${tit}</h2><span>${sub}</span></div>
       <div class="gradeS">${SERVICOS.filter(v=>v.g===gid).map(v=>`
-        <div class="srv${escolhidosS.has(v.id)?" on":""}" data-srv="${v.id}">
-          <h3>${v.nome}</h3><div class="oq">${v.oq}</div>
-          <div class="quem"><span class="rotq">Quem pode exercer</span>
-            <div class="txq">${v.quem}</div></div>
-          <div class="escolher"><i class="cx">${escolhidosS.has(v.id)?"✓":""}</i>${
-            escolhidosS.has(v.id)?"escolhido":"quero falar sobre isso"}</div>
+        <div class="srv${escolhidosS.has(v.id)?" on":""}${abertosS.has(v.id)?" aberto":""}">
+          <div class="cab" data-abrir="${v.id}">
+            <h3>${v.nome}</h3><span class="seta">&#9654;</span></div>
+          <p class="resumo">${resumoDe(v.oq)}</p>
+          <div class="miolo">
+            <div class="oq">${v.oq}</div>
+            <div class="quem"><span class="rotq">Quem pode exercer</span>
+              <div class="txq">${v.quem}</div></div>
+          </div>
+          <div class="escolher" data-srv="${v.id}"><i class="cx">${
+            escolhidosS.has(v.id)?"✓":""}</i>${
+            escolhidosS.has(v.id)?"escolhido — vai no pedido":"quero falar sobre isso"}</div>
         </div>`).join("")}</div>
     </div>`).join("")}
     <div class="contatoS">
@@ -4325,8 +5012,12 @@ async function telaServicos(){
       Encaminhar alguém a um profissional habilitado é diferente de recomendar
       investimento — e nada nesta página é recomendação.</div>`;
 
-    document.querySelectorAll("[data-srv]").forEach(el =>
-      el.onclick = () => { const id = el.dataset.srv;
+    document.querySelectorAll("[data-abrir]").forEach(el =>
+      el.onclick = () => { const id = el.dataset.abrir;
+        abertosS.has(id) ? abertosS.delete(id) : abertosS.add(id); pintar(); });
+
+    document.querySelectorAll(".escolher[data-srv]").forEach(el =>
+      el.onclick = e => { e.stopPropagation(); const id = el.dataset.srv;
         escolhidosS.has(id) ? escolhidosS.delete(id) : escolhidosS.add(id); pintar(); });
 
     document.getElementById("sEnv").onclick = async () => {
@@ -4359,13 +5050,22 @@ const rotSit = k => (SITUACAO.find(x=>x[0]===k)||["","—"])[1];
 async function telaLeads(){
   const q = new URLSearchParams(location.hash.split("?")[1]||"");
   const filtro = q.get("s") || "";
+  const origem = q.get("o") || "pedidos";
   const aberto = q.get("id") || "";
   app().innerHTML = `<div class="carreg">carregando pedidos…</div>`;
 
-  const { data, error } = await sb.from("lead").select("*").in("origem",["servicos","clube"])
+  const { data, error } = await sb.from("lead").select("*")
+    .in("origem",["servicos","clube","cadastro"])
     .order("criado_em", { ascending:false }).limit(400);
   if(error) return app().innerHTML = aviso("Não consegui ler os pedidos: " + error.message +
     " — se falar em permissão, a política lead_ler ainda não está no banco.", true);
+
+  // Serviços e Clube gravam nome/whatsapp; o gatilho do cadastro grava
+  // nome_completo/telefone. Sem casar os dois, metade da lista fica em branco.
+  (data||[]).forEach(x => {
+    x.nome     = x.nome     || x.nome_completo || "";
+    x.whatsapp = x.whatsapp || x.telefone      || "";
+  });
 
   let notas = [];
   if(aberto){
@@ -4378,26 +5078,44 @@ async function telaLeads(){
   const todos = data || [];
   const venceu = x => x.retomar_em && x.retomar_em <= hoje
     && !["fechado","perdido"].includes(x.situacao);
+  const daOrigemP = x => (q.get("o")||"pedidos") === "contas"
+    ? x.origem === "cadastro" : x.origem !== "cadastro";
   const conta = {};
-  SITUACAO.forEach(([k]) => conta[k] = todos.filter(x => (x.situacao||"novo") === k).length);
-  const aRetomar = todos.filter(venceu).length;
+  SITUACAO.forEach(([k]) => conta[k] =
+    todos.filter(x => daOrigemP(x) && (x.situacao||"novo") === k).length);
+  const aRetomar = todos.filter(x => daOrigemP(x) && venceu(x)).length;
 
-  let l = filtro === "retomar" ? todos.filter(venceu)
-        : filtro ? todos.filter(x => (x.situacao||"novo") === filtro) : todos;
+  const daOrigem = origem === "contas"
+    ? todos.filter(x => x.origem === "cadastro")
+    : todos.filter(x => x.origem !== "cadastro");
+
+  let l = filtro === "retomar" ? daOrigem.filter(venceu)
+        : filtro ? daOrigem.filter(x => (x.situacao||"novo") === filtro) : daOrigem;
   l = l.slice().sort((a,b) => (venceu(b)?1:0)-(venceu(a)?1:0)
     || String(b.criado_em).localeCompare(String(a.criado_em)));
 
   const lk = o => { const p = new URLSearchParams();
     const s2 = o.s !== undefined ? o.s : filtro;
     const i2 = o.id !== undefined ? o.id : aberto;
-    if(s2) p.set("s", s2); if(i2) p.set("id", i2);
+    const o2 = o.o !== undefined ? o.o : origem;
+    if(s2) p.set("s", s2); if(i2) p.set("id", i2); if(o2) p.set("o", o2);
     return "#/leads" + (p.toString() ? "?"+p : ""); };
+
+  const nPedidos = todos.filter(x => x.origem !== "cadastro").length;
+  const nContas  = todos.filter(x => x.origem === "cadastro").length;
 
   app().innerHTML = `
   <div class="cabeca" style="text-align:left">
     <h1>Pedidos de contato</h1>
-    <p>${todos.length} ${todos.length===1?"pedido":"pedidos"}${
+    <p>${nPedidos} ${nPedidos===1?"pedido":"pedidos"} · ${nContas} ${
+      nContas===1?"conta criada":"contas criadas"}${
       aRetomar?` · <b style="color:var(--baixa)">${aRetomar} para retomar hoje</b>`:""}</p>
+  </div>
+  <div class="abas" style="margin-bottom:2px">
+    <a href="${lk({o:"pedidos",s:"",id:""})}" class="aba${origem!=="contas"?" on":""}"
+      >Pediram contato<span class="n">${nPedidos}</span></a>
+    <a href="${lk({o:"contas",s:"",id:""})}" class="aba${origem==="contas"?" on":""}"
+      >Criaram conta<span class="n">${nContas}</span></a>
   </div>
   <div class="abas">
     <a href="${lk({s:"",id:""})}" class="aba${!filtro?" on":""}">Todos<span class="n">${todos.length}</span></a>
@@ -4408,7 +5126,9 @@ async function telaLeads(){
   </div>
 
   ${!l.length ? `<div class="card" style="margin-top:14px"><p style="margin:0;color:var(--t2)">
-      Nenhum pedido aqui. Os que chegarem pela tela de serviços aparecem nesta lista.</p></div>`
+      ${origem==="contas"
+        ? "Ninguém criou conta ainda. Quem se cadastrar no site aparece aqui."
+        : "Nenhum pedido aqui. Os que chegarem pela tela de serviços aparecem nesta lista."}</p></div>`
   : l.map(x=>{
     const ab = String(x.id) === String(aberto);
     return `<div class="lead${ab?" ab":""}${venceu(x)?" urg":""}">
@@ -4806,6 +5526,7 @@ function rotear(){
   if(h==="#/assinar")         return telaAssinar();
   if(h==="#/admin")           return telaAdmin();
   if(h==="#/servicos")        return telaServicos();
+  if(h==="#/planejar")        return telaPlanejar();
   if(h==="#/clube")           return telaClube();
   if(h==="#/consenso")        return telaConsenso();
   if(h.split("?")[0]==="#/universo") return telaUniverso();
