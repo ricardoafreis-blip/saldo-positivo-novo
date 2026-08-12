@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict HHvvD99Hem568v4fbk6QdJfQhklJXaJ0OqH4mm3KHlJxbhF2yIaevNjTg9hAjKs
+\restrict RrCjfEWjtyNhdz5NGjX8ygsSSHg4L6UWSzfDVHO1IIFb9JtG8x97ikh0UHvul26
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.10 (Ubuntu 17.10-1.pgdg24.04+1)
@@ -125,6 +125,27 @@ begin
     observacao    = coalesce(dados->>'observacao',    observacao)
   where id = lid;
   if not found then raise exception 'lead não encontrado'; end if;
+end $$;
+
+
+--
+-- Name: admin_excluir_conta(uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.admin_excluir_conta(quem uuid) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+begin
+  if not exists (select 1 from perfil where id = auth.uid() and admin) then
+    raise exception 'só administrador';
+  end if;
+  if quem = auth.uid() then
+    raise exception 'não dá para excluir a própria conta por aqui';
+  end if;
+  delete from lead   where usuario_id = quem;
+  delete from perfil where id = quem;
+  delete from auth.users where id = quem;
 end $$;
 
 
@@ -1072,6 +1093,43 @@ $$;
 
 
 --
+-- Name: mercado(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.mercado() RETURNS jsonb
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+  with hoje as (
+    select ativo, valor, preco, atualizado_em
+      from cotacao_viva
+     where preco > 0
+       and (atualizado_em at time zone 'America/Sao_Paulo')::date
+         = (now() at time zone 'America/Sao_Paulo')::date
+  ),
+  ontem as (
+    select distinct on (b.ativo)
+           b.ativo, b.fechamento, b.m1, b.m2, b.m3
+      from barra b
+     where b.data < (now() at time zone 'America/Sao_Paulo')::date
+     order by b.ativo, b.data desc
+  )
+  select jsonb_build_object(
+    'em', (select max(atualizado_em) from hoje),
+    'p',  coalesce(jsonb_object_agg(h.ativo, jsonb_build_array(
+            round(h.preco::numeric, 4),
+            round(h.valor::numeric, 6),
+            round((o.m1 * (1 - 2.0/18) + h.preco * (2.0/18))::numeric, 4),
+            round((o.m2 * (1 - 2.0/35) + h.preco * (2.0/35))::numeric, 4),
+            round((o.m3 * (1 - 2.0/73) + h.preco * (2.0/73))::numeric, 4))),
+          '{}'::jsonb))
+  from hoje h
+  join ontem o on o.ativo = h.ativo
+ where o.m1 > 0 and o.m2 > 0 and o.m3 > 0;
+$$;
+
+
+--
 -- Name: mt5_gravar(jsonb); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1305,6 +1363,23 @@ $$;
 
 
 --
+-- Name: perfil_trava(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.perfil_trava() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+begin
+  if new.id <> old.id then raise exception 'não dá para trocar o dono do perfil'; end if;
+  if new.admin     is distinct from old.admin     then raise exception 'admin não se altera por aqui'; end if;
+  if new.assinante is distinct from old.assinante then raise exception 'assinatura não se altera por aqui'; end if;
+  if new.bloqueado is distinct from old.bloqueado then raise exception 'bloqueio não se altera por aqui'; end if;
+  return new;
+end $$;
+
+
+--
 -- Name: pode_mexer(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1380,7 +1455,11 @@ begin
   k3 := 2.0 / (p_longa + 1);
   for r in
     select b.ativo as a, count(*) as q,
-           (select u.liquidez from universo u where u.ativo = b.ativo) as liq
+           (select avg(x.volume * x.fechamento)
+              from (select b2.volume, b2.fechamento
+                      from barra b2
+                     where b2.ativo = b.ativo and b2.volume > 0
+                     order by b2.data desc limit 21) x) as liq
       from barra b group by b.ativo
   loop
     if r.q < p_media then continue; end if;
@@ -1396,7 +1475,6 @@ begin
       if n <= p_media then s2 := s2 + v.f; end if;
       if n =  p_media then e2 := s2 / p_media; end if;
       if n >  p_media then e2 := v.f * k2 + e2 * (1 - k2); end if;
-      -- cada média semeada no PRÓPRIO período: é o cálculo correto
       if n <= p_longa then s3 := s3 + v.f; end if;
       if n =  p_longa then e3 := s3 / p_longa; end if;
       if n >  p_longa then e3 := v.f * k3 + e3 * (1 - k3); end if;
@@ -2011,6 +2089,41 @@ end $$;
 
 
 --
+-- Name: vivo(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.vivo() RETURNS jsonb
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+  with viva as (
+    select ativo, valor, atualizado_em
+      from cotacao_viva
+     where valor is not null
+       and (atualizado_em at time zone 'America/Sao_Paulo')::date
+         = (now()         at time zone 'America/Sao_Paulo')::date
+  ),
+  parcial as (
+    select p.carteira_id,
+           sum(p.peso / 100.0 * v.valor) as retorno,
+           count(v.valor)                as com_cotacao,
+           count(*)                      as papeis
+      from peso_atual p
+      left join viva v on v.ativo = p.ativo
+     group by p.carteira_id
+  )
+  select jsonb_build_object(
+    'em', (select max(atualizado_em) from viva),
+    'c',  coalesce(jsonb_agg(jsonb_build_array(
+            pa.carteira_id, round(pa.retorno::numeric, 6),
+            pa.com_cotacao, pa.papeis)) filter (where pa.com_cotacao > 0),
+          '[]'::jsonb))
+  from parcial pa
+  join carteira c on c.id = pa.carteira_id and c.ativa;
+$$;
+
+
+--
 -- Name: aposta; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -2577,6 +2690,21 @@ CREATE TABLE public.parametro (
     nome text,
     atualizado_em timestamp with time zone DEFAULT now()
 );
+
+
+--
+-- Name: perfil_publico; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.perfil_publico WITH (security_invoker='false') AS
+ SELECT id,
+    apelido,
+    exibir,
+    nome_publico,
+    credencial,
+    anos_mercado
+   FROM public.perfil
+  WHERE (NOT COALESCE(bloqueado, false));
 
 
 --
@@ -3170,6 +3298,13 @@ CREATE TRIGGER lead_norm BEFORE INSERT OR UPDATE ON public.lead FOR EACH ROW EXE
 --
 
 CREATE TRIGGER perfil_trava BEFORE UPDATE ON public.perfil FOR EACH ROW EXECUTE FUNCTION public.trava_privilegio();
+
+
+--
+-- Name: perfil perfil_trava_tg; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER perfil_trava_tg BEFORE UPDATE ON public.perfil FOR EACH ROW EXECUTE FUNCTION public.perfil_trava();
 
 
 --
@@ -3785,5 +3920,5 @@ CREATE POLICY universo_mexer ON public.universo TO authenticated USING ((EXISTS 
 -- PostgreSQL database dump complete
 --
 
-\unrestrict HHvvD99Hem568v4fbk6QdJfQhklJXaJ0OqH4mm3KHlJxbhF2yIaevNjTg9hAjKs
+\unrestrict RrCjfEWjtyNhdz5NGjX8ygsSSHg4L6UWSzfDVHO1IIFb9JtG8x97ikh0UHvul26
 
