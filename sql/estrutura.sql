@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict RrCjfEWjtyNhdz5NGjX8ygsSSHg4L6UWSzfDVHO1IIFb9JtG8x97ikh0UHvul26
+\restrict hOf5zOfmNE23w2YzbPzPZYdQTAwpB6D2GQztr1XSbtWg8KkCgfL7RNB3fzW6nTz
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.10 (Ubuntu 17.10-1.pgdg24.04+1)
@@ -1099,17 +1099,16 @@ $$;
 CREATE FUNCTION public.mercado() RETURNS jsonb
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public'
-    AS $$
+    AS $_$
   with hoje as (
-    select ativo, valor, preco, atualizado_em
+    select ativo, valor, preco, volume, atualizado_em
       from cotacao_viva
      where preco > 0
        and (atualizado_em at time zone 'America/Sao_Paulo')::date
          = (now() at time zone 'America/Sao_Paulo')::date
   ),
   ontem as (
-    select distinct on (b.ativo)
-           b.ativo, b.fechamento, b.m1, b.m2, b.m3
+    select distinct on (b.ativo) b.ativo, b.m1, b.m2, b.m3
       from barra b
      where b.data < (now() at time zone 'America/Sao_Paulo')::date
      order by b.ativo, b.data desc
@@ -1121,12 +1120,14 @@ CREATE FUNCTION public.mercado() RETURNS jsonb
             round(h.valor::numeric, 6),
             round((o.m1 * (1 - 2.0/18) + h.preco * (2.0/18))::numeric, 4),
             round((o.m2 * (1 - 2.0/35) + h.preco * (2.0/35))::numeric, 4),
-            round((o.m3 * (1 - 2.0/73) + h.preco * (2.0/73))::numeric, 4))),
+            round((o.m3 * (1 - 2.0/73) + h.preco * (2.0/73))::numeric, 4),
+            case when h.ativo ~ '[0-9]$' and h.volume > 0
+                 then round((h.volume * h.preco)::numeric, 0) end)),
           '{}'::jsonb))
   from hoje h
   join ontem o on o.ativo = h.ativo
  where o.m1 > 0 and o.m2 > 0 and o.m3 > 0;
-$$;
+$_$;
 
 
 --
@@ -1242,23 +1243,18 @@ begin
      and not coalesce((select admin from perfil where id = auth.uid()), false) then
     raise exception 'so admin pode gravar cotacao (papel: %)', papel;
   end if;
-
   delete from cotacao_viva
    where ativo in (select x.ativo from jsonb_to_recordset(dados)
-                     as x(ativo text, preco real, var real, ant real, abre real));
-
-  insert into cotacao_viva (ativo, valor, preco, abertura, atualizado_em)
+                     as x(ativo text, preco real, var real, ant real, abre real, vol real));
+  insert into cotacao_viva (ativo, valor, preco, abertura, volume, atualizado_em)
   select x.ativo,
-         -- variação pronta do terminal quando vier; senão deriva do
-         -- fechamento anterior, como antes (EA velho ainda no ar)
          coalesce(x.var, x.preco / nullif(x.ant, 0) - 1),
-         x.preco, nullif(x.abre, 0), now()
+         x.preco, nullif(x.abre, 0), nullif(x.vol, 0), now()
     from jsonb_to_recordset(dados)
-      as x(ativo text, preco real, var real, ant real, abre real)
+      as x(ativo text, preco real, var real, ant real, abre real, vol real)
    where x.ativo is not null
      and x.preco > 0
      and (x.var is not null or x.ant > 0);
-
   get diagnostics n = row_count;
   return jsonb_build_object('gravados', n, 'quando', now());
 end $$;
@@ -1363,23 +1359,6 @@ $$;
 
 
 --
--- Name: perfil_trava(); Type: FUNCTION; Schema: public; Owner: -
---
-
-CREATE FUNCTION public.perfil_trava() RETURNS trigger
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
-    AS $$
-begin
-  if new.id <> old.id then raise exception 'não dá para trocar o dono do perfil'; end if;
-  if new.admin     is distinct from old.admin     then raise exception 'admin não se altera por aqui'; end if;
-  if new.assinante is distinct from old.assinante then raise exception 'assinatura não se altera por aqui'; end if;
-  if new.bloqueado is distinct from old.bloqueado then raise exception 'bloqueio não se altera por aqui'; end if;
-  return new;
-end $$;
-
-
---
 -- Name: pode_mexer(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1442,7 +1421,7 @@ $$;
 CREATE FUNCTION public.quant_medias(p_curta integer DEFAULT 17, p_media integer DEFAULT 34, p_longa integer DEFAULT 72, p_janela integer DEFAULT 90) RETURNS TABLE(ativo text, pregoes integer, fech real, ema17 real, ema34 real, ema72 real, dist real, amplitude real, liquidez real, serie real[], serie72 real[])
     LANGUAGE plpgsql STABLE
     SET search_path TO 'public'
-    AS $$
+    AS $_$
 declare
   r record; v record;
   e1 real; e2 real; e3 real;
@@ -1455,11 +1434,13 @@ begin
   k3 := 2.0 / (p_longa + 1);
   for r in
     select b.ativo as a, count(*) as q,
-           (select avg(x.volume * x.fechamento)
-              from (select b2.volume, b2.fechamento
-                      from barra b2
-                     where b2.ativo = b.ativo and b2.volume > 0
-                     order by b2.data desc limit 21) x) as liq
+           case when b.ativo ~ '[0-9]$' then
+             (select avg(x.volume * x.fechamento)
+                from (select b2.volume, b2.fechamento
+                        from barra b2
+                       where b2.ativo = b.ativo and b2.volume > 0
+                       order by b2.data desc limit 21) x)
+           end as liq
       from barra b group by b.ativo
   loop
     if r.q < p_media then continue; end if;
@@ -1495,7 +1476,7 @@ begin
     serie72 := ser3[greatest(1, array_length(ser3,1) - p_janela + 1) : array_length(ser3,1)];
     return next;
   end loop;
-end $$;
+end $_$;
 
 
 --
@@ -2418,7 +2399,8 @@ CREATE TABLE public.cotacao_viva (
     valor real NOT NULL,
     preco real,
     atualizado_em timestamp with time zone DEFAULT now() NOT NULL,
-    abertura real
+    abertura real,
+    volume real
 );
 
 
@@ -3301,13 +3283,6 @@ CREATE TRIGGER perfil_trava BEFORE UPDATE ON public.perfil FOR EACH ROW EXECUTE 
 
 
 --
--- Name: perfil perfil_trava_tg; Type: TRIGGER; Schema: public; Owner: -
---
-
-CREATE TRIGGER perfil_trava_tg BEFORE UPDATE ON public.perfil FOR EACH ROW EXECUTE FUNCTION public.perfil_trava();
-
-
---
 -- Name: posicao tg_declarar; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -3654,9 +3629,7 @@ CREATE POLICY n_ins ON public.nota FOR INSERT WITH CHECK ((EXISTS ( SELECT 1
 -- Name: nota n_le; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY n_le ON public.nota FOR SELECT USING ((public.eh_assinante() OR (EXISTS ( SELECT 1
-   FROM public.carteira c
-  WHERE ((c.id = nota.carteira_id) AND (c.usuario_id = auth.uid()))))));
+CREATE POLICY n_le ON public.nota FOR SELECT USING ((auth.uid() IS NOT NULL));
 
 
 --
@@ -3707,9 +3680,7 @@ CREATE POLICY p_le ON public.perfil FOR SELECT USING (true);
 -- Name: peso_atual pa_le; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY pa_le ON public.peso_atual FOR SELECT USING ((public.eh_assinante() OR (EXISTS ( SELECT 1
-   FROM public.carteira c
-  WHERE ((c.id = peso_atual.carteira_id) AND (c.usuario_id = auth.uid()))))));
+CREATE POLICY pa_le ON public.peso_atual FOR SELECT USING ((auth.uid() IS NOT NULL));
 
 
 --
@@ -3771,9 +3742,7 @@ CREATE POLICY pos_ins ON public.posicao FOR INSERT WITH CHECK ((EXISTS ( SELECT 
 -- Name: posicao pos_le; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY pos_le ON public.posicao FOR SELECT USING ((public.eh_assinante() OR (EXISTS ( SELECT 1
-   FROM public.carteira c
-  WHERE ((c.id = posicao.carteira_id) AND (c.usuario_id = auth.uid()))))));
+CREATE POLICY pos_le ON public.posicao FOR SELECT USING ((auth.uid() IS NOT NULL));
 
 
 --
@@ -3920,5 +3889,5 @@ CREATE POLICY universo_mexer ON public.universo TO authenticated USING ((EXISTS 
 -- PostgreSQL database dump complete
 --
 
-\unrestrict RrCjfEWjtyNhdz5NGjX8ygsSSHg4L6UWSzfDVHO1IIFb9JtG8x97ikh0UHvul26
+\unrestrict hOf5zOfmNE23w2YzbPzPZYdQTAwpB6D2GQztr1XSbtWg8KkCgfL7RNB3fzW6nTz
 
