@@ -1114,18 +1114,16 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
       <div class="grupo"><span class="rotg">Aprender</span>
         <span class="def">antes de arriscar qualquer coisa</span>
         <select class="menu" data-g="aprender">
-          <option value="">o que você quer ver…</option>
           <option value="#/crescer">Como o dinheiro cresce</option>
           <option value="#/comprar">Comprar um bem</option>
           <option value="#/escada">A escada do consórcio</option>
           <option value="#/aplicado">Já tenho o dinheiro</option>
-          <option value="#/aprender">Por que é difícil</option>
-          <option value="#/como-funciona">Como funciona</option>
+          <option value="#/aprender">Por que investir é difícil</option>
+          <option value="#/como-funciona">Como funciona o site</option>
         </select></div>
       <div class="grupo"><span class="rotg">Especular</span>
         <span class="def">comprar para vender mais caro</span>
         <select class="menu" data-g="especular">
-          <option value="">escolha um jogo…</option>
           <option value="#/tiro-curto">Tiro curto</option>
           <option value="#/placar">Placar</option>
           <option value="#/duelo">Duelo</option>
@@ -1133,7 +1131,6 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
       <div class="grupo"><span class="rotg">Investir</span>
         <span class="def">comprar para viver de renda</span>
         <select class="menu" id="menuInv" data-g="investir">
-          <option value="">carteiras e papéis…</option>
           <option value="#/ranking">Ranking</option>
           <option value="#/screening">Screening</option>
           <option value="#/publicar">Crie sua carteira</option>
@@ -1141,10 +1138,28 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
       <div class="grupo"><span class="rotg">Construir</span>
         <span class="def">o patrimônio fora da tela</span>
         <select class="menu" data-g="construir">
-          <option value="">no mundo real…</option>
-          <option value="#/planejar">Planejamento</option>
-          <option value="#/clube">Clube de investimentos</option>
-          <option value="#/servicos">Serviços</option>
+          <option value="#/planejar">Planejamento financeiro</option>
+          <option value="#/sucessao">Seguro e sucessão</option>
+          <optgroup label="Organizar">
+            <option value="#/servicos?s=planejamento">Planejamento financeiro</option>
+            <option value="#/servicos?s=consultoria">Consultoria de investimentos</option>
+            <option value="#/servicos?s=assessoria">Assessoria de investimentos</option>
+            <option value="#/servicos?s=clube">Clube de investimentos</option>
+            <option value="#/servicos?s=consorcio">Estratégias com consórcio</option>
+          </optgroup>
+          <optgroup label="Proteger e transmitir">
+            <option value="#/servicos?s=blindagem">Blindagem e proteção patrimonial</option>
+            <option value="#/servicos?s=sucessorio">Planejamento sucessório</option>
+          </optgroup>
+          <optgroup label="Patrimônio complexo">
+            <option value="#/servicos?s=gestao">Gestão de recursos</option>
+            <option value="#/servicos?s=fortunas">Gestão de grandes fortunas</option>
+            <option value="#/servicos?s=exterior">Conta no exterior</option>
+            <option value="#/servicos?s=offshore">Abertura de offshore</option>
+            <option value="#/servicos?s=empresarial">Estruturação empresarial</option>
+            <option value="#/servicos?s=family">Multi family office</option>
+          </optgroup>
+          <option value="#/servicos">Ver todos os serviços</option>
         </select></div>
     </nav>
   </div>
@@ -1614,9 +1629,15 @@ async function carregarEu(){
 }
 function pintarNav(){
   document.querySelectorAll("nav select.menu").forEach(sel => {
+    // marca onde a pessoa está, se for um destino deste menu
+    const aqui = (location.hash||"").split("?")[0];
+    const qs   = (location.hash||"").split("?")[1] || "";
+    const alvo = qs.includes("s=") ? aqui + "?s=" + new URLSearchParams(qs).get("s") : aqui;
+    const op = [...sel.options].find(o => o.value === alvo || o.value === aqui);
+    if(op) sel.value = op.value;
     if(sel.dataset.ligado) return;
     sel.dataset.ligado = "1";
-    sel.onchange = () => { if(sel.value){ location.hash = sel.value; sel.selectedIndex = 0; } };
+    sel.onchange = () => { if(sel.value) location.hash = sel.value; };
   });
   $("#navDir").innerHTML = eu
     ? `<details class="eu" id="menuEu">
@@ -5559,6 +5580,101 @@ function pedirPL(f){
   </div>`;
 }
 
+function telaSucessao(){
+  app().innerHTML = `
+  <div class="cabeca" style="text-align:left;max-width:72ch">
+    <h1>Seguro e sucessão</h1>
+    <p>Quando alguém morre, os bens travam no mesmo dia — conta, aluguel,
+      empresa. As despesas não travam: folha, escola, condomínio, IPTU. E a
+      conta do inventário precisa ser paga <b>antes</b> de a família receber
+      qualquer coisa. É aí que se vende ativo com pressa, e quem vende com
+      pressa vende barato.</p>
+    <p style="margin-top:8px">O problema não é o imposto. É o caixa. A pergunta
+      não é se a sua família tem patrimônio — é se ela tem <b>dinheiro na semana
+      seguinte</b>.</p>
+  </div>
+
+  ${blocoSucessao()}
+
+  <div class="pontes">
+    <a href="#/planejar" class="bt">Fazer o plano completo</a>
+    <a href="#/servicos" class="bt cheio lacre">Falar com quem faz &rarr;</a>
+  </div>`;
+
+  document.querySelectorAll(".cSuc").forEach(el =>
+    el.onchange = () => { const id = el.dataset.c;
+      PL.casos = el.checked ? [...new Set([...PL.casos, id])]
+                            : PL.casos.filter(x => x !== id);
+      el.closest(".caso").classList.toggle("on", el.checked);
+      const r = $("#sucRes"); if(r) r.innerHTML = sucessaoHTML(); });
+
+  const es = $("#pSuc");
+  if(es) es.oninput = () => { PL.suc = numPL(es);
+    const r = $("#sucRes"); if(r) r.innerHTML = sucessaoHTML(); };
+}
+
+function blocoSucessao(){
+  return `
+  <div class="card" style="margin-top:12px" id="sucAncora">
+    <div style="font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+      color:var(--graf);margin-bottom:5px">A conta que ninguém faz</div>
+    <h3 style="font-family:Newsreader,serif;font-size:20px;margin:0 0 3px">
+      Quatro perguntas. Se você tiver resposta para as quatro, pule esta parte.</h3>
+    <p style="color:var(--graf);font-size:12.5px;margin:0 0 14px">
+      Não são hipóteses de manual. É o que acontece.</p>
+
+    <div class="provoca">
+      <div class="pv">
+        <b>Se você morrer hoje, quem paga a escola do seu filho no mês que vem?</b>
+        <p>A pergunta não é se você tem patrimônio — é se a sua família tem
+          <b>renda</b> na semana seguinte. São coisas diferentes. Conta
+          bloqueia, aluguel deixa de ser repassado, empresa entra em disputa.
+          E a mensalidade vence no dia cinco do mesmo jeito.</p>
+      </div>
+      <div class="pv">
+        <b>Você tem filhos de casamentos diferentes?</b>
+        <p>Então tem herdeiros necessários com interesses opostos, e um cônjuge
+          atual que também tem direito. Cada um com seu advogado e sua pressa:
+          quem precisa de dinheiro quer vender, quem não precisa quer esperar.
+          Isso dura anos.</p>
+      </div>
+      <div class="pv">
+        <b>Se o seu patrimônio for bloqueado amanhã, como você se vira?</b>
+        <p>Discussão trabalhista, tributária, uma garantia que você deu por
+          alguém. Não precisa ser culpa sua para o dinheiro parar. A pergunta
+          é o que sobra <b>fora</b> do que pode ser alcançado.</p>
+      </div>
+      <div class="pv">
+        <b>E se o casamento acabar?</b>
+        <p>Metade do que foi construído entra na conta, dependendo do regime.
+          O que fica de fora, e como isso foi montado, é decisão que se toma
+          antes — nunca durante.</p>
+      </div>
+    </div>
+
+    <p style="color:var(--t2);font-size:13.5px;line-height:1.6;margin:16px 0 12px">
+      O que essas quatro têm em comum: <b>não é falta de patrimônio, é falta de
+      liquidez na hora errada.</b> Os bens travam no mesmo dia; as despesas não
+      travam nenhum dia. E a conta do inventário precisa ser paga <b>antes</b>
+      de a família receber qualquer coisa.</p>
+
+    <p style="font-size:13px;color:var(--tinta);margin:0 0 8px">
+      <b>Marque o que é o seu caso.</b> Cada item muda o tamanho do problema.</p>
+    <div class="casos">${CASOS.map(x=>`
+      <label class="caso${PL.casos.includes(x.id)?" on":""}">
+        <input type="checkbox" class="cSuc" data-c="${x.id}"
+          ${PL.casos.includes(x.id)?"checked":""}>
+        <span>${x.t}</span></label>`).join("")}</div>
+
+    <label style="font-size:12px;color:var(--graf);margin-top:14px;display:block">
+      Patrimônio total, somando tudo — imóveis, empresa, investimentos</label>
+    <input id="pSuc" inputmode="decimal" value="${PL.suc||""}"
+      placeholder="10.000.000" style="max-width:260px">
+    <div id="sucRes" style="margin-top:12px">${sucessaoHTML()}</div>
+  </div>
+`;
+}
+
 function resultadoPL(c){
   const V = {
     preserva:["var(--alta)","Dá, e ainda sobra",
@@ -5701,63 +5817,7 @@ function resultadoPL(c){
   </div>
 
 
-  <div class="card" style="margin-top:12px" id="sucAncora">
-    <div style="font-size:10px;letter-spacing:.16em;text-transform:uppercase;
-      color:var(--graf);margin-bottom:5px">A conta que ninguém faz</div>
-    <h3 style="font-family:Newsreader,serif;font-size:20px;margin:0 0 3px">
-      Quatro perguntas. Se você tiver resposta para as quatro, pule esta parte.</h3>
-    <p style="color:var(--graf);font-size:12.5px;margin:0 0 14px">
-      Não são hipóteses de manual. É o que acontece.</p>
-
-    <div class="provoca">
-      <div class="pv">
-        <b>Se você morrer hoje, quem paga a escola do seu filho no mês que vem?</b>
-        <p>A pergunta não é se você tem patrimônio — é se a sua família tem
-          <b>renda</b> na semana seguinte. São coisas diferentes. Conta
-          bloqueia, aluguel deixa de ser repassado, empresa entra em disputa.
-          E a mensalidade vence no dia cinco do mesmo jeito.</p>
-      </div>
-      <div class="pv">
-        <b>Você tem filhos de casamentos diferentes?</b>
-        <p>Então tem herdeiros necessários com interesses opostos, e um cônjuge
-          atual que também tem direito. Cada um com seu advogado e sua pressa:
-          quem precisa de dinheiro quer vender, quem não precisa quer esperar.
-          Isso dura anos.</p>
-      </div>
-      <div class="pv">
-        <b>Se o seu patrimônio for bloqueado amanhã, como você se vira?</b>
-        <p>Discussão trabalhista, tributária, uma garantia que você deu por
-          alguém. Não precisa ser culpa sua para o dinheiro parar. A pergunta
-          é o que sobra <b>fora</b> do que pode ser alcançado.</p>
-      </div>
-      <div class="pv">
-        <b>E se o casamento acabar?</b>
-        <p>Metade do que foi construído entra na conta, dependendo do regime.
-          O que fica de fora, e como isso foi montado, é decisão que se toma
-          antes — nunca durante.</p>
-      </div>
-    </div>
-
-    <p style="color:var(--t2);font-size:13.5px;line-height:1.6;margin:16px 0 12px">
-      O que essas quatro têm em comum: <b>não é falta de patrimônio, é falta de
-      liquidez na hora errada.</b> Os bens travam no mesmo dia; as despesas não
-      travam nenhum dia. E a conta do inventário precisa ser paga <b>antes</b>
-      de a família receber qualquer coisa.</p>
-
-    <p style="font-size:13px;color:var(--tinta);margin:0 0 8px">
-      <b>Marque o que é o seu caso.</b> Cada item muda o tamanho do problema.</p>
-    <div class="casos">${CASOS.map(x=>`
-      <label class="caso${PL.casos.includes(x.id)?" on":""}">
-        <input type="checkbox" class="cSuc" data-c="${x.id}"
-          ${PL.casos.includes(x.id)?"checked":""}>
-        <span>${x.t}</span></label>`).join("")}</div>
-
-    <label style="font-size:12px;color:var(--graf);margin-top:14px;display:block">
-      Patrimônio total, somando tudo — imóveis, empresa, investimentos</label>
-    <input id="pSuc" inputmode="decimal" value="${PL.suc||""}"
-      placeholder="10.000.000" style="max-width:260px">
-    <div id="sucRes" style="margin-top:12px">${sucessaoHTML()}</div>
-  </div>
+  ${blocoSucessao()}
 
   <h3 style="font-family:Newsreader,serif;font-size:20px;margin:26px 0 4px">
     Agora vem a parte que a conta não faz</h3>
@@ -5912,7 +5972,14 @@ async function telaServicos(){
       pintar("Pedido registrado. Alguém entra em contato em até um dia útil.");
     };
   };
+  // veio do menu do cabeçalho com um serviço escolhido: abre e rola até ele
+  const alvo = new URLSearchParams((location.hash||"").split("?")[1]||"").get("s");
+  if(alvo && SERVICOS.some(v => v.id === alvo)) abertosS.add(alvo);
   pintar();
+  if(alvo){
+    const el = document.querySelector(`[data-abrir="${alvo}"]`);
+    if(el) setTimeout(() => el.scrollIntoView({behavior:"smooth", block:"center"}), 60);
+  }
 }
 
 const SITUACAO = [["novo","Novo"],["contatado","Contatado"],
@@ -7840,6 +7907,7 @@ function rotear(){
   if(h==="#/admin")           return telaAdmin();
   if(h==="#/servicos")        return telaServicos();
   if(h==="#/planejar")        return telaPlanejar();
+  if(h==="#/sucessao")        return telaSucessao();
   if(h==="#/clube")           return telaClube();
   if(h==="#/consenso")        return telaConsenso();
   if(h.split("?")[0]==="#/universo") return telaUniverso();
