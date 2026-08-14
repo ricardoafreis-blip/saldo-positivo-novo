@@ -49,13 +49,23 @@ header .marca{font-family:Newsreader,serif;font-weight:500;font-size:26px;
   letter-spacing:-.025em;color:var(--tinta);line-height:1.05;white-space:nowrap}
 header .marca:hover{color:var(--tinta)}
 
-nav{display:flex;align-items:flex-start;gap:0;flex-wrap:wrap;
-  padding:0 0 13px;border-top:1px solid var(--linha)}
-nav .grupo{display:flex;flex-direction:column;gap:3px;padding-top:11px}
-nav .grupo+.grupo{margin-left:24px;padding-left:24px;border-left:1px solid var(--linha)}
+.trilha{border-top:1px solid var(--linha);padding:9px 0 13px;text-align:center}
+.rotm{display:block;font-size:8px;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--graf);opacity:.55;margin-bottom:4px}
+
+/* grade centralizada. O divisor mora na coluna da direita, não no "grupo que
+   vem depois" — senão, ao quebrar em duas filas, o terceiro herda o recuo do
+   segundo e a fila de baixo sai torta. */
+nav{display:grid;grid-template-columns:repeat(4,1fr);align-items:start}
+nav .grupo{display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:6px 14px 0}
+nav .grupo+.grupo{border-left:1px solid var(--linha)}
 nav .rotg{font-size:8px;letter-spacing:.19em;text-transform:uppercase;
   color:var(--graf);opacity:.6}
-nav .bloco{display:flex;gap:14px;align-items:baseline;flex-wrap:wrap}
+nav .gloss{font-size:9.5px;color:var(--graf);opacity:.5;line-height:1.3;
+  margin:-1px 0 2px;font-style:italic;white-space:nowrap}
+nav .bloco{display:flex;gap:14px;align-items:baseline;flex-wrap:wrap;
+  justify-content:center}
 nav a,nav button.lnk{font-size:13.5px;color:var(--t2);background:none;
   transition:color .15s;white-space:nowrap}
 nav a:hover,nav button.lnk:hover{color:var(--ouro2)}
@@ -65,16 +75,21 @@ header .dir{display:flex;gap:12px;align-items:center;font-size:13px;flex:none}
 header .dir a,header .dir button.lnk{font-size:13px;color:var(--t2);background:none}
 header .dir a:hover{color:var(--ouro2)}
 
-@media(max-width:820px){
+@media(max-width:1060px){
+  nav .gloss{display:none}
+}
+@media(max-width:1040px){
   header .marca{font-size:22px}
-  nav .grupo+.grupo{margin-left:14px;padding-left:14px}
+  nav{grid-template-columns:repeat(2,1fr);row-gap:14px}
+  nav .grupo{padding-left:12px;padding-right:12px}
+  nav .grupo+.grupo{border-left:none}
+  nav .grupo:nth-child(even){border-left:1px solid var(--linha)}
   nav .bloco{gap:11px}
   nav a{font-size:13px}
 }
 @media(max-width:560px){
-
-  nav{flex-direction:column;gap:9px;padding-bottom:11px}
-  nav .grupo+.grupo{margin-left:0;padding-left:0;border-left:none;padding-top:0}
+  nav{grid-template-columns:1fr;row-gap:10px}
+  nav .grupo:nth-child(even){border-left:none}
 }
 
 .prova{display:inline-flex;flex-wrap:wrap;margin-top:22px;border:1px solid var(--linha2);
@@ -788,15 +803,35 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
 .ab3{font-size:14.5px;color:var(--t2);line-height:1.68;margin:0 auto 26px;max-width:60ch}
 .ab4{font-size:13px;color:var(--graf);line-height:1.6;margin:22px auto 0;max-width:56ch}
 
-.passosAb{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;
-  text-align:left;margin-top:4px}
-.passosAb .pAb{background:var(--p2);border:1px solid var(--linha);border-radius:5px;
-  padding:13px 13px 12px}
-.passosAb .nAb{display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;
-  color:var(--lacre);letter-spacing:.16em;margin-bottom:5px}
-.passosAb b{font-family:Newsreader,serif;font-size:16px;font-weight:500;
-  color:var(--tinta);display:block;margin-bottom:4px}
-.passosAb .dAb{font-size:11.5px;color:var(--t2);line-height:1.45}
+/* a trajetória: simulado à esquerda, mundo real à direita */
+.jornada{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;
+  text-align:left;margin-top:6px;position:relative}
+.jornada .et{background:var(--p2);border:1px solid var(--linha);border-radius:5px;
+  padding:14px 14px 13px;display:flex;flex-direction:column}
+.jornada .et.real{border-color:var(--linha2);background:linear-gradient(180deg,#0E1728,#0B1322)}
+.jornada .nEt{display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;
+  color:var(--lacre);letter-spacing:.16em;margin-bottom:6px}
+.jornada .et.real .nEt{color:var(--ouro2)}
+.jornada b{font-family:Newsreader,serif;font-size:18px;font-weight:500;
+  color:var(--tinta);display:block;margin-bottom:3px}
+.jornada .defEt{font-size:11px;color:var(--ouro2);opacity:.85;line-height:1.4;
+  margin-bottom:7px;font-style:italic}
+.jornada .dEt{font-size:11.5px;color:var(--t2);line-height:1.5}
+.jornada .ondeEt{font-size:10.5px;color:var(--graf);line-height:1.4;margin-top:9px;
+  padding-top:8px;border-top:1px solid var(--linha)}
+.setaJ{display:flex;align-items:center;gap:10px;margin:12px 0 0;
+  font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--graf)}
+.setaJ .li{flex:1;height:1px;background:linear-gradient(90deg,var(--linha),var(--ouro2))}
+
+/* a tese central */
+.tese{margin:34px 0 0;padding:24px 22px;border:1px solid var(--linha2);
+  border-radius:6px;background:var(--p2);text-align:left}
+.teseT{font-family:Newsreader,serif;font-size:22px;color:var(--tinta);
+  margin:0 0 10px;line-height:1.32}
+.teseP{font-size:13.5px;color:var(--t2);line-height:1.7;margin:0 0 10px}
+.teseP:last-child{margin-bottom:0}
+.teseP b{color:var(--ouro2);font-weight:500}
+@media(max-width:860px){.jornada{grid-template-columns:repeat(2,1fr)}}
 
 .promessa{margin:34px 0 0;padding:22px 0 0;border-top:1px solid var(--linha2);text-align:left}
 .pTit{font-family:Newsreader,serif;font-size:23px;color:var(--tinta);
@@ -817,13 +852,76 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
   text-decoration:underline;text-underline-offset:3px;opacity:.75;
   transition:opacity .14s,color .14s}
 .naoVer:hover{opacity:1;color:var(--t2)}
-@media(max-width:860px){.passosAb{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:620px){
   .abertura{margin-top:26px}
   .ab2{font-size:25px}
-  .passosAb{grid-template-columns:1fr;gap:6px}
+  .jornada{grid-template-columns:1fr;gap:6px}
+  .tese{padding:18px 16px}
+  .teseT{font-size:19px}
   .botoesAb .bt{width:100%}
 }
+
+/* telas de patrimônio: crescer e comprar */
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.grid4 label{display:block;font-size:10.5px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--graf);margin-bottom:4px}
+.grid4 input{width:100%}
+.tituloG{font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--graf);margin-bottom:2px}
+.subG{font-size:11.5px;color:var(--graf);margin-bottom:8px}
+.legG{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:11px;
+  color:var(--graf)}
+.legG i{display:inline-block;width:9px;height:2px;margin-right:5px;
+  vertical-align:middle;border-radius:1px}
+.trio{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:14px}
+.trio .cx{background:var(--p2);border:1px solid var(--linha);border-radius:5px;
+  padding:13px 14px}
+.trio .cx.destaque{border-color:var(--ouro2)}
+.trio .rot{display:block;font-size:10px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--graf);margin-bottom:5px}
+.trio b{display:block;font-family:Newsreader,serif;font-size:22px;
+  font-weight:500;color:var(--tinta);line-height:1.15}
+.trio .pe{display:block;font-size:11px;color:var(--graf);margin-top:4px;
+  line-height:1.4}
+.comp{width:100%}
+.comp td,.comp th{vertical-align:top;padding:11px 10px}
+.comp .rotL{color:var(--graf);font-size:12px}
+.comp .pe{font-size:11px;color:var(--graf)}
+.comp .bom{color:var(--alta)}
+.comp .ruim{color:var(--baixa)}
+.rolaX{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.rolaX .comp{min-width:520px}
+/* a ponte do educacional para o mundo real */
+.ponte{border-color:var(--linha2)}
+.ponte .rotP{display:block;font-size:9.5px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--ouro2);opacity:.75;margin-bottom:6px}
+.ponte h2{font-size:20px;margin:0 0 6px}
+.ponte .introP{font-size:13.5px;color:var(--t2);line-height:1.65;margin:0 0 14px}
+.casosP{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:14px}
+.casosP .cs{background:var(--p2);border:1px solid var(--linha);border-radius:5px;
+  padding:12px 13px}
+.casosP .cs b{display:block;font-family:Newsreader,serif;font-size:15px;
+  font-weight:500;color:var(--tinta);margin-bottom:4px}
+.casosP .cs p{font-size:12.5px;color:var(--t2);line-height:1.5;margin:0}
+.ponte .fechoP{font-size:12.5px;color:var(--graf);line-height:1.6;margin:0 0 14px}
+@media(max-width:760px){.casosP{grid-template-columns:1fr}}
+
+.degrau{display:flex;gap:13px;padding:13px 0;border-top:1px solid var(--linha)}
+.degrau:first-of-type{border-top:none;padding-top:4px}
+.degrau .nD{font-family:'IBM Plex Mono',monospace;font-size:11px;
+  color:var(--lacre);letter-spacing:.14em;padding-top:3px;flex:none}
+.degrau.ok .nD{color:var(--alta)}
+.degrau.nao .nD{color:var(--baixa)}
+.degrau b{display:block;font-family:Newsreader,serif;font-size:17px;
+  font-weight:500;color:var(--tinta);margin-bottom:4px}
+.degrau p{font-size:13px;color:var(--t2);line-height:1.6;margin:0}
+.pontes{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0 40px}
+@media(max-width:900px){.grid4{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:680px){
+  .trio{grid-template-columns:1fr}
+  .pontes .bt{width:100%}
+}
+@media(max-width:520px){.grid4{grid-template-columns:1fr}}
 
 /* as portas de entrada, para quem chega sem conta */
 .entrada{margin:30px 0 10px}
@@ -1002,16 +1100,23 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
     <a href="#/" class="marca">Saldo Positivo</a>
     <span class="dir" id="navDir"></span>
   </div>
+  <div class="trilha">
+  <span class="rotm">Escolha seu momento</span>
   <nav>
-    <span class="grupo"><span class="rotg">Carteiras</span>
-      <span class="bloco"><a href="#/">Ranking</a><a href="#/screening">Screening</a><span id="navPub"></span></span></span>
-    <span class="grupo"><span class="rotg">Diversão</span>
-      <span class="bloco"><a href="#/tiro-curto">Tiro curto</a><a href="#/placar">Placar</a><a href="#/duelo">Duelo</a></span></span>
     <span class="grupo"><span class="rotg">Aprender</span>
-      <span class="bloco"><a href="#/aprender">Por que é difícil</a><a href="#/como-funciona">Como funciona</a></span></span>
-    <span class="grupo"><span class="rotg">Com a gente</span>
+      <span class="gloss">antes de arriscar qualquer coisa</span>
+      <span class="bloco"><a href="#/crescer">Como o dinheiro cresce</a><a href="#/comprar">Comprar um bem</a><a href="#/aprender">Por que é difícil</a><a href="#/como-funciona">Como funciona</a></span></span>
+    <span class="grupo"><span class="rotg">Especular</span>
+      <span class="gloss">comprar para vender mais caro</span>
+      <span class="bloco"><a href="#/tiro-curto">Tiro curto</a><a href="#/placar">Placar</a><a href="#/duelo">Duelo</a></span></span>
+    <span class="grupo"><span class="rotg">Investir</span>
+      <span class="gloss">comprar para viver de renda</span>
+      <span class="bloco"><a href="#/">Ranking</a><a href="#/screening">Screening</a><span id="navPub"></span></span></span>
+    <span class="grupo"><span class="rotg">Construir</span>
+      <span class="gloss">o patrimônio fora da tela</span>
       <span class="bloco"><a href="#/planejar">Planejamento</a><a href="#/clube">Clube de investimentos</a><a href="#/servicos">Serviços</a></span></span>
   </nav>
+  </div>
 </div></header>
 
 <div class="faixa" id="faixa"></div>
@@ -2209,11 +2314,14 @@ async function telaRanking(){
 function telaEntrar(){
   const q = new URLSearchParams(location.hash.split("?")[1]||"");
   const novo = q.get("novo"), ref = q.get("ref")||"";
+  const de = q.get("de") ? decodeURIComponent(q.get("de")) : "";
+  const paraOnde = de && de.startsWith("#/") ? de : "";
   app().innerHTML = `
   <div style="max-width:420px;margin:42px auto">
     <h1 style="font-size:29px;margin-bottom:6px">${novo?"Criar conta":"Entrar"}</h1>
     <p style="color:var(--t2);margin-bottom:20px">
       ${novo?"Seu apelido aparece no ranking. O e-mail nunca aparece.":"Bem-vindo de volta."}</p>
+    ${paraOnde&&!novo?aviso("Entre para continuar. Depois do login você volta para onde clicou."):""}
     ${ref?aviso("Você chegou por indicação do código "+ref):""}
     <div id="erro"></div>
     <form class="card" id="f">
@@ -2226,9 +2334,20 @@ function telaEntrar(){
       <label>Senha</label><input name="senha" type="password" required minlength="6">
       <button class="bt cheio" style="width:100%" id="bt">${novo?"Criar conta":"Entrar"}</button>
     </form>
-    <p style="text-align:center;margin-top:15px;font-size:13px">
-      ${novo?'Já tem conta? <a href="#/entrar">Entrar</a>'
-            :'Não tem conta? <a href="#/entrar?novo=1">Criar</a> &nbsp;·&nbsp; <a href="#/senha">Esqueci a senha</a>'}</p>
+    ${novo
+      ? `<p style="text-align:center;margin-top:15px;font-size:13px">
+           Já tem conta? <a href="#/entrar${paraOnde?"?de="+encodeURIComponent(paraOnde):""}">Entrar</a></p>`
+      : `<p style="text-align:center;margin-top:13px;font-size:13px">
+           <a href="#/senha" style="color:var(--graf)">Esqueci a senha</a></p>
+         <div style="margin-top:22px;padding-top:20px;border-top:1px solid var(--linha2);text-align:center">
+           <p style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+             color:var(--graf);margin-bottom:8px">Ainda não tem conta?</p>
+           <p style="font-size:13px;color:var(--t2);line-height:1.6;margin-bottom:14px">
+             Leva um minuto e não custa nada. O apelido é o que aparece no ranking;
+             o e-mail nunca aparece.</p>
+           <a href="#/entrar?novo=1${paraOnde?"&de="+encodeURIComponent(paraOnde):""}"
+             class="bt cheio lacre" style="width:100%">Conta grátis</a>
+         </div>`}
   </div>`;
 
   $("#f").onsubmit = async e=>{
@@ -2266,12 +2385,10 @@ function telaEntrar(){
           Falta só confirmar o e-mail. Enviamos um link para <b>${esc(email)}</b> —
           clique nele e depois entre normalmente.</p>
         <p style="color:var(--t2);margin-bottom:22px;font-size:13px">
-          O link pode demorar alguns minutos. Enquanto isso, o site inteiro está
-          aberto para você olhar: só publicar carteira precisa de conta.</p>
+          O link pode demorar alguns minutos. Assim que confirmar, o site inteiro
+          abre: ranking, screening, carteiras, jogos e planejamento.</p>
         <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <a href="#/" class="bt cheio">Ver o ranking</a>
-          <a href="#/screening" class="bt">Screening</a>
-          <a href="#/como-funciona" class="bt">Como funciona</a>
+          <a href="#/entrar" class="bt cheio">Já confirmei — entrar</a>
         </div>
         <p style="margin-top:20px;font-size:13px;color:var(--graf)">
           Já confirmou? <a href="#/entrar" style="color:var(--ouro2)">Entrar</a></p>
@@ -2279,7 +2396,7 @@ function telaEntrar(){
       return;
     }
     await carregarEu(); pintarNav();
-    location.hash = novo ? "#/publicar" : "#/";
+    location.hash = paraOnde || (novo ? "#/publicar" : "#/");
     rotear();
   };
 }
@@ -4898,6 +5015,39 @@ const SERVICOS=[
 
 const escolhidosS = new Set();
 
+// ── A ponte: do caso educacional para o profissional ────────────
+// A pessoa se reconhece numa situação concreta e a solução aparece como
+// resposta àquilo. Nunca produto antes de problema. O botão já marca o
+// assunto nos Serviços, então ela chega lá com o pedido meio pronto.
+function irParaServico(ids){
+  (Array.isArray(ids)?ids:[ids]).forEach(id => escolhidosS.add(id));
+  location.hash = "#/servicos";
+}
+
+function ponte({ titulo, intro, casos, servicos, botao }){
+  const lista = casos.map(([t,d]) => `<div class="cs">
+    <b>${t}</b><p>${d}</p></div>`).join("");
+  return `
+  <div class="card ponte" style="margin-top:14px">
+    <span class="rotP">Isto acontece com gente de verdade</span>
+    <h2>${titulo}</h2>
+    <p class="introP">${intro}</p>
+    <div class="casosP">${lista}</div>
+    <p class="fechoP">Se você se reconheceu em algum desses, o problema já não é
+      de conta — é de execução, e execução tem nome, registro e responsabilidade.
+      O que segue não é recomendação de investimento: é encaminhamento a alguém
+      habilitado, que vai se identificar pelo nome e pelo registro.</p>
+    <button type="button" class="bt cheio lacre pnt"
+      data-svc="${servicos.join(",")}">${botao} &rarr;</button>
+  </div>`;
+}
+
+function ligarPontes(){
+  document.querySelectorAll("button.pnt[data-svc]").forEach(b =>
+    b.onclick = () => irParaServico(b.dataset.svc.split(",")));
+}
+
+
 const abertosS = new Set();
 function resumoDe(html){
   const txt = String(html).replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim();
@@ -6410,29 +6560,69 @@ function telaAprender(){
 function telaAbertura(){
   app().innerHTML = `
   <div class="abertura">
-    <p class="ab1">Ninguém nasce sabendo investir.</p>
-    <h1 class="ab2">E quase todo mundo aprende do jeito caro:<br>
-      com dinheiro de verdade.</h1>
-    <p class="ab3">Aqui é o contrário. Você monta a carteira que faria, o pregão
-      real diz se você estava certo, e o erro custa só o orgulho. Depois de
-      alguns meses você vai saber uma coisa sobre si mesmo que quase ninguém
-      sabe: <b>se leva jeito para isso ou não.</b> As duas respostas valem —
-      e nenhuma delas custou caro para ser descoberta.</p>
+    <p class="ab1">Venha competir conosco.</p>
+    <h1 class="ab2">Quem é o melhor analista do Brasil?</h1>
+    <p class="ab3">Ninguém sabe — porque ninguém nunca mediu todo mundo pela mesma
+      régua, ao mesmo tempo, à vista de todos. É isso que acontece aqui. As
+      melhores carteiras e os melhores analistas aparecem no ranking porque
+      acertaram, não porque falaram mais alto.</p>
 
-    <div class="passosAb">
-      ${[["Entender","o que é ação, carteira e risco — sem jargão"],
-         ["Brincar","palpite do dia, duelo, placar. Erra-se mais fácil jogando"],
-         ["Treinar","sua carteira, cotação real da B3, sem dinheiro em risco"],
-         ["Competir","o mesmo ranking para amador e profissional"],
-         ["Decidir","seguir sozinho, ou com quem tem registro para fazer isso"]]
-        .map(([t,d],i)=>`<div class="pAb">
-          <span class="nAb">0${i+1}</span>
-          <b>${t}</b><span class="dAb">${d}</span></div>`).join("")}
+    <p class="ab3">A regra é uma só, e vale para o profissional e para quem abriu
+      conta ontem: você publica a carteira, o pregão real apura o fechamento
+      todo dia, e <b>ninguém muda o passado depois</b> — nem quem publicou. Não
+      existe rentabilidade retroativa, não existe print recortado, não existe a
+      operação que deu errado sumindo da tela.</p>
+
+    <p class="ab3">Se você ainda não sabe, aprenda: o caminho começa no que é uma
+      ação e no motivo de a conta de perder não ser a mesma de ganhar. Se você
+      já sabe, venha provar — o ranking não pergunta o seu currículo.
+      <b>Escolha seu momento ali em cima.</b></p>
+
+    <div class="setaJ"><span>mundo simulado</span><span class="li"></span><span>mundo real</span></div>
+    <div class="jornada">
+      ${[["Aprender","antes de arriscar qualquer coisa",
+          "O que é ação, carteira e risco. Por que a conta de perder não é a mesma de ganhar.",
+          "Por que é difícil · Como funciona", false],
+         ["Especular","comprar para vender mais caro",
+          "Palpite do dia, duelo, placar. O erro sai barato quando é jogo — e ensina igual.",
+          "Tiro curto · Placar · Duelo", false],
+         ["Investir","comprar para viver de renda",
+          "Sua carteira publicada, cotação real da B3, apurada sozinha. Ninguém muda o passado depois.",
+          "Ranking · Screening · Criar", false],
+         ["Construir","o patrimônio fora da tela",
+          "Poupança mensal, compra de bem, sucessão. É aqui que o simulado vira dinheiro de verdade.",
+          "Planejamento · Clube · Serviços", true]]
+        .map(([t,def,d,onde,real],i)=>`<div class="et${real?" real":""}">
+          <span class="nEt">0${i+1}</span>
+          <b>${t}</b><span class="defEt">${def}</span>
+          <span class="dEt">${d}</span>
+          <span class="ondeEt">${onde}</span></div>`).join("")}
+    </div>
+
+    <div class="tese">
+      <p class="teseT">A conta que sustenta tudo isto cabe em uma linha</p>
+      <p class="teseP">Receita maior que despesa. Separar um pedaço <b>sempre</b>, não
+        o que sobrar. E deixar o juro composto trabalhar tempo suficiente para
+        que o patrimônio renda mais do que você consegue aportar.</p>
+      <p class="teseP">No começo custa. O aporte é quase tudo e o rendimento é
+        quase nada, e a impressão é de que não sai do lugar. Até que um mês
+        vira: <b>o que o patrimônio rende passa o que você deposita.</b> Desse
+        ponto em diante o trabalho pesado deixa de ser seu.</p>
+      <p class="teseP">Continuar depois disso é o que separa quem tem dinheiro de
+        quem vive de renda. Chega a hora em que dá para retirar e o patrimônio
+        segue crescendo — e é aí que a palavra aposentadoria muda de sentido.</p>
+      <p class="teseP">A bolsa é uma das ferramentas dessa conta, não a conta.
+        Por isso o site não termina no ranking: ele começa ali.</p>
     </div>
 
     <div class="promessa">
-      <p class="pTit">E se um dia você quiser ajuda de gente, não de tela</p>
-      <p class="pSub">O que você pode cobrar da gente:</p>
+      <p class="pTit">E quando o simulado acabar, o mundo real está do outro lado</p>
+      <p class="pSub">Corretoras, bancos e profissionais regulamentados</p>
+      <p class="teseP" style="max-width:64ch;margin:0 auto 18px;text-align:center">
+        Simular ensina, mas não rende. Uma hora o dinheiro precisa sair da tela —
+        e aí você vai precisar de corretora, de banco, e às vezes de gente. Nós
+        fazemos essa ponte com o que existe de melhor no mercado formal, e só com
+        quem tem registro para estar nele.</p>
       <div class="pGrid">
         ${[["Registro, sem exceção","Assessor, gestor, planejador, advogado — cada um com registro na CVM, no Banco Central, na ANBIMA ou na ANCORD. Quem não tem, não trabalha conosco."],
            ["Primeiro o seu caso, depois o produto","A conversa começa por quanto você tem, quem depende de você e o que te tira o sono. Produto que não resolve um problema seu não deveria ser oferecido."],
@@ -6451,16 +6641,1107 @@ function telaAbertura(){
       de um print de lucro no Telegram.</p>
 
     <div class="botoesAb">
-      <button type="button" class="bt cheio lacre" id="abVamos">Vamos lá &rarr;</button>
-      <button type="button" class="bt" id="abPular">Ir direto para o ranking</button>
+      <button type="button" class="bt cheio lacre" id="abConta">Criar conta grátis &rarr;</button>
+      <button type="button" class="bt" id="abEntrar">Já tenho conta</button>
     </div>
-    <button type="button" class="naoVer" id="abNunca">não quero mais ver isto</button>
+    <p class="ab4" style="margin-bottom:40px">Não se cobra nada para entrar, e o
+      apelido é o que aparece — o e-mail não.</p>
   </div>`;
 
-  $("#abVamos").onclick = () => { location.hash = "#/como-funciona"; };
-  $("#abPular").onclick = () => { location.hash = "#/?r=1"; rotear(); };
-  $("#abNunca").onclick = () => { dispensarAbertura();
-    location.hash = "#/?r=1"; rotear(); };
+  $("#abConta").onclick  = () => { location.hash = "#/entrar?novo=1"; };
+  $("#abEntrar").onclick = () => { location.hash = "#/entrar"; };
+}
+
+// ── Como o dinheiro cresce ──────────────────────────────────────
+// Duas curvas no mesmo eixo: o que o dinheiro faz sozinho, e o que ele faz
+// com aporte. A distância entre elas é o argumento inteiro.
+const CR = { tem:0, aporte:1500, taxa:10, anos:25 };
+
+const aoMes = aoAno => Math.pow(1 + aoAno/100, 1/12) - 1;
+
+function serieCR(){
+  const i = aoMes(CR.taxa), n = Math.max(1, Math.round(CR.anos*12));
+  let comA = CR.tem, semA = CR.tem, posto = CR.tem, virada = null;
+  const d = [{ mes:0, com:comA, sem:semA, posto }];
+  for(let m=1; m<=n; m++){
+    const rende = comA * i;
+    if(virada === null && CR.aporte > 0 && rende > CR.aporte) virada = m;
+    comA = comA + rende + CR.aporte;
+    semA = semA * (1 + i);
+    posto = posto + CR.aporte;
+    d.push({ mes:m, com:comA, sem:semA, posto });
+  }
+  return { d, virada, fim:comA, semAporte:semA, aportado:posto,
+           juro: comA - posto };
+}
+
+function graficoCR(s){
+  const L = 640, A = 210, pb = 16, pt = 6;
+  const d = s.d.filter(x => x.mes % 3 === 0);
+  const mx = Math.max(...d.map(x => x.com), 1);
+  const px = i => (i/(d.length-1)) * L;
+  const py = v => pt + (1 - v/mx) * (A - pb - pt);
+  const cam = sel => d.map((x,i) =>
+    `${i?"L":"M"}${px(i).toFixed(1)} ${py(sel(x)).toFixed(1)}`).join(" ");
+  const linhaCom = cam(x => x.com);
+  const linhaSem = cam(x => x.sem);
+  const linhaApo = cam(x => x.posto);
+  const areaCom = linhaCom + ` L${L} ${A-pb} L0 ${A-pb} Z`;
+
+  const iv = s.virada == null ? null
+    : d.findIndex(x => x.mes >= s.virada);
+  const xv = iv == null || iv < 0 ? null : px(iv);
+
+  return `
+  <div class="card" style="margin-top:14px;padding-bottom:9px">
+    <div class="tituloG">Patrimônio, mês a mês</div>
+    <div class="subG">o topo é ${rs(mx)} · ${CR.anos} anos a ${CR.taxa}% ao ano</div>
+    <svg viewBox="0 0 ${L} ${A}" style="width:100%;height:auto;display:block"
+      preserveAspectRatio="none">
+      <defs><linearGradient id="gCR" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="var(--alta)" stop-opacity=".22"/>
+        <stop offset="100%" stop-color="var(--alta)" stop-opacity="0"/>
+      </linearGradient></defs>
+      <line x1="0" y1="${A-pb}" x2="${L}" y2="${A-pb}" stroke="var(--linha)"/>
+      <path d="${areaCom}" fill="url(#gCR)"/>
+      <path d="${linhaApo}" fill="none" stroke="var(--graf)" stroke-width="1.1"
+        stroke-dasharray="3 3" opacity=".8"/>
+      <path d="${linhaSem}" fill="none" stroke="var(--ouro2)" stroke-width="1.4"
+        opacity=".85"/>
+      <path d="${linhaCom}" fill="none" stroke="var(--alta)" stroke-width="2"
+        stroke-linejoin="round"/>
+      ${xv==null?"":`<line x1="${xv.toFixed(1)}" y1="${pt}" x2="${xv.toFixed(1)}"
+        y2="${A-pb}" stroke="var(--lacre)" stroke-dasharray="3 3"/>`}
+    </svg>
+    <div class="legG">
+      <span><i style="background:var(--alta)"></i>com aporte</span>
+      <span><i style="background:var(--ouro2)"></i>só o que você já tem</span>
+      <span><i style="background:var(--graf)"></i>o que você depositou</span>
+      ${s.virada==null?"":`<span><i style="background:var(--lacre)"></i>a virada</span>`}
+    </div>
+  </div>`;
+}
+
+function telaCrescer(){
+  const s = serieCR();
+  const anosV = s.virada == null ? null : (s.virada/12);
+
+  app().innerHTML = `
+  <div class="cabeca" style="text-align:left;max-width:70ch">
+    <h1>Como o dinheiro cresce</h1>
+    <p>Receita maior que despesa, um pedaço separado sempre, e tempo. Não há
+      quarta variável. O que muda de pessoa para pessoa é só o tamanho de cada
+      uma — e esta tela deixa você mexer nas três.</p>
+  </div>
+
+  <div class="card">
+    <div class="grid4">
+      <div><label>Já tenho hoje</label>
+        <input id="crTem" inputmode="numeric" value="${CR.tem}"></div>
+      <div><label>Guardo por mês</label>
+        <input id="crApo" inputmode="numeric" value="${CR.aporte}"></div>
+      <div><label>Rende ao ano (%)</label>
+        <input id="crTax" inputmode="decimal" value="${CR.taxa}"></div>
+      <div><label>Por quantos anos</label>
+        <input id="crAno" inputmode="numeric" value="${CR.anos}"></div>
+    </div>
+  </div>
+
+  ${graficoCR(s)}
+
+  <div class="trio">
+    <div class="cx"><span class="rot">No fim</span>
+      <b>${rs(s.fim)}</b>
+      <span class="pe">depois de ${CR.anos} anos</span></div>
+    <div class="cx"><span class="rot">Saiu do seu bolso</span>
+      <b>${rs(s.aportado)}</b>
+      <span class="pe">${s.fim>0?Math.round(s.aportado/s.fim*100):0}% do total</span></div>
+    <div class="cx destaque"><span class="rot">O dinheiro fez sozinho</span>
+      <b>${rs(s.juro)}</b>
+      <span class="pe">${s.fim>0?Math.round(s.juro/s.fim*100):0}% do total</span></div>
+  </div>
+
+  <div class="card" style="margin-top:14px">
+    <h2 style="font-size:19px;margin-bottom:8px">A virada</h2>
+    ${anosV == null
+      ? `<p style="color:var(--t2);line-height:1.65">Com esses números a virada
+         não acontece dentro do prazo. Ela chega mais cedo de três jeitos:
+         guardando mais, começando com mais, ou esperando mais tempo — e o
+         terceiro costuma ser o mais poderoso dos três.</p>`
+      : `<p style="color:var(--t2);line-height:1.65">Em torno do
+         <b style="color:var(--ouro2)">ano ${Math.floor(anosV)}</b>
+         (mês ${s.virada}), o patrimônio passa a render mais do que você deposita.
+         É a linha pontilhada vermelha no gráfico. A partir dali o trabalho
+         pesado deixa de ser seu: o seu aporte continua importando, mas já não
+         é ele quem manda no resultado.</p>`}
+    <p style="color:var(--t2);line-height:1.65;margin-top:10px">
+      Repara na linha pontilhada cinza: é a soma do que você depositou, sem juro
+      nenhum. No começo ela quase encosta na linha verde — todo o patrimônio é
+      esforço seu. Lá na frente ela fica para trás e não alcança mais.
+      ${s.semAporte > 0 ? `E a linha dourada mostra o que os
+      ${rs(CR.tem)} de hoje fariam sozinhos, sem você guardar mais nada:
+      ${rs(s.semAporte)}.` : ""}</p>
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <p style="font-size:12.5px;color:var(--graf);line-height:1.6">
+      A taxa aqui é nominal e constante, o que nenhum investimento é. Serve para
+      entender o mecanismo, não para prometer resultado. Renda fixa aproxima
+      melhor esse desenho que bolsa — bolsa faz o mesmo caminho, mas aos
+      solavancos, e o solavanco é o que faz a maioria desistir no meio.</p>
+  </div>
+
+  ${ponte({
+    titulo: "Guardar é a parte fácil. O que trava é sempre outra coisa.",
+    intro: `A conta desta tela é simples e você acabou de fazê-la. O que
+      normalmente impede alguém de chegar na virada não é não saber a conta —
+      é uma dessas quatro situações, e nenhuma delas se resolve com calculadora.`,
+    casos: [
+      ["Sobra dinheiro e some","No fim do mês não sobra nada, e você não sabe dizer para onde foi. Sem essa resposta, o aporte nunca vira hábito."],
+      ["Está tudo na poupança","O dinheiro está guardado, mas rendendo menos que a inflação. Guardar sem aplicar direito é correr no lugar."],
+      ["Recebeu de uma vez","Rescisão, herança, venda de um bem. A decisão do que fazer com o valor inteiro vale mais que os próximos dez anos de aporte."],
+      ["Já tem patrimônio e nenhum plano","O dinheiro está aplicado em cinco lugares diferentes, escolhidos em épocas diferentes, por razões que já não valem."]
+    ],
+    servicos: ["planejamento","consultoria"],
+    botao: "Falar com um planejador"
+  })}
+
+  <div class="pontes">
+    <a href="#/comprar" class="bt">E se eu quiser comprar um bem?</a>
+    <a href="#/planejar" class="bt cheio lacre">Montar o meu plano &rarr;</a>
+  </div>`;
+
+  const liga = (id, campo, min, max) => {
+    const el = $(id);
+    el.oninput = () => {
+      let v = Number(String(el.value).replace(/[^\d.,-]/g,"").replace(",","."));
+      if(!isFinite(v)) v = 0;
+      CR[campo] = Math.min(max, Math.max(min, v));
+      const foco = document.activeElement && document.activeElement.id;
+      const pos = el.selectionStart;
+      telaCrescer();
+      const novo = foco ? $("#"+foco) : null;
+      if(novo){ novo.focus(); try{ novo.setSelectionRange(pos,pos); }catch(e){} }
+    };
+  };
+  ligarPontes();
+  liga("#crTem","tem",0,1e9);
+  liga("#crApo","aporte",0,1e7);
+  liga("#crTax","taxa",0,60);
+  liga("#crAno","anos",1,60);
+}
+
+// ── Comprar um bem ──────────────────────────────────────────────
+// Três caminhos para o mesmo imóvel, e a pergunta que separa os três não é
+// juro: é quando você põe a mão no bem, e o que cobram por isso.
+const CP = { bem:500000, mensal:1500, tem:0, taxa:12,
+             aluguelBem:2500, prazoCon:200, txAdm:19, fundoRes:5, redutor:50,
+             juroFin:11.7, trAno:2.02, prazoFin:360, entrada:0 };
+
+function contasCP(){
+  const i = aoMes(CP.taxa);
+  const bem = Math.max(1, CP.bem);
+
+  // parcela do consórcio: crédito × (1 + adm + fundo de reserva) ÷ prazo.
+  // Confirmado contra as tabelas da administradora, ao real.
+  const totalCon = bem * (1 + CP.txAdm/100 + CP.fundoRes/100);
+  const parcelaCheia = totalCon / Math.max(1, CP.prazoCon);
+  const parcelaRed = parcelaCheia * (1 - CP.redutor/100);
+
+  // o redutor não é desconto: o que deixou de ser pago volta depois da
+  // contemplação, ou na metade do prazo — o que vier primeiro.
+  const fase1 = Math.min(Math.round(CP.prazoCon/2), CP.prazoCon);
+  const diferido = (parcelaCheia - parcelaRed) * fase1;
+  const restante = Math.max(1, CP.prazoCon - fase1);
+  const parcelaDepois = parcelaCheia + diferido/restante;
+  const parcelaCon = CP.redutor > 0 ? parcelaRed : parcelaCheia;
+
+  // financiamento: tabela Price sobre o que falta depois da entrada
+  // financiamento: a taxa anunciada é sempre "+ TR". O custo é a composição
+  // das duas, não a soma simples — e nem isso é o CET, que ainda tem seguros.
+  const juroEfetivo = ((1 + CP.juroFin/100) * (1 + CP.trAno/100) - 1) * 100;
+  const iF = aoMes(juroEfetivo);
+  const nF = Math.max(1, CP.prazoFin);
+  const finan = Math.max(0, bem - CP.entrada);
+  const parcelaFin = iF > 0
+    ? finan * iF / (1 - Math.pow(1+iF, -nF))
+    : finan / nF;
+  const totalFin = parcelaFin * nF + CP.entrada;
+
+  // juntar: quantos meses até o patrimônio alcançar o bem
+  let saldo = CP.tem, mesesJuntar = null;
+  for(let m=1; m<=1200; m++){
+    saldo = saldo * (1+i) + CP.mensal;
+    if(saldo >= bem){ mesesJuntar = m; break; }
+  }
+
+  // consórcio contemplado em três momentos: cedo, meio, fim do prazo
+  const cenarios = [["cedo", Math.round(CP.prazoCon*0.25)],
+                    ["no meio", Math.round(CP.prazoCon*0.5)],
+                    ["no fim", CP.prazoCon]]
+    .map(([q,m]) => {
+      // depois de contemplado o aluguel entra e abate a parcela
+      const restante = Math.max(0, CP.prazoCon - m);
+      const doBolso = parcelaCon*m + Math.max(0, parcelaCon - CP.aluguelBem)*restante;
+      return { quando:q, mes:m, doBolso, sobra: CP.aluguelBem - parcelaCon };
+    });
+
+  // para quem já tem patrimônio: a parcela sai do rendimento, o principal fica
+  const rendaMes = CP.tem * i;
+  const cobre = rendaMes >= parcelaCon;
+  const precisaTer = i > 0 ? parcelaCon / i : null;
+
+  return { i, totalCon, parcelaCon, parcelaCheia, parcelaRed, parcelaDepois,
+           fase1, diferido, parcelaFin, totalFin, mesesJuntar, juroEfetivo,
+           cenarios, rendaMes, cobre, precisaTer,
+           custoAdm: totalCon - bem, juroPago: totalFin - bem };
+}
+
+function telaComprar(){
+  const c = contasCP();
+  const anos = m => m == null ? "—" : (m/12).toFixed(1).replace(".",",") + " anos";
+
+  app().innerHTML = `
+  <div class="cabeca" style="text-align:left;max-width:70ch">
+    <h1>Comprar um bem</h1>
+    <p>Consórcio, financiamento e juntar levam ao mesmo imóvel. A diferença não
+      está no juro — está em <b>quando você põe a mão no bem</b>, e no que cada
+      caminho cobra por essa pressa.</p>
+  </div>
+
+  <div class="card">
+    <div class="grid4">
+      <div><label>Valor do bem</label>
+        <input id="cpBem" inputmode="numeric" value="${CP.bem}"></div>
+      <div><label>Posso pagar por mês</label>
+        <input id="cpMes" inputmode="numeric" value="${CP.mensal}"></div>
+      <div><label>Já tenho aplicado</label>
+        <input id="cpTem" inputmode="numeric" value="${CP.tem}"></div>
+      <div><label>Meu dinheiro rende (% a.a.)</label>
+        <input id="cpTax" inputmode="decimal" value="${CP.taxa}"></div>
+      <div><label>Aluguel que o bem daria</label>
+        <input id="cpAlu" inputmode="numeric" value="${CP.aluguelBem}"></div>
+      <div><label>Consórcio: prazo (meses)</label>
+        <input id="cpPzC" inputmode="numeric" value="${CP.prazoCon}"></div>
+      <div><label>Consórcio: taxa adm (%)</label>
+        <input id="cpAdm" inputmode="decimal" value="${CP.txAdm}"></div>
+      <div><label>Consórcio: fundo reserva (%)</label>
+        <input id="cpFR" inputmode="decimal" value="${CP.fundoRes}"></div>
+      <div><label>Consórcio: redutor (%)</label>
+        <input id="cpRed" inputmode="decimal" value="${CP.redutor}"></div>
+      <div><label>Financiamento: juro (% a.a.)</label>
+        <input id="cpJur" inputmode="decimal" value="${CP.juroFin}"></div>
+      <div><label>TR (% a.a.)</label>
+        <input id="cpTR" inputmode="decimal" value="${CP.trAno}"></div>
+    </div>
+  </div>
+
+  ${(c.parcelaCon > CP.mensal || c.parcelaFin > CP.mensal) && CP.mensal > 0 ? `
+  <div class="card" style="margin-top:14px;border-color:var(--ouro2)">
+    <h2 style="font-size:17px;margin-bottom:6px">A parcela não cabe no que você disse que pode pagar</h2>
+    <p style="color:var(--t2);line-height:1.65">
+      Você pode pagar ${rs(CP.mensal)} por mês.
+      ${c.parcelaCon > CP.mensal ? `O consórcio pede ${rs(c.parcelaCon)} — faltam
+        ${rs(c.parcelaCon - CP.mensal)}.` : ""}
+      ${c.parcelaFin > CP.mensal ? ` O financiamento pede ${rs(c.parcelaFin)} — faltam
+        ${rs(c.parcelaFin - CP.mensal)}.` : ""}
+      Isso não invalida a comparação, mas muda a pergunta: ou o bem é menor, ou o
+      prazo é maior, ou o caminho é juntar antes e comprar depois. Vendedor
+      nenhum vai te dizer isso, então a tela diz.</p>
+  </div>` : ""}
+
+  <div class="card rolaX" style="margin-top:14px">
+  <table class="comp">
+    <thead><tr><th></th><th>Consórcio</th><th>Financiamento</th><th>Juntar</th></tr></thead>
+    <tbody>
+      <tr><td class="rotL">Quando você tem o bem</td>
+        <td>quando for sorteado<br><span class="pe">ou der lance</span></td>
+        <td class="bom">agora</td>
+        <td>${anos(c.mesesJuntar)}</td></tr>
+      <tr><td class="rotL">Parcela</td>
+        <td class="mono">${rs(c.parcelaCon)}</td>
+        <td class="mono">${rs(c.parcelaFin)}</td>
+        <td class="mono">${rs(CP.mensal)}</td></tr>
+      <tr><td class="rotL">Custo acima do bem</td>
+        <td class="mono">${rs(c.custoAdm)}<br><span class="pe">taxa de administração</span></td>
+        <td class="mono ruim">${rs(c.juroPago)}<br><span class="pe">juro</span></td>
+        <td class="mono bom">nada</td></tr>
+      <tr><td class="rotL">Total pago</td>
+        <td class="mono">${rs(c.totalCon)}</td>
+        <td class="mono">${rs(c.totalFin)}</td>
+        <td class="mono">${rs(CP.bem)}</td></tr>
+      <tr><td class="rotL">Aluguel ajuda a pagar</td>
+        <td>${c.cenarios[0].sobra >= 0
+             ? `<span class="bom">sim, e ainda sobra ${rs(c.cenarios[0].sobra)}</span>`
+             : `só em parte — faltam ${rs(-c.cenarios[0].sobra)}`}
+           <br><span class="pe">depois de contemplado</span></td>
+        <td>${CP.aluguelBem - c.parcelaFin >= 0
+             ? `<span class="bom">sim</span>`
+             : `faltam ${rs(c.parcelaFin - CP.aluguelBem)} por mês`}</td>
+        <td class="pe">não há bem para alugar ainda</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="card" style="margin-top:14px">
+    <h2 style="font-size:19px;margin-bottom:4px">O sorteio é a parte incerta</h2>
+    <p style="color:var(--t2);line-height:1.6;margin-bottom:12px">
+      Ninguém sabe quando você é contemplado, e quem promete data está vendendo.
+      Por isso a conta aqui é feita em três cenários, não em um. O lance é o jeito
+      de antecipar — mas lance é dinheiro que você precisa ter na hora.</p>
+    <div class="trio">
+      ${c.cenarios.map(x => `<div class="cx">
+        <span class="rot">Contemplado ${x.quando}</span>
+        <b>${rs(x.doBolso)}</b>
+        <span class="pe">sai do bolso no total · mês ${x.mes}</span></div>`).join("")}
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <h2 style="font-size:19px;margin-bottom:4px">Se você já tem patrimônio</h2>
+    <p style="color:var(--t2);line-height:1.65">
+      É a estratégia que muda o jogo, e quase ninguém conta. Em vez de gastar o
+      dinheiro, você o deixa rendendo e paga a parcela com <b>um pedaço do
+      rendimento</b>. O principal não some. Quando o consórcio é contemplado, o
+      bem entra no seu patrimônio e o aluguel dele começa a entrar também — e você
+      terminou com o bem e com o dinheiro, sem desencaixe.</p>
+    <div class="trio" style="margin-top:12px">
+      <div class="cx"><span class="rot">Seu dinheiro rende por mês</span>
+        <b>${rs(c.rendaMes)}</b>
+        <span class="pe">${CP.taxa}% ao ano sobre ${rs(CP.tem)}</span></div>
+      <div class="cx"><span class="rot">A parcela custa</span>
+        <b>${rs(c.parcelaCon)}</b>
+        <span class="pe">${c.rendaMes>0?Math.round(c.parcelaCon/c.rendaMes*100):"—"}% do rendimento</span></div>
+      <div class="cx ${c.cobre?"destaque":""}"><span class="rot">Dá para fazer?</span>
+        <b>${c.cobre ? "sim" : "ainda não"}</b>
+        <span class="pe">${c.cobre
+          ? "o rendimento cobre a parcela inteira"
+          : `precisaria de ${rs(c.precisaTer)} aplicados`}</span></div>
+    </div>
+    <p style="color:var(--t2);line-height:1.65;margin-top:12px">
+      À vista é o mais barato de todos — não tem juro nem taxa. Mas tirar
+      ${rs(CP.bem)} da aplicação custa o que esse dinheiro renderia:
+      cerca de <b>${rs(CP.bem * c.i)}</b> por mês, para sempre. Esse é o preço que
+      não aparece no contrato de ninguém.</p>
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <h2 style="font-size:19px;margin-bottom:4px">"A partir de 10,26% + TR" também tem letra miúda</h2>
+    <p style="color:var(--t2);line-height:1.65">
+      A taxa anunciada nunca vem sozinha: vem somada à TR, que hoje roda perto de
+      <b>2% ao ano</b>. E as duas não se somam, se compõem. Com
+      ${CP.juroFin.toString().replace(".",",")}% mais TR de
+      ${CP.trAno.toString().replace(".",",")}%, o juro efetivo do contrato é
+      <b style="color:var(--ouro2)">${c.juroEfetivo.toFixed(2).replace(".",",")}% ao ano</b> —
+      e é esse número que a tela usa, não o do anúncio.</p>
+    <p style="color:var(--t2);line-height:1.65;margin-top:10px">
+      Duas coisas ainda faltam para chegar no custo real, e nenhuma delas cabe
+      numa taxa: o <b>seguro obrigatório</b> (morte e invalidez, mais danos ao
+      imóvel), que entra em toda parcela, e a <b>taxa de administração mensal</b>.
+      Somados, costumam empurrar o CET bem acima do juro contratual. O número que
+      importa na hora de assinar é o CET, e ele tem que estar escrito no contrato.</p>
+    <p style="color:var(--t2);line-height:1.65;margin-top:10px">
+      Por fim, "a partir de" quer dizer o melhor cliente do banco: relacionamento,
+      portabilidade de salário, renda alta. A taxa que sai na sua simulação
+      costuma ser outra.</p>
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <h2 style="font-size:19px;margin-bottom:4px">Parcela reduzida: o que o folheto não põe em tamanho grande</h2>
+    <p style="color:var(--t2);line-height:1.65">
+      O "redutor de 50%" é o número que aparece maior no anúncio, e ele é
+      verdadeiro — só que é adiamento, não desconto. O que você deixa de pagar
+      volta depois da contemplação, ou na metade do prazo, o que vier primeiro.
+      A letra miúda diz isso; a arte grande, não.</p>
+    <div class="trio" style="margin-top:12px">
+      <div class="cx"><span class="rot">Parcela cheia</span>
+        <b>${rs(c.parcelaCheia)}</b>
+        <span class="pe">o que a conta realmente pede</span></div>
+      <div class="cx"><span class="rot">Com redutor de ${CP.redutor}%</span>
+        <b>${rs(c.parcelaRed)}</b>
+        <span class="pe">nos primeiros ${c.fase1} meses</span></div>
+      <div class="cx ${c.parcelaDepois > c.parcelaCheia ? "destaque" : ""}">
+        <span class="rot">Depois</span>
+        <b>${rs(c.parcelaDepois)}</b>
+        <span class="pe">${CP.redutor>0
+          ? `os ${rs(c.diferido)} adiados voltam diluídos`
+          : "sem redutor, a parcela não muda"}</span></div>
+    </div>
+    <p style="color:var(--t2);line-height:1.65;margin-top:12px">
+      Isso não torna o redutor ruim — ele serve exatamente para o caso que você
+      descreveu: segurar a parcela baixa até tirar o bem, e depois deixar o
+      aluguel absorver o aumento. Só não pode ser confundido com parcela barata.</p>
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <h2 style="font-size:19px;margin-bottom:4px">Lance embutido não é dinheiro seu</h2>
+    <p style="color:var(--t2);line-height:1.65">
+      São duas coisas diferentes com nome parecido. O <b>lance fixo</b> sai do seu
+      bolso — é dinheiro que você precisa ter na hora. O <b>lance embutido</b> sai
+      do próprio crédito: você não desembolsa, mas recebe menos.</p>
+    <p style="color:var(--t2);line-height:1.65;margin-top:10px">
+      A conta que quase ninguém faz: com lance embutido de 50%, uma carta de
+      ${rs(CP.bem)} entrega ${rs(CP.bem*0.5)} na mão — e você continua devendo os
+      ${rs(CP.bem)} inteiros. Para comprar um imóvel de ${rs(CP.bem)} usando
+      embutido de 50%, a carta precisa ser de
+      <b style="color:var(--ouro2)">${rs(CP.bem*2)}</b>, e a parcela dobra junto.
+      O embutido acelera a contemplação; ele não barateia nada.</p>
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <p style="font-size:12.5px;color:var(--graf);line-height:1.6">
+      Uma coisa que esta tela não simula: a parcela do consórcio é corrigida todo
+      ano no aniversário do grupo, em geral pelo INPC. Ou seja, o valor não fica
+      parado nos ${CP.prazoCon} meses — sobe com a inflação, e o crédito sobe
+      junto. Quem compara consórcio com financiamento de parcela fixa está
+      comparando duas coisas que se comportam diferente ao longo do tempo.</p>
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <h2 style="font-size:19px;margin-bottom:6px">Como escolher</h2>
+    <p style="color:var(--t2);line-height:1.7">
+      <b style="color:var(--ouro2)">Financiamento</b> se você precisa morar
+      agora. O juro é o preço da pressa, e às vezes a pressa vale — mas fora
+      dessa necessidade ele é o caminho mais caro dos três.<br><br>
+      <b style="color:var(--ouro2)">Consórcio</b> se você tem tempo de esperar o
+      sorteio. A taxa de administração é menor que o juro, e o bem contemplado
+      pode se pagar com o aluguel. Não serve para quem tem prazo.<br><br>
+      <b style="color:var(--ouro2)">Juntar</b> se o prazo não aperta e você
+      aguenta esperar ${anos(c.mesesJuntar)}. Não paga nada a ninguém — mas
+      durante todo esse tempo você não tem o bem, e se mora alugado, está
+      pagando aluguel sem construir nada.</p>
+  </div>
+
+  ${ponte({
+    titulo: "A conta você já tem. Falta escolher o grupo e ler o contrato.",
+    intro: `Esta tela compara três caminhos, mas não escolhe por você o grupo, o
+      prazo, a administradora nem a hora do lance — e é aí que a diferença de
+      centenas de milhares aparece. Quatro situações em que a decisão sozinho
+      costuma sair cara.`,
+    casos: [
+      ["Só compararam a parcela","Duas cotas com parcela parecida podem ter prazo, taxa e fundo de reserva bem diferentes. A parcela é a pior forma de comparar."],
+      ["O vendedor prometeu data","Ninguém sabe quando você é contemplado. Quem promete está vendendo, e o resto da conversa merece a mesma desconfiança."],
+      ["Precisa do bem agora","Se há prazo, consórcio não serve — e insistir nele custa mais que o juro do financiamento que você evitou."],
+      ["O banco ofereceu 'a partir de'","A taxa anunciada é a do melhor cliente, vem somada à TR, e ainda faltam seguro e administração. O número que vale é o CET."]
+    ],
+    servicos: ["consorcio","planejamento"],
+    botao: "Falar com quem entende de consórcio"
+  })}
+
+  <div class="pontes">
+    <a href="#/escada" class="bt cheio lacre">A escada do consórcio &rarr;</a>
+    <a href="#/crescer" class="bt">Ver como o dinheiro cresce</a>
+    <a href="#/planejar" class="bt">Montar o meu plano</a>
+  </div>`;
+
+  const liga = (id, campo, min, max) => {
+    const el = $(id);
+    el.oninput = () => {
+      let v = Number(String(el.value).replace(/[^\d.,-]/g,"").replace(",","."));
+      if(!isFinite(v)) v = 0;
+      CP[campo] = Math.min(max, Math.max(min, v));
+      const foco = document.activeElement && document.activeElement.id;
+      const pos = el.selectionStart;
+      telaComprar();
+      const novo = foco ? $("#"+foco) : null;
+      if(novo){ novo.focus(); try{ novo.setSelectionRange(pos,pos); }catch(e){} }
+    };
+  };
+  ligarPontes();
+  liga("#cpBem","bem",1,1e9);
+  liga("#cpMes","mensal",0,1e7);
+  liga("#cpTem","tem",0,1e9);
+  liga("#cpTax","taxa",0,60);
+  liga("#cpAlu","aluguelBem",0,1e6);
+  liga("#cpPzC","prazoCon",12,300);
+  liga("#cpAdm","txAdm",0,60);
+  liga("#cpFR","fundoRes",0,20);
+  liga("#cpRed","redutor",0,50);
+  liga("#cpJur","juroFin",0,60);
+  liga("#cpTR","trAno",0,20);
+}
+
+// ── A escada do consórcio ───────────────────────────────────────
+// A estratégia inteira depende de uma coisa: o aluguel do bem contemplado
+// cobrir a parcela do saldo que sobrou. Prazo curto não fecha.
+const ES = { alvo:700000, emb:30, prazo:229, adm:19, fr:3.7, redutor:50,
+             aluguelPct:0.5, mesCont:36, alugoHoje:0, anos:30, descola:0 };
+
+function contasES(){
+  const fator = 1 + ES.adm/100 + ES.fr/100;
+  const carta = ES.emb >= 100 ? ES.alvo : ES.alvo / (1 - ES.emb/100);
+  const lance = carta - ES.alvo;
+
+  const cheiaTotal = carta * fator / Math.max(1, ES.prazo);
+  const fase1 = cheiaTotal * (1 - ES.redutor/100);
+
+  // depois de contemplado o redutor acaba e o lance abateu o saldo:
+  // passa-se a pagar sobre o crédito retido, mais o que foi adiado
+  const mc = Math.min(ES.mesCont, ES.prazo);
+  const diferido = (cheiaTotal - fase1) * mc * (ES.alvo/carta);
+  const restante = Math.max(1, ES.prazo - mc);
+  const sobreRetido = ES.alvo * fator / Math.max(1, ES.prazo);
+  const parcelaPos = sobreRetido + diferido/restante;
+
+  const aluguel = ES.alvo * ES.aluguelPct/100;
+  const caixaAntes = ES.alugoHoje > 0 ? -fase1 - ES.alugoHoje : -fase1;
+  const caixaDepois = aluguel - parcelaPos + (ES.alugoHoje > 0 ? 0 : 0);
+  // quem morava de aluguel e vai morar no bem deixa de pagar aluguel
+  const caixaMorando = ES.alugoHoje - parcelaPos;
+
+  const cobre = aluguel >= parcelaPos;
+  const cobertura = parcelaPos > 0 ? aluguel/parcelaPos*100 : 0;
+  const sobra = aluguel - parcelaPos;
+  const proximo = sobra > 0 ? Math.ceil(fase1 / sobra) : null;
+
+  // parcela e aluguel corrigem os dois por índice de inflação, então em
+  // dinheiro de hoje a distância entre eles não muda com o tempo. Só muda se o
+  // aluguel ganhar do índice da parcela — e é isso que este cálculo mede.
+  let fechaEm = null;
+  if(!cobre && ES.descola > 0){
+    for(let a=1; a<=Math.ceil(ES.prazo/12); a++){
+      if(aluguel * Math.pow(1 + ES.descola/100, a) >= parcelaPos){ fechaEm = a; break; }
+    }
+  }
+  const aluguelDepois = aluguel * Math.pow(1 + ES.descola/100, 10);
+
+  const aposQuitar = aluguel;
+
+  return { fator, carta, lance, cheiaTotal, fase1, parcelaPos, sobreRetido,
+           diferido, aluguel, cobre, cobertura, sobra, proximo, aposQuitar,
+           fechaEm, aluguelDepois,
+           caixaAntes, caixaDepois, caixaMorando, mc };
+}
+
+function telaEscada(){
+  const e = contasES();
+  const pc = v => v.toFixed(1).replace(".",",") + "%";
+
+  app().innerHTML = `
+  <div class="cabeca" style="text-align:left;max-width:72ch">
+    <h1>A escada do consórcio</h1>
+    <p>A ideia: pegar uma carta maior do que o bem que você quer, usar parte dela
+      como lance embutido para acelerar a contemplação, e deixar o aluguel do
+      imóvel pagar a parcela que sobrou. Se fechar, o próximo degrau nasce do
+      aluguel do anterior. Esta tela testa se fecha — com os seus números.</p>
+  </div>
+
+  <div class="card">
+    <div class="grid4">
+      <div><label>Imóvel que quero</label>
+        <input id="esAlvo" inputmode="numeric" value="${ES.alvo}"></div>
+      <div><label>Lance embutido (%)</label>
+        <input id="esEmb" inputmode="decimal" value="${ES.emb}"></div>
+      <div><label>Prazo do grupo (meses)</label>
+        <input id="esPz" inputmode="numeric" value="${ES.prazo}"></div>
+      <div><label>Taxa adm (%)</label>
+        <input id="esAdm" inputmode="decimal" value="${ES.adm}"></div>
+      <div><label>Fundo de reserva (%)</label>
+        <input id="esFR" inputmode="decimal" value="${ES.fr}"></div>
+      <div><label>Redutor (%)</label>
+        <input id="esRed" inputmode="decimal" value="${ES.redutor}"></div>
+      <div><label>Aluguel do imóvel (% ao mês)</label>
+        <input id="esAlu" inputmode="decimal" value="${ES.aluguelPct}"></div>
+      <div><label>Contemplado no mês</label>
+        <input id="esMC" inputmode="numeric" value="${ES.mesCont}"></div>
+      <div><label>Aluguel corrige acima da parcela (% a.a.)</label>
+        <input id="esDesc" inputmode="decimal" value="${ES.descola}"></div>
+    </div>
+    <p style="font-size:12px;color:var(--graf);line-height:1.55;margin-top:12px;
+      padding-top:10px;border-top:1px solid var(--linha)">
+      <b style="color:var(--t2)">Tudo aqui está em dinheiro de hoje.</b> A parcela
+      corrige pelo INPC no aniversário do grupo e o aluguel corrige no contrato —
+      os dois sobem. Como sobem juntos, a distância entre eles em poder de compra
+      não muda, e mostrar os dois inflando só encheria a tela de zeros. O que muda
+      a conta é o aluguel subir <i>acima</i> do índice da parcela, e para isso é o
+      último campo.</p>
+    </div>
+
+  <div class="card" style="margin-top:14px">
+    <h2 style="font-size:19px;margin-bottom:10px">Os quatro degraus</h2>
+
+    <div class="degrau">
+      <span class="nD">01</span>
+      <div><b>A carta é maior que o imóvel</b>
+      <p>Para ficar com ${rs(ES.alvo)} usando lance embutido de ${pc(ES.emb)},
+        a carta precisa ser de <b style="color:var(--ouro2)">${rs(e.carta)}</b>.
+        Os ${rs(e.lance)} de diferença são o lance — saem do próprio crédito,
+        não do seu bolso.</p></div>
+    </div>
+
+    <div class="degrau">
+      <span class="nD">02</span>
+      <div><b>Você paga a parcela reduzida até ser sorteado</b>
+      <p>A parcela cheia da carta de ${rs(e.carta)} é ${rs(e.cheiaTotal)}.
+        Com redutor de ${pc(ES.redutor)} você paga
+        <b style="color:var(--ouro2)">${rs(e.fase1)}</b> por mês
+        durante os ${ES.mesCont} meses até a contemplação.</p></div>
+    </div>
+
+    <div class="degrau">
+      <span class="nD">03</span>
+      <div><b>Contemplado, o lance abate e a parcela recai só sobre o que ficou</b>
+      <p>Você recebe ${rs(ES.alvo)} e passa a dever sobre esse valor, não sobre a
+        carta inteira: ${rs(e.sobreRetido)} por mês. Mas o redutor acabou, e os
+        ${rs(e.diferido)} adiados voltam diluídos no prazo restante — a parcela
+        real fica em <b style="color:var(--ouro2)">${rs(e.parcelaPos)}</b>.</p></div>
+    </div>
+
+    <div class="degrau ${e.cobre?"ok":"nao"}">
+      <span class="nD">04</span>
+      <div><b>O aluguel entra${e.cobre?" — e a conta fecha":" — mas não cobre tudo"}</b>
+      <p>A ${pc(ES.aluguelPct)} ao mês, ${rs(ES.alvo)} rendem
+        <b>${rs(e.aluguel)}</b> de aluguel. Isso cobre
+        <b style="color:var(--${e.cobre?"alta":"baixa"})">${Math.round(e.cobertura)}%</b>
+        da parcela.
+        ${e.cobre
+          ? `Sobram ${rs(e.sobra)} por mês, e é dessa sobra que nasce o próximo
+             degrau: em ${e.proximo} ${e.proximo===1?"mês":"meses"} ela banca a
+             parcela reduzida de um consórcio igual.`
+          : `Faltam ${rs(-e.sobra)} por mês, que saem do seu bolso. A escada não
+             se sustenta sozinha com esses números — ela ainda pode valer a pena,
+             mas como compra, não como máquina.${
+             ES.descola > 0
+               ? e.fechaEm
+                 ? ` Com o aluguel subindo ${ES.descola.toString().replace(".",",")}%
+                     ao ano acima da parcela, a conta empata no <b>ano ${e.fechaEm}</b>.`
+                 : ` Mesmo com o aluguel subindo ${ES.descola.toString().replace(".",",")}%
+                     ao ano acima da parcela, não empata dentro do prazo.`
+               : ` Correção não resolve isto: parcela e aluguel sobem juntos. Só
+                   fecha se o aluguel ganhar do índice da parcela — teste no último
+                   campo.`}`}</p></div>
+    </div>
+  </div>
+
+  <div class="trio">
+    <div class="cx"><span class="rot">Enquanto espera</span>
+      <b>${rs(e.fase1)}</b>
+      <span class="pe">por mês, do bolso</span></div>
+    <div class="cx"><span class="rot">Depois de contemplado</span>
+      <b>${rs(e.parcelaPos)}</b>
+      <span class="pe">parcela, menos ${rs(e.aluguel)} de aluguel</span></div>
+    <div class="cx ${e.cobre?"destaque":""}"><span class="rot">Quando quitar</span>
+      <b>${rs(e.aposQuitar)}</b>
+      <span class="pe">de aluguel livre, todo mês</span></div>
+  </div>
+
+  <div class="card" style="margin-top:14px">
+    <h2 style="font-size:19px;margin-bottom:4px">Se você mora de aluguel, a conta é outra</h2>
+    <div style="margin-bottom:10px">
+      <label style="display:block;font-size:10.5px;letter-spacing:.1em;
+        text-transform:uppercase;color:var(--graf);margin-bottom:4px">Aluguel que pago hoje</label>
+      <input id="esAlHoje" inputmode="numeric" value="${ES.alugoHoje}" style="max-width:220px">
+    </div>
+    ${ES.alugoHoje > 0
+      ? `<p style="color:var(--t2);line-height:1.65">
+         Hoje você paga ${rs(ES.alugoHoje)} de aluguel e não constrói nada com isso.
+         Durante a espera, a parcela reduzida de ${rs(e.fase1)} soma ao aluguel:
+         são ${rs(e.fase1 + ES.alugoHoje)} por mês saindo. Depois de contemplado,
+         se você for morar no imóvel, o aluguel some e sobra só a parcela de
+         ${rs(e.parcelaPos)} —
+         ${e.caixaMorando >= 0
+           ? `<b style="color:var(--alta)">${rs(e.caixaMorando)} a menos por mês
+              do que você paga hoje</b>, já morando em imóvel seu.`
+           : `${rs(-e.caixaMorando)} a mais do que o aluguel de hoje — mas agora
+              construindo patrimônio em vez de pagar o do outro.`}</p>
+         <p style="color:var(--t2);line-height:1.65;margin-top:10px">
+         É aqui que o redutor ganha sentido de verdade: ele segura a parcela baixa
+         justamente na fase em que você paga as duas coisas.</p>`
+      : `<p style="color:var(--graf);line-height:1.6;font-size:13px">
+         Preencha se você paga aluguel hoje. Muda bastante a conta: durante a
+         espera você paga duas coisas, e depois de contemplado pode parar de
+         pagar uma delas.</p>`}
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <h2 style="font-size:19px;margin-bottom:6px">Onde isto quebra de verdade</h2>
+    <p style="color:var(--t2);line-height:1.7">
+      <b style="color:var(--ouro2)">O rendimento do seu dinheiro cair.</b> Este é
+      o risco que realmente separa esta estratégia de comprar à vista. Ela vive da
+      distância entre o que a sua aplicação rende e o que o consórcio cobra. Com
+      dinheiro rendendo 10% reais, a vantagem é grande; a 6% ela encolhe; com o
+      dinheiro parado sem render, a estratégia <b>perde</b> — você trocou um ativo
+      que rendia zero por uma dívida com taxa de administração.<br><br>
+      <b style="color:var(--ouro2)">O sorteio demorar.</b> Lance embutido aumenta a
+      chance, não garante. Contemplação no mês 36 contra o mês 120 muda o resultado
+      em ordem de grandeza, e é a variável que você não controla.<br><br>
+      <b style="color:var(--ouro2)">Empilhar antes da hora.</b> Cada degrau novo é
+      uma parcela que começa antes de existir o aluguel que a paga. Numa fase ruim
+      você tem várias parcelas e nenhum aluguel novo — e é aí que se vende cota com
+      deságio, não com ágio.<br><br>
+      <b style="color:var(--ouro2)">Disciplina.</b> Só funciona se o dinheiro ficar
+      aplicado até o fim. Quem resgata no meio fica com a parcela e sem o rendimento
+      que a pagava.</p>
+    <p style="color:var(--t2);line-height:1.7;margin-top:14px;padding-top:12px;
+      border-top:1px solid var(--linha)">
+      <b style="color:var(--t2)">E dois riscos que existem, mas não são desta
+      estratégia:</b> vacância e ${ES.aluguelPct.toString().replace(".",",")}%
+      ser bruto. Os dois atingem igual quem comprou o mesmo imóvel à vista — é o
+      mesmo inquilino que falta e o mesmo IPTU que se paga. Eles reduzem o
+      resultado dos dois caminhos, não a diferença entre eles. Valem para decidir
+      <i>se</i> comprar imóvel para alugar; não valem para decidir <i>como</i>
+      pagar por ele.</p>
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <h2 style="font-size:19px;margin-bottom:4px">Sobre o ágio</h2>
+    <p style="color:var(--t2);line-height:1.65">
+      Cota contemplada vale mais que cota em espera, e existe mercado para isso —
+      é o ágio. Ele é real e pode ser saída de liquidez. Mas a transferência
+      depende de aprovação da administradora, o comprador assume o saldo devedor,
+      e comprar cota para revender com ágio de forma habitual deixa de ser
+      estratégia pessoal e vira atividade com regra própria. Como plano B de
+      liquidez, faz sentido; como o negócio em si, é outra conversa.</p>
+  </div>
+
+  ${ponte({
+    titulo: "Montar isto sozinho é onde a maioria se machuca",
+    intro: `A escada funciona no papel com os números certos. Na prática ela
+      depende de escolhas que a tela não faz — e de coisas que nem entram na
+      conta, como o que a administradora aceita e o que a Receita entende.`,
+    casos: [
+      ["Dimensionou pelo fim","Contou quantas cotas cabem depois de tudo alugado, e não quantas cabem na travessia. É o erro que quebra a escada no meio."],
+      ["Vai pôr imóvel no meio","Transferir bem entre pessoa e empresa envolve ITBI, ganho de capital e a atividade da PJ. Errar a ordem custa mais que a economia pretendida."],
+      ["Quer usar a cota como crédito","Operação entre partes relacionadas costuma ser recusada pela administradora. Melhor descobrir antes de contratar, não depois."],
+      ["Já tem duas ou três cotas","Empilhar sem escalonar contemplação e prazo cria meses com várias parcelas e nenhum aluguel novo."]
+    ],
+    servicos: ["consorcio","empresarial","blindagem"],
+    botao: "Falar com quem monta estrutura"
+  })}
+
+  <div class="pontes">
+    <a href="#/aplicado" class="bt cheio lacre">E se eu já tiver o dinheiro? &rarr;</a>
+    <a href="#/comprar" class="bt">Comparar com financiamento</a>
+    <a href="#/crescer" class="bt">Como o dinheiro cresce</a>
+  </div>`;
+
+  const liga = (id, campo, min, max) => {
+    const el = $(id);
+    if(!el) return;
+    el.oninput = () => {
+      let v = Number(String(el.value).replace(/[^\d.,-]/g,"").replace(",","."));
+      if(!isFinite(v)) v = 0;
+      ES[campo] = Math.min(max, Math.max(min, v));
+      const foco = document.activeElement && document.activeElement.id;
+      const pos = el.selectionStart;
+      telaEscada();
+      const novo = foco ? $("#"+foco) : null;
+      if(novo){ novo.focus(); try{ novo.setSelectionRange(pos,pos); }catch(e){} }
+    };
+  };
+  ligarPontes();
+  liga("#esAlvo","alvo",1,1e9);
+  liga("#esEmb","emb",0,90);
+  liga("#esPz","prazo",12,300);
+  liga("#esAdm","adm",0,60);
+  liga("#esFR","fr",0,20);
+  liga("#esRed","redutor",0,50);
+  liga("#esAlu","aluguelPct",0.05,3);
+  liga("#esMC","mesCont",1,300);
+  liga("#esDesc","descola",0,10);
+  liga("#esAlHoje","alugoHoje",0,1e6);
+}
+
+// ── Quem já tem o dinheiro ──────────────────────────────────────
+// Tudo aqui é em dinheiro de hoje. Parcela, crédito e imóvel corrigem por
+// índice de inflação; trabalhar em termos reais é o que impede que o reajuste
+// apareça dos dois lados e confunda a comparação.
+const AP = { tenho:1000000, bem:700000, prazo:229, adm:19, fr:3.7,
+             real:10, valoriza:0, aluguelPct:0.5, mesCont:36, descola:0 };
+
+function serieAP(){
+  const iR = Math.pow(1 + AP.real/100, 1/12) - 1;
+  const iV = Math.pow(1 + AP.valoriza/100, 1/12) - 1;
+  const n = Math.max(1, AP.prazo);
+  const parcela = AP.bem * (1 + AP.adm/100 + AP.fr/100) / n;
+  const mc = Math.min(AP.mesCont, n);
+  // o aluguel pode correr por índice diferente do da parcela
+  const iA = Math.pow(1 + AP.descola/100, 1/12) - 1;
+
+  // À VISTA: compra hoje, o que sobra fica aplicado
+  let vCaixa = Math.max(0, AP.tenho - AP.bem), vBem = AP.bem;
+  // CONSÓRCIO: tudo aplicado, parcela sai do caixa, bem entra na contemplação
+  let cCaixa = AP.tenho, cBem = 0;
+
+  const d = [{ m:0, vista: vCaixa + vBem, cons: cCaixa }];
+  let faltou = 0, aluguelAcum = 0;
+
+  for(let m=1; m<=n; m++){
+    const corr = Math.pow(1+iA, m);
+    // à vista: imóvel já rendendo aluguel desde o primeiro mês
+    const aluV = AP.bem * AP.aluguelPct/100 * corr;
+    vCaixa = vCaixa*(1+iR) + aluV;
+    vBem   = vBem*(1+iV);
+
+    // consórcio: parcela sai; depois da contemplação o bem entra e aluga
+    cCaixa = cCaixa*(1+iR) - parcela;
+    if(cCaixa < 0){ faltou++; }
+    if(m === mc) cBem = AP.bem;
+    if(m >= mc){
+      const aluC = AP.bem * AP.aluguelPct/100 * corr;
+      cCaixa += aluC; aluguelAcum += aluC;
+      cBem = cBem*(1+iV);
+    }
+    d.push({ m, vista: vCaixa + vBem, cons: cCaixa + cBem });
+  }
+
+  const fimV = vCaixa + vBem, fimC = cCaixa + cBem;
+  const rendaMes = AP.tenho * iR;
+  return { d, parcela, mc, fimV, fimC, vCaixa, vBem, cCaixa, cBem,
+           dif: fimC - fimV, rendaMes, faltou, iR,
+           cobre: rendaMes >= parcela,
+           fatia: rendaMes > 0 ? parcela/rendaMes*100 : null };
+}
+
+function graficoAP(s){
+  const L = 640, A = 200, pb = 15, pt = 6;
+  const passo = Math.max(1, Math.round(s.d.length/120));
+  const d = s.d.filter((x,i) => i % passo === 0);
+  const mx = Math.max(...d.map(x => Math.max(x.vista, x.cons)), 1);
+  const px = i => (i/(d.length-1)) * L;
+  const py = v => pt + (1 - v/mx) * (A - pb - pt);
+  const cam = sel => d.map((x,i) =>
+    `${i?"L":"M"}${px(i).toFixed(1)} ${py(sel(x)).toFixed(1)}`).join(" ");
+  const iC = d.findIndex(x => x.m >= s.mc);
+  return `
+  <div class="card" style="margin-top:14px;padding-bottom:9px">
+    <div class="tituloG">Patrimônio total, em dinheiro de hoje</div>
+    <div class="subG">imóvel mais aplicação · o topo é ${rs(mx)}</div>
+    <svg viewBox="0 0 ${L} ${A}" style="width:100%;height:auto;display:block"
+      preserveAspectRatio="none">
+      <line x1="0" y1="${A-pb}" x2="${L}" y2="${A-pb}" stroke="var(--linha)"/>
+      ${iC>0?`<line x1="${px(iC).toFixed(1)}" y1="${pt}" x2="${px(iC).toFixed(1)}"
+        y2="${A-pb}" stroke="var(--lacre)" stroke-dasharray="3 3"/>`:""}
+      <path d="${cam(x=>x.vista)}" fill="none" stroke="var(--ouro2)" stroke-width="1.6"/>
+      <path d="${cam(x=>x.cons)}" fill="none" stroke="var(--alta)" stroke-width="2"/>
+    </svg>
+    <div class="legG">
+      <span><i style="background:var(--ouro2)"></i>comprar à vista</span>
+      <span><i style="background:var(--alta)"></i>deixar aplicado e fazer consórcio</span>
+      <span><i style="background:var(--lacre)"></i>a contemplação</span>
+    </div>
+  </div>`;
+}
+
+function telaAplicado(){
+  const s = serieAP();
+
+  app().innerHTML = `
+  <div class="cabeca" style="text-align:left;max-width:72ch">
+    <h1>Quem já tem o dinheiro</h1>
+    <p>Se você tem o valor do bem no bolso, a pergunta deixa de ser "como
+      financio" e vira outra: <b>compro à vista, ou deixo o dinheiro rendendo e
+      pago o consórcio com um pedaço do rendimento?</b> A resposta depende de
+      dois números — quanto o seu dinheiro rende, e quanto o consórcio custa.</p>
+    <p style="margin-top:8px">Tudo nesta tela está em dinheiro de hoje. Parcela,
+      crédito e imóvel corrigem todos por índice de inflação, então trabalhar em
+      termos reais é o que evita contar o reajuste duas vezes.</p>
+  </div>
+
+  <div class="card">
+    <div class="grid4">
+      <div><label>Tenho aplicado</label>
+        <input id="apTem" inputmode="numeric" value="${AP.tenho}"></div>
+      <div><label>Imóvel que quero</label>
+        <input id="apBem" inputmode="numeric" value="${AP.bem}"></div>
+      <div><label>Meu dinheiro rende (% real a.a.)</label>
+        <input id="apReal" inputmode="decimal" value="${AP.real}"></div>
+      <div><label>Imóvel valoriza (% real a.a.)</label>
+        <input id="apVal" inputmode="decimal" value="${AP.valoriza}"></div>
+      <div><label>Prazo do grupo (meses)</label>
+        <input id="apPz" inputmode="numeric" value="${AP.prazo}"></div>
+      <div><label>Taxa adm (%)</label>
+        <input id="apAdm" inputmode="decimal" value="${AP.adm}"></div>
+      <div><label>Fundo de reserva (%)</label>
+        <input id="apFR" inputmode="decimal" value="${AP.fr}"></div>
+      <div><label>Contemplado no mês</label>
+        <input id="apMC" inputmode="numeric" value="${AP.mesCont}"></div>
+      <div><label>Aluguel do imóvel (% ao mês)</label>
+        <input id="apAlu" inputmode="decimal" value="${AP.aluguelPct}"></div>
+      <div><label>Aluguel corrige acima da parcela (% a.a.)</label>
+        <input id="apDesc" inputmode="decimal" value="${AP.descola}"></div>
+    </div>
+  </div>
+
+  <div class="trio">
+    <div class="cx"><span class="rot">Seu dinheiro rende</span>
+      <b>${rs(s.rendaMes)}</b>
+      <span class="pe">por mês, em termos reais</span></div>
+    <div class="cx"><span class="rot">A parcela custa</span>
+      <b>${rs(s.parcela)}</b>
+      <span class="pe">${s.fatia==null?"—":Math.round(s.fatia)+"% do rendimento"}</span></div>
+    <div class="cx ${s.cobre?"destaque":""}"><span class="rot">O rendimento cobre?</span>
+      <b>${s.cobre?"sim":"não"}</b>
+      <span class="pe">${s.cobre
+        ? "sem tocar no principal"
+        : `faltam ${rs(s.parcela - s.rendaMes)} por mês`}</span></div>
+  </div>
+
+  ${graficoAP(s)}
+
+  <div class="card" style="margin-top:14px">
+    <h2 style="font-size:19px;margin-bottom:8px">No fim dos ${AP.prazo} meses</h2>
+    <div class="trio" style="margin-top:0">
+      <div class="cx"><span class="rot">Comprando à vista</span>
+        <b>${rs(s.fimV)}</b>
+        <span class="pe">${rs(s.vBem)} de imóvel · ${rs(s.vCaixa)} aplicados</span></div>
+      <div class="cx"><span class="rot">Aplicado + consórcio</span>
+        <b>${rs(s.fimC)}</b>
+        <span class="pe">${rs(s.cBem)} de imóvel · ${rs(s.cCaixa)} aplicados</span></div>
+      <div class="cx ${s.dif>0?"destaque":""}">
+        <span class="rot">Diferença</span>
+        <b style="color:var(--${s.dif>0?"alta":"baixa"})">${s.dif>0?"+":""}${rs(s.dif)}</b>
+        <span class="pe">${s.dif>0?"a favor do consórcio":"a favor de comprar à vista"}</span></div>
+    </div>
+    <p style="color:var(--t2);line-height:1.65;margin-top:14px">
+      ${s.dif > 0
+        ? `A diferença existe por um motivo só: o seu dinheiro rende
+           ${AP.real.toString().replace(".",",")}% reais ao ano e o consórcio cobra
+           bem menos que isso. Enquanto essa distância existir, tirar o dinheiro da
+           aplicação para comprar à vista é abrir mão de um ganho maior do que a
+           taxa que você economizaria.`
+        : `Com esses números não compensa: o consórcio está custando mais do que o
+           seu dinheiro rende. Comprar à vista sai na frente. Isso muda se o
+           rendimento subir, se a taxa de administração cair, ou se a contemplação
+           vier mais cedo.`}
+      ${s.faltou > 0
+        ? `<br><br><b style="color:var(--baixa)">Atenção:</b> em ${s.faltou} meses
+           o caixa fica negativo — o rendimento não cobre a parcela e o principal
+           é consumido. A conta acima continua válida, mas o caminho passa por
+           apertos que a linha do gráfico não mostra.`
+        : ""}</p>
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <h2 style="font-size:19px;margin-bottom:4px">Por que o consórcio é barato aqui</h2>
+    <p style="color:var(--t2);line-height:1.65">
+      Consórcio não tem juro — tem taxa de administração e fundo de reserva,
+      diluídos no prazo. Num grupo de ${AP.prazo} meses com
+      ${AP.adm.toString().replace(".",",")}% de administração, isso equivale a algo
+      entre <b style="color:var(--ouro2)">2% e 3,5% ao ano acima da inflação</b> se
+      a contemplação vier nos primeiros anos. É a dívida mais barata a que a maior
+      parte das pessoas tem acesso no Brasil — mais barata que financiamento
+      imobiliário, muito mais barata que crédito pessoal.</p>
+    <p style="color:var(--t2);line-height:1.65;margin-top:10px">
+      Só que ela vem com uma condição que nenhuma outra dívida tem: <b>você não
+      escolhe quando recebe.</b> Todo o resto da conta depende disso. Por isso o
+      campo do mês da contemplação está aí para você mexer — arraste ele para
+      frente e veja a diferença encolher.</p>
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <h2 style="font-size:19px;margin-bottom:4px">Com esse dinheiro, quantas cartas cabem?</h2>
+    <p style="color:var(--t2);line-height:1.65">
+      É a pergunta que muda a escala da estratégia. Se o rendimento paga uma
+      parcela, ele pode pagar duas — e aí você não está comprando um imóvel, está
+      montando uma carteira deles. O limite não é onde parece.</p>
+    <div class="trio" style="margin-top:12px">
+      <div class="cx destaque"><span class="rot">Na fase de espera</span>
+        <b>${(s.rendaMes / Math.max(1, s.parcela*0.5)).toFixed(1)}</b>
+        <span class="pe">cartas, com parcela reduzida e nenhum aluguel ainda</span></div>
+      <div class="cx"><span class="rot">Depois de contempladas</span>
+        <b>${(s.rendaMes / Math.max(1, s.parcela)).toFixed(1)}</b>
+        <span class="pe">cartas, se o rendimento pagasse sozinho</span></div>
+      <div class="cx"><span class="rot">Com o aluguel entrando</span>
+        <b>muitas</b>
+        <span class="pe">a parcela quase se paga — o limite deixa de ser dinheiro</span></div>
+    </div>
+    <p style="color:var(--t2);line-height:1.65;margin-top:12px">
+      <b style="color:var(--ouro2)">O aperto é no começo, não no fim.</b> Depois que
+      os imóveis estão alugados, cada um quase se paga e o rendimento sobra. Mas
+      para chegar lá você atravessa anos pagando várias parcelas sem receber
+      aluguel nenhum — e é essa travessia que define quantas cartas você aguenta.
+      Quem dimensiona pelo estado final quebra no meio do caminho.</p>
+    <p style="color:var(--t2);line-height:1.65;margin-top:10px">
+      E há um detalhe que piora a travessia: as contemplações não vêm juntas nem em
+      ordem. Você pode ficar com três cartas pagando e nenhuma sorteada por anos.
+      Dimensione pelo pior caso da espera, não pela média.</p>
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <h2 style="font-size:19px;margin-bottom:4px">Quem tem o dinheiro e quem não tem</h2>
+    <p style="color:var(--t2);line-height:1.65">
+      A parcela é a mesma para os dois, mas a natureza dela não é. Quem tem o
+      capital paga a diferença <b>com o rendimento</b> — o principal fica de pé e
+      continua crescendo, e a operação não depende do salário. Quem não tem paga
+      <b>do próprio bolso</b>: é orçamento doméstico, e um mês ruim vira
+      inadimplência.</p>
+    <p style="color:var(--t2);line-height:1.65;margin-top:10px">
+      É a mesma estratégia com dois riscos completamente diferentes. Para quem tem
+      capital, é alocação: troca-se rendimento por patrimônio, e o pior caso é
+      render menos. Para quem não tem, é alavancagem: o pior caso é perder a cota.
+      As telas mostram os mesmos números para os dois — quem está de que lado, só
+      você sabe.</p>
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <h2 style="font-size:19px;margin-bottom:6px">O que esta conta não garante</h2>
+    <p style="color:var(--t2);line-height:1.7">
+      <b style="color:var(--ouro2)">Rendimento real de
+      ${AP.real.toString().replace(".",",")}% não é promessa.</b> São
+      ${(AP.real + 4.5).toFixed(1).replace(".",",")}% nominais com inflação de 4,5%,
+      e nem renda fixa entrega isso de forma estável por
+      ${(AP.prazo/12).toFixed(0)} anos. Se a Selic cair, a distância que sustenta
+      toda a estratégia encolhe junto.<br><br>
+      <b style="color:var(--ouro2)">Imposto de renda.</b> O rendimento da aplicação
+      é tributado; o aluguel também. A tela trabalha com valores brutos, e o líquido
+      derruba a linha verde mais do que a dourada.<br><br>
+      <b style="color:var(--ouro2)">Disciplina é premissa.</b> A estratégia só
+      funciona se o dinheiro ficar aplicado até o fim. Quem resgata no meio para
+      outra coisa fica com a parcela e sem o rendimento que a pagava.<br><br>
+      <b style="color:var(--ouro2)">Valorização do imóvel entra como zero real</b>
+      por padrão, de propósito. Imóvel acompanhando a inflação já é um resultado
+      razoável no longo prazo brasileiro; quem quiser supor mais, muda o campo e
+      assume a suposição.</p>
+  </div>
+
+  ${ponte({
+    titulo: "Com esse tamanho de patrimônio, o erro fica caro",
+    intro: `Toda a vantagem desta tela mora na distância entre o que o seu
+      dinheiro rende e o que o consórcio cobra. Manter essa distância de pé por
+      quinze ou vinte anos não é escolha de produto — é gestão, e é o que a
+      maioria não faz sozinha.`,
+    casos: [
+      ["O rendimento é a premissa","A estratégia inteira supõe a aplicação rendendo bem por duas décadas. Se ela render mal, você trocou patrimônio por dívida."],
+      ["Está tudo no mesmo lugar","Patrimônio concentrado em imóvel e uma aplicação só. Concentração não é diversificação, e imóvel não se vende com pressa por preço justo."],
+      ["Ninguém falou de imposto","Rendimento e aluguel são tributados de formas diferentes, e a escolha do veículo muda o líquido mais que a escolha do ativo."],
+      ["E se você não estiver mais aqui","Patrimônio grande e ilíquido é justamente o que trava no inventário. A conta do processo chega antes de a família receber qualquer coisa."]
+    ],
+    servicos: ["planejamento","consorcio","sucessorio"],
+    botao: "Falar com quem cuida disso"
+  })}
+
+  <div class="pontes">
+    <a href="#/escada" class="bt">A escada do consórcio</a>
+    <a href="#/comprar" class="bt">Comparar com financiamento</a>
+    <a href="#/planejar" class="bt cheio lacre">Montar o meu plano &rarr;</a>
+  </div>`;
+
+  const liga = (id, campo, min, max) => {
+    const el = $(id);
+    if(!el) return;
+    el.oninput = () => {
+      let v = Number(String(el.value).replace(/[^\d.,-]/g,"").replace(",","."));
+      if(!isFinite(v)) v = 0;
+      AP[campo] = Math.min(max, Math.max(min, v));
+      const foco = document.activeElement && document.activeElement.id;
+      const pos = el.selectionStart;
+      telaAplicado();
+      const novo = foco ? $("#"+foco) : null;
+      if(novo){ novo.focus(); try{ novo.setSelectionRange(pos,pos); }catch(e){} }
+    };
+  };
+  ligarPontes();
+  liga("#apTem","tenho",0,1e10);
+  liga("#apBem","bem",1,1e9);
+  liga("#apReal","real",0,30);
+  liga("#apVal","valoriza",-10,15);
+  liga("#apPz","prazo",12,300);
+  liga("#apAdm","adm",0,60);
+  liga("#apFR","fr",0,20);
+  liga("#apMC","mesCont",1,300);
+  liga("#apAlu","aluguelPct",0,3);
+  liga("#apDesc","descola",-10,10);
 }
 
 function rotear(){
@@ -6474,20 +7755,30 @@ function rotear(){
   window.__marcarAbas = null;
   RANK_CTX = null;
   const h = (location.hash||"#/").split("?")[0];
+
+  // sem conta, o site inteiro é uma tela só: a abertura.
+  // Clicar em qualquer coisa do cabeçalho leva ao login, guardando o destino.
+  if(!eu){
+    const LIVRE = ["#/entrar","#/senha","#/nova-senha","#/termos"];
+    if(h==="#/"||h==="") return telaAbertura();
+    if(!LIVRE.includes(h)){
+      location.hash = "#/entrar?de=" + encodeURIComponent(h);
+      return;
+    }
+  }
+
   const m = h.match(/^#\/carteira\/(\d+)$/);
   if(m)                       return telaCarteira(m[1]);
-  if(h==="#/"||h===""){
-    // quem não tem conta vê a abertura até dizer que não quer mais.
-    // O r=1 é o "ir direto" desta visita, sem dispensar de vez.
-    const q0 = new URLSearchParams((location.hash||"").split("?")[1]||"");
-    if(!eu && !aberturaDispensada() && q0.get("r") !== "1") return telaAbertura();
-    return telaRanking();
-  }
+  if(h==="#/"||h==="")        return telaRanking();
   if(h==="#/entrar")          return telaEntrar();
   if(h==="#/publicar")        return telaPublicar();
   if(h==="#/duelo")           return telaDuelo();
   if(h==="#/abertura")        return telaAbertura();
   if(h==="#/aprender")        return telaAprender();
+  if(h==="#/crescer")         return telaCrescer();
+  if(h==="#/comprar")         return telaComprar();
+  if(h==="#/escada")          return telaEscada();
+  if(h==="#/aplicado")        return telaAplicado();
   if(h==="#/como-funciona")   return telaComo();
   if(h==="#/termos")          return telaTermos();
   if(h==="#/screening")       return telaScreening();
