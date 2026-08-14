@@ -56,40 +56,38 @@ header .marca:hover{color:var(--tinta)}
 /* grade centralizada. O divisor mora na coluna da direita, não no "grupo que
    vem depois" — senão, ao quebrar em duas filas, o terceiro herda o recuo do
    segundo e a fila de baixo sai torta. */
-nav{display:grid;grid-template-columns:repeat(4,1fr);align-items:start}
-nav .grupo{display:flex;flex-direction:column;align-items:center;gap:3px;
-  padding:6px 14px 0}
-nav .grupo+.grupo{border-left:1px solid var(--linha)}
-nav .rotg{font-size:8px;letter-spacing:.19em;text-transform:uppercase;
-  color:var(--graf);opacity:.6}
-nav .gloss{font-size:9.5px;color:var(--graf);opacity:.5;line-height:1.3;
-  margin:-1px 0 2px;font-style:italic;white-space:nowrap}
-nav .bloco{display:flex;gap:14px;align-items:baseline;flex-wrap:wrap;
-  justify-content:center}
-nav a,nav button.lnk{font-size:13.5px;color:var(--t2);background:none;
-  transition:color .15s;white-space:nowrap}
-nav a:hover,nav button.lnk:hover{color:var(--ouro2)}
-nav .divisor,nav .rot{display:none}
+/* uma linha para escolher o momento, outra com os tópicos daquele momento.
+   Nada some do menu: o que muda é qual grupo está aberto. */
+nav{display:flex;justify-content:center;flex-wrap:wrap;gap:0}
+nav .mom{position:relative;background:none;padding:3px 18px;font-size:14px;
+  color:var(--t2);letter-spacing:.01em;white-space:nowrap;transition:color .15s}
+nav .mom+.mom{border-left:1px solid var(--linha)}
+nav .mom:hover{color:var(--tinta)}
+nav .mom.on{color:var(--ouro2)}
+nav .mom .def{display:block;font-size:9px;color:var(--graf);opacity:.6;
+  font-style:italic;margin-top:1px;letter-spacing:0}
+
+.topicos{display:flex;justify-content:center;flex-wrap:wrap;gap:16px;
+  margin-top:9px;padding-top:8px;border-top:1px solid var(--linha);min-height:22px}
+.topicos a{font-size:13.5px;color:var(--t2);white-space:nowrap;
+  transition:color .15s}
+.topicos a:hover{color:var(--ouro2)}
+.topicos a.aqui{color:var(--ouro2)}
 
 header .dir{display:flex;gap:12px;align-items:center;font-size:13px;flex:none}
 header .dir a,header .dir button.lnk{font-size:13px;color:var(--t2);background:none}
 header .dir a:hover{color:var(--ouro2)}
 
-@media(max-width:1060px){
-  nav .gloss{display:none}
-}
 @media(max-width:1040px){
   header .marca{font-size:22px}
-  nav{grid-template-columns:repeat(2,1fr);row-gap:14px}
-  nav .grupo{padding-left:12px;padding-right:12px}
-  nav .grupo+.grupo{border-left:none}
-  nav .grupo:nth-child(even){border-left:1px solid var(--linha)}
-  nav .bloco{gap:11px}
-  nav a{font-size:13px}
+  nav .mom{padding:3px 12px;font-size:13.5px}
+  .topicos{gap:13px}
+  .topicos a{font-size:13px}
 }
 @media(max-width:560px){
-  nav{grid-template-columns:1fr;row-gap:10px}
-  nav .grupo:nth-child(even){border-left:none}
+  nav .mom{padding:3px 9px;font-size:13px}
+  nav .mom .def{display:none}
+  .topicos{gap:11px}
 }
 
 .prova{display:inline-flex;flex-wrap:wrap;margin-top:22px;border:1px solid var(--linha2);
@@ -1101,21 +1099,9 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
     <span class="dir" id="navDir"></span>
   </div>
   <div class="trilha">
-  <span class="rotm">Escolha seu momento</span>
-  <nav>
-    <span class="grupo"><span class="rotg">Aprender</span>
-      <span class="gloss">antes de arriscar qualquer coisa</span>
-      <span class="bloco"><a href="#/crescer">Como o dinheiro cresce</a><a href="#/comprar">Comprar um bem</a><a href="#/aprender">Por que é difícil</a><a href="#/como-funciona">Como funciona</a></span></span>
-    <span class="grupo"><span class="rotg">Especular</span>
-      <span class="gloss">comprar para vender mais caro</span>
-      <span class="bloco"><a href="#/tiro-curto">Tiro curto</a><a href="#/placar">Placar</a><a href="#/duelo">Duelo</a></span></span>
-    <span class="grupo"><span class="rotg">Investir</span>
-      <span class="gloss">comprar para viver de renda</span>
-      <span class="bloco"><a href="#/">Ranking</a><a href="#/screening">Screening</a><span id="navPub"></span></span></span>
-    <span class="grupo"><span class="rotg">Construir</span>
-      <span class="gloss">o patrimônio fora da tela</span>
-      <span class="bloco"><a href="#/planejar">Planejamento</a><a href="#/clube">Clube de investimentos</a><a href="#/servicos">Serviços</a></span></span>
-  </nav>
+    <span class="rotm">Escolha seu momento</span>
+    <nav id="trilhaNav"></nav>
+    <div class="topicos" id="trilhaTop"></div>
   </div>
 </div></header>
 
@@ -1581,8 +1567,64 @@ async function carregarEu(){
   eu = data;
   if(eu) eu.email = session.user.email;
 }
+// A trilha: quatro momentos numa linha, e os tópicos do momento escolhido na
+// linha de baixo. Nada sai do menu — o que muda é qual grupo está aberto.
+const TRILHA = [
+  ["aprender","Aprender","antes de arriscar", [
+    ["#/crescer","Como o dinheiro cresce"],
+    ["#/comprar","Comprar um bem"],
+    ["#/escada","A escada do consórcio"],
+    ["#/aplicado","Já tenho o dinheiro"],
+    ["#/aprender","Por que é difícil"],
+    ["#/como-funciona","Como funciona"]]],
+  ["especular","Especular","vender mais caro", [
+    ["#/tiro-curto","Tiro curto"],
+    ["#/placar","Placar"],
+    ["#/duelo","Duelo"]]],
+  ["investir","Investir","viver de renda", [
+    ["#/","Ranking"],
+    ["#/screening","Screening"],
+    ["#/publicar","Criar", true]]],
+  ["construir","Construir","fora da tela", [
+    ["#/planejar","Planejamento"],
+    ["#/clube","Clube de investimentos"],
+    ["#/servicos","Serviços"]]]
+];
+let MOMENTO = null;
+
+function momentoDaRota(h){
+  for(const [id,,,tops] of TRILHA)
+    if(tops.some(([r]) => r === h && r !== "#/")) return id;
+  if(h === "#/" || h === "") return "investir";
+  return null;
+}
+
+function pintarTrilha(){
+  const h = (location.hash||"#/").split("?")[0];
+  const daRota = momentoDaRota(h);
+  const ativo = daRota || MOMENTO || "investir";
+  MOMENTO = ativo;
+
+  const nv = $("#trilhaNav"), tp = $("#trilhaTop");
+  if(!nv || !tp) return;
+
+  nv.innerHTML = TRILHA.map(([id,nome,def]) =>
+    `<button type="button" class="mom${id===ativo?" on":""}" data-mom="${id}">${nome}
+      <span class="def">${def}</span></button>`).join("");
+
+  const grupo = TRILHA.find(g => g[0] === ativo);
+  tp.innerHTML = grupo[3]
+    .filter(([,,soLogado]) => !soLogado || eu)
+    .map(([rota,nome]) =>
+      `<a href="${rota}" class="${rota===h?"aqui":""}">${nome}</a>`).join("");
+
+  nv.querySelectorAll("[data-mom]").forEach(b =>
+    b.onclick = () => { MOMENTO = b.dataset.mom; pintarTrilha(); });
+}
+
 function pintarNav(){
-  $("#navPub").innerHTML = eu ? `<a href="#/publicar">Criar</a>` : "";
+  const np = $("#navPub"); if(np) np.innerHTML = eu ? `<a href="#/publicar">Criar</a>` : "";
+  pintarTrilha();
   $("#navDir").innerHTML = eu
     ? `<details class="eu" id="menuEu">
          <summary><span class="ini">${esc((eu.apelido||"?").trim().slice(0,2).toUpperCase())}</span
@@ -7753,13 +7795,22 @@ function rotear(){
   clearInterval(window.__timerTC);
   clearInterval(window.__timerScr);
   window.__marcarAbas = null;
+  pintarTrilha();
   RANK_CTX = null;
   const h = (location.hash||"#/").split("?")[0];
 
   // sem conta, o site inteiro é uma tela só: a abertura.
-  // Clicar em qualquer coisa do cabeçalho leva ao login, guardando o destino.
+  // Quem CHEGA vê a mensagem — inclusive se a aba tinha outra rota guardada.
+  // O login só aparece depois de um clique, e guarda o destino.
   if(!eu){
     const LIVRE = ["#/entrar","#/senha","#/nova-senha","#/termos"];
+    if(!window.__jaEntrou){
+      window.__jaEntrou = true;
+      if(!LIVRE.includes(h)){
+        if(h !== "#/" && h !== "") history.replaceState(null,"","#/");
+        return telaAbertura();
+      }
+    }
     if(h==="#/"||h==="") return telaAbertura();
     if(!LIVRE.includes(h)){
       location.hash = "#/entrar?de=" + encodeURIComponent(h);
