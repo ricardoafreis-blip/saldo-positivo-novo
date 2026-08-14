@@ -56,23 +56,18 @@ header .marca:hover{color:var(--tinta)}
 /* grade centralizada. O divisor mora na coluna da direita, não no "grupo que
    vem depois" — senão, ao quebrar em duas filas, o terceiro herda o recuo do
    segundo e a fila de baixo sai torta. */
-/* uma linha para escolher o momento, outra com os tópicos daquele momento.
-   Nada some do menu: o que muda é qual grupo está aberto. */
-nav{display:flex;justify-content:center;flex-wrap:wrap;gap:0}
-nav .mom{position:relative;background:none;padding:3px 18px;font-size:14px;
-  color:var(--t2);letter-spacing:.01em;white-space:nowrap;transition:color .15s}
-nav .mom+.mom{border-left:1px solid var(--linha)}
-nav .mom:hover{color:var(--tinta)}
-nav .mom.on{color:var(--ouro2)}
-nav .mom .def{display:block;font-size:9px;color:var(--graf);opacity:.6;
-  font-style:italic;margin-top:1px;letter-spacing:0}
-
-.topicos{display:flex;justify-content:center;flex-wrap:wrap;gap:16px;
-  margin-top:9px;padding-top:8px;border-top:1px solid var(--linha);min-height:22px}
-.topicos a{font-size:13.5px;color:var(--t2);white-space:nowrap;
-  transition:color .15s}
-.topicos a:hover{color:var(--ouro2)}
-.topicos a.aqui{color:var(--ouro2)}
+nav{display:grid;grid-template-columns:repeat(4,1fr);align-items:start;gap:0}
+nav .grupo{padding:6px 16px 0;text-align:left}
+nav .grupo+.grupo{border-left:1px solid var(--linha)}
+nav .rotg{display:block;font-size:8px;letter-spacing:.19em;text-transform:uppercase;
+  color:var(--graf);opacity:.6}
+nav .def{display:block;font-size:9px;color:var(--graf);opacity:.5;
+  font-style:italic;margin:1px 0 5px}
+nav .bloco{display:flex;flex-direction:column;gap:4px;align-items:flex-start}
+nav a,nav button.lnk{font-size:13px;color:var(--t2);background:none;
+  transition:color .15s;line-height:1.35}
+nav a:hover,nav button.lnk:hover{color:var(--ouro2)}
+nav .divisor,nav .rot,nav .gloss{display:none}
 
 header .dir{display:flex;gap:12px;align-items:center;font-size:13px;flex:none}
 header .dir a,header .dir button.lnk{font-size:13px;color:var(--t2);background:none}
@@ -80,14 +75,17 @@ header .dir a:hover{color:var(--ouro2)}
 
 @media(max-width:1040px){
   header .marca{font-size:22px}
-  nav .mom{padding:3px 12px;font-size:13.5px}
-  .topicos{gap:13px}
-  .topicos a{font-size:13px}
+  nav .grupo{padding:6px 12px 0}
+  nav a{font-size:12.5px}
 }
-@media(max-width:560px){
-  nav .mom{padding:3px 9px;font-size:13px}
-  nav .mom .def{display:none}
-  .topicos{gap:11px}
+@media(max-width:700px){
+  nav{grid-template-columns:repeat(2,1fr);row-gap:14px}
+  nav .grupo+.grupo{border-left:none}
+  nav .grupo:nth-child(even){border-left:1px solid var(--linha)}
+}
+@media(max-width:460px){
+  nav{grid-template-columns:1fr;row-gap:10px}
+  nav .grupo:nth-child(even){border-left:none}
 }
 
 .prova{display:inline-flex;flex-wrap:wrap;margin-top:22px;border:1px solid var(--linha2);
@@ -1100,8 +1098,20 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
   </div>
   <div class="trilha">
     <span class="rotm">Escolha seu momento</span>
-    <nav id="trilhaNav"></nav>
-    <div class="topicos" id="trilhaTop"></div>
+    <nav>
+      <div class="grupo"><span class="rotg">Aprender</span>
+        <span class="def">antes de arriscar</span>
+        <span class="bloco"><a href="#/crescer">Como o dinheiro cresce</a><a href="#/comprar">Comprar um bem</a><a href="#/escada">A escada do consórcio</a><a href="#/aplicado">Já tenho o dinheiro</a><a href="#/aprender">Por que é difícil</a><a href="#/como-funciona">Como funciona</a></span></div>
+      <div class="grupo"><span class="rotg">Especular</span>
+        <span class="def">vender mais caro</span>
+        <span class="bloco"><a href="#/tiro-curto">Tiro curto</a><a href="#/placar">Placar</a><a href="#/duelo">Duelo</a></span></div>
+      <div class="grupo"><span class="rotg">Investir</span>
+        <span class="def">viver de renda</span>
+        <span class="bloco"><a href="#/">Ranking</a><a href="#/screening">Screening</a><span id="navPub"></span></span></div>
+      <div class="grupo"><span class="rotg">Construir</span>
+        <span class="def">fora da tela</span>
+        <span class="bloco"><a href="#/planejar">Planejamento</a><a href="#/clube">Clube de investimentos</a><a href="#/servicos">Serviços</a></span></div>
+    </nav>
   </div>
 </div></header>
 
@@ -1567,64 +1577,8 @@ async function carregarEu(){
   eu = data;
   if(eu) eu.email = session.user.email;
 }
-// A trilha: quatro momentos numa linha, e os tópicos do momento escolhido na
-// linha de baixo. Nada sai do menu — o que muda é qual grupo está aberto.
-const TRILHA = [
-  ["aprender","Aprender","antes de arriscar", [
-    ["#/crescer","Como o dinheiro cresce"],
-    ["#/comprar","Comprar um bem"],
-    ["#/escada","A escada do consórcio"],
-    ["#/aplicado","Já tenho o dinheiro"],
-    ["#/aprender","Por que é difícil"],
-    ["#/como-funciona","Como funciona"]]],
-  ["especular","Especular","vender mais caro", [
-    ["#/tiro-curto","Tiro curto"],
-    ["#/placar","Placar"],
-    ["#/duelo","Duelo"]]],
-  ["investir","Investir","viver de renda", [
-    ["#/","Ranking"],
-    ["#/screening","Screening"],
-    ["#/publicar","Criar", true]]],
-  ["construir","Construir","fora da tela", [
-    ["#/planejar","Planejamento"],
-    ["#/clube","Clube de investimentos"],
-    ["#/servicos","Serviços"]]]
-];
-let MOMENTO = null;
-
-function momentoDaRota(h){
-  for(const [id,,,tops] of TRILHA)
-    if(tops.some(([r]) => r === h && r !== "#/")) return id;
-  if(h === "#/" || h === "") return "investir";
-  return null;
-}
-
-function pintarTrilha(){
-  const h = (location.hash||"#/").split("?")[0];
-  const daRota = momentoDaRota(h);
-  const ativo = daRota || MOMENTO || "investir";
-  MOMENTO = ativo;
-
-  const nv = $("#trilhaNav"), tp = $("#trilhaTop");
-  if(!nv || !tp) return;
-
-  nv.innerHTML = TRILHA.map(([id,nome,def]) =>
-    `<button type="button" class="mom${id===ativo?" on":""}" data-mom="${id}">${nome}
-      <span class="def">${def}</span></button>`).join("");
-
-  const grupo = TRILHA.find(g => g[0] === ativo);
-  tp.innerHTML = grupo[3]
-    .filter(([,,soLogado]) => !soLogado || eu)
-    .map(([rota,nome]) =>
-      `<a href="${rota}" class="${rota===h?"aqui":""}">${nome}</a>`).join("");
-
-  nv.querySelectorAll("[data-mom]").forEach(b =>
-    b.onclick = () => { MOMENTO = b.dataset.mom; pintarTrilha(); });
-}
-
 function pintarNav(){
   const np = $("#navPub"); if(np) np.innerHTML = eu ? `<a href="#/publicar">Criar</a>` : "";
-  pintarTrilha();
   $("#navDir").innerHTML = eu
     ? `<details class="eu" id="menuEu">
          <summary><span class="ini">${esc((eu.apelido||"?").trim().slice(0,2).toUpperCase())}</span
@@ -6606,19 +6560,25 @@ function telaAbertura(){
     <h1 class="ab2">Quem é o melhor analista do Brasil?</h1>
     <p class="ab3">Ninguém sabe — porque ninguém nunca mediu todo mundo pela mesma
       régua, ao mesmo tempo, à vista de todos. É isso que acontece aqui. As
-      melhores carteiras e os melhores analistas aparecem no ranking porque
-      acertaram, não porque falaram mais alto.</p>
+      melhores carteiras aparecem no ranking porque acertaram, e o nome de quem
+      as montou vem junto.</p>
+
+    <p class="ab3">E o ranking é só a porta. <b>Você abre qualquer carteira e vê o
+      que tem dentro:</b> quais papéis, com que peso, desde quando. Compara duas
+      lado a lado e descobre onde elas discordam. Acompanha o rebalanceamento —
+      quem trocou o quê, em que dia, e o que aconteceu depois. É o oposto do
+      print recortado: aqui o acerto e o erro ficam no mesmo lugar, com data.</p>
+
+    <p class="ab3">No Screening, os papéis que essas carteiras carregam aparecem
+      pela mecânica: <b>quem está em alta firme, quem está realizando, quem está
+      virando.</b> Cotação real da B3, apurada sozinha todo pregão. Dá para ver o
+      que está bom e o que está ruim <i>agora</i> — e cruzar isso com quem
+      apostou em quê.</p>
 
     <p class="ab3">A regra é uma só, e vale para o profissional e para quem abriu
-      conta ontem: você publica a carteira, o pregão real apura o fechamento
-      todo dia, e <b>ninguém muda o passado depois</b> — nem quem publicou. Não
-      existe rentabilidade retroativa, não existe print recortado, não existe a
-      operação que deu errado sumindo da tela.</p>
-
-    <p class="ab3">Se você ainda não sabe, aprenda: o caminho começa no que é uma
-      ação e no motivo de a conta de perder não ser a mesma de ganhar. Se você
-      já sabe, venha provar — o ranking não pergunta o seu currículo.
-      <b>Escolha seu momento ali em cima.</b></p>
+      conta ontem: você publica a carteira, o pregão apura o fechamento todo dia,
+      e <b>ninguém muda o passado depois</b> — nem quem publicou. Não existe
+      rentabilidade retroativa. <b>Escolha seu momento ali em cima.</b></p>
 
     <div class="setaJ"><span>mundo simulado</span><span class="li"></span><span>mundo real</span></div>
     <div class="jornada">
@@ -7795,7 +7755,6 @@ function rotear(){
   clearInterval(window.__timerTC);
   clearInterval(window.__timerScr);
   window.__marcarAbas = null;
-  pintarTrilha();
   RANK_CTX = null;
   const h = (location.hash||"#/").split("?")[0];
 
