@@ -2,10 +2,10 @@
 -- PostgreSQL database dump
 --
 
-\restrict hOf5zOfmNE23w2YzbPzPZYdQTAwpB6D2GQztr1XSbtWg8KkCgfL7RNB3fzW6nTz
+\restrict w248PoovlKw25NSffMyCEjFCJuYA9onWsbMHEqficqUZd04HDa97N1WUSBoSWRp
 
 -- Dumped from database version 17.6
--- Dumped by pg_dump version 17.10 (Ubuntu 17.10-1.pgdg24.04+1)
+-- Dumped by pg_dump version 17.11 (Ubuntu 17.11-1.pgdg24.04+2)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -3889,5 +3889,5 @@ CREATE POLICY universo_mexer ON public.universo TO authenticated USING ((EXISTS 
 -- PostgreSQL database dump complete
 --
 
-\unrestrict hOf5zOfmNE23w2YzbPzPZYdQTAwpB6D2GQztr1XSbtWg8KkCgfL7RNB3fzW6nTz
+\unrestrict w248PoovlKw25NSffMyCEjFCJuYA9onWsbMHEqficqUZd04HDa97N1WUSBoSWRp
 
