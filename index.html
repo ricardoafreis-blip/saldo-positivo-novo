@@ -62,35 +62,32 @@ nav .grupo+.grupo{border-left:1px solid var(--linha)}
 nav .rotg{display:block;font-size:8px;letter-spacing:.19em;text-transform:uppercase;
   color:var(--graf);opacity:.6}
 nav .def{display:block;font-size:9px;color:var(--graf);opacity:.5;
-  font-style:italic;margin:1px 0 5px}
-nav .bloco{display:flex;flex-direction:column;gap:4px;align-items:flex-start}
-nav a,nav button.lnk{font-size:13px;color:var(--t2);background:none;
-  transition:color .15s;line-height:1.35}
-nav a:hover,nav button.lnk:hover{color:var(--ouro2)}
-nav .divisor,nav .rot,nav .gloss{display:none}
+  font-style:italic;margin:1px 0 6px}
+nav select.menu{width:100%;background:var(--p2);border:1px solid var(--linha2);
+  color:var(--t2);border-radius:5px;padding:6px 9px;font-size:12.5px;
+  cursor:pointer;transition:border-color .15s,color .15s}
+nav select.menu:hover{border-color:var(--ouro2);color:var(--tinta)}
+nav .divisor,nav .rot,nav .gloss,nav .bloco{display:none}
 
 header .dir{display:flex;gap:12px;align-items:center;font-size:13px;flex:none}
 header .dir a,header .dir button.lnk{font-size:13px;color:var(--t2);background:none}
 header .dir a:hover{color:var(--ouro2)}
 
-.atalho{display:none;align-items:center;justify-content:center;gap:9px;
-  margin-top:10px;padding-top:9px;border-top:1px solid var(--linha)}
-.atalho label{font-size:9px;letter-spacing:.18em;text-transform:uppercase;
-  color:var(--graf);opacity:.6}
-.atalho select{background:var(--p2);border:1px solid var(--linha2);color:var(--t2);
-  border-radius:5px;padding:6px 10px;font-size:13px;max-width:260px}
+.atalho{display:none}
 
 @media(max-width:1040px){
   header .marca{font-size:22px}
-  nav .grupo{padding:6px 12px 0}
-  nav a{font-size:12.5px}
+  nav .grupo{padding:6px 10px 0}
+  nav select.menu{font-size:12px;padding:5px 7px}
 }
 @media(max-width:700px){
-  nav{display:none}
-  .atalho{display:flex;border-top:none;margin-top:6px;padding-top:0}
+  nav{grid-template-columns:repeat(2,1fr);row-gap:12px}
+  nav .grupo+.grupo{border-left:none}
+  nav .grupo:nth-child(even){border-left:1px solid var(--linha)}
 }
-@media(max-width:460px){
-  .atalho select{max-width:none;flex:1}
+@media(max-width:420px){
+  nav{grid-template-columns:1fr;row-gap:9px}
+  nav .grupo:nth-child(even){border-left:none}
 }
 
 .prova{display:inline-flex;flex-wrap:wrap;margin-top:22px;border:1px solid var(--linha2);
@@ -1106,45 +1103,39 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
     <nav>
       <div class="grupo"><span class="rotg">Aprender</span>
         <span class="def">antes de arriscar</span>
-        <span class="bloco"><a href="#/crescer">Como o dinheiro cresce</a><a href="#/comprar">Comprar um bem</a><a href="#/escada">A escada do consórcio</a><a href="#/aplicado">Já tenho o dinheiro</a><a href="#/aprender">Por que é difícil</a><a href="#/como-funciona">Como funciona</a></span></div>
-      <div class="grupo"><span class="rotg">Especular</span>
-        <span class="def">vender mais caro</span>
-        <span class="bloco"><a href="#/tiro-curto">Tiro curto</a><a href="#/placar">Placar</a><a href="#/duelo">Duelo</a></span></div>
-      <div class="grupo"><span class="rotg">Investir</span>
-        <span class="def">viver de renda</span>
-        <span class="bloco"><a href="#/">Ranking</a><a href="#/screening">Screening</a><span id="navPub"></span></span></div>
-      <div class="grupo"><span class="rotg">Construir</span>
-        <span class="def">fora da tela</span>
-        <span class="bloco"><a href="#/planejar">Planejamento</a><a href="#/clube">Clube de investimentos</a><a href="#/servicos">Serviços</a></span></div>
-    </nav>
-    <div class="atalho">
-      <label for="irPara">Ir direto para</label>
-      <select id="irPara">
-        <option value="">escolha uma seção…</option>
-        <optgroup label="Aprender — antes de arriscar">
+        <select class="menu" data-g="aprender">
+          <option value="">o que você quer ver…</option>
           <option value="#/crescer">Como o dinheiro cresce</option>
           <option value="#/comprar">Comprar um bem</option>
           <option value="#/escada">A escada do consórcio</option>
           <option value="#/aplicado">Já tenho o dinheiro</option>
           <option value="#/aprender">Por que é difícil</option>
           <option value="#/como-funciona">Como funciona</option>
-        </optgroup>
-        <optgroup label="Especular — vender mais caro">
+        </select></div>
+      <div class="grupo"><span class="rotg">Especular</span>
+        <span class="def">vender mais caro</span>
+        <select class="menu" data-g="especular">
+          <option value="">escolha um jogo…</option>
           <option value="#/tiro-curto">Tiro curto</option>
           <option value="#/placar">Placar</option>
           <option value="#/duelo">Duelo</option>
-        </optgroup>
-        <optgroup label="Investir — viver de renda">
+        </select></div>
+      <div class="grupo"><span class="rotg">Investir</span>
+        <span class="def">viver de renda</span>
+        <select class="menu" id="menuInv" data-g="investir">
+          <option value="">carteiras e papéis…</option>
           <option value="#/">Ranking</option>
           <option value="#/screening">Screening</option>
-        </optgroup>
-        <optgroup label="Construir — fora da tela">
+        </select></div>
+      <div class="grupo"><span class="rotg">Construir</span>
+        <span class="def">fora da tela</span>
+        <select class="menu" data-g="construir">
+          <option value="">no mundo real…</option>
           <option value="#/planejar">Planejamento</option>
           <option value="#/clube">Clube de investimentos</option>
           <option value="#/servicos">Serviços</option>
-        </optgroup>
-      </select>
-    </div>
+        </select></div>
+    </nav>
   </div>
 </div></header>
 
@@ -1611,12 +1602,17 @@ async function carregarEu(){
   if(eu) eu.email = session.user.email;
 }
 function pintarNav(){
-  const np = $("#navPub"); if(np) np.innerHTML = eu ? `<a href="#/publicar">Criar</a>` : "";
-  const ip = $("#irPara");
-  if(ip && !ip.dataset.ligado){
-    ip.dataset.ligado = "1";
-    ip.onchange = () => { if(ip.value){ location.hash = ip.value; ip.value = ""; } };
+  const mi = $("#menuInv");
+  if(mi && !mi.querySelector('[value="#/publicar"]') && eu){
+    const o = document.createElement("option");
+    o.value = "#/publicar"; o.textContent = "Criar carteira";
+    mi.appendChild(o);
   }
+  document.querySelectorAll("nav select.menu").forEach(sel => {
+    if(sel.dataset.ligado) return;
+    sel.dataset.ligado = "1";
+    sel.onchange = () => { if(sel.value){ location.hash = sel.value; sel.selectedIndex = 0; } };
+  });
   $("#navDir").innerHTML = eu
     ? `<details class="eu" id="menuEu">
          <summary><span class="ini">${esc((eu.apelido||"?").trim().slice(0,2).toUpperCase())}</span
@@ -7800,7 +7796,10 @@ function rotear(){
     const LIVRE = ["#/entrar","#/senha","#/nova-senha","#/termos"];
     if(!window.__jaEntrou){
       window.__jaEntrou = true;
-      if(!LIVRE.includes(h)){
+      // quem chega vê a mensagem, sempre — mesmo se a aba tinha #/entrar
+      // guardado. Só a recuperação de senha passa direto, senão o link do
+      // e-mail não funciona.
+      if(h !== "#/nova-senha"){
         if(h !== "#/" && h !== "") history.replaceState(null,"","#/");
         return telaAbertura();
       }
