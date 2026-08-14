@@ -50,8 +50,12 @@ header .marca{font-family:Newsreader,serif;font-weight:500;font-size:26px;
 header .marca:hover{color:var(--tinta)}
 
 .momentos{border-top:1px solid var(--linha);padding:9px 0 13px;text-align:center}
-.rotm{display:block;font-size:8px;letter-spacing:.22em;text-transform:uppercase;
-  color:var(--graf);opacity:.55;margin-bottom:4px}
+.viagem{display:flex;align-items:center;gap:11px;margin-bottom:10px}
+.viagem .li{flex:1;height:1px;background:linear-gradient(90deg,var(--linha),var(--ouro2))}
+.viagem .pt1,.viagem .pt2{font-size:9.5px;letter-spacing:.17em;text-transform:uppercase;
+  color:var(--ouro2);opacity:.8;white-space:nowrap}
+.rotm{font-size:9px;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--ouro2);opacity:.9;white-space:nowrap}
 
 /* grade centralizada. O divisor mora na coluna da direita, não no "grupo que
    vem depois" — senão, ao quebrar em duas filas, o terceiro herda o recuo do
@@ -59,10 +63,10 @@ header .marca:hover{color:var(--tinta)}
 nav{display:grid;grid-template-columns:repeat(4,1fr);align-items:start;gap:0}
 nav .grupo{padding:6px 16px 0;text-align:left}
 nav .grupo+.grupo{border-left:1px solid var(--linha)}
-nav .rotg{display:block;font-size:8px;letter-spacing:.19em;text-transform:uppercase;
-  color:var(--graf);opacity:.6}
-nav .def{display:block;font-size:9px;color:var(--graf);opacity:.5;
-  font-style:italic;margin:1px 0 6px}
+nav .rotg{display:block;font-family:Newsreader,serif;font-size:19px;
+  font-weight:500;letter-spacing:-.01em;color:var(--tinta);line-height:1.15}
+nav .def{display:block;font-size:11.5px;color:var(--ouro2);opacity:.85;
+  font-style:italic;line-height:1.35;margin:5px 0 8px}
 nav select.menu{width:100%;background:var(--p2);border:1px solid var(--linha2);
   color:var(--t2);border-radius:5px;padding:6px 9px;font-size:12.5px;
   cursor:pointer;transition:border-color .15s,color .15s}
@@ -1099,10 +1103,16 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
     <span class="dir" id="navDir"></span>
   </div>
   <div class="momentos">
-    <span class="rotm">Escolha seu momento</span>
+    <div class="viagem">
+      <span class="pt1">mundo simulado</span>
+      <span class="li"></span>
+      <span class="rotm">Escolha seu momento</span>
+      <span class="li"></span>
+      <span class="pt2">mundo real</span>
+    </div>
     <nav>
       <div class="grupo"><span class="rotg">Aprender</span>
-        <span class="def">antes de arriscar</span>
+        <span class="def">antes de arriscar qualquer coisa</span>
         <select class="menu" data-g="aprender">
           <option value="">o que você quer ver…</option>
           <option value="#/crescer">Como o dinheiro cresce</option>
@@ -1113,7 +1123,7 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
           <option value="#/como-funciona">Como funciona</option>
         </select></div>
       <div class="grupo"><span class="rotg">Especular</span>
-        <span class="def">vender mais caro</span>
+        <span class="def">comprar para vender mais caro</span>
         <select class="menu" data-g="especular">
           <option value="">escolha um jogo…</option>
           <option value="#/tiro-curto">Tiro curto</option>
@@ -1121,14 +1131,15 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
           <option value="#/duelo">Duelo</option>
         </select></div>
       <div class="grupo"><span class="rotg">Investir</span>
-        <span class="def">viver de renda</span>
+        <span class="def">comprar para viver de renda</span>
         <select class="menu" id="menuInv" data-g="investir">
           <option value="">carteiras e papéis…</option>
-          <option value="#/">Ranking</option>
+          <option value="#/ranking">Ranking</option>
           <option value="#/screening">Screening</option>
+          <option value="#/publicar">Crie sua carteira</option>
         </select></div>
       <div class="grupo"><span class="rotg">Construir</span>
-        <span class="def">fora da tela</span>
+        <span class="def">o patrimônio fora da tela</span>
         <select class="menu" data-g="construir">
           <option value="">no mundo real…</option>
           <option value="#/planejar">Planejamento</option>
@@ -1602,12 +1613,6 @@ async function carregarEu(){
   if(eu) eu.email = session.user.email;
 }
 function pintarNav(){
-  const mi = $("#menuInv");
-  if(mi && !mi.querySelector('[value="#/publicar"]') && eu){
-    const o = document.createElement("option");
-    o.value = "#/publicar"; o.textContent = "Criar carteira";
-    mi.appendChild(o);
-  }
   document.querySelectorAll("nav select.menu").forEach(sel => {
     if(sel.dataset.ligado) return;
     sel.dataset.ligado = "1";
@@ -6587,12 +6592,13 @@ function telaAprender(){
 function telaAbertura(){
   app().innerHTML = `
   <div class="abertura">
-    <p class="ab1">Venha competir conosco.</p>
-    <h1 class="ab2">Quem é o melhor analista do Brasil?</h1>
-    <p class="ab3">Ninguém sabe — porque ninguém nunca mediu todo mundo pela mesma
-      régua, ao mesmo tempo, à vista de todos. É isso que acontece aqui. As
-      melhores carteiras aparecem no ranking porque acertaram, e o nome de quem
-      as montou vem junto.</p>
+    <p class="ab1">Quem é o melhor analista do Brasil?</p>
+    <h1 class="ab2">Seja você.</h1>
+    <p class="ab3" style="font-size:17px;color:var(--tinta);margin-bottom:18px">
+      <b>Crie sua carteira e participe.</b> Ninguém sabe quem é o melhor —
+      porque ninguém nunca mediu todo mundo pela mesma régua, ao mesmo tempo, à
+      vista de todos. É isso que acontece aqui. As melhores carteiras aparecem no
+      ranking porque acertaram, e o nome de quem as montou vem junto.</p>
 
     <p class="ab3">E o ranking é só a porta. <b>Você abre qualquer carteira e vê o
       que tem dentro:</b> quais papéis, com que peso, desde quando. Compara duas
@@ -7814,6 +7820,7 @@ function rotear(){
   const m = h.match(/^#\/carteira\/(\d+)$/);
   if(m)                       return telaCarteira(m[1]);
   if(h==="#/"||h==="")        return telaRanking();
+  if(h==="#/ranking")         return telaRanking();
   if(h==="#/entrar")          return telaEntrar();
   if(h==="#/publicar")        return telaPublicar();
   if(h==="#/duelo")           return telaDuelo();
