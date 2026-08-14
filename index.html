@@ -49,7 +49,7 @@ header .marca{font-family:Newsreader,serif;font-weight:500;font-size:26px;
   letter-spacing:-.025em;color:var(--tinta);line-height:1.05;white-space:nowrap}
 header .marca:hover{color:var(--tinta)}
 
-.trilha{border-top:1px solid var(--linha);padding:9px 0 13px;text-align:center}
+.momentos{border-top:1px solid var(--linha);padding:9px 0 13px;text-align:center}
 .rotm{display:block;font-size:8px;letter-spacing:.22em;text-transform:uppercase;
   color:var(--graf);opacity:.55;margin-bottom:4px}
 
@@ -73,19 +73,24 @@ header .dir{display:flex;gap:12px;align-items:center;font-size:13px;flex:none}
 header .dir a,header .dir button.lnk{font-size:13px;color:var(--t2);background:none}
 header .dir a:hover{color:var(--ouro2)}
 
+.atalho{display:none;align-items:center;justify-content:center;gap:9px;
+  margin-top:10px;padding-top:9px;border-top:1px solid var(--linha)}
+.atalho label{font-size:9px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--graf);opacity:.6}
+.atalho select{background:var(--p2);border:1px solid var(--linha2);color:var(--t2);
+  border-radius:5px;padding:6px 10px;font-size:13px;max-width:260px}
+
 @media(max-width:1040px){
   header .marca{font-size:22px}
   nav .grupo{padding:6px 12px 0}
   nav a{font-size:12.5px}
 }
 @media(max-width:700px){
-  nav{grid-template-columns:repeat(2,1fr);row-gap:14px}
-  nav .grupo+.grupo{border-left:none}
-  nav .grupo:nth-child(even){border-left:1px solid var(--linha)}
+  nav{display:none}
+  .atalho{display:flex;border-top:none;margin-top:6px;padding-top:0}
 }
 @media(max-width:460px){
-  nav{grid-template-columns:1fr;row-gap:10px}
-  nav .grupo:nth-child(even){border-left:none}
+  .atalho select{max-width:none;flex:1}
 }
 
 .prova{display:inline-flex;flex-wrap:wrap;margin-top:22px;border:1px solid var(--linha2);
@@ -1096,7 +1101,7 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
     <a href="#/" class="marca">Saldo Positivo</a>
     <span class="dir" id="navDir"></span>
   </div>
-  <div class="trilha">
+  <div class="momentos">
     <span class="rotm">Escolha seu momento</span>
     <nav>
       <div class="grupo"><span class="rotg">Aprender</span>
@@ -1112,6 +1117,34 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
         <span class="def">fora da tela</span>
         <span class="bloco"><a href="#/planejar">Planejamento</a><a href="#/clube">Clube de investimentos</a><a href="#/servicos">Serviços</a></span></div>
     </nav>
+    <div class="atalho">
+      <label for="irPara">Ir direto para</label>
+      <select id="irPara">
+        <option value="">escolha uma seção…</option>
+        <optgroup label="Aprender — antes de arriscar">
+          <option value="#/crescer">Como o dinheiro cresce</option>
+          <option value="#/comprar">Comprar um bem</option>
+          <option value="#/escada">A escada do consórcio</option>
+          <option value="#/aplicado">Já tenho o dinheiro</option>
+          <option value="#/aprender">Por que é difícil</option>
+          <option value="#/como-funciona">Como funciona</option>
+        </optgroup>
+        <optgroup label="Especular — vender mais caro">
+          <option value="#/tiro-curto">Tiro curto</option>
+          <option value="#/placar">Placar</option>
+          <option value="#/duelo">Duelo</option>
+        </optgroup>
+        <optgroup label="Investir — viver de renda">
+          <option value="#/">Ranking</option>
+          <option value="#/screening">Screening</option>
+        </optgroup>
+        <optgroup label="Construir — fora da tela">
+          <option value="#/planejar">Planejamento</option>
+          <option value="#/clube">Clube de investimentos</option>
+          <option value="#/servicos">Serviços</option>
+        </optgroup>
+      </select>
+    </div>
   </div>
 </div></header>
 
@@ -1579,6 +1612,11 @@ async function carregarEu(){
 }
 function pintarNav(){
   const np = $("#navPub"); if(np) np.innerHTML = eu ? `<a href="#/publicar">Criar</a>` : "";
+  const ip = $("#irPara");
+  if(ip && !ip.dataset.ligado){
+    ip.dataset.ligado = "1";
+    ip.onchange = () => { if(ip.value){ location.hash = ip.value; ip.value = ""; } };
+  }
   $("#navDir").innerHTML = eu
     ? `<details class="eu" id="menuEu">
          <summary><span class="ini">${esc((eu.apelido||"?").trim().slice(0,2).toUpperCase())}</span
@@ -2313,11 +2351,12 @@ function telaEntrar(){
   const de = q.get("de") ? decodeURIComponent(q.get("de")) : "";
   const paraOnde = de && de.startsWith("#/") ? de : "";
   app().innerHTML = `
-  <div style="max-width:420px;margin:42px auto">
-    <h1 style="font-size:29px;margin-bottom:6px">${novo?"Criar conta":"Entrar"}</h1>
-    <p style="color:var(--t2);margin-bottom:20px">
-      ${novo?"Seu apelido aparece no ranking. O e-mail nunca aparece.":"Bem-vindo de volta."}</p>
-    ${paraOnde&&!novo?aviso("Entre para continuar. Depois do login você volta para onde clicou."):""}
+  <div style="max-width:360px;margin:34px auto 60px">
+    <h1 style="font-size:24px;margin-bottom:3px">${novo?"Criar conta":"Entrar"}</h1>
+    <p style="color:var(--graf);margin-bottom:16px;font-size:13px">
+      ${novo?"O apelido aparece no ranking. O e-mail nunca aparece."
+            :paraOnde?"Depois do login você volta para onde clicou."
+                     :"Bem-vindo de volta."}</p>
     ${ref?aviso("Você chegou por indicação do código "+ref):""}
     <div id="erro"></div>
     <form class="card" id="f">
@@ -2331,18 +2370,14 @@ function telaEntrar(){
       <button class="bt cheio" style="width:100%" id="bt">${novo?"Criar conta":"Entrar"}</button>
     </form>
     ${novo
-      ? `<p style="text-align:center;margin-top:15px;font-size:13px">
+      ? `<p style="text-align:center;margin-top:14px;font-size:13px">
            Já tem conta? <a href="#/entrar${paraOnde?"?de="+encodeURIComponent(paraOnde):""}">Entrar</a></p>`
-      : `<p style="text-align:center;margin-top:13px;font-size:13px">
-           <a href="#/senha" style="color:var(--graf)">Esqueci a senha</a></p>
-         <div style="margin-top:22px;padding-top:20px;border-top:1px solid var(--linha2);text-align:center">
-           <p style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;
-             color:var(--graf);margin-bottom:8px">Ainda não tem conta?</p>
-           <p style="font-size:13px;color:var(--t2);line-height:1.6;margin-bottom:14px">
-             Leva um minuto e não custa nada. O apelido é o que aparece no ranking;
-             o e-mail nunca aparece.</p>
+      : `<div style="display:flex;justify-content:space-between;align-items:center;
+           margin-top:16px;padding-top:14px;border-top:1px solid var(--linha);
+           font-size:13px;gap:12px;flex-wrap:wrap">
+           <a href="#/senha" style="color:var(--graf)">Esqueci a senha</a>
            <a href="#/entrar?novo=1${paraOnde?"&de="+encodeURIComponent(paraOnde):""}"
-             class="bt cheio lacre" style="width:100%">Conta grátis</a>
+             style="color:var(--ouro2)">Criar conta grátis &rarr;</a>
          </div>`}
   </div>`;
 
