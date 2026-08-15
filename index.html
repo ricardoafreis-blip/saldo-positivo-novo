@@ -849,11 +849,6 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
 @media(max-width:760px){.pGrid{grid-template-columns:1fr}.pTit{font-size:20px}}
 
 .botoesAb{display:flex;gap:10px;justify-content:center;margin-top:26px;flex-wrap:wrap}
-.naoVer{display:block;margin:16px auto 40px;background:none;border:none;
-  color:var(--graf);font-size:11.5px;font-family:inherit;cursor:pointer;
-  text-decoration:underline;text-underline-offset:3px;opacity:.75;
-  transition:opacity .14s,color .14s}
-.naoVer:hover{opacity:1;color:var(--t2)}
 @media(max-width:620px){
   .abertura{margin-top:26px}
   .ab2{font-size:25px}
@@ -891,8 +886,14 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
 .comp .pe{font-size:11px;color:var(--graf)}
 .comp .bom{color:var(--alta)}
 .comp .ruim{color:var(--baixa)}
+.custo .bar{display:block;height:7px;background:var(--p3);border-radius:4px;overflow:hidden}
+.custo .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--ouro2),var(--baixa));border-radius:4px}
+.custo .degrau .nD{font-size:12px;min-width:52px}
 .rolaX{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .rolaX .comp{min-width:520px}
+text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
+  fill:var(--graf);opacity:.85}
+
 /* a ponte do educacional para o mundo real */
 .ponte{border-color:var(--linha2)}
 .ponte .rotP{display:block;font-size:9.5px;letter-spacing:.2em;
@@ -947,24 +948,6 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
   .euPer{font-size:22px;margin-bottom:14px}
   .portas .pt{padding:13px 14px 11px;gap:3px}
   .portas .q{font-size:14.5px}
-}
-
-/* faixa de papéis mais operados, no topo do ranking */
-.faixaK{display:flex;align-items:center;gap:6px;flex-wrap:wrap;
-  padding:11px 0 2px;margin-bottom:2px}
-.rotK{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
-  color:var(--graf);margin-right:2px}
-.chipK{display:inline-flex;align-items:baseline;gap:5px;text-decoration:none;
-  padding:4px 9px;border-radius:99px;border:1px solid var(--linha2);
-  background:var(--p2);transition:border-color .14s,background .14s}
-.chipK:hover{border-color:var(--c);background:var(--p3)}
-.chipK b{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--tinta);font-weight:500}
-.chipK i{font-style:normal;font-size:10.5px;color:var(--c)}
-.verK{font-size:11.5px;color:var(--graf);text-decoration:none;margin-left:auto}
-.verK:hover{color:var(--ouro2)}
-@media(max-width:620px){
-  .faixaK{gap:5px}
-  .verK{margin-left:0;width:100%;padding-top:4px}
 }
 
 .linhaC{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid var(--linha);
@@ -1116,8 +1099,10 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
         <select class="menu" data-g="aprender">
           <option value="#/crescer">Como o dinheiro cresce</option>
           <option value="#/comprar">Comprar um bem</option>
+          <option value="#/credito">Quanto custa o dinheiro</option>
           <option value="#/escada">A escada do consórcio</option>
           <option value="#/aplicado">Já tenho o dinheiro</option>
+          <option value="#/sucessao">Seguro e sucessão</option>
           <option value="#/aprender">Por que investir é difícil</option>
           <option value="#/como-funciona">Como funciona o site</option>
         </select></div>
@@ -1139,7 +1124,6 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
         <span class="def">o patrimônio fora da tela</span>
         <select class="menu" data-g="construir">
           <option value="#/planejar">Planejamento financeiro</option>
-          <option value="#/sucessao">Seguro e sucessão</option>
           <optgroup label="Organizar">
             <option value="#/servicos?s=planejamento">Planejamento financeiro</option>
             <option value="#/servicos?s=consultoria">Consultoria de investimentos</option>
@@ -1236,19 +1220,6 @@ async function painelCache(forcar){
   return PAINEL_INDO;
 }
 
-let CONS = null, CONS_EM = 0, CONS_INDO = null;
-async function consensoCache(){
-  if(CONS && Date.now() - CONS_EM < 300000) return CONS;
-  if(CONS_INDO) return CONS_INDO;
-  CONS_INDO = (async () => {
-    const { data, error } = await sb.rpc("consenso", { min_carteiras: 5 });
-    CONS_INDO = null;
-    if(error) return CONS || [];
-    CONS = data || []; CONS_EM = Date.now();
-    return CONS;
-  })();
-  return CONS_INDO;
-}
 
 let MK = null, MK_EM = 0, MK_INDO = null;
 const MK_VALE = 8000;
@@ -1661,7 +1632,11 @@ function pintarNav(){
     : `<a href="#/entrar">entrar</a>
        <a href="#/entrar?novo=1" class="bt cheio" style="padding:6px 13px">criar conta</a>`;
   const b=$("#btSair");
-  if(b) b.onclick = async()=>{ await sb.auth.signOut(); eu=null; location.hash="#/"; rotear(); };
+  if(b) b.onclick = async()=>{ await sb.auth.signOut(); eu=null;
+    // zera a marca do portão: quem sai volta a ver a tela de entrada,
+    // e não o login.
+    window.__jaEntrou = false;
+    location.hash="#/"; rotear(); };
   const men = $("#menuEu");
   if(men){
     document.addEventListener("click", ev => {
@@ -1833,16 +1808,6 @@ async function pintarFaixa(){
 const pts = v => v==null ? "—"
   : (v>=0?"+":"−") + Math.abs(v*100).toFixed(2).replace(".",",") + " pts";
 
-function contraIbov(serie, oIbov){
-  if(!serie || !serie.length) return null;
-  let ib = 1, tem = false;
-  serie.forEach(x => {
-    if(oIbov[x.data] != null) tem = true;
-    ib *= 1 + (oIbov[x.data] ?? 0);
-  });
-  if(!tem) return null;
-  return (serie[serie.length-1].indice/100 - 1) - (ib - 1);
-}
 
 function comparativo(serie, refs){
   if(!serie || !serie.length) return null;
@@ -1862,34 +1827,6 @@ function comparativo(serie, refs){
            vsCdi:  cart - (cd - 1) };
 }
 
-function comparativoHTML(serie, refs){
-  const k = comparativo(serie, refs);
-  if(!k) return "";
-  return `<div class="card" style="margin-bottom:18px">
-    <div style="font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--graf);margin-bottom:12px">
-      Contra o mercado · ${k.dias} ${k.dias===1?"pregão":"pregões"}</div>
-    <div class="grade" style="margin:0">
-      <div class="cel"><div class="v ${cor(k.cart)}">${pct(k.cart)}</div>
-        <div class="k">carteira</div></div>
-      <div class="cel"><div class="v ${k.ibov==null?"nulo":cor(k.ibov)}">${
-        k.ibov==null?"—":pct(k.ibov)}</div><div class="k">Ibovespa</div></div>
-      <div class="cel"><div class="v" style="color:var(--ouro2)">${pct(k.cdi)}</div>
-        <div class="k">CDI estimado</div></div>
-      <div class="cel" style="background:var(--p3)">
-        <div class="v ${k.vsIbov==null?"nulo":cor(k.vsIbov)}">${pts(k.vsIbov)}</div>
-        <div class="k">contra o Ibovespa</div></div>
-      <div class="cel" style="background:var(--p3)">
-        <div class="v ${cor(k.vsCdi)}">${pts(k.vsCdi)}</div>
-        <div class="k">contra o CDI</div></div>
-    </div>
-    <p style="font-size:11.5px;color:var(--graf);margin:10px 0 0">
-      O Ibovespa e o CDI são medidos <b>a partir do dia em que esta carteira
-      nasceu</b>, não do começo do ano — por isso a coluna de pregões importa:
-      quem escolhe um dia de partida bom escolhe também um benchmark fácil.
-      ${k.ibov==null?"Sem cotação do Ibovespa no período. ":""}A renda fixa é
-      estimada em ${n2(CDI_ANO*100,1)}% ao ano, não medida.</p>
-  </div>`;
-}
 
 const REFERENCIAS = ["IBOV"];
 const CDI_DIA = Math.pow(1 + CDI_ANO, 1/252) - 1;
@@ -2030,29 +1967,6 @@ function montarExtrato(todas, rebal){
 
 let RANK_CTX = null;
 
-async function pintarConsenso(){
-  const el = $("#faixaCons"); if(!el) return;
-  const l = await consensoCache();
-  if(!l || !l.length) return;
-  if(!$("#faixaCons")) return;
-
-  const comp = l.filter(x => x.peso_liquido > 0).slice(0, 6);
-  const vend = l.filter(x => x.peso_liquido < 0)
-                .sort((a,b) => a.peso_liquido - b.peso_liquido).slice(0, 4);
-  if(!comp.length && !vend.length) return;
-
-  const chip = (x, cor) => `<a href="#/consenso" class="chipK" style="--c:${cor}">
-    <b>${esc(x.ativo)}</b><i>${x.carteiras}</i></a>`;
-
-  $("#faixaCons").innerHTML = `
-  <div class="faixaK">
-    ${comp.length ? `<span class="rotK">mais comprados</span>
-      ${comp.map(x => chip(x,"var(--alta)")).join("")}` : ""}
-    ${vend.length ? `<span class="rotK" style="margin-left:6px">mais vendidos</span>
-      ${vend.map(x => chip(x,"var(--baixa)")).join("")}` : ""}
-    <a href="#/consenso" class="verK">ver tudo &rarr;</a>
-  </div>`;
-}
 
 function pintarParciais(vv){
   if(!RANK_CTX) return;
@@ -5068,7 +4982,50 @@ const SERVICOS=[
 
 const escolhidosS = new Set();
 
-// ── A ponte: do caso educacional para o profissional ────────────
+// ── Eixos dos gráficos ──────────────────────────────────────────
+// Curva sem número é desenho, não informação. Todo gráfico de linha usa isto.
+const rsCurto = v => {
+  const a = Math.abs(v);
+  if(a >= 1e9) return (v/1e9).toFixed(1).replace(".",",") + " bi";
+  if(a >= 1e6) return (v/1e6).toFixed(a >= 1e7 ? 0 : 1).replace(".",",") + " mi";
+  if(a >= 1e3) return Math.round(v/1e3) + " mil";
+  return String(Math.round(v));
+};
+
+// grade horizontal com o valor de cada linha à esquerda
+function eixoY(mx, G, n = 4){
+  let s = "";
+  for(let i = 0; i <= n; i++){
+    const v = mx * i / n;
+    const y = G.b - (i/n) * (G.b - G.t);
+    s += `<line x1="${G.l}" y1="${y.toFixed(1)}" x2="${G.r}" y2="${y.toFixed(1)}"
+        stroke="var(--linha)" stroke-opacity="${i ? ".45" : "1"}"/>
+      <text x="${G.l - 7}" y="${(y + 3.4).toFixed(1)}" text-anchor="end"
+        class="eixo">${i ? rsCurto(v) : "0"}</text>`;
+  }
+  return s;
+}
+
+// marcas no eixo do tempo: recebe [posição 0..1, rótulo]
+function eixoX(marcas, G){
+  return marcas.map(([p, rot]) => {
+    const x = G.l + p * (G.r - G.l);
+    return `<line x1="${x.toFixed(1)}" y1="${G.b}" x2="${x.toFixed(1)}"
+        y2="${G.b + 4}" stroke="var(--linha2)"/>
+      <text x="${x.toFixed(1)}" y="${G.b + 15}" text-anchor="middle"
+        class="eixo">${rot}</text>`;
+  }).join("");
+}
+
+const escalaBoa = v => {
+  if(v <= 0) return 1;
+  const e = Math.pow(10, Math.floor(Math.log10(v)));
+  const m = v / e;
+  const passos = [1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10];
+  return (passos.find(p => m <= p + 1e-9) || 10) * e;
+};
+
+
 // A pessoa se reconhece numa situação concreta e a solução aparece como
 // resposta àquilo. Nunca produto antes de problema. O botão já marca o
 // assunto nos Serviços, então ela chega lá com o pedido meio pronto.
@@ -5195,8 +5152,6 @@ function contasPL(){
            aportePreservar: precisa(preservar), aporteConsumir: precisa(consumir),
            rendaPossivel: projetado * r / 12 };
 }
-
-
 
 function telaPlanejar(){
   const c = contasPL();
@@ -5362,13 +5317,21 @@ function lerPL(){
 function graficoPL(c){
   const d = c.curva || [];
   if(d.length < 2) return "";
-  const L = 640, A = 168, pb = 20;
-  const mx = Math.max(...d.map(x => x.v), 1);
-  const px = i => (i / (d.length - 1)) * L;
-  const py = v => A - pb - (v / mx) * (A - pb - 8);
+  const L = 700, A = 230;
+  const G = { l:56, r:L-10, t:12, b:A-26 };
+  const mx = escalaBoa(Math.max(...d.map(x => x.v), 1));
+  const px = i => G.l + (i / (d.length - 1)) * (G.r - G.l);
+  const py = v => G.b - (v / mx) * (G.b - G.t);
 
   const linha = d.map((x,i) => `${i?"L":"M"}${px(i).toFixed(1)},${py(x.v).toFixed(1)}`).join(" ");
-  const area  = linha + ` L${L},${A-pb} L0,${A-pb} Z`;
+  const area  = linha + ` L${G.r},${G.b} L${G.l},${G.b} Z`;
+
+  // marcas de idade no eixo do tempo
+  const nA = d.length - 1;
+  const pIdade = Math.max(1, Math.ceil(nA/6));
+  const marcasX = [];
+  for(let i = 0; i <= nA; i += pIdade) marcasX.push([i/nA, d[i].idade]);
+  if(marcasX[marcasX.length-1][0] < 0.97) marcasX.push([1, d[nA].idade]);
   const iPara = d.findIndex(x => x.idade === PL.apos);
   const xPara = iPara >= 0 ? px(iPara) : null;
   const cor = c.veredito === "falta" ? "var(--baixa)"
@@ -5378,7 +5341,7 @@ function graficoPL(c){
     const i = d.findIndex(x => x.idade === Number(mt.idade));
     if(i < 0 || !(Number(mt.valor)>0)) return "";
     return `<line x1="${px(i).toFixed(1)}" y1="${py(d[i].v).toFixed(1)}"
-      x2="${px(i).toFixed(1)}" y2="${A-pb}" stroke="var(--linha2)" stroke-dasharray="2 3"/>
+      x2="${px(i).toFixed(1)}" y2="${G.b}" stroke="var(--linha2)" stroke-dasharray="2 3"/>
       <circle cx="${px(i).toFixed(1)}" cy="${py(d[i].v).toFixed(1)}" r="3"
         fill="var(--papel)" stroke="var(--ouro2)" stroke-width="1.4"/>`;
   }).join("");
@@ -5388,27 +5351,23 @@ function graficoPL(c){
     <div style="font-size:10px;letter-spacing:.16em;text-transform:uppercase;
       color:var(--graf);margin-bottom:2px">Seu patrimônio, ano a ano</div>
     <div style="font-size:11.5px;color:var(--graf);margin-bottom:8px">
-      em dinheiro de hoje · o topo é ${rs(mx)}</div>
-    <svg viewBox="0 0 ${L} ${A}" style="width:100%;height:auto;display:block"
-      preserveAspectRatio="none">
+      em dinheiro de hoje · eixo de baixo em anos de idade</div>
+    <svg viewBox="0 0 ${L} ${A}" style="width:100%;height:auto;display:block">
       <defs><linearGradient id="gPL" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0%" stop-color="${cor}" stop-opacity=".26"/>
         <stop offset="100%" stop-color="${cor}" stop-opacity="0"/>
       </linearGradient></defs>
-      <line x1="0" y1="${A-pb}" x2="${L}" y2="${A-pb}" stroke="var(--linha)"/>
+      ${eixoY(mx, G)}
+      ${eixoX(marcasX, G)}
       <path d="${area}" fill="url(#gPL)"/>
-      <path d="${linha}" fill="none" stroke="${cor}" stroke-width="1.8"
+      <path d="${linha}" fill="none" stroke="${cor}" stroke-width="1.9"
         stroke-linejoin="round"/>
-      ${xPara==null?"":`<line x1="${xPara.toFixed(1)}" y1="4" x2="${xPara.toFixed(1)}"
-        y2="${A-pb}" stroke="var(--lacre)" stroke-dasharray="3 3" stroke-width="1"/>`}
+      ${xPara==null?"":`<line x1="${xPara.toFixed(1)}" y1="${G.t}" x2="${xPara.toFixed(1)}"
+        y2="${G.b}" stroke="var(--lacre)" stroke-dasharray="3 3" stroke-width="1"/>
+        <text x="${xPara.toFixed(1)}" y="${G.t-2}" text-anchor="middle" class="eixo"
+          fill="var(--lacre)">para aos ${PL.apos}</text>`}
       ${marcas}
     </svg>
-    <div style="display:flex;justify-content:space-between;font-size:10.5px;
-      color:var(--graf);font-family:'IBM Plex Mono',monospace;margin-top:1px">
-      <span>${PL.idade}</span>
-      ${xPara==null?"":`<span style="color:var(--ouro2)">para aos ${PL.apos}</span>`}
-      <span>${PL.ate}</span>
-    </div>
     <p style="font-size:12px;color:var(--t2);line-height:1.55;margin:9px 0 0">
       ${c.acabaEm
         ? `A linha chega a zero aos <b style="color:var(--baixa)">${c.acabaEm.idade}</b>
@@ -6442,12 +6401,6 @@ async function telaConsenso(){
 // ── abertura ────────────────────────────────────────────────────
 // Fica aparecendo até a pessoa dizer que não quer mais. Contador
 // escondido decide pelo usuário; um botão deixa a escolha com ele.
-function aberturaDispensada(){
-  try { return localStorage.getItem("sp_abertura") === "nao"; } catch(e){ return true; }
-}
-function dispensarAbertura(){
-  try { localStorage.setItem("sp_abertura", "nao"); } catch(e){}
-}
 
 function telaAprender(){
   const volta = p => (1/(1-p/100) - 1) * 100;
@@ -6782,48 +6735,53 @@ function serieCR(){
 }
 
 function graficoCR(s){
-  const L = 640, A = 210, pb = 16, pt = 6;
+  const L = 700, A = 260;
+  const G = { l:56, r:L-10, t:10, b:A-26 };
   const d = s.d.filter(x => x.mes % 3 === 0);
-  const mx = Math.max(...d.map(x => x.com), 1);
-  const px = i => (i/(d.length-1)) * L;
-  const py = v => pt + (1 - v/mx) * (A - pb - pt);
+  const mx = escalaBoa(Math.max(...d.map(x => x.com), 1));
+  const px = i => G.l + (i/(d.length-1)) * (G.r - G.l);
+  const py = v => G.b - (v/mx) * (G.b - G.t);
   const cam = sel => d.map((x,i) =>
     `${i?"L":"M"}${px(i).toFixed(1)} ${py(sel(x)).toFixed(1)}`).join(" ");
   const linhaCom = cam(x => x.com);
-  const linhaSem = cam(x => x.sem);
-  const linhaApo = cam(x => x.posto);
-  const areaCom = linhaCom + ` L${L} ${A-pb} L0 ${A-pb} Z`;
+  const areaCom = linhaCom + ` L${G.r} ${G.b} L${G.l} ${G.b} Z`;
 
-  const iv = s.virada == null ? null
-    : d.findIndex(x => x.mes >= s.virada);
+  // marcas de ano no eixo do tempo, no máximo seis
+  const passo = Math.max(1, Math.ceil(CR.anos/6));
+  const marcas = [];
+  for(let a = 0; a <= CR.anos; a += passo)
+    marcas.push([a/CR.anos, a === 0 ? "hoje" : "ano " + a]);
+
+  const iv = s.virada == null ? null : d.findIndex(x => x.mes >= s.virada);
   const xv = iv == null || iv < 0 ? null : px(iv);
 
   return `
   <div class="card" style="margin-top:14px;padding-bottom:9px">
     <div class="tituloG">Patrimônio, mês a mês</div>
-    <div class="subG">o topo é ${rs(mx)} · ${CR.anos} anos a ${CR.taxa}% ao ano</div>
-    <svg viewBox="0 0 ${L} ${A}" style="width:100%;height:auto;display:block"
-      preserveAspectRatio="none">
+    <div class="subG">em reais · ${CR.anos} anos a ${CR.taxa}% ao ano</div>
+    <svg viewBox="0 0 ${L} ${A}" style="width:100%;height:auto;display:block">
       <defs><linearGradient id="gCR" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0%" stop-color="var(--alta)" stop-opacity=".22"/>
         <stop offset="100%" stop-color="var(--alta)" stop-opacity="0"/>
       </linearGradient></defs>
-      <line x1="0" y1="${A-pb}" x2="${L}" y2="${A-pb}" stroke="var(--linha)"/>
+      ${eixoY(mx, G)}
+      ${eixoX(marcas, G)}
       <path d="${areaCom}" fill="url(#gCR)"/>
-      <path d="${linhaApo}" fill="none" stroke="var(--graf)" stroke-width="1.1"
-        stroke-dasharray="3 3" opacity=".8"/>
-      <path d="${linhaSem}" fill="none" stroke="var(--ouro2)" stroke-width="1.4"
-        opacity=".85"/>
-      <path d="${linhaCom}" fill="none" stroke="var(--alta)" stroke-width="2"
+      <path d="${cam(x=>x.posto)}" fill="none" stroke="var(--graf)" stroke-width="1.2"
+        stroke-dasharray="3 3" opacity=".85"/>
+      <path d="${cam(x=>x.sem)}" fill="none" stroke="var(--ouro2)" stroke-width="1.5"
+        opacity=".9"/>
+      <path d="${linhaCom}" fill="none" stroke="var(--alta)" stroke-width="2.2"
         stroke-linejoin="round"/>
-      ${xv==null?"":`<line x1="${xv.toFixed(1)}" y1="${pt}" x2="${xv.toFixed(1)}"
-        y2="${A-pb}" stroke="var(--lacre)" stroke-dasharray="3 3"/>`}
+      ${xv==null?"":`<line x1="${xv.toFixed(1)}" y1="${G.t}" x2="${xv.toFixed(1)}"
+        y2="${G.b}" stroke="var(--lacre)" stroke-dasharray="3 3"/>
+        <text x="${xv.toFixed(1)}" y="${G.t-1}" text-anchor="middle" class="eixo"
+          fill="var(--lacre)">a virada</text>`}
     </svg>
     <div class="legG">
       <span><i style="background:var(--alta)"></i>com aporte</span>
       <span><i style="background:var(--ouro2)"></i>só o que você já tem</span>
       <span><i style="background:var(--graf)"></i>o que você depositou</span>
-      ${s.virada==null?"":`<span><i style="background:var(--lacre)"></i>a virada</span>`}
     </div>
   </div>`;
 }
@@ -7600,31 +7558,40 @@ function serieAP(){
 }
 
 function graficoAP(s){
-  const L = 640, A = 200, pb = 15, pt = 6;
-  const passo = Math.max(1, Math.round(s.d.length/120));
-  const d = s.d.filter((x,i) => i % passo === 0);
-  const mx = Math.max(...d.map(x => Math.max(x.vista, x.cons)), 1);
-  const px = i => (i/(d.length-1)) * L;
-  const py = v => pt + (1 - v/mx) * (A - pb - pt);
+  const L = 700, A = 250;
+  const G = { l:56, r:L-10, t:10, b:A-26 };
+  const passoD = Math.max(1, Math.round(s.d.length/140));
+  const d = s.d.filter((x,i) => i % passoD === 0);
+  const mx = escalaBoa(Math.max(...d.map(x => Math.max(x.vista, x.cons)), 1));
+  const px = i => G.l + (i/(d.length-1)) * (G.r - G.l);
+  const py = v => G.b - (v/mx) * (G.b - G.t);
   const cam = sel => d.map((x,i) =>
     `${i?"L":"M"}${px(i).toFixed(1)} ${py(sel(x)).toFixed(1)}`).join(" ");
+
+  const anos = AP.prazo/12;
+  const passo = Math.max(1, Math.ceil(anos/6));
+  const marcas = [];
+  for(let a = 0; a <= anos; a += passo)
+    marcas.push([a/anos, a === 0 ? "hoje" : "ano " + a]);
+
   const iC = d.findIndex(x => x.m >= s.mc);
   return `
   <div class="card" style="margin-top:14px;padding-bottom:9px">
     <div class="tituloG">Patrimônio total, em dinheiro de hoje</div>
-    <div class="subG">imóvel mais aplicação · o topo é ${rs(mx)}</div>
-    <svg viewBox="0 0 ${L} ${A}" style="width:100%;height:auto;display:block"
-      preserveAspectRatio="none">
-      <line x1="0" y1="${A-pb}" x2="${L}" y2="${A-pb}" stroke="var(--linha)"/>
-      ${iC>0?`<line x1="${px(iC).toFixed(1)}" y1="${pt}" x2="${px(iC).toFixed(1)}"
-        y2="${A-pb}" stroke="var(--lacre)" stroke-dasharray="3 3"/>`:""}
-      <path d="${cam(x=>x.vista)}" fill="none" stroke="var(--ouro2)" stroke-width="1.6"/>
-      <path d="${cam(x=>x.cons)}" fill="none" stroke="var(--alta)" stroke-width="2"/>
+    <div class="subG">imóvel mais aplicação · ${AP.real}% reais ao ano</div>
+    <svg viewBox="0 0 ${L} ${A}" style="width:100%;height:auto;display:block">
+      ${eixoY(mx, G)}
+      ${eixoX(marcas, G)}
+      ${iC>0?`<line x1="${px(iC).toFixed(1)}" y1="${G.t}" x2="${px(iC).toFixed(1)}"
+        y2="${G.b}" stroke="var(--lacre)" stroke-dasharray="3 3"/>
+        <text x="${px(iC).toFixed(1)}" y="${G.t-1}" text-anchor="middle" class="eixo"
+          fill="var(--lacre)">contemplação</text>`:""}
+      <path d="${cam(x=>x.vista)}" fill="none" stroke="var(--ouro2)" stroke-width="1.8"/>
+      <path d="${cam(x=>x.cons)}" fill="none" stroke="var(--alta)" stroke-width="2.2"/>
     </svg>
     <div class="legG">
       <span><i style="background:var(--ouro2)"></i>comprar à vista</span>
       <span><i style="background:var(--alta)"></i>deixar aplicado e fazer consórcio</span>
-      <span><i style="background:var(--lacre)"></i>a contemplação</span>
     </div>
   </div>`;
 }
@@ -7850,6 +7817,187 @@ function telaAplicado(){
   liga("#apDesc","descola",-10,10);
 }
 
+// ── Quanto custa o dinheiro ─────────────────────────────────────
+// A mesma dívida custa de 0,6% a 13% ao mês dependendo de onde você a pega.
+// Taxas de referência do Banco Central; mudam todo mês e são editáveis.
+const CD = { valor:50000, meses:24 };
+const LINHAS = [
+  ["consorcio","Consórcio",0.62,
+   "Não tem juro — tem taxa de administração e fundo de reserva diluídos no prazo. Em troca, você não escolhe quando recebe.",
+   "aprox. INPC + 3% ao ano, contemplando cedo"],
+  ["imob","Financiamento imobiliário",1.09,
+   "A garantia é o próprio imóvel, e é isso que segura a taxa. A anunciada vem somada à TR, e o CET ainda tem seguro e administração.",
+   "11,7% ao ano + TR de 2,02%"],
+  ["equity","Home equity",1.50,
+   "Empréstimo com o seu imóvel em garantia. Mais barato que crédito pessoal, mas você põe a casa no contrato.",
+   "praticado no mercado"],
+  ["cInss","Consignado INSS",1.80,
+   "Desconto direto no benefício. O risco quase zero para o banco vira taxa baixa para você — e teto definido por norma.",
+   "teto vigente, Banco Central"],
+  ["cPriv","Consignado privado",3.40,
+   "Desconto em folha para quem tem carteira assinada. Mais caro que o do INSS, bem mais barato que o crédito comum.",
+   "média Banco Central"],
+  ["pessoal","Crédito pessoal",7.24,
+   "Sem garantia nenhuma. O banco cobra a incerteza inteira, e ela é cara.",
+   "132,3% ao ano, média Banco Central"],
+  ["rotativo","Rotativo do cartão",12.08,
+   "O que sobra quando você paga menos que a fatura inteira. É o crédito mais caro que existe legalmente ao alcance de todo mundo.",
+   "291,9% ao ano, média Banco Central"],
+  ["cheque","Cheque especial",12.68,
+   "O limite que parece dinheiro seu na conta e não é. Cobra por dia usado.",
+   "321,1% ao ano, média Banco Central"]
+];
+const CDT = {};
+LINHAS.forEach(([id,,tx]) => CDT[id] = tx);
+
+function contasCD(){
+  const v = Math.max(1, CD.valor), n = Math.max(1, CD.meses);
+  return LINHAS.map(([id,nome,,oq,fonte]) => {
+    const i = CDT[id]/100;
+    const parcela = i > 0 ? v*i/(1 - Math.pow(1+i,-n)) : v/n;
+    const total = parcela * n;
+    return { id, nome, oq, fonte, aoMes:CDT[id],
+             aoAno:(Math.pow(1+i,12)-1)*100, parcela, total, juro: total - v };
+  }).sort((a,b) => a.aoMes - b.aoMes);
+}
+
+function telaCredito(){
+  const r = contasCD();
+  const pior = r[r.length-1], melhor = r[0];
+  const mx = Math.max(...r.map(x => x.juro), 1);
+  const pc = v => v.toFixed(2).replace(".",",");
+
+  app().innerHTML = `
+  <div class="cabeca" style="text-align:left;max-width:72ch">
+    <h1>Quanto custa o dinheiro</h1>
+    <p>É a mesma dívida, o mesmo valor, o mesmo prazo. O que muda é só de onde
+      você tira — e essa escolha, sozinha, faz a conta variar em
+      <b>${Math.round(pior.juro/Math.max(1,melhor.juro))} vezes</b>. Quase
+      ninguém compara antes de assinar.</p>
+  </div>
+
+  <div class="card">
+    <div class="grid4">
+      <div><label>Preciso de</label>
+        <input id="cdVal" inputmode="numeric" value="${CD.valor}"></div>
+      <div><label>Para pagar em (meses)</label>
+        <input id="cdMes" inputmode="numeric" value="${CD.meses}"></div>
+    </div>
+  </div>
+
+  <div class="card rolaX" style="margin-top:14px">
+  <table class="comp custo">
+    <thead><tr><th>De onde vem</th><th>Ao mês</th><th>Ao ano</th>
+      <th>Parcela</th><th>Juro pago</th><th></th></tr></thead>
+    <tbody>
+      ${r.map(x => `<tr>
+        <td><b>${x.nome}</b><br><span class="pe">${x.fonte}</span></td>
+        <td class="mono">${pc(x.aoMes)}%</td>
+        <td class="mono">${x.aoAno >= 100 ? Math.round(x.aoAno) : pc(x.aoAno)}%</td>
+        <td class="mono">${rs(x.parcela)}</td>
+        <td class="mono ${x.juro > CD.valor ? "ruim" : ""}">${rs(x.juro)}</td>
+        <td style="width:34%"><span class="bar"><i style="width:${
+          Math.max(1, x.juro/mx*100).toFixed(1)}%"></i></span></td>
+      </tr>`).join("")}
+    </tbody>
+  </table>
+  </div>
+
+  <div class="trio">
+    <div class="cx destaque"><span class="rot">O mais barato</span>
+      <b>${melhor.nome}</b>
+      <span class="pe">${rs(melhor.juro)} de juro em ${CD.meses} meses</span></div>
+    <div class="cx"><span class="rot">O mais caro</span>
+      <b>${pior.nome}</b>
+      <span class="pe">${rs(pior.juro)} de juro em ${CD.meses} meses</span></div>
+    <div class="cx"><span class="rot">A diferença</span>
+      <b style="color:var(--baixa)">${rs(pior.juro - melhor.juro)}</b>
+      <span class="pe">só por causa de onde o dinheiro veio</span></div>
+  </div>
+
+  <div class="card" style="margin-top:14px">
+    <h2 style="font-size:19px;margin-bottom:10px">O que explica a diferença</h2>
+    ${r.map(x => `<div class="degrau">
+      <span class="nD">${pc(x.aoMes)}%</span>
+      <div><b>${x.nome}</b><p>${x.oq}</p></div>
+    </div>`).join("")}
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <h2 style="font-size:19px;margin-bottom:6px">A regra por trás de tudo isto</h2>
+    <p style="color:var(--t2);line-height:1.7">
+      <b style="color:var(--ouro2)">Garantia derruba juro.</b> Consórcio,
+      financiamento e home equity têm bem atrás. Consignado tem folha de
+      pagamento. Cartão e cheque especial não têm nada — e cobram a incerteza
+      inteira.<br><br>
+      <b style="color:var(--ouro2)">Pressa custa caro.</b> O crédito que sai na
+      hora é sempre o mais caro. O mais barato da lista é justamente o que não
+      diz quando chega.<br><br>
+      <b style="color:var(--ouro2)">Trocar dívida cara por barata é o melhor
+      investimento que existe.</b> Quem paga ${pc(pior.aoMes)}% ao mês e consegue
+      migrar para uma linha com garantia não está economizando — está ganhando o
+      equivalente à diferença, sem risco nenhum. Nenhuma aplicação no Brasil paga
+      isso.<br><br>
+      <b style="color:var(--ouro2)">A taxa não é o custo.</b> O que vale é o CET,
+      que inclui seguro, tarifa de abertura e administração. Ele tem que estar
+      escrito no contrato, e é o único número comparável entre bancos.</p>
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <h2 style="font-size:17px;margin-bottom:8px">Ajustar as taxas</h2>
+    <p style="font-size:12.5px;color:var(--graf);line-height:1.6;margin-bottom:12px">
+      Os valores acima são médias do Banco Central e do mercado, e <b>mudam todo
+      mês</b>. A sua taxa depende de banco, relacionamento e histórico — quase
+      sempre é outra. Ponha a que te ofereceram e refaça a conta.</p>
+    <div class="grid4">
+      ${LINHAS.map(([id,nome]) => `<div>
+        <label>${nome} (% a.m.)</label>
+        <input class="cdTx" data-t="${id}" inputmode="decimal" value="${CDT[id]}">
+      </div>`).join("")}
+    </div>
+  </div>
+
+  ${ponte({
+    titulo: "Trocar de linha é a decisão mais rentável, e a menos feita",
+    intro: `Quem está numa linha cara raramente sabe que dá para sair dela — e
+      quem sabe não conhece o caminho. Quatro situações em que a conversa com
+      alguém habilitado se paga no primeiro mês.`,
+    casos: [
+      ["Está no rotativo ou no cheque especial","Toda migração para linha com garantia devolve dinheiro imediatamente. É a maior taxa de retorno disponível no Brasil, e ela é certa."],
+      ["Tem imóvel quitado e dívida cara","O bem que está parado pode virar garantia e derrubar o juro em dois terços. Portabilidade e home equity são caminhos distintos."],
+      ["Vai financiar imóvel","A diferença entre bancos, na mesma proposta, passa de cem mil reais num contrato longo. Ninguém compara sozinho."],
+      ["Tem tempo e não tem pressa","Se o prazo não aperta, consórcio é a dívida mais barata a que você tem acesso. Escolher grupo e prazo é o que decide."]
+    ],
+    servicos: ["planejamento","consorcio","consultoria"],
+    botao: "Falar com quem compara isso todo dia"
+  })}
+
+  <div class="pontes">
+    <a href="#/comprar" class="bt">Comparar formas de comprar um bem</a>
+    <a href="#/crescer" class="bt">Como o dinheiro cresce</a>
+  </div>`;
+
+  const rev = () => {
+    const foco = document.activeElement && document.activeElement.id;
+    const dt = document.activeElement && document.activeElement.dataset
+             ? document.activeElement.dataset.t : null;
+    const pos = document.activeElement ? document.activeElement.selectionStart : null;
+    telaCredito();
+    const novo = dt ? document.querySelector(`.cdTx[data-t="${dt}"]`)
+                    : (foco ? $("#"+foco) : null);
+    if(novo){ novo.focus(); try{ novo.setSelectionRange(pos,pos); }catch(e){} }
+  };
+  const num = el => {
+    const v = Number(String(el.value).replace(/[^\d.,-]/g,"").replace(",","."));
+    return isFinite(v) ? v : 0;
+  };
+  $("#cdVal").oninput = e => { CD.valor = Math.min(1e9, Math.max(1, num(e.target))); rev(); };
+  $("#cdMes").oninput = e => { CD.meses = Math.min(480, Math.max(1, num(e.target))); rev(); };
+  document.querySelectorAll(".cdTx").forEach(el =>
+    el.oninput = () => { CDT[el.dataset.t] = Math.min(30, Math.max(0, num(el))); rev(); });
+  ligarPontes();
+}
+
 function rotear(){
   clearInterval(window.__timerRank);
   clearInterval(window.__timerVivo);
@@ -7895,6 +8043,7 @@ function rotear(){
   if(h==="#/aprender")        return telaAprender();
   if(h==="#/crescer")         return telaCrescer();
   if(h==="#/comprar")         return telaComprar();
+  if(h==="#/credito")         return telaCredito();
   if(h==="#/escada")          return telaEscada();
   if(h==="#/aplicado")        return telaAplicado();
   if(h==="#/como-funciona")   return telaComo();
@@ -7936,7 +8085,13 @@ addEventListener("hashchange", rotear);
   await carregarEu(); pintarNav(); rotear();
   pintarFaixa();
   setInterval(pintarFaixa, 300000);
-  sb.auth.onAuthStateChange(async()=>{ await carregarEu(); pintarNav(); });
+  sb.auth.onAuthStateChange(async()=>{
+    const tinha = !!eu;
+    await carregarEu(); pintarNav();
+    // se a sessão caiu ou entrou por fora desta aba, redesenha: senão a
+    // pessoa fica olhando conteúdo velho até clicar em alguma coisa.
+    if(tinha !== !!eu){ if(!eu) window.__jaEntrou = false; rotear(); }
+  });
 })();
 </script>
 </body>
