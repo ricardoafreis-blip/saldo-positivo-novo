@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict w248PoovlKw25NSffMyCEjFCJuYA9onWsbMHEqficqUZd04HDa97N1WUSBoSWRp
+\restrict e8XPt8Dh0OmbJVeQUt2nMF9xCbi8k9nfhacMvvz0fAIfMRABYgndicxhayURLpC
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.11 (Ubuntu 17.11-1.pgdg24.04+2)
@@ -800,7 +800,7 @@ declare
   c record; reb text; bnd real;
   cdi_dia real; ret real;
   l real; s real; caixa real; rende real;
-  idx_ant real; n int := 0;
+  idx_ant real; idx_novo real; n int := 0;
   m_novo date; m_atual date;
   dia date := coalesce(d, (select max(data) from oscilacao), hoje_br());
   vira_sem boolean; vira_mes boolean; vira_ano boolean;
@@ -822,8 +822,12 @@ begin
   vira_ano := date_trunc('year',  proximo_pregao(dia)) <> date_trunc('year',  dia);
 
   -- ⚠️ A GUARDA: carteira não apura pregão anterior ao nascimento dela.
+  -- ⚠️ A GUARDA 2: quem já quebrou não apura mais. `encerrada_em` é a marca;
+  -- `ativa` continua true de propósito, para a carteira seguir no ranking
+  -- mostrando o −100% em vez de sumir. Encerramento manual usa `ativa=false`
+  -- e continua funcionando como antes.
   for c in select id, rebalancear, banda_pct from carteira
-            where ativa and criada_em <= dia loop
+            where ativa and encerrada_em is null and criada_em <= dia loop
 
     -- ⚠️ A RÉGUA VEM DA DATA. O autor troca quando quiser; o que já foi
     -- apurado continua apurado pela regra que valia naquele pregão.
@@ -872,8 +876,33 @@ begin
      where carteira_id = c.id and data < dia order by data desc limit 1;
     idx_ant := coalesce(idx_ant, 100.0);
 
+    idx_novo := idx_ant * (1 + ret);
+
+    -- ⚠️ RUÍNA. Numa vendida o capital é 200 − 100×(P/P₀) e zera quando o
+    -- papel dobra; numa comprada zera se tudo for a zero. Passando disso o
+    -- índice ficava negativo, o retorno do dia virava −380%, e no pregão
+    -- seguinte o peso invertia de sinal e a carteira quebrada voltava a
+    -- "ganhar". Aqui ela para: perde 100% e encerra.
+    if idx_novo <= 0 then
+      insert into retorno_dia (carteira_id, data, retorno, indice)
+      values (c.id, dia, -1.0, 0.0)
+      on conflict (carteira_id, data) do update
+         set retorno = excluded.retorno, indice = excluded.indice;
+
+      -- não desativa: a carteira fica visível no ranking com −100%.
+      -- O que para é a apuração, pela marca de encerrada_em.
+      update carteira
+         set encerrada_em = dia
+       where id = c.id;
+
+      perform recalcular_resumo(c.id);
+      n := n + 1;
+      raise notice 'carteira % quebrou em %: perda total, apuração encerrada', c.id, dia;
+      continue;
+    end if;
+
     insert into retorno_dia (carteira_id, data, retorno, indice)
-    values (c.id, dia, ret, idx_ant * (1 + ret))
+    values (c.id, dia, ret, idx_novo)
     on conflict (carteira_id, data) do update
        set retorno = excluded.retorno, indice = excluded.indice;
 
@@ -1550,6 +1579,7 @@ declare
   n int; ult date; idx real; ac real; hj real;
   sem real; ms real; an real; sh real; dd real; vl real; vi real;
   md real; dp real; f real[];
+  quebrou boolean;
 begin
   select count(*), max(data) into n, ult from retorno_dia where carteira_id = cid;
   if n = 0 then
@@ -1561,6 +1591,12 @@ begin
   select indice, retorno into idx, hj from retorno_dia
    where carteira_id = cid order by data desc limit 1;
   ac := idx/100.0 - 1;
+
+  -- ⚠️ Carteira que perdeu o capital inteiro. Sem esta marca, o filtro
+  -- `retorno > -1` logo abaixo descartava o dia da ruína e semana, mês e
+  -- ano saíam calculados como se a quebra nunca tivesse acontecido.
+  quebrou := exists (select 1 from retorno_dia
+                      where carteira_id = cid and indice <= 0);
 
   -- períodos: composto sobre os últimos N pregões
   select exp(sum(ln(1+retorno))) - 1 into sem from
@@ -1574,7 +1610,7 @@ begin
       and data >= date_trunc('year', ult)) t;
 
   -- risco: só com histórico suficiente, senão é ruído com cara de número
-  if n >= 20 then
+  if n >= 20 and not quebrou then
     select avg(retorno), stddev_samp(retorno) into md, dp
       from retorno_dia where carteira_id = cid;
     if dp > 0 then
@@ -1593,6 +1629,12 @@ begin
    where o.ativo = 'IBOV'
      and o.data >= (select min(data) from retorno_dia where carteira_id = cid)
      and o.data <= ult and o.valor > -1;
+
+  -- ⚠️ Quebrou: perdeu tudo. Todo período que contém o dia da ruína é
+  -- −100%, e Sharpe sobre uma série que termina em zero não significa nada.
+  if quebrou then
+    ac := -1; sem := -1; ms := -1; an := -1; dd := -1; sh := null; vl := null;
+  end if;
 
   select array_agg(retorno order by data) into f from
     (select data, retorno from retorno_dia where carteira_id = cid
@@ -2613,8 +2655,16 @@ CREATE TABLE public.universo (
     liquidez real,
     tipo text DEFAULT 'acao'::text NOT NULL,
     nome text,
-    cotacao_em date
+    cotacao_em date,
+    acoes real
 );
+
+
+--
+-- Name: COLUMN universo.acoes; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.universo.acoes IS 'Ações totais da companhia. Do Fundamentus: P/VP × Patrimônio Líquido ÷ Cotação.';
 
 
 --
@@ -3889,5 +3939,5 @@ CREATE POLICY universo_mexer ON public.universo TO authenticated USING ((EXISTS 
 -- PostgreSQL database dump complete
 --
 
-\unrestrict w248PoovlKw25NSffMyCEjFCJuYA9onWsbMHEqficqUZd04HDa97N1WUSBoSWRp
+\unrestrict e8XPt8Dh0OmbJVeQUt2nMF9xCbi8k9nfhacMvvz0fAIfMRABYgndicxhayURLpC
 
