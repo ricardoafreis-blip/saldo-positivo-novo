@@ -18,7 +18,7 @@ instances | 0
 lead | 2
 lead_nota | 0
 messages | 0
-mfa_amr_claims | 5
+mfa_amr_claims | 6
 mfa_challenges | 0
 mfa_factors | 0
 migrations | 62
@@ -38,7 +38,7 @@ peso_atual_backup | 46
 posicao | 560
 rebalanceamento | 290
 referencia | 11
-refresh_tokens | 28
+refresh_tokens | 37
 regra | 80
 resumo | 80
 retorno_dia | 1680
@@ -51,7 +51,7 @@ schema_migrations | 81
 secrets | 0
 seguidor | 0
 seguindo | 0
-sessions | 5
+sessions | 6
 sso_domains | 0
 sso_providers | 0
 subscription | 0
