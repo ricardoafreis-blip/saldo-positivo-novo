@@ -858,6 +858,116 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
   .botoesAb .bt{width:100%}
 }
 
+/* a conclusão em palavras, antes dos números soltos */
+.conclusao{margin-top:16px;padding:18px 20px;border-left:2px solid var(--ouro2);
+  background:linear-gradient(90deg,rgba(198,161,91,.07),transparent)}
+.conclusao p{font-family:Newsreader,serif;font-size:19px;line-height:1.5;
+  color:var(--tinta);margin:0}
+.conclusao p.segunda{font-size:16px;color:var(--t2);margin-top:9px;
+  font-family:inherit;line-height:1.6}
+.conclusao b{color:var(--tinta);font-weight:500}
+@media(max-width:620px){
+  .conclusao{padding:14px 15px}
+  .conclusao p{font-size:17px}
+  .conclusao p.segunda{font-size:14.5px}
+}
+
+
+.campos{display:grid;gap:14px;background:var(--p2);border:1px solid var(--linha);
+  border-radius:7px;padding:18px 20px;margin-bottom:8px}
+.campos label{display:block;font-size:10.5px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--graf);margin-bottom:5px;
+  min-height:26px;line-height:1.25;display:flex;align-items:flex-end}
+.campos > div{display:flex;flex-direction:column;justify-content:flex-end}
+.campos input{width:100%;background:var(--papel);border:1px solid var(--linha2);
+  color:var(--tinta);border-radius:5px;padding:9px 11px;font-size:15px;
+  font-family:'IBM Plex Mono',monospace}
+.campos input:focus{outline:none;border-color:var(--ouro2)}
+.placar3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0}
+.placar3 > div{background:var(--p2);border:1px solid var(--linha);
+  border-radius:6px;padding:15px 16px}
+.placar3 .rot{display:block;font-size:9.5px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--graf);margin-bottom:6px}
+.placar3 b{font-family:Newsreader,serif;font-size:26px;font-weight:500;
+  color:var(--tinta);display:block;line-height:1.1}
+.placar3 .pe{font-size:12px;color:var(--graf);display:block;margin-top:5px}
+.placar3 .forte{border-color:var(--ouro2)}
+.conclui{font-family:Newsreader,serif;font-size:22px;color:var(--tinta);
+  line-height:1.45;margin:24px 0;padding-left:16px;
+  border-left:3px solid var(--alta);max-width:58ch}
+.figura{margin:26px 0 8px}
+.figura svg{width:100%;height:auto;display:block}
+.legenda{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;font-size:12px;color:var(--graf)}
+.legenda i{display:inline-block;width:14px;height:2px;margin-right:6px;
+  vertical-align:middle;border-radius:1px}
+.notafig{font-size:12.5px;color:var(--graf);margin-top:10px;max-width:62ch}
+.trinca{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:24px 0}
+.trinca > div{background:var(--p2);border:1px solid var(--linha);
+  border-radius:6px;padding:15px 16px}
+.trinca .rot{display:block;font-size:9.5px;letter-spacing:.15em;
+  text-transform:uppercase;color:var(--graf);margin-bottom:6px}
+.trinca p{font-size:13.5px;margin:0;line-height:1.5;color:var(--t2)}
+.custo .bar{display:block;height:7px;background:var(--p3);border-radius:4px;overflow:hidden}
+.custo .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--ouro2),var(--baixa));border-radius:4px}
+@media(max-width:720px){
+  .trinca,.placar3{grid-template-columns:1fr}
+  .campos{grid-template-columns:1fr 1fr !important}
+}
+@media(max-width:460px){.campos{grid-template-columns:1fr !important}}
+
+.camada{margin-top:22px}
+.degrauS{display:flex;gap:14px;padding:16px 0;border-top:1px solid var(--linha)}
+.degrauS .q{flex:none;width:130px;font-size:11px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ouro2);padding-top:4px}
+.degrauS .c b{display:block;font-family:Newsreader,serif;font-size:20px;
+  color:var(--tinta);margin-bottom:4px;font-weight:500}
+.degrauS .c p{font-size:13.5px;margin:0;color:var(--t2);line-height:1.6}
+@media(max-width:720px){.degrauS{flex-direction:column;gap:5px}.degrauS .q{width:auto}}
+
+/* ── educacional: índice e páginas de tópico ── */
+.trilho{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--ouro2);opacity:.8;margin-bottom:10px}
+.chapeu{font-size:18px;color:var(--t2);line-height:1.6;max-width:60ch}
+.caso{border-left:2px solid var(--ouro2);padding:16px 20px;margin:22px 0;
+  background:linear-gradient(90deg,rgba(227,196,92,.07),transparent)}
+.caso p{font-family:Newsreader,serif;font-size:20px;color:var(--tinta);
+  line-height:1.5;margin:0;max-width:none}
+.indice{margin-top:22px}
+.item{display:block;text-decoration:none;padding:16px 18px;margin-bottom:9px;
+  background:var(--p2);border:1px solid var(--linha);border-radius:7px;
+  transition:border-color .15s,transform .15s}
+.item:hover{border-color:var(--ouro2);transform:translateX(2px)}
+.item .t{display:block;font-family:Newsreader,serif;font-size:21px;
+  color:var(--tinta);margin-bottom:3px;line-height:1.2}
+.item .d{display:block;font-size:13.5px;color:var(--t2);line-height:1.5}
+.etapa{font-size:10px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--graf);margin:26px 0 10px;padding-top:14px;
+  border-top:1px solid var(--linha)}
+.etapa:first-of-type{border-top:none;padding-top:0;margin-top:16px}
+.simule{display:block;margin:30px 0 8px;padding:20px 22px;background:var(--p2);
+  border:1px solid var(--ouro2);border-radius:7px;text-decoration:none;
+  transition:background .15s,transform .15s}
+.simule:hover{background:var(--p3);transform:translateY(-1px)}
+.simule .k{font-size:10px;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--ouro2);display:block;margin-bottom:5px}
+.simule .t{font-family:Newsreader,serif;font-size:23px;color:var(--tinta);
+  display:block;line-height:1.25}
+.simule .d{font-size:13px;color:var(--t2);display:block;margin-top:5px}
+.adiante{display:flex;gap:10px;flex-wrap:wrap;margin:32px 0 40px;
+  padding-top:22px;border-top:1px solid var(--linha)}
+.aviso{margin:24px 0 8px;padding:16px 18px;border:1px solid var(--linha2);
+  border-left:3px solid var(--lacre);border-radius:6px;background:var(--p2)}
+.aviso b{display:block;font-family:Newsreader,serif;font-size:17px;
+  color:var(--tinta);margin-bottom:6px;font-weight:500}
+.aviso p{font-size:13px;color:var(--t2);margin:0;line-height:1.6}
+table.volta{width:100%;border-collapse:collapse;font-size:14px;margin:20px 0}
+table.volta th{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--graf);text-align:left;padding:0 10px 8px 0;font-weight:500}
+table.volta td{padding:9px 10px 9px 0;border-top:1px solid var(--linha);color:var(--t2)}
+table.volta .mono{font-family:'IBM Plex Mono',monospace}
+table.volta .ruim{color:var(--baixa)}
+@media(max-width:620px){ .simule .t{font-size:20px} .caso p{font-size:17px} }
+
 /* telas de patrimônio: crescer e comprar */
 .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
 .grid4 label{display:block;font-size:10.5px;letter-spacing:.1em;
@@ -1097,13 +1207,38 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
       <div class="grupo"><span class="rotg">Aprender</span>
         <span class="def">antes de arriscar qualquer coisa</span>
         <select class="menu" data-g="aprender">
-          <option value="#/crescer">Como o dinheiro cresce</option>
-          <option value="#/comprar">Comprar um bem</option>
-          <option value="#/credito">Quanto custa o dinheiro</option>
-          <option value="#/escada">A escada do consórcio</option>
-          <option value="#/aplicado">Já tenho o dinheiro</option>
-          <option value="#/sucessao">Seguro e sucessão</option>
-          <option value="#/aprender">Por que investir é difícil</option>
+          <option value="#/aprender">Comece por aqui</option>
+          <optgroup label="Comece por aqui">
+            <option value="#/crescer">Como o dinheiro cresce</option>
+            <option value="#/dividas">Antes de poupar, saia das dívidas</option>
+            <option value="#/corrigir">Corrigir não é crescer</option>
+          </optgroup>
+          <optgroup label="O que é cada coisa">
+            <option value="#/renda-fixa">Renda fixa</option>
+            <option value="#/renda-variavel">Renda variável</option>
+            <option value="#/previdencia">Previdência</option>
+            <option value="#/fundos">Fundo de investimento</option>
+            <option value="#/clubes">Clube de investimento</option>
+            <option value="#/alternativos">Ouro, dólar e bitcoin</option>
+            <option value="#/internacional">Investir no exterior</option>
+            <option value="#/consorcio">Consórcio</option>
+            <option value="#/seguro-vida">Seguro de vida</option>
+          </optgroup>
+          <optgroup label="Montar a sua carteira">
+            <option value="#/risco">O risco de verdade</option>
+            <option value="#/carteira-como">Como se monta uma carteira</option>
+            <option value="#/sessenta">A carteira 60/40</option>
+            <option value="#/grandes">Os grandes acumuladores</option>
+          </optgroup>
+          <optgroup label="Quando já há patrimônio">
+            <option value="#/casa">Sair do aluguel</option>
+            <option value="#/comprar">Comprar um bem</option>
+            <option value="#/escada">A escada do consórcio</option>
+            <option value="#/aplicado">Pôr o patrimônio para trabalhar</option>
+            <option value="#/credito">Quanto custa o dinheiro</option>
+            <option value="#/sucessao">Não perder na saída</option>
+            <option value="#/porque">Por que investir é difícil</option>
+          </optgroup>
           <option value="#/como-funciona">Como funciona o site</option>
         </select></div>
       <div class="grupo"><span class="rotg">Especular</span>
@@ -1123,27 +1258,28 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
       <div class="grupo"><span class="rotg">Construir</span>
         <span class="def">o patrimônio fora da tela</span>
         <select class="menu" data-g="construir">
-          <option value="#/planejar">Planejamento financeiro</option>
-          <optgroup label="Organizar">
-            <option value="#/servicos?s=planejamento">Planejamento financeiro</option>
-            <option value="#/servicos?s=consultoria">Consultoria de investimentos</option>
+          <option value="#/servicos">Com quem falar</option>
+          <option value="#/planejar">Fazer o meu planejamento</option>
+          <optgroup label="Quero alguém para me acompanhar">
             <option value="#/servicos?s=assessoria">Assessoria de investimentos</option>
-            <option value="#/servicos?s=clube">Clube de investimentos</option>
-            <option value="#/servicos?s=consorcio">Estratégias com consórcio</option>
-          </optgroup>
-          <optgroup label="Proteger e transmitir">
-            <option value="#/servicos?s=blindagem">Blindagem e proteção patrimonial</option>
-            <option value="#/servicos?s=sucessorio">Planejamento sucessório</option>
-          </optgroup>
-          <optgroup label="Patrimônio complexo">
+            <option value="#/servicos?s=consultoria">Consultoria de investimentos</option>
+            <option value="#/servicos?s=planejamento">Planejamento financeiro</option>
             <option value="#/servicos?s=gestao">Gestão de recursos</option>
             <option value="#/servicos?s=fortunas">Gestão de grandes fortunas</option>
+            <option value="#/servicos?s=family">Multi family office</option>
+          </optgroup>
+          <optgroup label="Quero resolver uma coisa">
+            <option value="#/servicos?s=consorcio">Estratégias com consórcio</option>
+            <option value="#/servicos?s=clube">Clube de investimentos</option>
             <option value="#/servicos?s=exterior">Conta no exterior</option>
             <option value="#/servicos?s=offshore">Abertura de offshore</option>
             <option value="#/servicos?s=empresarial">Estruturação empresarial</option>
-            <option value="#/servicos?s=family">Multi family office</option>
           </optgroup>
-          <option value="#/servicos">Ver todos os serviços</option>
+          <optgroup label="Quero proteger o que já tenho">
+            <option value="#/servicos?s=sucessorio">Planejamento sucessório</option>
+            <option value="#/servicos?s=blindagem">Blindagem e proteção patrimonial</option>
+            <option value="#/sucessao">Seguro e sucessão</option>
+          </optgroup>
         </select></div>
     </nav>
   </div>
@@ -4850,26 +4986,26 @@ function telaTermos(){
 }
 
 const GRUPOS_S=[
- ["organizar","Organizar","Para quem está montando a base: saber para onde vai o dinheiro antes de decidir onde investir."],
- ["proteger","Proteger e transmitir","Para quem já tem o que perder — e quer que o patrimônio atravesse separação, sociedade e sucessão inteiro."],
- ["complexo","Patrimônio complexo","Para quem tem empresa, bens em mais de um país ou uma família inteira dependendo da mesma estrutura."]];
+ ["relacao","Quem acompanha você","A escolha depende do tamanho do que você tem — e um degrau leva ao outro."],
+ ["resolver","Para resolver uma coisa","Produtos e operações contratados pontualmente, ou dentro de um portfólio."],
+ ["proteger","Para proteger o que já existe","Quando o patrimônio está formado e o assunto passa a ser não perdê-lo."]];
 
 const SERVICOS=[
- {g:"organizar", id:"planejamento", nome:"Planejamento financeiro",
+ {g:"relacao", id:"planejamento", nome:"Planejamento financeiro",
   oq:`Organizar o que entra, o que sai e o que sobra, e transformar isso em metas com
       prazo: reserva de emergência, troca de carro, entrada de imóvel, aposentadoria.
       Começa pelo orçamento, não pelo investimento.`,
   quem:`Não é atividade regulada em si. Procure o selo <b>CFP®</b> (Planejar) — é a
         certificação de referência no Brasil.`},
 
- {g:"organizar", id:"consultoria", nome:"Consultoria de investimentos",
+ {g:"relacao", id:"consultoria", nome:"Consultoria de investimentos",
   oq:`Orientação sobre onde investir, contratada e <b>paga pelo próprio cliente</b>. Como
       a remuneração não vem de comissão de produto, não há incentivo para indicar um
       fundo em vez de outro.`,
   quem:`<b>Economista</b> ou especialista com registro na CVM como <b>consultor de
         valores mobiliários</b> (Resolução CVM 19).`},
 
- {g:"organizar", id:"assessoria", nome:"Assessoria de investimentos",
+ {g:"relacao", id:"assessoria", nome:"Assessoria de investimentos",
   oq:`Atendimento ligado a uma corretora ou distribuidora: apresenta produtos da
       plataforma, executa ordens e acompanha a carteira. A remuneração vem da
       instituição, não do cliente.`,
@@ -4877,13 +5013,13 @@ const SERVICOS=[
         distribuição (<b>Resolução CVM 178</b>). Pergunte a qual instituição
         o profissional está vinculado.`},
 
- {g:"organizar", id:"clube", nome:"Clube de investimentos",
+ {g:"resolver", id:"clube", nome:"Clube de investimentos",
   oq:`Um condomínio de 3 a 50 pessoas que juntam recursos numa carteira comum, com
       regulamento próprio. Custo menor que um fundo e decisão mais próxima do grupo.`,
   quem:`Administrado por instituição autorizada pela CVM e registrado na B3. A gestão
         pode caber a um cotista, se o regulamento permitir.`},
 
- {g:"organizar", id:"consorcio", nome:"Estratégias com consórcio",
+ {g:"resolver", id:"consorcio", nome:"Estratégias com consórcio",
   oq:`Compra programada sem juros, com taxa de administração. Serve para quem tem
       prazo e não tem pressa — e também como carta de crédito para investir em
       imóvel ou equipamento.`,
@@ -4908,13 +5044,13 @@ const SERVICOS=[
   quem:`Trabalho conjunto de <b>especialista em sucessão</b> e <b>contador</b>, com apoio
         de quem cuida dos investimentos.`},
 
- {g:"complexo", id:"gestao", nome:"Gestão de recursos",
+ {g:"relacao", id:"gestao", nome:"Gestão de recursos",
   oq:`O cliente dá mandato e o gestor decide as operações por ele, dentro da política
       combinada. Diferente da assessoria: aqui quem aperta o botão é o gestor.`,
   quem:`Exige autorização da CVM como <b>administrador de carteiras</b>
         (Resolução CVM 21). Sem essa autorização, ninguém pode operar por você.`},
 
- {g:"complexo", id:"fortunas", nome:"Gestão de grandes fortunas",
+ {g:"relacao", id:"fortunas", nome:"Gestão de grandes fortunas",
   oq:`A partir de <b>R$ 20 milhões</b>, com equipe dedicada. A pergunta deixa de ser
       quanto rendeu no ano e passa a ser <b>quanto tempo o patrimônio dura</b>: política
       de investimento escrita, regra de retirada anual, caixa dimensionado para
@@ -4925,7 +5061,7 @@ const SERVICOS=[
         internacional. É o cuidado com a <i>carteira</i> — quem cuida do conjunto todo
         é o family office, logo abaixo.`},
 
- {g:"complexo", id:"exterior", nome:"Conta no exterior",
+ {g:"resolver", id:"exterior", nome:"Conta no exterior",
   oq:`Conta em banco nos <b>Estados Unidos ou na Europa</b>, no nome da pessoa física.
       Tirar dinheiro do país é a parte fácil; o que decide o resultado é a legislação
       que se aplica a <b>brasileiro com bens fora</b> — em que nome o ativo fica, qual
@@ -4940,7 +5076,7 @@ const SERVICOS=[
         acima de US$ 1 milhão e, desde a <b>Lei 14.754/2023</b>, tributação anual dos
         lucros da offshore, tenha havido distribuição ou não.`},
 
- {g:"complexo", id:"offshore", nome:"Abertura de offshore",
+ {g:"resolver", id:"offshore", nome:"Abertura de offshore",
   oq:`Constituir uma empresa fora do país para ser <b>dona dos investimentos</b>. Serve
       para consolidar aplicações em várias moedas e instituições sob um só titular,
       separar o patrimônio investido do pessoal e resolver a sucessão sem inventário
@@ -4954,7 +5090,7 @@ const SERVICOS=[
         tenha havido distribuição ou não. Offshore não declarada não é planejamento —
         é problema esperando data.`},
 
- {g:"complexo", id:"empresarial", nome:"Estruturação empresarial",
+ {g:"resolver", id:"empresarial", nome:"Estruturação empresarial",
   oq:`Do lado da empresa: desenhar a estrutura societária, trocar capital de giro caro
       por dívida bem estruturada e captar no mercado — <b>CRI e CRA</b> lastreados em
       recebíveis, além de operações estruturadas com os grandes bancos.`,
@@ -4963,7 +5099,7 @@ const SERVICOS=[
         recebível — não é caminho para qualquer empresa, e um bom estruturador diz isso
         antes de cobrar.`},
 
- {g:"complexo", id:"family", nome:"Multi family office",
+ {g:"relacao", id:"family", nome:"Multi family office",
   oq:`A partir de <b>R$ 20 milhões</b>, e a diferença aqui não é tamanho, é dispersão.
       O dinheiro <b>fica onde a família quiser</b> — em qualquer banco, corretora ou
       gestora, no Brasil e fora. O family office não custodia nada e não disputa com
@@ -5833,19 +5969,51 @@ async function telaServicos(){
   const pintar = (recado="", ruim=false) => {
     app().innerHTML = `
     <div class="cabeca" style="text-align:left;max-width:70ch">
-      <h1>O que cada um desses serviços é, de verdade</h1>
-      <p>Palavras que aparecem em anúncio o tempo todo e quase nunca vêm explicadas.
-        Aqui elas estão em português: o que cada uma faz, para quem serve e —
-        principalmente — <b>qual registro o profissional precisa ter</b> para
-        exercê-la.</p>
-      <p style="font-size:13.5px;color:var(--t2);margin-top:12px;line-height:1.6">
-        Leia por curiosidade, mesmo que não queira contratar nada. Saber a diferença
-        entre um assessor e um gestor, e saber que ambos precisam de registro, já
-        evita a maior parte das histórias que terminam mal.</p>
-      <p style="font-size:12.5px;color:var(--graf);margin-top:12px">
-        ${SERVICOS.length} serviços · toque para abrir · marque os que te interessam e
-        peça contato no fim da página</p>
+      <h1>Com quem falar</h1>
+      <p>Entender é uma coisa. Executar é outra. Aqui você fala com quem faz.</p>
     </div>
+
+    <div class="caso">
+      <p>Só indicamos profissionais <b>certificados pelo mercado</b>, atuando em
+        instituições reconhecidas. Sem invenção, sem serviço de segunda linha,
+        sem gente inabilitada.</p>
+    </div>
+
+    <h2 style="font-family:Newsreader,serif;font-size:25px;font-weight:500;margin:34px 0 8px">
+      Primeiro: uma coisa pontual, ou alguém para acompanhar?</h2>
+    <p style="color:var(--t2);max-width:64ch;line-height:1.6">Essa é a única
+      pergunta que importa no começo. E a resposta depende menos do que você quer
+      do que <b>do tamanho do que você tem</b> — porque o seu dinheiro deve
+      trabalhar no tamanho que ele tem.</p>
+
+    <div class="camada">
+      <div class="degrauS"><div class="q">A porta de entrada</div>
+        <div class="c"><b>Assessoria</b>
+          <p>Ligada a uma instituição. Acompanha você, indica produtos e resolve
+            o dia a dia. É por onde quase todo mundo começa, e dá conta da maior
+            parte dos casos.</p></div></div>
+      <div class="degrauS"><div class="q">Quando espalha</div>
+        <div class="c"><b>Consultoria</b>
+          <p>Não é ligada a nenhuma instituição — acompanha o seu portfólio onde
+            quer que ele esteja. Começa a fazer sentido quando você já tem
+            dinheiro em muitos lugares e precisa de quem olhe o conjunto.</p></div></div>
+      <div class="degrauS"><div class="q">20 milhões ou mais</div>
+        <div class="c"><b>Gestão de fortunas</b>
+          <p>Aqui a pergunta muda: deixa de ser rentabilidade e passa a ser
+            <b>perpetuidade</b>. O trabalho é mais afastar risco desnecessário do
+            que buscar o portfólio campeão — porque o que fez a fortuna não foi o
+            mercado financeiro, foi o que veio antes dele.</p></div></div>
+    </div>
+
+    <h2 style="font-family:Newsreader,serif;font-size:25px;font-weight:500;margin:34px 0 8px">
+      Depois: o que você vai usar</h2>
+    <p style="color:var(--t2);max-width:64ch;line-height:1.6">Os produtos são
+      contratados pontualmente ou dentro de um portfólio, e há equipe
+      especializada em cada família — toda ela regulada, sem exceção.</p>
+
+    <p style="font-size:12.5px;color:var(--graf);margin-top:22px">
+      ${SERVICOS.length} serviços · toque para abrir · marque os que te interessam e
+      peça contato no fim da página</p>
     ${GRUPOS_S.map(([gid,tit,sub])=>`
     <div class="secaoS">
       <div class="cabsec"><h2>${tit}</h2><span>${sub}</span></div>
@@ -6813,6 +6981,18 @@ function telaCrescer(){
 
   ${graficoCR(s)}
 
+  <div class="conclusao">
+    <p>Guardando <b>${rs(CR.aporte)}</b> por mês durante <b>${CR.anos} anos</b>,
+      você deposita ${rs(s.aportado)} — e termina com
+      <b style="color:var(--alta)">${rs(s.fim)}</b>.</p>
+    <p class="segunda">${s.fim > 0 && s.juro > 0
+      ? `<b>${Math.round(s.juro/s.fim*100)}% desse dinheiro você não depositou.</b>
+         Foi o juro que fez. Você entrou com ${rs(s.aportado)} e o tempo entrou
+         com ${rs(s.juro)}.`
+      : `Nesse prazo o juro ainda não teve tempo de aparecer. Aumente os anos e
+         veja o que acontece.`}</p>
+  </div>
+
   <div class="trio">
     <div class="cx"><span class="rot">No fim</span>
       <b>${rs(s.fim)}</b>
@@ -6826,25 +7006,31 @@ function telaCrescer(){
   </div>
 
   <div class="card" style="margin-top:14px">
-    <h2 style="font-size:19px;margin-bottom:8px">A virada</h2>
+    <h2 style="font-size:19px;margin-bottom:8px">${anosV == null
+      ? "A virada ainda não chegou" : "O dia em que o jogo vira"}</h2>
     ${anosV == null
-      ? `<p style="color:var(--t2);line-height:1.65">Com esses números a virada
-         não acontece dentro do prazo. Ela chega mais cedo de três jeitos:
-         guardando mais, começando com mais, ou esperando mais tempo — e o
-         terceiro costuma ser o mais poderoso dos três.</p>`
-      : `<p style="color:var(--t2);line-height:1.65">Em torno do
-         <b style="color:var(--ouro2)">ano ${Math.floor(anosV)}</b>
-         (mês ${s.virada}), o patrimônio passa a render mais do que você deposita.
-         É a linha pontilhada vermelha no gráfico. A partir dali o trabalho
-         pesado deixa de ser seu: o seu aporte continua importando, mas já não
-         é ele quem manda no resultado.</p>`}
+      ? `<p style="color:var(--t2);line-height:1.65">Com esses números, o
+         rendimento nunca chega a passar o seu aporte dentro do prazo. Isso muda
+         de três jeitos: <b>guardando mais</b>, <b>começando com mais</b>, ou
+         <b>esperando mais tempo</b> — e o terceiro costuma ser o mais poderoso.
+         Aumente os anos e repare no que acontece.</p>`
+      : `<p style="color:var(--t2);line-height:1.65">A partir do
+         <b style="color:var(--ouro2)">ano ${Math.floor(anosV)}</b>, o seu
+         dinheiro passa a render <b>mais do que você deposita todo mês</b>.</p>
+         <p style="color:var(--t2);line-height:1.65;margin-top:10px">
+         Na prática: naquele mês o patrimônio ganha ${rs(CR.aporte)} sozinho,
+         sem você fazer nada — o mesmo que você deposita com esforço. Daí em
+         diante você continua guardando, mas <b>já não é você quem faz o trabalho
+         pesado.</b> É a linha vermelha no gráfico.</p>`}
     <p style="color:var(--t2);line-height:1.65;margin-top:10px">
-      Repara na linha pontilhada cinza: é a soma do que você depositou, sem juro
-      nenhum. No começo ela quase encosta na linha verde — todo o patrimônio é
-      esforço seu. Lá na frente ela fica para trás e não alcança mais.
-      ${s.semAporte > 0 ? `E a linha dourada mostra o que os
-      ${rs(CR.tem)} de hoje fariam sozinhos, sem você guardar mais nada:
-      ${rs(s.semAporte)}.` : ""}</p>
+      No gráfico, a <b style="color:var(--graf)">linha cinza pontilhada</b> é a
+      soma de tudo que você depositou, sem juro nenhum — é o que teria se o
+      dinheiro ficasse embaixo do colchão. No começo ela quase encosta na verde:
+      todo o patrimônio é esforço seu. Lá na frente ela fica para trás e não
+      alcança mais. <b>A distância entre as duas é o que o tempo fez por
+      você.</b>
+      ${s.semAporte > 0 ? ` Já a linha dourada mostra o que os ${rs(CR.tem)} que
+      você tem hoje fariam sozinhos, sem guardar mais nada: ${rs(s.semAporte)}.` : ""}</p>
   </div>
 
   <div class="card" style="margin-top:12px">
@@ -7138,18 +7324,23 @@ function telaComprar(){
   </div>
 
   <div class="card" style="margin-top:12px">
-    <h2 style="font-size:19px;margin-bottom:4px">Lance embutido não é dinheiro seu</h2>
+    <h2 style="font-size:19px;margin-bottom:4px">Lance fixo e lance embutido não são a mesma coisa</h2>
     <p style="color:var(--t2);line-height:1.65">
-      São duas coisas diferentes com nome parecido. O <b>lance fixo</b> sai do seu
-      bolso — é dinheiro que você precisa ter na hora. O <b>lance embutido</b> sai
-      do próprio crédito: você não desembolsa, mas recebe menos.</p>
+      Os dois servem para antecipar a contemplação, mas saem de lugares
+      diferentes. O <b>lance fixo</b> sai do seu bolso — é dinheiro que você
+      precisa ter na hora. O <b>lance embutido</b> sai do próprio crédito: você
+      não desembolsa nada, recebe menos, e <b>deve menos na mesma proporção</b>.</p>
     <p style="color:var(--t2);line-height:1.65;margin-top:10px">
-      A conta que quase ninguém faz: com lance embutido de 50%, uma carta de
-      ${rs(CP.bem)} entrega ${rs(CP.bem*0.5)} na mão — e você continua devendo os
-      ${rs(CP.bem)} inteiros. Para comprar um imóvel de ${rs(CP.bem)} usando
-      embutido de 50%, a carta precisa ser de
-      <b style="color:var(--ouro2)">${rs(CP.bem*2)}</b>, e a parcela dobra junto.
-      O embutido acelera a contemplação; ele não barateia nada.</p>
+      Numa carta de ${rs(CP.bem*2)} com embutido de 50%: você recebe
+      <b style="color:var(--ouro2)">${rs(CP.bem)}</b> na mão, e passa a pagar
+      sobre ${rs(CP.bem)} — não sobre a carta inteira. É por isso que a
+      estratégia funciona: para ficar com um imóvel de ${rs(CP.bem)} você
+      contrata uma carta maior, usa a diferença como lance, e sai devendo o
+      valor do imóvel.</p>
+    <p style="color:var(--t2);line-height:1.65;margin-top:10px">
+      O que o embutido custa não é dívida a mais — é <b>chance</b>. Carta maior
+      significa parcela maior enquanto você espera, e o lance concorre com o de
+      todo mundo: oferecer 50% não garante contemplação, garante disputar melhor.</p>
   </div>
 
   <div class="card" style="margin-top:12px">
@@ -7998,6 +8189,2098 @@ function telaCredito(){
   ligarPontes();
 }
 
+
+/* ══ SIMULADORES (vindos do protótipo, já corrigidos) ══ */
+const P = { valor:100000, taxa:10, anos:10, vende:2 };
+
+const TX_C = {}; LINHAS_C.forEach(([n,t]) => TX_C[n] = t);
+
+const LINHAS_C = [
+  ["Consórcio",0.62,"taxa de administração, sem juro"],
+  ["Financiamento imobiliário",1.09,"garantia é o próprio imóvel"],
+  ["Home equity",1.50,"empréstimo com o seu imóvel em garantia"],
+  ["Consignado INSS",1.80,"desconto direto no benefício"],
+  ["Consignado privado",3.40,"desconto em folha"],
+  ["Crédito pessoal",7.24,"sem garantia nenhuma"],
+  ["Rotativo do cartão",12.08,"o que sobra quando não se paga a fatura"],
+  ["Cheque especial",12.68,"cobra por dia usado"]
+];
+const B = { bem:500000, mensal:3000, aluguel:2500,
+            prazoCon:200, adm:19, fr:5, juroFin:11.7, tr:2.02, prazoFin:360, taxa:10 };
+const C = { valor:50000, meses:24 };
+const R = { tenho:3000000, taxa:10, inflacao:4.5, idade:60, modo:"mes", valor:13000 };
+const S = { tem:0, aporte:1500, taxa:10, idade:35, para:65, ate:90,
+            retira:false, retiraMes:10000, saque:0,
+            inflacao:4.5, rendaQuero:25000, rendaAos:60, rendaDura:0 };
+function serie(o){
+  const i = Math.pow(1 + o.taxa/100, 1/12) - 1;
+  const mAcum = Math.max(1, (o.para - o.idade) * 12);
+  let com = o.tem, sem = o.tem, posto = o.tem, virada = null;
+  const d = [{m:0, com, sem, posto, fase:"a"}];
+  for(let m=1; m<=mAcum; m++){
+    const rende = com*i;
+    if(virada === null && o.aporte > 0 && rende > o.aporte) virada = m;
+    com = com + rende + o.aporte; sem = sem*(1+i); posto += o.aporte;
+    d.push({m, com, sem, posto, fase:"a"});
+  }
+  const pico = com;
+  const soJuros = pico*i;
+  // a retirada é escolhida pela pessoa; o simulador responde quanto tempo dura
+  const saque = Math.min(o.saque||0, pico);
+  let c2 = pico - saque, mDura = null;
+  const perpetuo = (o.retiraMes||0) <= c2*i + 1e-9;
+  const limite = Math.max(1, (110 - o.para)*12);
+  for(let m=1; m<=limite; m++){
+    c2 = c2*(1+i) - (o.retiraMes||0);
+    if(c2 <= 0 && mDura === null){ mDura = m; c2 = 0; }
+    d.push({m:mAcum+m, com:Math.max(0,c2), sem, posto, fase:"r"});
+    if(mDura !== null) break;
+  }
+  const idadeAcaba = mDura === null ? null : o.para + mDura/12;
+  const retirada = o.retiraMes||0;
+  const mRet = mDura || limite;  // meses efetivos de retirada
+
+  return { d, virada, pico, semAporte:sem, aportado:posto, juro:pico-posto,
+           retirada, soJuros, mAcum, mRet, i, perpetuo, idadeAcaba, saque };
+}
+
+function graficoAc(s, o, alt, soSobe){
+  const L = 700, A = alt || 250, G = {l:0, r:L, t:20, b:A-24};
+  const base = soSobe ? s.d.filter(x => x.fase === 'a') : s.d;
+  const passo = Math.max(1, Math.round(base.length/160));
+  const d = base.filter((x,k) => k % passo === 0);
+  const mx = escalaBoa(Math.max(...d.map(x => x.com), 1));
+  const px = k => G.l + (k/(d.length-1))*(G.r-G.l);
+  const py = v => G.b - (v/mx)*(G.b-G.t);
+  const cam = f => d.map((x,k) => `${k?"L":"M"}${px(k).toFixed(1)} ${py(f(x)).toFixed(1)}`).join(" ");
+  let eixo = "";
+  for(let k=0; k<=4; k++){
+    const y = G.b - (k/4)*(G.b-G.t);
+    eixo += `<line x1="${G.l}" y1="${y.toFixed(1)}" x2="${G.r}" y2="${y.toFixed(1)}"
+      stroke="var(--linha)" stroke-opacity="${k?".45":"1"}"/>
+      <text x="${G.l+2}" y="${(y-5).toFixed(1)}" text-anchor="start" class="eixo">${
+        k ? rsCurto(mx*k/4) : "0"}</text>`;
+  }
+  const anosT = soSobe ? (o.para - o.idade) : (o.ate - o.idade);
+  const pa = Math.max(1, Math.ceil(anosT/6));
+  for(let a=0; a<=anosT; a+=pa){
+    const x = G.l + (a/anosT)*(G.r-G.l);
+    eixo += `<text x="${x.toFixed(1)}" y="${G.b+15}" text-anchor="middle"
+      class="eixo" text-anchor="${a===0?"start":"middle"}">${o.idade + a} anos</text>`;
+  }
+  const iAp = d.findIndex(x => x.fase === "r");
+  const xAp = iAp > 0 ? px(iAp) : null;
+  const iv = s.virada == null ? -1 : d.findIndex(x => x.m >= s.virada);
+  const xv = iv < 0 ? null : px(iv);
+  return `<svg viewBox="0 0 ${L} ${A}">
+    <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="var(--alta)" stop-opacity=".2"/>
+      <stop offset="100%" stop-color="var(--alta)" stop-opacity="0"/>
+    </linearGradient></defs>
+    ${eixo}
+    <path d="${cam(x=>x.com)} L${G.r} ${G.b} L${G.l} ${G.b} Z" fill="url(#g)"/>
+    <path d="${cam(x=>x.posto)}" fill="none" stroke="var(--graf)"
+      stroke-width="1.3" stroke-dasharray="4 3"/>
+    ${o.tem > 0 ? `<path d="${cam(x=>x.sem)}" fill="none" stroke="var(--ouro2)"
+      stroke-width="1.5" stroke-opacity=".9"/>` : ""}
+    <path d="${cam(x=>x.com)}" fill="none" stroke="var(--alta)" stroke-width="2.4"/>
+    ${xv==null?"":`<line x1="${xv.toFixed(1)}" y1="${G.t}" x2="${xv.toFixed(1)}"
+      y2="${G.b}" stroke="var(--lacre)" stroke-dasharray="3 3"/>
+      <text x="${xv.toFixed(1)}" y="${G.t-2}" text-anchor="middle" class="eixo"
+        fill="var(--lacre)">a virada</text>`}
+    ${xAp==null?"":`<line x1="${xAp.toFixed(1)}" y1="${G.t}" x2="${xAp.toFixed(1)}"
+      y2="${G.b}" stroke="var(--ouro2)" stroke-opacity=".55"/>
+      <text x="${xAp.toFixed(1)}" y="${G.t-2}" text-anchor="middle" class="eixo"
+        fill="var(--ouro2)">para de aportar</text>`}
+  </svg>`;
+}
+
+
+/* três taxas no mesmo eixo: e se render mais? e se render menos? */
+function cenarios(o){
+  const menos = Math.max(0.5, o.taxa - 4), mais = o.taxa + 4;
+  const tx = [[menos,"var(--graf)"],[o.taxa,"var(--alta)"],[mais,"var(--ouro2)"]];
+  const sers = tx.map(([t]) => serie({...o, taxa:t}));
+  const L = 700, A = 230, G = {l:0, r:L, t:20, b:A-24};
+  const n = sers[1].d.filter(x => x.fase === "a").length;
+  const mx = escalaBoa(Math.max(...sers.map(x => x.pico)));
+  const px = k => G.l + (k/(n-1))*(G.r-G.l);
+  const py = v => G.b - (v/mx)*(G.b-G.t);
+  let eixo = "";
+  for(let k=0; k<=4; k++){
+    const y = G.b - (k/4)*(G.b-G.t);
+    eixo += `<line x1="${G.l}" y1="${y.toFixed(1)}" x2="${G.r}" y2="${y.toFixed(1)}"
+      stroke="var(--linha)" stroke-opacity="${k?".45":"1"}"/>
+      <text x="${G.l+2}" y="${(y-5).toFixed(1)}" text-anchor="start" class="eixo">${
+        k ? rsCurto(mx*k/4) : "0"}</text>`;
+  }
+  const anos = o.para - o.idade, pa = Math.max(1, Math.ceil(anos/5));
+  for(let a=0; a<=anos; a+=pa){
+    const x = G.l + (a/anos)*(G.r-G.l);
+    eixo += `<text x="${x.toFixed(1)}" y="${G.b+15}" text-anchor="middle"
+      class="eixo" text-anchor="${a===0?"start":"middle"}">${o.idade+a} anos</text>`;
+  }
+  const linhas = sers.map((se,i) => {
+    const dd = se.d.filter(x => x.fase === "a");
+    const st = Math.max(1, Math.round(dd.length/160));
+    const pts = dd.filter((x,k) => k % st === 0);
+    const cam = pts.map((x,k) => `${k?"L":"M"}${px(k*st).toFixed(1)} ${py(x.com).toFixed(1)}`).join(" ");
+    return `<path d="${cam}" fill="none" stroke="${tx[i][1]}"
+      stroke-width="${i===1?"2.6":"1.7"}" ${i===1?"":'stroke-opacity=".9"'}/>`;
+  }).join("");
+  return `
+  <h2>E se render mais? E se render menos?</h2>
+  <p>A taxa é a variável que mais muda o resultado — e é a que ninguém controla
+    sozinho. Quatro pontos para cima ou para baixo mudam o fim em centenas de
+    milhares de reais.</p>
+  <div class="figura">
+    <svg viewBox="0 0 ${L} ${A}">${eixo}${linhas}</svg>
+    <div class="legenda">
+      ${tx.map(([t,c],i) => `<span><i style="background:${c}"></i>${
+        t.toFixed(1).replace(".",",")}% ao ano — ${rs(sers[i].pico)}</span>`).join("")}
+    </div>
+    <p class="notafig">Mesmo aporte, mesmo prazo. Só a taxa muda.
+      <b>Entre a menor e a maior, a diferença é de ${
+      rs(sers[2].pico - sers[0].pico)}.</b></p>
+  </div>`;
+}
+
+
+/* A pergunta ao contrário, que é a que o cliente faz de verdade:
+   "para ter X por mês, quanto preciso ter juntado?" */
+function usar(o){
+  const i = Math.pow(1 + o.taxa/100, 1/12) - 1;
+  const inf = Math.pow(1 + (o.inflacao||0)/100, 1/12) - 1;
+  // a retirada precisa acompanhar a inflação, senão encolhe sozinha e a conta
+  // mente: o que decide se ela se sustenta é o ganho REAL, não o nominal
+  const iReal = (1+i)/(1+inf) - 1;
+  const rendeMes = o.tenho*iReal, rendeAno = o.tenho*(Math.pow(1+iReal,12)-1);
+  let saldo = o.tenho, meses = null, sobra = null, v = o.valor;
+  const limite = 35*12;
+  const d = [{m:0, v:saldo}];
+  if(o.modo === "unica"){
+    sobra = Math.max(0, o.tenho - o.valor);
+    saldo = sobra;
+    for(let m=1; m<=limite; m++){ saldo = saldo*(1+iReal); d.push({m, v:saldo}); }
+  } else {
+    for(let m=1; m<=limite; m++){
+      saldo = saldo*(1+i) - (o.modo === "mes" ? v : 0);
+      if(o.modo === "ano" && m % 12 === 0) saldo -= v;
+      v = v*(1+inf);
+      if(saldo <= 0 && meses === null){ meses = m; saldo = 0; }
+      // guardado em dinheiro de hoje, para a curva não mentir com a inflação
+      d.push({m, v:Math.max(0, saldo/Math.pow(1+inf, m))});
+      if(meses !== null) break;
+    }
+  }
+  const limiteSeguro = o.modo === "ano" ? rendeAno : rendeMes;
+  return { d, i, iReal, rendeMes, rendeAno, meses, sobra, saldoFim:saldo,
+           dura: meses === null ? null : o.idade + meses/12,
+           perpetuo: perp, limiteSeguro };
+}
+
+function graficoUsar(u, o){
+  const L = 700, A = 240, G = {l:52, r:L-8, t:12, b:A-24};
+  const passo = Math.max(1, Math.round(u.d.length/160));
+  const d = u.d.filter((x,k) => k % passo === 0);
+  const mx = escalaBoa(Math.max(...d.map(x => x.v), 1));
+  const px = k => G.l + (k/(d.length-1))*(G.r-G.l);
+  const py = v => G.b - (v/mx)*(G.b-G.t);
+  const cam = d.map((x,k) => `${k?"L":"M"}${px(k).toFixed(1)} ${py(x.v).toFixed(1)}`).join(" ");
+  let eixo = "";
+  for(let k=0; k<=4; k++){
+    const y = G.b - (k/4)*(G.b-G.t);
+    eixo += `<line x1="${G.l}" y1="${y.toFixed(1)}" x2="${G.r}" y2="${y.toFixed(1)}"
+      stroke="var(--linha)" stroke-opacity="${k?".45":"1"}"/>
+      <text x="${G.l-7}" y="${(y+3.4).toFixed(1)}" text-anchor="end" class="eixo">${
+        k ? rsCurto(mx*k/4) : "0"}</text>`;
+  }
+  const anos = Math.max(1, Math.round(d[d.length-1].m/12));
+  const pa = Math.max(1, Math.ceil(anos/6));
+  for(let a=0; a<=anos; a+=pa){
+    const x = G.l + (a/anos)*(G.r-G.l);
+    eixo += `<text x="${x.toFixed(1)}" y="${G.b+15}" text-anchor="middle"
+      class="eixo">${o.idade+a} anos</text>`;
+  }
+  const sobe = u.perpetuo || o.modo === "unica";
+  return `<svg viewBox="0 0 ${L} ${A}">
+    <defs><linearGradient id="gu" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="${sobe?"var(--alta)":"var(--ouro2)"}" stop-opacity=".18"/>
+      <stop offset="100%" stop-color="${sobe?"var(--alta)":"var(--ouro2)"}" stop-opacity="0"/>
+    </linearGradient></defs>
+    ${eixo}
+    <path d="${cam} L${G.r} ${G.b} L${G.l} ${G.b} Z" fill="url(#gu)"/>
+    <path d="${cam}" fill="none" stroke="${sobe?"var(--alta)":"var(--ouro2)"}"
+      stroke-width="2.4"/>
+  </svg>`;
+}
+
+function aoContrario(o){
+  const iNom = Math.pow(1 + o.taxa/100, 1/12) - 1;
+  const inf  = Math.pow(1 + (o.inflacao||0)/100, 1/12) - 1;
+  // ⚠️ tudo em termos REAIS. A renda precisa manter o poder de compra, então
+  // o capital tem que render acima da inflação — usar a taxa nominal aqui
+  // subestima o alvo em milhões.
+  const i = (1+iNom)/(1+inf) - 1;
+  const renda = Math.max(0, o.rendaQuero||0);
+  const anosJunta = Math.max(1, (o.rendaAos||60) - o.idade);
+  const perpetuo = i > 0 ? renda/i : Infinity;
+  const nCons = Math.max(1, (o.rendaDura||0)*12);
+  const consumindo = o.rendaDura > 0
+    ? (i > 0 ? renda*(1 - Math.pow(1+i,-nCons))/i : renda*nCons) : null;
+  const alvo = consumindo != null ? consumindo : perpetuo;
+  const nJunta = anosJunta*12;
+  const jaTem = (o.tem||0) * Math.pow(1+i, nJunta);
+  const falta = Math.max(0, alvo - jaTem);
+  const aporte = i > 0 ? falta*i/(Math.pow(1+i,nJunta)-1) : falta/nJunta;
+  return { renda, anosJunta, perpetuo, consumindo, alvo, aporte, jaTem, i,
+           iAno: (Math.pow(1+i,12)-1)*100 };
+}
+
+function blocoContrario(o){
+  const c = aoContrario(o);
+  return `
+  <h2>A pergunta ao contrário</h2>
+  <p>É a que quase todo mundo faz primeiro: <b>para ter uma renda de tanto por
+    mês, quanto preciso ter juntado?</b> Preencha a renda que você quer e a
+    idade em que quer começar.</p>
+
+  <div class="campos" style="grid-template-columns:repeat(4,1fr)">
+    <div><label>Renda que quero</label><input id="q1" value="${o.rendaQuero}"></div>
+    <div><label>A partir dos</label><input id="q2" value="${o.rendaAos}"></div>
+    <div><label>Durante quantos anos</label><input id="q3" value="${o.rendaDura}"></div>
+    <div><label>Inflação %</label><input id="q4" value="${o.inflacao}"></div>
+  </div>
+  <p style="font-size:12.5px;color:var(--graf);margin:-2px 0 4px">
+    No campo dos anos, <b>0 significa uma renda que nunca acaba</b>.</p>
+
+  <div class="placar3">
+    <div class="forte"><span class="rot">Preciso ter juntado</span>
+      <b>${rs(c.alvo)}</b>
+      <span class="pe">aos ${o.rendaAos} anos${c.consumindo != null
+        ? ", consumindo em " + o.rendaDura + " anos"
+        : ", sem nunca acabar"}</span></div>
+    <div><span class="rot">Guardando por mês</span>
+      <b>${rs(c.aporte)}</b>
+      <span class="pe">durante ${c.anosJunta} anos, corrigido pela inflação</span></div>
+    <div><span class="rot">Ganho real usado</span>
+      <b>${c.iAno.toFixed(2).replace(".",",")}% ao ano</b>
+      <span class="pe">${o.taxa.toString().replace(".",",")}% menos inflação de ${
+        o.inflacao.toString().replace(".",",")}%</span></div>
+  </div>
+
+  <div class="conclui">Para receber <b class="destaque">${rs(c.renda)} por
+    mês</b> a partir dos ${o.rendaAos}, você precisa juntar
+    <b class="destaque">${rs(c.alvo)}</b> — o que dá
+    <b>${rs(c.aporte)} por mês</b> pelos próximos ${c.anosJunta} anos.</div>
+
+  <p>${c.consumindo != null
+    ? `Nesta conta o dinheiro <b>acaba</b> no fim dos ${o.rendaDura} anos. Se
+       quiser uma renda que não acabe, ponha 0 no campo dos anos — e repare no
+       quanto o alvo sobe.`
+    : `Aqui você retira <b>só o ganho real</b> e nunca toca no principal: por
+       isso a renda não tem prazo. Não é mágica nem promessa — é a consequência
+       de tirar menos do que o patrimônio rende acima da inflação. Na prática,
+       <b>ninguém vive para sempre</b>: aceitar consumir o principal ao longo de
+       20 ou 30 anos derruba bastante o alvo. Ponha o número de anos e
+       compare.`}</p>
+  <p><b>Começar cedo é a variável mais barata.</b> Adiar cinco anos não aumenta
+    o aporte em 20%: aumenta muito mais, porque você tira do juro composto
+    justamente os anos em que ele mais trabalha.</p>`;
+}
+
+/* ─── cabeçalho ─── */
+function graficoPrefixado(){
+  const valor=100000, taxa=10, anos=10, sai=2, restam=anos-sai;
+  const noFim = valor*Math.pow(1+taxa/100,anos);
+  const cen = [
+    { rot:"juro cai para 5%",  tx:5,  cor:"var(--alta)" },
+    { rot:"juro fica em 10%",  tx:10, cor:"var(--graf)" },
+    { rot:"juro sobe para 15%",tx:15, cor:"var(--baixa)" }
+  ].map(c => ({ ...c, vale: noFim/Math.pow(1+c.tx/100, restam) }));
+
+  const L=700, A=280, G={l:0, r:L-92, t:22, b:A-26}, passos=100;
+  const curvas = cen.map(c => {
+    const p=[];
+    for(let k=0;k<=passos;k++){
+      const t=anos*k/passos, rest=anos-t;
+      const tx = t<sai ? taxa : c.tx;
+      p.push(rest<=0 ? noFim : noFim/Math.pow(1+tx/100,rest));
+    }
+    return p;
+  });
+  const mx = 300000;
+  const px = k => G.l + (k/passos)*(G.r-G.l);
+  const py = v => G.b - (v/mx)*(G.b-G.t);
+  const linha = a => a.map((v,k)=>`${k?"L":"M"}${px(k).toFixed(1)} ${py(v).toFixed(1)}`).join(" ");
+
+  let eixo="";
+  for(const v of [0,100000,200000,300000]){
+    const y=py(v);
+    eixo+=`<line x1="${G.l}" y1="${y.toFixed(1)}" x2="${G.r}" y2="${y.toFixed(1)}"
+      stroke="var(--linha)" stroke-opacity="${v?".4":"1"}"/>
+      <text x="${G.l+2}" y="${(y-5).toFixed(1)}" class="eixo">${
+        v?rsCurto(v):"0"}</text>`;
+  }
+  for(const a of [0,2,4,6,8,10]){
+    const x=G.l+(a/anos)*(G.r-G.l);
+    eixo+=`<text x="${x.toFixed(1)}" y="${G.b+16}" text-anchor="${
+      a===0?"start":a===10?"end":"middle"}" class="eixo">${
+      a===0?"aplico":a===10?"vence":"ano "+a}</text>`;
+  }
+  const xs = G.l+(sai/anos)*(G.r-G.l);
+
+  return `
+  <div class="figura">
+    <svg viewBox="0 0 ${L} ${A}">
+      ${eixo}
+      <line x1="${xs.toFixed(1)}" y1="${G.t}" x2="${xs.toFixed(1)}" y2="${G.b}"
+        stroke="var(--lacre)" stroke-dasharray="3 3"/>
+      <text x="${(xs+5).toFixed(1)}" y="${G.t-6}" class="eixo" fill="var(--lacre)"
+        >você precisa sair aqui</text>
+      ${curvas.map((c,i)=>`<path d="${linha(c)}" fill="none" stroke="${cen[i].cor}"
+        stroke-width="${i===1?"1.5":"2.4"}" ${i===1?'stroke-dasharray="5 4"':""}/>`).join("")}
+      ${cen.map((c,i)=>`
+        <circle cx="${xs.toFixed(1)}" cy="${py(c.vale).toFixed(1)}" r="3.5" fill="${c.cor}"></circle>
+        <text x="${(G.r+8)}" y="${(py(c.vale)+4).toFixed(1)}" class="eixo"
+          fill="${c.cor}" style="font-size:11px">${rs(c.vale)}</text>`).join("")}
+      <circle cx="${G.r}" cy="${py(noFim).toFixed(1)}" r="3.5" fill="var(--ouro2)"></circle>
+      <text x="${(G.r+8)}" y="${(py(noFim)+4).toFixed(1)}" class="eixo"
+        fill="var(--ouro2)" style="font-size:11px">${rs(noFim)}</text>
+    </svg>
+    <div class="legenda">
+      ${cen.map(c=>`<span><i style="background:${c.cor}"></i>${c.rot}</span>`).join("")}
+      <span><i style="background:var(--ouro2)"></i>o vencimento</span>
+    </div>
+  </div>`;
+}
+
+
+function telaCrescerNova(){
+  const o = { tem:0, aporte:1500, taxa:10, idade:35, para:65, ate:90 };
+  const s = serie(o);
+  $("#app").innerHTML = `
+  <div class="trilho"><a href="#/aprender" style="color:var(--ouro2);text-decoration:none">Aprender</a> · comece por aqui</div>
+  <h1>Como o dinheiro cresce</h1>
+  <p class="chapeu">Não existe mágica em investimento. Existe uma conta que
+    quase ninguém faz até o fim — e ela tem só três variáveis.</p>
+
+  <div class="caso">
+    <p>Duas pessoas guardam <b>R$ 1.500</b> por mês. Uma começa aos 25, a outra
+      aos 40. Aos 65, a primeira tem <b>quatro vezes e meia</b> o que a segunda
+      tem — e depositou só 60% a mais.</p>
+  </div>
+
+  <h2>O que é</h2>
+  <p>Juro composto é o juro rendendo sobre o juro. No primeiro mês, o seu
+    dinheiro rende sobre o que você depositou. No segundo, rende sobre o
+    depósito <b>mais o rendimento do mês anterior</b>. Parece pouca coisa. Em
+    trinta anos, é quase tudo.</p>
+
+  <div class="figura">
+    ${graficoAc(s, o, 250, true)}
+    <div class="legenda">
+      <span><i style="background:var(--alta)"></i>o que você tem</span>
+      <span><i style="background:var(--graf)"></i>o que você depositou</span>
+      <span><i style="background:var(--lacre)"></i>a virada</span>
+    </div>
+    <p class="notafig">Guardando R$ 1.500 por mês a 10% ao ano, dos 35 aos 65.
+      A linha cinza é o dinheiro embaixo do colchão. <b>A distância entre as duas
+      é o que o tempo fez.</b></p>
+  </div>
+
+  <div class="conclui">Você deposita ${rs(s.aportado)} e chega aos 65 com
+    ${rs(s.pico)}. <b class="destaque">${Math.round(s.juro/s.pico*100)}% desse
+    dinheiro você não depositou.</b></div>
+
+  <p>E quem não guarda nada? Fica com nada. <b>Não existe rendimento sobre
+    dinheiro que não existe</b> — nenhuma taxa, nenhuma escolha de investimento,
+    nenhum conhecimento de mercado muda isso. É por isso que guardar vem antes
+    de qualquer outra coisa nesta lista.</p>
+
+  <h2>A virada</h2>
+  <p>Existe um mês em que o seu patrimônio passa a render <b>mais do que você
+    deposita</b>. Nesse exemplo é por volta dos
+    <b class="destaque">${o.idade + Math.floor(s.virada/12)} anos</b>: o dinheiro
+    ganha R$ 1.500 sozinho, o mesmo que você deposita com esforço.</p>
+  <p>Daí em diante você continua guardando, mas <b>já não é você quem faz o
+    trabalho pesado</b>.</p>
+
+  <h2>E depois, quanto dá para tirar?</h2>
+  <p>Chegando aos 65 com ${rs(s.pico)}, dá para retirar
+    <b class="destaque">${rs(s.retirada)} por mês</b> até os 90 — e o dinheiro
+    acaba junto. Se preferir não tocar no principal e viver só do rendimento,
+    são <b>${rs(s.soJuros)} por mês, para sempre</b>.</p>
+
+  <div class="trinca">
+    <div><span class="rot">Pra que serve</span>
+      <p>Saber quanto e por quanto tempo guardar para chegar onde você quer.</p></div>
+    <div><span class="rot">Como usar</span>
+      <p>Aporte fixo, todo mês, sem interrupção. O valor importa menos que a
+        constância.</p></div>
+    <div><span class="rot">Quando não serve</span>
+      <p>Se você tem dívida cara. Nenhuma aplicação paga o que o cartão cobra —
+        quitar vem primeiro.</p></div>
+  </div>
+
+  <a class="simule" href="#/sim-crescer">
+    <span class="k">Simule aqui · acumulação</span>
+    <span class="t">Quanto o meu dinheiro rende &rarr;</span>
+    <span class="d">Sua idade, quanto você guarda por mês e por quantos anos.
+      Leva dez segundos.</span>
+  </a>
+
+  <a class="simule" href="#/sim-renda" style="margin-top:12px">
+    <span class="k">Simule aqui · renda</span>
+    <span class="t">Quanto posso usar depois &rarr;</span>
+    <span class="d">Renda todo mês, retirada uma vez por ano ou saque único —
+      e por quanto tempo o dinheiro dura.</span>
+  </a>
+
+  <h2>E se eu não souber por onde começar?</h2>
+  <p>É o caso mais comum, e não tem nada de errado nisso. A conta acima é
+    simples; o difícil é aplicá-la à sua vida — quanto dá para guardar sem
+    apertar, onde pôr o dinheiro, o que fazer quando aparece um imprevisto.</p>
+  <p>Conversar com um especialista que faz isso todo dia <b>não costuma piorar
+    o seu custo. Tende a melhorar.</b></p>
+
+  <div class="adiante">
+    <a class="bt cheio" href="#/servicos">Consulte gratuitamente &rarr;</a>
+    <a class="bt" href="#/aprender">Ver todos os temas</a>
+  </div>`;
+}
+
+/* ─── PÁGINA: renda fixa (segundo tópico, para ver o padrão repetir) ─── */
+function simulador(){
+  const s = serie(S);
+  $("#app").innerHTML = `
+  <div class="trilho">Simulador · acumulação</div>
+  <h1>Quanto o meu dinheiro rende</h1>
+  <p class="chapeu">Mexa nos campos e veja o que muda. Nada é salvo.</p>
+
+  <div class="campos" style="grid-template-columns:repeat(5,1fr)">
+    <div><label>Tenho hoje</label><input id="a" value="${S.tem}"></div>
+    <div><label>Guardo por mês</label><input id="b" value="${S.aporte}"></div>
+    <div><label>Rende ao ano %</label><input id="c" value="${S.taxa}"></div>
+    <div><label>Minha idade</label><input id="d" value="${S.idade}"></div>
+    <div><label>Aporto até os</label><input id="e" value="${S.para}"></div>
+  </div>
+
+  <div class="figura">${graficoAc(s, S, 290, true)}
+    <div class="legenda">
+      <span><i style="background:var(--alta)"></i>o que você tem</span>
+      <span><i style="background:var(--graf)"></i>só o que você depositou</span>
+      ${S.tem>0?`<span><i style="background:var(--ouro2)"></i>sem aportar nada</span>`:""}
+    </div>
+    ${S.tem===0 && S.aporte>0 ? `<p class="notafig"><b>Quem não guarda nada fica
+      na linha do zero.</b> Não existe rendimento sobre dinheiro que não existe.</p>` : ""}
+  </div>
+
+  <div class="placar3">
+    <div><span class="rot">Aos ${S.para} anos</span><b>${rs(s.pico)}</b>
+      <span class="pe">depois de ${S.para-S.idade} anos guardando</span></div>
+    <div><span class="rot">Saiu do seu bolso</span><b>${rs(s.aportado)}</b>
+      <span class="pe">${Math.round(s.aportado/s.pico*100)}% do total</span></div>
+    <div class="forte"><span class="rot">O dinheiro fez sozinho</span>
+      <b>${rs(s.juro)}</b>
+      <span class="pe">${Math.round(s.juro/s.pico*100)}% do total</span></div>
+  </div>
+
+  <div class="conclui">${s.virada == null
+    ? `Com esses números a virada não chega. Aumente o prazo, o aporte ou a taxa
+       e veja o que acontece.`
+    : `Aos <b class="destaque">${S.idade + Math.floor(s.virada/12)} anos</b> o
+       seu dinheiro passa a render mais do que você deposita todo mês.`}</div>
+
+  ${cenarios(S)}
+
+  ${AVISO}
+
+  <div class="adiante">
+    <a class="bt cheio" href="#/servicos">Consulte gratuitamente &rarr;</a>
+    <a class="bt" href="#/aprender">Ver todos os temas</a>
+  </div>`;
+
+  const liga = (id, campo, min, max) => {
+    const el = $("#"+id); if(!el) return;
+    el.oninput = () => {
+      let v = Number(String(el.value).replace(/[^\d.,-]/g,"").replace(",","."));
+      if(!isFinite(v)) v = 0;
+      S[campo] = Math.min(max, Math.max(min, v));
+      if(S.para <= S.idade) S.para = S.idade + 1;
+      if(S.ate <= S.para) S.ate = S.para + 25;
+      const pos = el.selectionStart;
+      simulador();
+      const n = $("#"+id); if(n){ n.focus(); try{ n.setSelectionRange(pos,pos); }catch(e){} }
+    };
+  };
+  liga("a","tem",0,1e9); liga("b","aporte",0,1e7); liga("c","taxa",0,60);
+  liga("d","idade",16,90); liga("e","para",17,95);
+}
+
+function simRenda(){
+  const u = usar(R);
+  const rot = { mes:"por mês", ano:"por ano", unica:"de uma vez" }[R.modo];
+  $("#app").innerHTML = `
+  <div class="trilho">Simulador · o que dá para fazer com o que juntei</div>
+  <h1>Quanto posso usar</h1>
+  <p class="chapeu">Você já tem, ou vai ter, um valor guardado. A pergunta agora
+    é outra: <b>quanto dá para tirar, de que jeito, e por quanto tempo dura.</b></p>
+
+  <div class="campos" style="grid-template-columns:repeat(4,1fr)">
+    <div><label>Tenho juntado</label><input id="r1" value="${R.tenho}"></div>
+    <div><label>Rende ao ano (%)</label><input id="r2" value="${R.taxa}"></div>
+    <div><label>Minha idade</label><input id="r3" value="${R.idade}"></div>
+    <div><label>Quero tirar ${rot}</label><input id="r4" value="${R.valor}"></div>
+  </div>
+
+  <div class="modos">
+    ${[["mes","Uma renda todo mês"],["ano","Uma retirada por ano"],
+       ["unica","Uma retirada única, agora"]]
+      .map(([k,t]) => `<button type="button" class="modo${R.modo===k?" on":""}"
+        data-modo="${k}">${t}</button>`).join("")}
+  </div>
+
+  <div class="figura">${graficoUsar(u, R)}
+    <p class="notafig">${R.modo === "unica"
+      ? `O que sobra depois do saque, rendendo sozinho.`
+      : u.perpetuo
+        ? `O patrimônio não cai: você tira menos do que ele rende.`
+        : `O patrimônio sendo consumido até acabar.`}</p>
+  </div>
+
+  <div class="placar3">
+    ${R.modo === "unica"
+      ? `<div class="forte"><span class="rot">Sobra depois do saque</span>
+           <b>${rs(u.sobra)}</b>
+           <span class="pe">e continua rendendo</span></div>
+         <div><span class="rot">Isso passa a render</span>
+           <b>${rs(u.sobra*u.i)}</b>
+           <span class="pe">por mês, sem tocar no principal</span></div>
+         <div><span class="rot">Em dez anos vira</span>
+           <b>${rs(u.d[Math.min(120, u.d.length-1)].v)}</b>
+           <span class="pe">se você não tirar mais nada</span></div>`
+      : `<div class="forte"><span class="rot">Tirando ${rs(R.valor)} ${rot}</span>
+           <b>${u.perpetuo ? "para sempre" : "até os " + Math.floor(u.dura) + " anos"}</b>
+           <span class="pe">${u.perpetuo
+             ? "o patrimônio não acaba"
+             : "quando o dinheiro termina"}</span></div>
+         <div><span class="rot">O limite sem consumir</span>
+           <b>${rs(u.limiteSeguro)}</b>
+           <span class="pe">${R.modo === "ano" ? "por ano" : "por mês"}, só do rendimento</span></div>
+         <div><span class="rot">Seu patrimônio rende</span>
+           <b>${rs(u.rendeMes)}</b>
+           <span class="pe">por mês, sobre ${rs(R.tenho)}</span></div>`}
+  </div>
+
+  <div class="conclui">${R.modo === "unica"
+    ? `Tirando ${rs(R.valor)} de uma vez, sobram ${rs(u.sobra)} — que passam a
+       render <b class="destaque">${rs(u.sobra*u.i)} por mês</b>.`
+    : u.perpetuo
+      ? `Tirando ${rs(R.valor)} ${rot}, <b class="destaque">o patrimônio não
+         acaba</b>: você está tirando menos do que ele rende.`
+      : `Tirando ${rs(R.valor)} ${rot}, o dinheiro dura até os
+         <b class="destaque">${Math.floor(u.dura)} anos</b>. O limite para não
+         consumir o principal é ${rs(u.limiteSeguro)} ${
+         R.modo === "ano" ? "por ano" : "por mês"}.`}</div>
+
+  ${blocoContrario(S)}
+
+  ${AVISO}
+
+  <div class="adiante">
+    <a class="bt cheio" href="#/servicos">Consulte gratuitamente &rarr;</a>
+    <a class="bt" href="#/aprender">Ver todos os temas</a>
+  </div>`;
+
+  const liga = (id, campo, min, max, alvo) => {
+    const el = $("#"+id); if(!el) return;
+    el.oninput = () => {
+      let v = Number(String(el.value).replace(/[^\d.,-]/g,"").replace(",","."));
+      if(!isFinite(v)) v = 0;
+      alvo[campo] = Math.min(max, Math.max(min, v));
+      const pos = el.selectionStart;
+      simRenda();
+      const n = $("#"+id); if(n){ n.focus(); try{ n.setSelectionRange(pos,pos); }catch(e){} }
+    };
+  };
+  liga("r1","tenho",0,1e10,R); liga("r2","taxa",0,60,R);
+  liga("r3","idade",18,100,R); liga("r4","valor",0,1e10,R);
+  liga("q1","rendaQuero",0,1e7,S); liga("q2","rendaAos",18,100,S);
+  liga("q3","rendaDura",0,60,S);
+  document.querySelectorAll("[data-modo]").forEach(b =>
+    b.onclick = () => {
+      R.modo = b.dataset.modo;
+      if(R.modo === "ano" && R.valor < 50000) R.valor = 240000;
+      if(R.modo === "mes" && R.valor > 200000) R.valor = 20000;
+      if(R.modo === "unica" && R.valor < 50000) R.valor = 500000;
+      simRenda();
+    });
+}
+
+/* ─── SIMULADOR: quanto custa o dinheiro ─── */
+
+
+function simCredito(){
+  const v = Math.max(1, C.valor), n = Math.max(1, C.meses);
+  const r = LINHAS_C.map(([nome,,oq]) => {
+    const i = TX_C[nome]/100;
+    const parcela = i > 0 ? v*i/(1 - Math.pow(1+i,-n)) : v/n;
+    return { nome, oq, aoMes:TX_C[nome], aoAno:(Math.pow(1+i,12)-1)*100,
+             parcela, juro: parcela*n - v };
+  }).sort((a,b) => a.aoMes - b.aoMes);
+  const mx = Math.max(...r.map(x => x.juro), 1);
+  const melhor = r[0], pior = r[r.length-1];
+
+  $("#app").innerHTML = `
+  <div class="trilho">Simulador · custo do crédito</div>
+  <h1>Quanto custa o dinheiro</h1>
+  <p class="chapeu">O mesmo valor, o mesmo prazo, a mesma dívida. Só muda de
+    onde você tira.</p>
+
+  <div class="campos" style="grid-template-columns:repeat(2,1fr)">
+    <div><label>Preciso de</label><input id="k1" value="${C.valor}"></div>
+    <div><label>Para pagar em quantos meses</label><input id="k2" value="${C.meses}"></div>
+  </div>
+
+  <div class="figura">
+  <table class="volta">
+    <thead><tr><th>De onde vem</th><th>Ao mês</th><th>Ao ano</th>
+      <th>Parcela</th><th>Juro pago</th><th></th></tr></thead>
+    <tbody>${r.map(x => `<tr>
+      <td><b style="color:var(--tinta)">${x.nome}</b><br>
+        <span style="font-size:11.5px;color:var(--graf)">${x.oq}</span></td>
+      <td class="mono">${x.aoMes.toFixed(2).replace(".",",")}%</td>
+      <td class="mono">${x.aoAno>=100?Math.round(x.aoAno):x.aoAno.toFixed(1).replace(".",",")}%</td>
+      <td class="mono">${rs(x.parcela)}</td>
+      <td class="mono ${x.juro>C.valor?"ruim":""}">${rs(x.juro)}</td>
+      <td style="width:26%"><span class="bar"><i style="width:${
+        Math.max(2,x.juro/mx*100).toFixed(1)}%"></i></span></td>
+    </tr>`).join("")}</tbody>
+  </table>
+  </div>
+
+  <div class="conclui">Entre o caminho mais barato e o mais caro há
+    <b class="destaque">${rs(pior.juro - melhor.juro)}</b> de diferença — o mesmo
+    empréstimo, cobrado ${Math.round(pior.juro/Math.max(1,melhor.juro))} vezes mais.</div>
+
+  <h2>Trocar dívida cara por barata é a melhor aplicação que existe</h2>
+  <p>Quem sai do rotativo para uma linha com garantia ganha a diferença
+    <b>sem correr risco nenhum</b>. Nenhuma aplicação no Brasil paga isso.</p>
+
+  <h2>Ajustar as taxas</h2>
+  <p style="font-size:13px;color:var(--graf)">São médias de mercado e mudam todo
+    mês. A sua taxa depende de banco, relacionamento e histórico — ponha a que
+    te ofereceram.</p>
+  <div class="campos" style="grid-template-columns:repeat(4,1fr)">
+    ${LINHAS_C.map(([nome]) => `<div><label>${nome}</label>
+      <input class="txC" data-t="${nome}" value="${TX_C[nome]}"></div>`).join("")}
+  </div>
+
+  ${AVISO}
+
+  <div class="adiante">
+    <a class="bt cheio" href="#/servicos">Consulte gratuitamente &rarr;</a>
+    <a class="bt" href="#/aprender">Ver todos os temas</a>
+  </div>`;
+
+  const num = el => { const x = Number(String(el.value).replace(/[^\d.,-]/g,"").replace(",",".")); return isFinite(x)?x:0; };
+  const rev = id => { const p = $("#"+id) ? $("#"+id).selectionStart : null;
+    simCredito(); const e2 = $("#"+id); if(e2){ e2.focus(); try{ e2.setSelectionRange(p,p); }catch(e){} } };
+  $("#k1").oninput = e => { C.valor = Math.min(1e9, Math.max(1, num(e.target))); rev("k1"); };
+  $("#k2").oninput = e => { C.meses = Math.min(480, Math.max(1, num(e.target))); rev("k2"); };
+  document.querySelectorAll(".txC").forEach(el => el.oninput = () => {
+    TX_C[el.dataset.t] = Math.min(30, Math.max(0, num(el)));
+    const t = el.dataset.t; simCredito();
+    const e2 = document.querySelector(`.txC[data-t="${t}"]`); if(e2) e2.focus();
+  });
+}
+
+/* ─── SIMULADOR: comprar um bem ─── */
+
+function simComprar(){
+  const bem = Math.max(1, B.bem);
+  const fator = 1 + B.adm/100 + B.fr/100;
+  const parcelaCon = bem*fator/Math.max(1,B.prazoCon);
+  const custoAdm = bem*fator - bem;
+  const jEf = ((1+B.juroFin/100)*(1+B.tr/100) - 1)*100;
+  const iF = Math.pow(1+jEf/100, 1/12) - 1;
+  const parcelaFin = iF>0 ? bem*iF/(1-Math.pow(1+iF,-B.prazoFin)) : bem/B.prazoFin;
+  const juroFin = parcelaFin*B.prazoFin - bem;
+  const iA = Math.pow(1+B.taxa/100,1/12)-1;
+  let saldo = 0, mJuntar = null;
+  for(let m=1;m<=1200;m++){ saldo = saldo*(1+iA)+B.mensal; if(saldo>=bem){ mJuntar=m; break; } }
+
+  $("#app").innerHTML = `
+  <div class="trilho">Simulador · comprar um bem</div>
+  <h1>Consórcio, financiamento ou juntar</h1>
+  <p class="chapeu">Três caminhos, o mesmo imóvel. O que muda é quando você põe
+    a mão na chave e quanto cobram por essa pressa.</p>
+
+  <div class="campos" style="grid-template-columns:repeat(4,1fr)">
+    <div><label>Valor do bem</label><input id="b1" value="${B.bem}"></div>
+    <div><label>Posso pagar por mês</label><input id="b2" value="${B.mensal}"></div>
+    <div><label>Aluguel que pago hoje</label><input id="b3" value="${B.aluguel}"></div>
+    <div><label>Meu dinheiro rende %</label><input id="b9" value="${B.taxa}"></div>
+    <div><label>Consórcio: prazo</label><input id="b4" value="${B.prazoCon}"></div>
+    <div><label>Consórcio: adm %</label><input id="b5" value="${B.adm}"></div>
+    <div><label>Consórcio: fundo %</label><input id="b6" value="${B.fr}"></div>
+    <div><label>Financiamento: juro %</label><input id="b7" value="${B.juroFin}"></div>
+  </div>
+
+  <div class="figura">
+  <table class="volta">
+    <thead><tr><th></th><th>Consórcio</th><th>Financiamento</th><th>Juntar</th></tr></thead>
+    <tbody>
+      <tr><td>Quando tem o bem</td>
+        <td>quando for sorteado</td><td style="color:var(--alta)">agora</td>
+        <td>${mJuntar? (mJuntar/12).toFixed(1).replace(".",",")+" anos" : "mais de 100 anos"}</td></tr>
+      <tr><td>Parcela</td>
+        <td class="mono">${rs(parcelaCon)}</td>
+        <td class="mono">${rs(parcelaFin)}</td>
+        <td class="mono">${rs(B.mensal)}</td></tr>
+      <tr><td>Custo acima do bem</td>
+        <td class="mono">${rs(custoAdm)}</td>
+        <td class="mono ruim">${rs(juroFin)}</td>
+        <td class="mono" style="color:var(--alta)">nada</td></tr>
+      <tr><td>Cabe no que posso pagar?</td>
+        <td>${parcelaCon<=B.mensal?'<span style="color:var(--alta)">sim</span>'
+             :"faltam "+rs(parcelaCon-B.mensal)}</td>
+        <td>${parcelaFin<=B.mensal?'<span style="color:var(--alta)">sim</span>'
+             :"faltam "+rs(parcelaFin-B.mensal)}</td>
+        <td><span style="color:var(--alta)">sim</span></td></tr>
+      <tr><td>Aluguel que você paga enquanto espera</td>
+        <td class="mono">—</td><td class="mono" style="color:var(--alta)">acaba já</td>
+        <td class="mono ruim">${mJuntar?rs(B.aluguel*mJuntar):"—"}</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="conclui">O financiamento custa
+    <b class="destaque">${rs(juroFin)}</b> de juro — ${(juroFin/bem).toFixed(1).replace(".",",")}
+    vezes o valor do imóvel. O consórcio custa ${rs(custoAdm)} de taxa, mas
+    <b>não diz quando chega</b>.</div>
+
+  <p>O juro do financiamento aqui é <b>${jEf.toFixed(2).replace(".",",")}% ao ano</b>:
+    a taxa anunciada de ${B.juroFin.toString().replace(".",",")}% composta com a TR
+    de ${B.tr.toString().replace(".",",")}%. A taxa que aparece no anúncio nunca é
+    a que você paga.</p>
+
+  <p>E repare na última linha: quem escolhe juntar passa
+    ${mJuntar?(mJuntar/12).toFixed(1).replace(".",","):"muitos"} anos pagando
+    aluguel. <b>Esse dinheiro precisa entrar na comparação</b>, e quase nunca
+    entra.</p>
+
+  ${AVISO}
+
+  <div class="adiante">
+    <a class="bt cheio" href="#/servicos">Consulte gratuitamente &rarr;</a>
+    <a class="bt" href="#/aprender">Ver todos os temas</a>
+  </div>`;
+
+  const num = el => { const x = Number(String(el.value).replace(/[^\d.,-]/g,"").replace(",",".")); return isFinite(x)?x:0; };
+  const liga = (id,campo,min,max) => { const el=$("#"+id); if(!el) return;
+    el.oninput = () => { B[campo]=Math.min(max,Math.max(min,num(el)));
+      const p=el.selectionStart; simComprar();
+      const e2=$("#"+id); if(e2){e2.focus(); try{e2.setSelectionRange(p,p);}catch(e){}} }; };
+  liga("b1","bem",1,1e9); liga("b2","mensal",0,1e7); liga("b3","aluguel",0,1e6);
+  liga("b4","prazoCon",12,300); liga("b5","adm",0,60); liga("b6","fr",0,20);
+  liga("b7","juroFin",0,60); liga("b9","taxa",0,60);
+}
+
+/* gráfico fixo dos três cenários do prefixado — sem simulador, só a dinâmica */
+function pagCreditoNova(){ $("#app").innerHTML =
+  TOPO("quando já há patrimônio","Quanto custa o dinheiro",
+    "A mesma dívida, o mesmo valor, o mesmo prazo. Muda só de onde você tira — e a conta varia em dezenas de vezes.") + `
+  <div class="caso">
+    <p>R$ 50 mil em dois anos. No caminho mais barato você paga <b>R$ 4 mil</b>
+      de custo. No mais caro, <b>R$ 111 mil</b>. É o mesmo empréstimo.</p>
+  </div>
+  <h2>A ordem, do mais barato ao mais caro</h2>
+  <p>Consórcio, financiamento imobiliário, empréstimo com imóvel em garantia,
+    consignado, crédito pessoal, rotativo do cartão e cheque especial. A
+    diferença entre as pontas passa de <b>vinte vezes</b>.</p>
+  <h2>As duas regras que explicam tudo</h2>
+  <p><b>Garantia derruba juro.</b> Onde há um bem atrás da dívida, o banco
+    arrisca pouco e cobra pouco. Cartão e cheque especial não têm nada atrás — e
+    cobram a incerteza inteira.</p>
+  <p><b>Pressa custa caro.</b> O crédito que sai na hora é sempre o mais caro. O
+    mais barato da lista é justamente o que não diz quando chega.</p>
+  <div class="trinca">
+    <div><span class="rot">A taxa não é o custo</span>
+      <p>O que vale é o CET, que soma seguro, tarifa e administração.</p></div>
+    <div><span class="rot">"A partir de"</span>
+      <p>É a taxa do melhor cliente do banco. Quase nunca é a sua.</p></div>
+    <div><span class="rot">"+ TR"</span>
+      <p>No imobiliário, a taxa anunciada vem somada a um índice. Compõe, não
+        soma.</p></div>
+  </div>
+  <h2>A melhor aplicação que existe</h2>
+  <p>Trocar dívida cara por dívida barata. Quem sai do rotativo para uma linha
+    com garantia <b>ganha a diferença sem correr risco nenhum</b> — e nenhuma
+    aplicação no Brasil paga isso.</p>
+  ` + `<a class="simule" href="#/sim-credito">
+    <span class="k">Simule aqui</span>
+    <span class="t">Compare as linhas com o seu valor &rarr;</span>
+    <span class="d">Quanto você precisa e em quantos meses — o custo de cada
+      caminho lado a lado.</span></a>`
+    + FIMP(); }
+
+/* ══ vindas do protótipo: sucessão e detalhe de produto ══ */
+
+function pagSucessaoNova(){ $("#app").innerHTML =
+  TOPO("quando já há patrimônio","Não perder na saída",
+    "Passar a vida acumulando e deixar um quinto na mão de imposto, advogado e cartório é o erro mais caro de todos — e o mais evitável.") + `
+  <div class="caso">
+    <p>Um patrimônio de R$ 10 milhões custa cerca de <b>R$ 1,25 milhão</b> para
+      ser transmitido, entre imposto, honorários e custas. E essa conta é paga
+      <b>antes</b> de a família receber qualquer coisa.</p>
+  </div>
+  <h2>O problema não é o imposto. É o caixa</h2>
+  <p>Quando alguém morre, os bens travam no mesmo dia: conta, aluguel, empresa.
+    As despesas não travam — escola, condomínio, folha de pagamento continuam
+    chegando.</p>
+  <p>É aí que a família vende ativo com pressa. E quem vende com pressa vende
+    barato. <b>A pergunta não é se há patrimônio: é se há dinheiro na semana
+    seguinte.</b></p>
+  <h2>Cada tipo de bem pede um caminho</h2>
+  <div class="trinca">
+    <div><span class="rot">Imóveis e empresa</span>
+      <p>Holding. Ela não morre: passam-se as cotas, não a matrícula de cada
+        bem.</p></div>
+    <div><span class="rot">Dinheiro e aplicações</span>
+      <p>Fora da holding. Dentro dela, aplicação paga mais imposto e perde
+        isenções.</p></div>
+    <div><span class="rot">A liquidez</span>
+      <p>Seguro. Não entra em inventário e chega em semanas, enquanto o resto
+        está travado.</p></div>
+  </div>
+  <h2>Por que não dá para fazer sozinho</h2>
+  <p>O caminho muda conforme o regime de casamento, os herdeiros, se há filhos
+    de uniões diferentes, se há sócios e o que diz o contrato social. Segundo
+    casamento com filhos do primeiro é o caso clássico que termina em briga.</p>
+  <p>Isso é trabalho de advogado e contador. <b>Montar depois de acontecer é
+    impossível.</b></p>
+  ` + FIMP(); }
+
+
+function servRendaFixa(){
+  $("#app").innerHTML = `
+  <div class="trilho"><a href="#/servicos" style="color:var(--ouro2);text-decoration:none">Serviços</a> · produtos</div>
+  <h1>Renda fixa</h1>
+  <p class="chapeu">Do título do governo ao crédito privado estruturado. É onde
+    fica a parte do patrimônio que não pode oscilar — e onde a escolha do papel
+    certo vale mais do que parece.</p>
+
+  <div class="caso">
+    <p>Dois títulos com o mesmo prazo e o mesmo emissor podem ter
+      <b>tributação diferente</b>. Um isento e outro não muda o retorno líquido
+      em vários pontos ao ano, sem mudar nada do risco.</p>
+  </div>
+
+  <h2>Quando você precisa</h2>
+  <p>Quando tem dinheiro com data marcada, quando quer reserva de emergência
+    que renda, ou quando o patrimônio cresceu e a parte estável precisa parar
+    de ficar na poupança.</p>
+
+  <h2>O que o especialista faz</h2>
+  <p>Compara emissores e garantias, ajusta prazo ao seu uso do dinheiro, e
+    escolhe entre prefixado, pós e híbrido conforme o cenário — não conforme o
+    que está em promoção. E, principalmente, olha a <b>tributação</b>, que é
+    onde a maior parte do ganho se perde sem ninguém notar.</p>
+
+  <h2>Que registro ele tem</h2>
+  <p>Distribuição e recomendação de produto de renda fixa exigem registro e
+    certificação — e todo profissional indicado aqui atua vinculado a
+    instituição autorizada. <b>Nada fora do que é regulado.</b></p>
+
+  <div class="adiante">
+    <a class="bt cheio" href="#/servicos">Consulte gratuitamente &rarr;</a>
+    <a class="bt" href="#/aprender">Voltar ao índice</a>
+  </div>`;
+}
+
+
+const TOPO = (etapa,titulo,chapeu) => `
+  <div class="trilho"><a href="#/aprender" style="color:var(--ouro2);text-decoration:none">Aprender</a> · ${etapa}</div>
+  <h1>${titulo}</h1>
+  <p class="chapeu">${chapeu}</p>`;
+const FIMP = () => `
+  <div class="adiante">
+    <a class="bt cheio" href="#/servicos">Consulte gratuitamente &rarr;</a>
+    <a class="bt" href="#/aprender">Voltar ao índice</a>
+  </div>`;
+const AVISO = `
+  <div class="aviso">
+    <b>Isto é conteúdo educacional, não uma proposta.</b>
+    <p>O simulador existe para você entender o raciocínio. Cada investidor tem
+      um perfil de crédito.</p>
+    <p style="margin-top:9px">A conta aqui serve para você chegar preparado à
+      conversa, não para substituí-la. <b>Quem vai encontrar as melhores
+      condições reais, no seu nome, é o especialista</b> — e é aí que a
+      diferença aparece.</p>
+  </div>`;
+
+const CART = (t,d) => `
+  <a class="simule" href="#/servicos">
+    <span class="k">O simulador de carteiras</span>
+    <span class="t">${t} &rarr;</span>
+    <span class="d">${d}</span></a>`;
+
+const SIM = (t,d) => `
+  <a class="simule" href="#/servicos">
+    <span class="k">Simule aqui</span>
+    <span class="t">Veja o efeito da taxa no seu patrimônio &rarr;</span>
+    <span class="d">${d}</span></a>`;
+
+function servInternacional(){
+  $("#app").innerHTML = `
+  <div class="trilho"><a href="#/servicos" style="color:var(--ouro2);text-decoration:none">Serviços</a> · produtos</div>
+  <h1>Conta internacional</h1>
+  <p class="chapeu">Ter parte do patrimônio fora do país e fora do real. Não é
+    coisa só de quem tem muito — mudou bastante nos últimos anos.</p>
+
+  <div class="caso">
+    <p>O risco que quase ninguém mede é ter <b>100% do patrimônio numa moeda
+      só</b>, num país só. Não é sobre desconfiar do Brasil: é sobre não depender
+      de uma aposta única.</p>
+  </div>
+
+  <h2>Quando você precisa</h2>
+  <p>Quando tem gasto em dólar — filho estudando fora, viagem recorrente, imóvel
+    lá. Quando o patrimônio cresceu e concentrar tudo aqui virou risco. E quando
+    você quer acesso a ativos que não existem na bolsa brasileira.</p>
+
+  <h2>O que o especialista faz</h2>
+  <p>Escolhe a jurisdição e o tipo de conta conforme o seu objetivo, cuida da
+    <b>declaração ao Banco Central e à Receita</b> — que é obrigatória a partir
+    de certos valores e é onde a maioria erra —, e monta a carteira lá fora com
+    a tributação certa. Remessa, câmbio e imposto têm regras próprias, e errar
+    sai caro.</p>
+
+  <h2>Que registro ele tem</h2>
+  <p>Distribuição e assessoria sobre esses produtos exigem registro, e a parte
+    tributária e declaratória envolve contador. <b>Nada fora do que é
+    regulado.</b></p>
+
+  <div class="adiante">
+    <a class="bt cheio" href="#/servicos">Consulte gratuitamente &rarr;</a>
+    <a class="bt" href="#/aprender">Voltar ao índice</a>
+  </div>`;
+}
+
+function servAlternativos(){
+  $("#app").innerHTML = `
+  <div class="trilho"><a href="#/servicos" style="color:var(--ouro2);text-decoration:none">Serviços</a> · produtos</div>
+  <h1>Ouro, dólar e bitcoin</h1>
+  <p class="chapeu">Três coisas diferentes que costumam ser tratadas como uma
+    só. Nenhuma delas paga renda — todas servem para outra coisa.</p>
+
+  <div class="caso">
+    <p>Ação paga dividendo. Título paga juro. Imóvel paga aluguel. <b>Ouro,
+      dólar e bitcoin não pagam nada</b>: o retorno vem só do preço subir. Isso
+      muda o papel deles na carteira.</p>
+  </div>
+
+  <h2>Para que cada um serve</h2>
+  <div class="trinca">
+    <div><span class="rot">Dólar</span>
+      <p>Proteção contra o real perder valor. Quem tem gasto ou plano em dólar
+        deveria ter parte do patrimônio nele — é casar a moeda com a
+        despesa.</p></div>
+    <div><span class="rot">Ouro</span>
+      <p>Reserva de valor de crise. Costuma subir quando quase tudo cai. Não
+        rende nada em tempos normais, e é esse o preço do seguro.</p></div>
+    <div><span class="rot">Bitcoin</span>
+      <p>Ativo novo, sem lastro em fluxo de caixa. Pode multiplicar e pode cair
+        80%. <b>Só entra em posição que você aceita perder inteira.</b></p></div>
+  </div>
+
+  <h2>Quando você precisa</h2>
+  <p>Quando o patrimônio já está formado e você quer <b>diversificar de
+    verdade</b> — não em mais papéis brasileiros, mas em coisas que se movem por
+    razões diferentes. É proteção de carteira, não motor de crescimento.</p>
+
+  <h2>Quando não serve</h2>
+  <p>Como aposta principal, para quem ainda está formando patrimônio. E em
+    proporção grande: <b>ativo que não paga renda não sustenta ninguém</b> — ele
+    protege o que já existe.</p>
+
+  <h2>O que o especialista faz</h2>
+  <p>Define a proporção certa para o seu tamanho e perfil, escolhe o veículo —
+    fundo, ETF, exposição direta —, e cuida da <b>tributação</b>, que é diferente
+    em cada um e muda o líquido de forma relevante.</p>
+
+  <h2>Que registro ele tem</h2>
+  <p>Recomendação e distribuição desses produtos exigem registro e certificação.
+    <b>Nada fora do que é regulado</b> — e é justamente nessa categoria que
+    aparece mais oferta sem registro nenhum.</p>
+
+  <div class="adiante">
+    <a class="bt cheio" href="#/servicos">Consulte gratuitamente &rarr;</a>
+    <a class="bt" href="#/aprender">Voltar ao índice</a>
+  </div>`;
+}
+
+/* ─── PÁGINA: momentos ainda não desenhados ─── */
+/* ══ EDUCACIONAL: índice e tópicos ══ */
+/* ── auxiliares das páginas educacionais ── */
+const TOPO = (etapa,titulo,chapeu) => `
+  <div class="trilho"><a href="#/aprender" style="color:var(--ouro2);text-decoration:none">Aprender</a> · ${etapa}</div>
+  <h1>${titulo}</h1>
+  <p class="chapeu">${chapeu}</p>`;
+
+const FIMP = () => `
+  <div class="adiante">
+    <a class="bt cheio lacre" href="#/servicos">Consulte gratuitamente &rarr;</a>
+    <a class="bt" href="#/aprender">Ver todos os temas</a>
+  </div>`;
+
+const CART = (t,d) => `
+  <a class="simule" href="#/publicar">
+    <span class="k">O simulador de carteiras</span>
+    <span class="t">${t} &rarr;</span>
+    <span class="d">${d}</span></a>`;
+
+const SIM = (t,d) => `
+  <a class="simule" href="#/crescer">
+    <span class="k">Simule aqui</span>
+    <span class="t">${t} &rarr;</span>
+    <span class="d">${d}</span></a>`;
+
+const AVISO = `
+  <div class="aviso">
+    <b>Isto é conteúdo educacional, não uma proposta.</b>
+    <p>O simulador existe para você entender o raciocínio. Cada investidor tem
+      um perfil de crédito.</p>
+    <p style="margin-top:9px">A conta aqui serve para você chegar preparado à
+      conversa, não para substituí-la. <b>Quem vai encontrar as melhores
+      condições reais, no seu nome, é o especialista</b> — e é aí que a
+      diferença aparece.</p>
+  </div>`;
+
+const TOPICOS_AP = [
+  ["Comece por aqui", [
+    ["#/crescer","Como o dinheiro cresce","Juro composto, e o mês em que o seu dinheiro passa a render mais do que você deposita."],
+    ["#/dividas","Antes de poupar, saia das dívidas","Nenhuma aplicação paga o que o cartão cobra. A ordem importa."],
+    ["#/corrigir","Corrigir não é crescer","A diferença entre acompanhar a inflação e ficar de fato mais rico."]
+  ]],
+  ["O que é cada coisa", [
+    ["#/renda-fixa","O que é renda fixa","Você empresta e sabe a regra do retorno desde o começo."],
+    ["#/renda-variavel","O que é renda variável","Você vira sócio. O retorno não é combinado."],
+    ["#/previdencia","O que é previdência","Para que serve, quando vale e quando é caro demais."],
+    ["#/fundos","O que é fundo de investimento","Você compra uma cota e o trabalho de escolher passa a ser de um gestor."],
+    ["#/clubes","O que é clube de investimento","Um grupo investindo junto, com regras próprias e carteira só."],
+    ["#/alternativos","Ouro, dólar e bitcoin","Nenhum paga renda. Servem para proteger, não para crescer."],
+    ["#/internacional","O que é investir no exterior","Não depender de um país só, nem de uma moeda só."],
+    ["#/consorcio","O que é consórcio","Um grupo de pessoas poupando junto, e um por mês leva o valor."],
+    ["#/seguro-vida","O que é seguro de vida","Não é investimento. É o capital que você não vai ter tempo de acumular."]
+  ]],
+  ["Montar a sua carteira", [
+    ["#/risco","O risco de verdade","Cair 50% exige subir 100% para voltar. A assimetria que decide tudo."],
+    ["#/carteira-como","Como se monta uma carteira","Peso importa mais que escolha. É aqui que o site vira ferramenta."],
+    ["#/sessenta","A carteira 60/40","Por que ela atravessou setenta anos, e quando ela falha."],
+    ["#/grandes","Os grandes acumuladores","O que Buffett e outros gestores têm em comum — e não é palpite."]
+  ]],
+  ["Quando já há patrimônio", [
+    ["#/casa","Sair do aluguel e ter a casa própria","Consórcio, financiamento ou juntar. A diferença passa de um milhão."],
+    ["#/comprar","Comprar um bem","Os três caminhos lado a lado, com os números."],
+    ["#/escada","A escada do consórcio","Lance embutido, aluguel pagando parcela, degraus."],
+    ["#/aplicado","Pôr o patrimônio para trabalhar","Comprar à vista ou deixar rendendo e pagar de outro jeito."],
+    ["#/credito","Quanto custa o dinheiro","A mesma dívida custa de 0,6% a 12,7% ao mês."],
+    ["#/nao-perder","Não perder na saída","Inventário, holding e liquidez — o último degrau da mesma escada."],
+    ["#/porque","Por que investir é difícil","A lógica que a vida inteira nos ensinou a ignorar."]
+  ]]
+];
+
+function telaIndiceAprender(){
+  app().innerHTML = `
+  <div class="cabeca" style="text-align:left;max-width:70ch">
+    <h1>Do começo, sem pular etapa</h1>
+    <p>Não adianta saber de renda variável, renda fixa, consórcio ou seguro se
+      ainda não há dinheiro para aplicar. Por isso a ordem aqui não é
+      alfabética: é a ordem em que as coisas acontecem na vida de quem está
+      construindo patrimônio.</p>
+  </div>
+  <div class="indice">
+    ${TOPICOS_AP.map(([etapa,itens]) => `
+      <div class="etapa">${etapa}</div>
+      ${itens.map(([r,t,d]) => `<a class="item" href="${r}">
+        <span class="t">${t}</span><span class="d">${d}</span></a>`).join("")}`).join("")}
+  </div>
+  <div class="adiante">
+    <a class="bt cheio lacre" href="#/servicos">Consulte gratuitamente &rarr;</a>
+  </div>`;
+}
+
+function pagRendaFixa(){ $("#app").innerHTML =
+  TOPO("o que é cada coisa","O que é renda fixa",
+    "Você empresta dinheiro e sabe, desde o começo, qual é a regra do retorno. Fixa é a regra — nem sempre o caminho.") + `
+  <div class="caso">
+    <p>Renda fixa é, no fundo, <b>correção monetária</b>: o seu dinheiro
+      acompanhando o custo do dinheiro. Mas quem quiser <b>especular com
+      taxa</b> também consegue — e aí ela deixa de ser previsível.</p>
+  </div>
+
+  <h2>Você empresta. Mas para quem?</h2>
+  <p>Quem pega o seu dinheiro muda o risco, e o risco muda a taxa. São três:</p>
+
+  <div class="trinca">
+    <div><span class="rot">Governo</span>
+      <p>Não deve quebrar. Se quebrar, <b>nada te salva</b> — tudo o mais já
+        terá quebrado antes.</p></div>
+    <div><span class="rot">Bancos</span>
+      <p>Os únicos com garantia formal: o <b>FGC</b>, até um limite por CPF e
+        por instituição.</p></div>
+    <div><span class="rot">Empresas</span>
+      <p><b>Sem garantia nenhuma.</b> Quebrou, você entra na fila dos
+        credores.</p></div>
+  </div>
+
+  <p><b>As taxas sobem nessa mesma ordem.</b> Governo paga menos que banco, que
+    paga menos que empresa. Quando um papel oferece muito acima dos outros, ele
+    não está sendo generoso: está dizendo o tamanho do risco.</p>
+
+  <h2>As três formas de correção</h2>
+  <div class="trinca">
+    <div><span class="rot">Pós-fixado</span>
+      <p>Segue um indicador, como o CDI. <b>Só sobe</b>, dia após dia. Você não
+        vê o preço oscilar e pode sair quando quiser.</p></div>
+    <div><span class="rot">Prefixado</span>
+      <p>Taxa travada na largada. Você sabe o valor final — mas no meio do
+        caminho tem <b>ágio ou deságio</b>.</p></div>
+    <div><span class="rot">Híbrido</span>
+      <p>Inflação mais uma taxa. O único que garante ganho <b>acima</b> da
+        inflação, aconteça o que acontecer com os preços.</p></div>
+  </div>
+
+  <h2>No prefixado, o meio do caminho balança</h2>
+  <p>Quando você trava uma taxa, ela passa a ser comparada com a taxa de hoje,
+    todo dia. <b>Se o juro cai, a sua taxa antiga vira boa e o título vale
+    mais</b> — é o ágio. Se o juro sobe, ela fica pior que a nova e o título vale
+    menos — é o deságio.</p>
+  <p>Duas saídas, e você escolhe: <b>carregar até o vencimento</b> e receber
+    exatamente a taxa combinada, ou <b>vender no meio</b> e levar o preço do dia.</p>
+
+  <div class="caso">
+    <p>Você aplica <b>R$ 100 mil</b> a 10% por dez anos e precisa sair no
+      segundo. Se o juro tiver <b>caído para 5%</b>, o seu título vale
+      <b>R$ 175 mil</b> — 76% em dois anos. Se tiver <b>subido para 15%</b>,
+      vale <b>R$ 85 mil</b>: menos do que você aplicou, mesmo com os juros tendo
+      corrido a favor.</p>
+  </div>
+  <p>É o mesmo papel, a mesma taxa travada, o mesmo prazo. <b>O que mudou foi o
+    juro do dia em que você precisou do dinheiro.</b> Carregando até o fim,
+    receberia os 10% combinados nos dois casos.</p>
+
+  ` + graficoPrefixado() + `
+  <p>As três linhas terminam no mesmo lugar: <b>R$ 259.374</b>, o combinado do
+    vencimento. O que muda é o <b>caminho</b> — e é nele que você sai, se
+    precisar. No ano 2, o mesmo título vale R$ 175 mil, R$ 121 mil ou R$ 85 mil,
+    dependendo só de para onde o juro foi.</p>
+  <p><b>Quanto mais tempo falta para o vencimento, maior o efeito.</b> Um título
+    de dez anos balança muito mais que um de dois — e perto do fim as três
+    curvas se encontram, aconteça o que acontecer.</p>
+
+  <h2>Por que isso acontece</h2>
+  <p>Para vender antes do prazo, alguém precisa comprar o seu título. Essa
+    pessoa paga de acordo com <b>o juro que existe no dia</b>, não com o que
+    você travou.</p>
+  <p>Se o juro <b>caiu</b>, o seu papel — que paga mais que os novos — virou
+    disputado, e você vende caro. Se o juro <b>subiu</b>, quem compra hoje
+    consegue papel novo pagando mais, e o seu só sai com desconto. O mercado
+    secundário pode ser amigo ou inimigo.</p>
+
+  <h2>A regra prática</h2>
+  <div class="trinca">
+    <div><span class="rot">Juro vai subir</span>
+      <p>Fique mais em <b>pós-fixado</b>. Acompanha para cima e nunca perde
+        valor no caminho.</p></div>
+    <div><span class="rot">Juro vai cair</span>
+      <p>Fique mais em <b>prefixado</b>. Trava a taxa alta e ainda ganha quando
+        ela cair.</p></div>
+    <div><span class="rot">Não pode oscilar</span>
+      <p>Dinheiro que <b>nunca</b> pode aparecer menor: pós-fixado, sempre.</p></div>
+  </div>
+  <p>O mecanismo é simples. <b>O difícil é acertar para onde o juro vai</b>, e
+    ninguém acerta sempre — por isso a resposta costuma ser uma mistura, ajustada
+    ao seu prazo. Um especialista analisa o cenário, escolhe o título e o prazo
+    certos para o <b>seu</b> dinheiro, e sabe quando vale sair antes.</p>
+
+  <h2>Imposto: pessoa física tem vantagem, empresa não</h2>
+  <p>Alguns títulos são <b>isentos de imposto de renda para pessoa física</b> —
+    e essa isenção muda o retorno líquido em vários pontos, sem mudar nada do
+    risco. Há também isenção de IOF em certas aplicações depois de um prazo
+    mínimo.</p>
+  <p><b>Pessoa jurídica não tem essas isenções.</b> O mesmo papel, comprado por
+    uma empresa, rende menos no líquido. Quem tem PJ e aplica pela empresa
+    achando que dá na mesma costuma estar perdendo dinheiro sem perceber.</p>
+  <p>Comparar rendimento bruto entre um papel isento e um tributado é comparar
+    coisas diferentes. <b>O que importa é o que sobra depois do imposto</b> — e
+    isso muda de pessoa para pessoa.</p>
+
+  <h2>Pra que serve</h2>
+  <p>Para <b>corrigir monetariamente o seu dinheiro</b>. É essa a função: fazer
+    o valor acompanhar o custo do dinheiro no país, para que ele não encolha
+    parado.</p>
+  <p>Por isso é onde fica o dinheiro que tem data e dono — a reserva de
+    emergência, a entrada do imóvel, a viagem marcada.</p>
+
+  <h2>E dá para perder dinheiro aqui</h2>
+  <p>O nome engana. Muita gente perde em renda fixa, e quase sempre por não saber
+    a diferença entre os títulos. <b>São três armadilhas</b>, e as três são
+    evitáveis:</p>
+
+  <div class="trinca">
+    <div><span class="rot">1 · Errar o lado do juro</span>
+      <p>Comprar prefixado ou híbrido <b>sem ideia da trajetória futura dos
+        juros</b>. Se eles sobem, o seu título vale menos — e você só descobre
+        quando precisa dele.</p></div>
+    <div><span class="rot">2 · Errar o prazo</span>
+      <p>Comprar título <b>longo</b> com dinheiro que vai precisar sair antes.
+        Aí a venda é no preço do dia, e o dia pode ser ruim.</p></div>
+    <div><span class="rot">3 · Errar o emissor</span>
+      <p>Comprar o que <b>parece pagar mais</b> e ficar <b>acima do limite do
+        FGC</b>. Se o banco ou a empresa quebra, o que passou do limite não
+        volta.</p></div>
+  </div>
+
+  <p>Repare que nenhuma das três é azar. <b>São escolhas feitas sem saber o que
+    se estava escolhendo</b> — e é por isso que renda fixa, apesar do nome, exige
+    tanto critério quanto o resto.</p>
+
+  <h2>A regra que resume tudo</h2>
+  <div class="caso">
+    <p><b>Prazo do título e prazo do seu dinheiro precisam combinar.</b> Se o
+      dinheiro pode ser chamado a qualquer momento, ele fica em pós-fixado. Se
+      tem data certa, o título pode vencer nessa data. O erro caro é travar
+      prazo longo com dinheiro de prazo curto.</p>
+  </div>
+
+  ` + FIMP(); }
+
+function pagFundos(){ $("#app").innerHTML =
+  TOPO("o que é cada coisa","O que é fundo de investimento",
+    "Um bolo de dinheiro de muita gente, gerido por um profissional. Você compra uma fatia e o trabalho de escolher passa a ser dele.") + `
+  <div class="caso">
+    <p>Em vez de comprar dez papéis e acompanhar cada um, você compra
+      <b>uma cota</b>. Dentro dela estão os dez — escolhidos, comprados e
+      trocados por quem faz isso todo dia.</p>
+  </div>
+
+  <h2>O que é</h2>
+  <p>Um fundo junta o dinheiro de vários investidores e aplica segundo uma
+    regra escrita. Você não escolhe os papéis: escolhe <b>a regra e quem a
+    executa</b>. O valor da sua cota sobe e desce conforme o que está dentro.</p>
+
+  <h2>Os tipos, do mais calmo ao mais agitado</h2>
+  <div class="trinca">
+    <div><span class="rot">Renda fixa</span>
+      <p>Títulos de governo, banco e empresa. Oscila pouco e serve para
+        reserva.</p></div>
+    <div><span class="rot">Multimercado</span>
+      <p>Pode ir a vários lugares ao mesmo tempo: juro, moeda, bolsa, fora do
+        país.</p></div>
+    <div><span class="rot">Ações</span>
+      <p>Só empresas. Oscila muito e é para prazo longo.</p></div>
+  </div>
+
+  <h2>Pra que serve</h2>
+  <p>Para ter <b>diversificação pronta</b> e gestão profissional sem precisar
+    acompanhar nada. É a forma mais simples de acessar estratégias que sozinho
+    você não montaria — crédito privado, exterior, moedas.</p>
+
+  <h2>Onde mora o cuidado</h2>
+  <p><b>A taxa.</b> Administração e, em alguns, performance. Uma taxa alta come
+    o retorno todo ano, e ela é cobrada mesmo quando o fundo vai mal.</p>
+  <p><b>A liquidez.</b> Alguns devolvem o dinheiro em um dia, outros em trinta,
+    sessenta ou mais. Isso está no regulamento e quase ninguém lê — até
+    precisar do dinheiro.</p>
+  <p><b>O que tem dentro.</b> Dois fundos com o mesmo nome podem carregar coisas
+    bem diferentes. O nome vende; o regulamento é que vale.</p>
+
+  <h2>Quando não serve</h2>
+  <p>Quando a taxa não se justifica pelo que o fundo entrega. Se um fundo de
+    renda fixa cobra caro para fazer o que um título direto faria, <b>você está
+    pagando por nada</b>.</p>
+
+  ` + FIMP(); }
+
+function pagClube(){ $("#app").innerHTML =
+  TOPO("o que é cada coisa","O que é clube de investimento",
+    "Um grupo de pessoas que investe junto, com regras próprias e uma carteira só. Fica no meio do caminho entre investir sozinho e comprar um fundo.") + `
+  <div class="caso">
+    <p>Amigos, colegas ou família juntam recursos, definem por escrito como as
+      decisões são tomadas, e passam a ter <b>uma carteira comum</b> — com custo
+      dividido e voz de todos.</p>
+  </div>
+
+  <h2>O que é</h2>
+  <p>Um clube reúne um número limitado de participantes numa estrutura formal,
+    registrada e administrada por instituição autorizada. Cada um tem sua cota,
+    e a carteira é única.</p>
+
+  <h2>Pra que serve</h2>
+  <p>Para <b>aprender junto e dividir custo</b>. Sozinho, com pouco dinheiro, a
+    diversificação é cara e limitada; somando, o grupo alcança o que ninguém
+    alcançaria separado.</p>
+  <p>E para quem quer participar das decisões em vez de terceirizar — é a
+    diferença em relação ao fundo, onde você entrega a escolha ao gestor.</p>
+
+  <h2>Onde mora o cuidado</h2>
+  <p><b>As regras têm que estar escritas antes.</b> Quem decide, como se decide,
+    o que acontece se alguém quiser sair, quem responde pelo quê. Clube que
+    começa na confiança e sem estatuto termina em briga.</p>
+  <p><b>Não é informal.</b> Há registro, administrador e prestação de contas —
+    e é isso que separa um clube de uma vaquinha entre amigos.</p>
+
+  <h2>Quando não serve</h2>
+  <p>Quando o grupo não tem tempo nem interesse real em participar. Aí o clube
+    vira um fundo mais trabalhoso e sem gestor profissional — o pior dos dois
+    mundos.</p>
+
+  ` + FIMP(); }
+
+function pagAlternativos(){ $("#app").innerHTML =
+  TOPO("o que é cada coisa","Ouro, dólar e bitcoin",
+    "Três coisas diferentes que costumam ser tratadas como uma só. Nenhuma paga renda — todas servem para outra coisa.") + `
+  <div class="caso">
+    <p>Ação paga dividendo. Título paga juro. Imóvel paga aluguel.
+      <b>Ouro, dólar e bitcoin não pagam nada</b>: o retorno vem só do preço
+      subir. Isso muda o papel deles na carteira.</p>
+  </div>
+
+  <h2>Para que cada um serve</h2>
+  <div class="trinca">
+    <div><span class="rot">Dólar</span>
+      <p>Proteção contra o real perder valor. Quem tem gasto ou plano em dólar
+        deveria ter parte do patrimônio nele — é <b>casar a moeda com a
+        despesa</b>.</p></div>
+    <div><span class="rot">Ouro</span>
+      <p>Reserva de valor de crise. Costuma subir quando quase tudo cai. Não
+        rende nada em tempos normais, e é esse o preço do seguro.</p></div>
+    <div><span class="rot">Bitcoin</span>
+      <p>Ativo novo, sem lastro em fluxo de caixa. Pode multiplicar e pode cair
+        80%. <b>Só entra em posição que você aceita perder inteira.</b></p></div>
+  </div>
+
+  <h2>Pra que serve</h2>
+  <p>Para <b>diversificar de verdade</b>: não em mais papéis brasileiros, mas em
+    coisas que se movem por razões diferentes. Quando o Brasil vai mal, esses
+    costumam ir bem — e é justamente aí que você precisa deles.</p>
+  <p>É proteção de carteira, <b>não motor de crescimento</b>.</p>
+
+  <h2>Quando não serve</h2>
+  <p>Como aposta principal de quem ainda está formando patrimônio. E em
+    proporção grande: <b>ativo que não paga renda não sustenta ninguém</b> — ele
+    protege o que já existe.</p>
+  <p>E cuidado com a promessa fácil: é nesta categoria que aparece mais oferta
+    sem registro nenhum.</p>
+
+  ` + FIMP(); }
+
+function pagInternacional(){ $("#app").innerHTML =
+  TOPO("o que é cada coisa","O que é investir no exterior",
+    "Ter parte do patrimônio fora do país e fora do real. Não é mais coisa só de quem tem muito — mudou bastante nos últimos anos.") + `
+  <div class="caso">
+    <p>O risco que quase ninguém mede é ter <b>100% do patrimônio numa moeda só,
+      num país só</b>. Não é sobre desconfiar do Brasil: é sobre não depender de
+      uma aposta única.</p>
+  </div>
+
+  <h2>O que é</h2>
+  <p>Aplicar em ativos de fora — ações de empresas globais, títulos de outros
+    governos, fundos internacionais. Dá para fazer <b>daqui</b>, por fundos e
+    ETFs listados na B3, ou <b>lá fora</b>, com conta no exterior.</p>
+
+  <h2>Pra que serve</h2>
+  <p>Para reduzir a dependência de um país só e para acessar o que não existe
+    aqui — as maiores empresas do mundo, setores inteiros que a bolsa brasileira
+    não tem.</p>
+  <p>E para quem tem <b>gasto em dólar</b>: filho estudando fora, viagem
+    recorrente, plano de morar em outro lugar. Nesse caso não é diversificação,
+    é casar o dinheiro com a despesa.</p>
+
+  <h2>Onde mora o cuidado</h2>
+  <p><b>A moeda vira parte do resultado.</b> Você pode acertar a empresa e errar
+    o câmbio, ou o contrário. São dois riscos, não um.</p>
+  <p><b>Imposto e declaração têm regras próprias.</b> Conta e bens no exterior
+    são declarados à Receita e, acima de certos valores, ao Banco Central. É
+    onde a maioria erra — e o erro aqui é caro.</p>
+
+  <h2>Quando não serve</h2>
+  <p>Antes de ter reserva de emergência e o básico organizado aqui. E em
+    proporção que você não entenda: <b>não adianta ter dólar se você vai vender
+    na primeira alta do real</b>.</p>
+
+  ` + FIMP(); }
+
+/* ─── PÁGINA: serviços, nas duas camadas ─── */
+function pagDividas(){
+  $("#app").innerHTML = `
+  <div class="trilho"><a href="#/aprender" style="color:var(--ouro2);text-decoration:none">Aprender</a> · comece por aqui</div>
+  <h1>Antes de poupar, saia das dívidas</h1>
+  <p class="chapeu">É a única etapa desta lista que não é opcional, e é a que
+    quase todo conteúdo de investimento pula.</p>
+
+  <div class="caso">
+    <p>Você tem R$ 5 mil no cartão rotativo e R$ 5 mil aplicados rendendo bem.
+      A aplicação te paga cerca de <b>R$ 40</b> no mês. O rotativo te cobra
+      <b>R$ 600</b>. <b class="destaque">Você está perdendo R$ 560 por mês para
+      se sentir investidor.</b></p>
+  </div>
+
+  <h2>Por que a ordem importa</h2>
+  <p>Nenhuma aplicação no Brasil paga o que as dívidas caras cobram. Não é
+    questão de escolher bem: é aritmética. Enquanto houver dívida de cartão ou
+    cheque especial, <b>quitar rende mais que qualquer investimento</b> — e
+    rende sem risco nenhum, o que não existe em lugar nenhum do mercado.</p>
+  <p>São dois passos, nesta ordem: pôr a receita acima da despesa, e usar o que
+    sobra para zerar dívida. Só depois começa a fase de poupar.</p>
+
+  <h2>Nem toda dívida é igual</h2>
+  <div class="trinca">
+    <div><span class="rot">Quita agora</span>
+      <p>Cartão rotativo e cheque especial. Passam de 12% ao mês. Não há
+        discussão.</p></div>
+    <div><span class="rot">Vale renegociar</span>
+      <p>Crédito pessoal, parcelamento. Trocar por linha com garantia devolve
+        dinheiro imediatamente.</p></div>
+    <div><span class="rot">Pode conviver</span>
+      <p>Financiamento imobiliário e consignado, se a parcela cabe. Custam pouco
+        e compraram algo.</p></div>
+  </div>
+
+  <h2>Trocar dívida cara por barata é o melhor investimento que existe</h2>
+  <p>Quem paga 12% ao mês e migra para uma linha com garantia a 1,5% não está
+    economizando — está <b>ganhando a diferença, sem risco</b>. Nenhuma
+    aplicação no Brasil paga isso, e essa é a única vez em que você encontra
+    retorno alto com risco zero.</p>
+
+  <a class="simule" href="#/crescer">
+    <span class="k">Simule aqui</span>
+    <span class="t">Veja o que a sua sobra faz depois de limpa &rarr;</span>
+    <span class="d">Quanto sobra por mês, e o que isso vira em dez, vinte,
+      trinta anos.</span>
+  </a>
+
+  <h2>Se a dívida já saiu do controle</h2>
+  <p>Renegociar bem é ofício. Há linha, prazo e garantia que a maioria não sabe
+    que existe, e a diferença entre uma proposta e outra costuma valer mais que
+    anos de aporte.</p>
+  <p>Conversar com um especialista aqui <b>costuma se pagar no primeiro
+    mês</b>.</p>
+
+  <div class="adiante">
+    <a class="bt cheio" href="#/servicos">Consulte gratuitamente &rarr;</a>
+    <a class="bt" href="#/aprender">Ver todos os temas</a>
+  </div>`;
+}
+
+/* ─── PÁGINA: o que é consórcio ─── */
+function pagConsorcioBase(){
+  $("#app").innerHTML = `
+  <div class="trilho"><a href="#/aprender" style="color:var(--ouro2);text-decoration:none">Aprender</a> · o que é cada coisa</div>
+  <h1>O que é consórcio</h1>
+  <p class="chapeu">É a forma mais barata de comprar um bem parcelado no
+    Brasil. E a única em que você não escolhe quando recebe.</p>
+
+  <div class="caso">
+    <p>Trezentas pessoas juntam <b>R$ 1.000</b> por mês. Todo mês entram
+      R$ 300 mil no caixa do grupo — e <b>uma delas leva esse valor</b> para
+      comprar o bem. No mês seguinte, outra. Até todas terem sido
+      contempladas.</p>
+  </div>
+
+  <h2>O que é</h2>
+  <p>Um consórcio é uma <b>união de pessoas que poupam juntas</b>. Ninguém
+    empresta dinheiro a ninguém, e por isso <b>não há juro</b> — o que existe é
+    uma taxa de administração, paga a quem organiza o grupo, mais um fundo de
+    reserva que cobre quem deixa de pagar.</p>
+  <p>Você entra, paga a sua parcela todo mês, e em algum momento é contemplado:
+    por sorteio ou por lance, que é oferecer antecipar parcelas para passar na
+    frente. Contemplado, recebe a carta de crédito e compra o bem — mas continua
+    pagando as parcelas que faltam.</p>
+
+  <h2>Pra que serve</h2>
+  <p>Para comprar imóvel, carro ou equipamento <b>quando você tem tempo</b>. A
+    taxa de administração fica muito abaixo do juro de qualquer financiamento —
+    e, no fim, o bem custa perto do que ele vale.</p>
+
+  <h2>Quando não serve</h2>
+  <p>Quando você <b>precisa do bem agora</b>. Ninguém sabe quando será
+    contemplado, e quem promete data está vendendo. Se há prazo apertado,
+    consórcio é o instrumento errado, por mais barato que seja.</p>
+
+  <div class="trinca">
+    <div><span class="rot">Não tem juro</span>
+      <p>Tem taxa de administração e fundo de reserva, diluídos no prazo.</p></div>
+    <div><span class="rot">Não tem data</span>
+      <p>Sorteio ou lance. É a única incerteza real, e ela é grande.</p></div>
+    <div><span class="rot">A parcela sobe</span>
+      <p>Corrige todo ano no aniversário do grupo, junto com o crédito.</p></div>
+  </div>
+
+  <a class="simule" href="#/comprar">
+    <span class="k">Simule aqui</span>
+    <span class="t">Compare com financiamento e com juntar &rarr;</span>
+    <span class="d">Mesmo bem, três caminhos, e a diferença de custo entre
+      eles.</span>
+  </a>
+
+  <h2>Depois do básico, há estratégia</h2>
+  <p>Consórcio tem um segundo andar que quase ninguém conhece: lance embutido,
+    parcela reduzida, e o uso do rendimento do próprio patrimônio para pagar a
+    parcela sem gastar o principal. Isso deixa de ser compra e vira
+    <b>construção de patrimônio</b> — e é assunto para conversar com quem faz
+    todo dia.</p>
+
+  <div class="adiante">
+    <a class="bt cheio" href="#/servicos">Consulte gratuitamente &rarr;</a>
+    <a class="bt" href="#/aprender">Ver todos os temas</a>
+  </div>`;
+}
+
+/* ─── PÁGINA: como se monta uma carteira ─── */
+function pagCarteiraComo(){
+  $("#app").innerHTML = `
+  <div class="trilho"><a href="#/aprender" style="color:var(--ouro2);text-decoration:none">Aprender</a> · montar a sua carteira</div>
+  <h1>Como se monta uma carteira</h1>
+  <p class="chapeu">Escolher o que comprar é a parte que todo mundo discute.
+    Decidir quanto de cada coisa é a parte que decide o resultado.</p>
+
+  <div class="caso">
+    <p>Duas pessoas compram exatamente os mesmos cinco papéis. Uma põe 20% em
+      cada. A outra põe 60% no que ela mais gosta e divide o resto.
+      <b>Ao fim de cinco anos, as duas carteiras não se parecem.</b></p>
+  </div>
+
+  <h2>O que é uma carteira</h2>
+  <p>Uma carteira não é uma lista de papéis: é uma <b>lista de pesos</b>. O que
+    você escolhe importa; quanto você põe em cada escolha importa mais. Um
+    acerto com 2% do patrimônio não muda a sua vida — e um erro com 40% muda.</p>
+
+  <h2>As três decisões, em ordem de importância</h2>
+  <div class="trinca">
+    <div><span class="rot">Primeiro</span>
+      <p><b>Quanto em renda variável e quanto em renda fixa.</b> É a decisão que
+        mais explica o seu resultado, e a que menos gente toma
+        conscientemente.</p></div>
+    <div><span class="rot">Segundo</span>
+      <p><b>Como dividir dentro de cada parte.</b> Setores, prazos, moedas. Aqui
+        entra diversificação de verdade.</p></div>
+    <div><span class="rot">Terceiro</span>
+      <p><b>Quais papéis.</b> É a decisão mais discutida e a menos
+        determinante.</p></div>
+  </div>
+
+  <h2>Rebalancear é o que mantém a carteira sendo a sua</h2>
+  <p>Se você montou 60% em ações e elas subiram muito, hoje você tem 75% em
+    ações — e um risco que você não escolheu. Rebalancear é voltar aos pesos
+    definidos, vendendo o que subiu e comprando o que ficou para trás.</p>
+  <p>É contraintuitivo e é justamente por isso que funciona: obriga a vender na
+    alta e comprar na baixa, que é o contrário do que o instinto manda.</p>
+
+  <h2>Diversificar não é espalhar</h2>
+  <p>Com pouco dinheiro, dividir entre muitos lugares não protege — só
+    fragmenta e encarece. A diversificação, nesse tamanho, vem <b>pronta dentro
+    do produto</b>: um ETF ou uma carteira recomendada já contém dezenas de
+    papéis. Espalhar de verdade vira necessidade quando o patrimônio cresce.</p>
+
+  <a class="simule" href="#/publicar">
+    <span class="k">O simulador de carteiras</span>
+    <span class="t">Publique a sua carteira e veja como ela se sai &rarr;</span>
+    <span class="d">Cotação real da B3, apurada todo pregão. Sem dinheiro em
+      risco, e ninguém muda o passado depois.</span>
+  </a>
+
+  <div class="adiante">
+    <a class="bt cheio" href="#/servicos">Consulte gratuitamente &rarr;</a>
+    <a class="bt" href="#/aprender">Ver todos os temas</a>
+  </div>`;
+}
+
+/* ─── PÁGINA: um serviço em detalhe ─── */
+function pagReal(){ $("#app").innerHTML =
+  TOPO("comece por aqui","Corrigir não é crescer",
+    "Seu dinheiro pode dobrar de número e você continuar comprando a mesma coisa. Essa é a diferença entre o que parece e o que é.") + `
+  <div class="caso">
+    <p>Em 2010 um carro popular custava R$ 30 mil. Hoje custa R$ 90 mil. Quem
+      guardou R$ 30 mil e viu virar R$ 90 mil <b>não ficou três vezes mais
+      rico: continua com um carro.</b></p>
+  </div>
+  <h2>O que é</h2>
+  <p><b>Correção monetária</b> é o dinheiro correndo atrás dos preços. Se a
+    inflação foi 5% e a sua aplicação rendeu 5%, você tem mais número na conta e
+    exatamente o mesmo poder de compra.</p>
+  <p><b>Juro real</b> é o que sobra depois de descontar a inflação. É o único
+    número que significa alguma coisa — o resto é ilusão de ótica.</p>
+  <h2>Como se calcula</h2>
+  <p>Não é subtração, é divisão. Rendeu 12% com inflação de 5%? O ganho real
+    não é 7%: é 6,7%. Em um ano parece detalhe. Em trinta, some uma fatia
+    grande do patrimônio.</p>
+  <div class="trinca">
+    <div><span class="rot">Ganho real positivo</span>
+      <p>Você compra mais coisa do que comprava. É o objetivo.</p></div>
+    <div><span class="rot">Ganho real zero</span>
+      <p>Você empatou. Guardou por nada, mas também não perdeu.</p></div>
+    <div><span class="rot">Ganho real negativo</span>
+      <p>O extrato subiu e você empobreceu. Acontece mais do que se imagina.</p></div>
+  </div>
+  <h2>Por que quase ninguém repara</h2>
+  <p>Porque o extrato só mostra o número, nunca o poder de compra. Um
+    rendimento de 13% num ano de inflação de 10% aparece na tela como um ótimo
+    ano — e foi um ano medíocre.</p>
+  <p><b>Toda vez que alguém te mostrar rentabilidade, pergunte qual foi a
+    inflação do período.</b> Se a resposta demorar, você já sabe.</p>
+  ` + SIM("Veja o efeito da taxa no longo prazo",
+      "Compare duas taxas com poucos pontos de diferença e repare no tamanho do buraco em vinte anos.")
+    + FIMP(); }
+
+function pagRendaVar(){ $("#app").innerHTML =
+  TOPO("o que é cada coisa","O que é renda variável",
+    "Você deixa de emprestar e passa a ser dono. Ninguém combina retorno com você — e é justamente por isso que ele pode ser muito maior.") + `
+  <div class="caso">
+    <p>Em renda fixa você empresta para a empresa e recebe juro. Em renda
+      variável <b>você compra um pedaço dela</b>. Se ela crescer, o pedaço vale
+      mais e o lucro é seu. Se afundar, ninguém te devolve nada.</p>
+  </div>
+
+  <h2>O que é</h2>
+  <p>É todo investimento em que <b>não há promessa de retorno</b>. O preço vem
+    da disputa entre quem quer comprar e quem quer vender, todo dia — e por isso
+    varia. Não é defeito: é o funcionamento.</p>
+
+  <h2>O que existe dentro dela</h2>
+  <div class="trinca">
+    <div><span class="rot">Ações</span>
+      <p>Um pedaço de uma empresa. Você ganha de dois jeitos: o preço subindo e
+        os <b>dividendos</b> — a parte do lucro que ela distribui.</p></div>
+    <div><span class="rot">Fundos imobiliários</span>
+      <p>Um pedaço de imóveis alugados. Pagam renda todo mês e você não precisa
+        cuidar de inquilino nem de reforma.</p></div>
+    <div><span class="rot">ETFs</span>
+      <p>Uma cesta inteira num papel só. Compra o índice, não a aposta — é a
+        diversificação já pronta.</p></div>
+  </div>
+
+  <h2>De onde vem o retorno</h2>
+  <p>De duas fontes, e elas são diferentes. <b>O lucro que a empresa distribui</b>
+    — dividendos, aluguel do fundo — que pinga na sua conta sem você fazer nada.
+    E <b>a valorização</b>, que só vira dinheiro quando você vende.</p>
+  <p>Quem investe para viver de renda olha mais a primeira. Quem investe para
+    crescer patrimônio olha mais a segunda. <b>São estratégias diferentes com o
+    mesmo instrumento</b>, e confundir as duas é a origem de boa parte da
+    frustração.</p>
+
+  <h2>O que faz o preço mexer</h2>
+  <p>No curto prazo, quase tudo: notícia, humor, juro subindo, dólar, eleição. No
+    longo prazo, uma coisa só — <b>quanto a empresa lucra</b>. É por isso que
+    prazo curto parece loteria e prazo longo parece fazer sentido: são fenômenos
+    diferentes olhados pelo mesmo gráfico.</p>
+  <p>E há uma relação que não se descola: <b>quando o juro sobe, ação cai</b>.
+    Se dá para ganhar bem sem risco, ninguém paga caro por risco. É a mesma
+    conta que move o prefixado.</p>
+
+  <h2>Pra que serve</h2>
+  <p>Para a parte do patrimônio que não vai ser usada tão cedo. No prazo longo,
+    ser sócio de boas empresas costuma render acima da inflação de forma
+    consistente — e é a forma mais direta de o patrimônio <b>crescer de
+    verdade</b>, não só corrigir.</p>
+
+  <h2>Quando não serve</h2>
+  <p>Para dinheiro com data marcada. Se você precisa em dezembro, não pode
+    depender de o mercado estar bem em dezembro. <b>Reserva de emergência jamais
+    fica aqui.</b></p>
+  <p>E não serve para quem não aguenta ver o valor cair. Não é questão de
+    coragem: é que <b>vender no fundo transforma oscilação em prejuízo</b>. Quem
+    sabe que vai vender numa queda deveria carregar menos risco desde o começo.</p>
+
+  <div class="trinca">
+    <div><span class="rot">O preço cai</span>
+      <p>E não é o mesmo que perder. Só vira prejuízo quando você vende.</p></div>
+    <div><span class="rot">O tempo ajuda</span>
+      <p>Quanto maior o prazo, menor o peso do dia ruim no resultado final.</p></div>
+    <div><span class="rot">O peso decide</span>
+      <p>Quanto você põe importa mais do que em qual empresa você põe.</p></div>
+  </div>
+
+  ` + CART("Monte uma carteira e acompanhe",
+      "Cotação real da B3, apurada todo pregão. Sem dinheiro em risco, e ninguém muda o passado depois.") + `
+
+  ` + FIMP(); }
+
+function pagPrev(){ $("#app").innerHTML =
+  TOPO("o que é cada coisa","O que é previdência privada",
+    "É um jeito de guardar para o longo prazo com regra de imposto própria. Serve muito bem para uns casos e é cara demais para outros.") + `
+  <div class="caso">
+    <p>Duas pessoas guardam o mesmo valor pelo mesmo tempo. Uma escolheu o
+      regime de tributação certo e a outra não. <b>Na hora de sacar, a
+      diferença pode passar de 20% do que foi acumulado.</b></p>
+  </div>
+  <h2>O que é</h2>
+  <p>Um plano de previdência é um fundo com duas particularidades: o imposto só
+    é cobrado quando você tira o dinheiro, e a alíquota <b>cai com o tempo</b>,
+    podendo chegar a 10% se você deixar por mais de dez anos.</p>
+  <p>Há dois tipos. O <b>PGBL</b> permite abater até 12% da renda tributável no
+    imposto de renda, mas cobra imposto sobre tudo no resgate. O <b>VGBL</b> não
+    abate nada, mas o imposto incide só sobre o rendimento.</p>
+  <h2>Pra que serve</h2>
+  <p>Para aposentadoria de verdade, com prazo longo. E, em alguns casos, para
+    sucessão: o valor vai direto ao beneficiário sem passar por inventário.</p>
+  <p>O Supremo decidiu, no <b>Tema 1214</b>, que o ITCMD — o imposto sobre
+    herança — <b>não incide</b> sobre o repasse de VGBL e PGBL aos
+    beneficiários. Para a Corte, não é herança: é cumprimento de um contrato
+    firmado em vida. Na prática, é dinheiro que chega inteiro e rápido, numa
+    hora em que o resto do patrimônio está travado.</p>
+  <h2>Quando não serve</h2>
+  <p>Quando você vai precisar do dinheiro em poucos anos — a alíquota alta no
+    começo come o ganho. E quando o plano cobra taxa de administração alta e
+    taxa de carregamento: <b>plano caro derrota qualquer vantagem
+    tributária</b>.</p>
+  <div class="trinca">
+    <div><span class="rot">PGBL</span>
+      <p>Só vale se você declara no modelo completo e tem renda tributável.</p></div>
+    <div><span class="rot">VGBL</span>
+      <p>Para quem declara no simplificado, ou já usou os 12%.</p></div>
+    <div><span class="rot">Olhe as taxas</span>
+      <p>Carregamento deveria ser zero. Administração alta anula o benefício.</p></div>
+  </div>
+  <h2>Onde erra quem faz sozinho</h2>
+  <p>Escolher o tipo errado, escolher o regime de tributação errado, e aceitar
+    taxa alta por conveniência. Os três são difíceis de desfazer depois e valem
+    muito dinheiro. É conta de especialista.</p>
+  ` + FIMP(); }
+
+function pagSeguro(){ $("#app").innerHTML =
+  TOPO("o que é cada coisa","O que é seguro de vida",
+    "Não é investimento, e comparar rendimento é a maneira errada de olhar. É o capital que você não vai ter tempo de acumular.") + `
+  <div class="caso">
+    <p>Você guarda R$ 10 mil por mês para se aposentar com a sua mulher. Se você
+      morrer no ano seis, <b>ela não se aposenta e as crianças não estudam</b> —
+      o plano parou junto com você.</p>
+  </div>
+  <h2>O que é</h2>
+  <p>Você paga um valor mensal e, se morrer, a seguradora entrega de uma vez um
+    capital combinado a quem você indicou. Esse dinheiro <b>não entra em
+    inventário</b>: vai direto ao beneficiário, em semanas.</p>
+  <h2>Pra que serve — e é só isto</h2>
+  <p>Toda a conta de aposentadoria supõe que você esteja vivo para fazer os
+    aportes. O seguro entrega, de uma vez, <b>o patrimônio que os aportes
+    futuros iriam construir</b>. Ele não rende: ele completa.</p>
+  <p>Onde o risco é mais alto: quem tem filho pequeno, quem sustenta alguém,
+    quem está em segundo casamento, e quem é bem mais velho que o cônjuge. Em
+    todos, o plano inteiro depende de uma vida só.</p>
+  <h2>Quando não serve</h2>
+  <p>Quando não há ninguém que dependa financeiramente de você e o patrimônio já
+    está formado. Aí a fase de risco passou, e o seguro deixa de ter função.</p>
+  <div class="trinca">
+    <div><span class="rot">Contratar cedo</span>
+      <p>A saúde é avaliada uma vez, na entrada. Depois o contrato vale.</p></div>
+    <div><span class="rot">Resgatável</span>
+      <p>Alguns permitem resgate depois de anos. É bom que exista, mas não é o
+        motivo de comprar.</p></div>
+    <div><span class="rot">Ler antes</span>
+      <p>Cláusula ruim se resolve na contratação. Depois, só na Justiça.</p></div>
+  </div>
+  ` + FIMP(); }
+
+function pagSessenta(){ $("#app").innerHTML =
+  TOPO("montar a sua carteira","A carteira 60/40",
+    "Sessenta por cento em ações, quarenta em renda fixa. É a receita mais antiga que ainda funciona — e entender por quê ensina mais que decorá-la.") + `
+  <div class="caso">
+    <p>Não é a carteira que mais rende. Nem a que menos cai. <b>É a que a maior
+      parte das pessoas consegue carregar sem desistir no meio</b> — e essa é
+      uma qualidade que os números não mostram.</p>
+  </div>
+  <h2>Por que 60/40</h2>
+  <p>A parte em ações puxa o crescimento no longo prazo. A parte em renda fixa
+    segura a queda nos anos ruins e, principalmente, dá <b>de onde tirar</b>
+    quando você precisa de dinheiro numa hora em que vender ação seria burrice.</p>
+  <p>Os dois pedaços costumam se mover de forma diferente. Quando um cai, o
+    outro segura — e o rebalanceamento transforma isso em compra na baixa
+    automática.</p>
+  <h2>Onde ela falha</h2>
+  <p>Quando ações e renda fixa caem juntas, o que acontece em choque de
+    inflação e juro. O amortecedor some justamente no ano em que você mais
+    precisava dele.</p>
+  <p>E ela não é uma lei: 60/40 é ponto de partida. Quem tem 30 anos e prazo
+    longo pode carregar mais risco; quem vai precisar do dinheiro em cinco anos,
+    menos.</p>
+  <div class="trinca">
+    <div><span class="rot">A vantagem</span>
+      <p>Simples de entender, simples de manter, difícil de estragar.</p></div>
+    <div><span class="rot">O trabalho</span>
+      <p>Rebalancear de tempos em tempos. Sem isso ela vira outra coisa.</p></div>
+    <div><span class="rot">O ajuste</span>
+      <p>A proporção certa é a sua, não a do livro. Depende do seu prazo.</p></div>
+  </div>
+  ` + `<a class="simule" href="#/publicar">
+    <span class="k">O simulador de carteiras</span>
+    <span class="t">Veja as carteiras 60/40 publicadas aqui &rarr;</span>
+    <span class="d">O site tem essa classe própria. Dá para ver como elas estão indo, com dado real.</span></a>`
+    + FIMP(); }
+
+function pagGrandes(){ $("#app").innerHTML =
+  TOPO("montar a sua carteira","Os grandes acumuladores",
+    "Quem juntou muito dinheiro por muito tempo não fez isso adivinhando o mercado. Fez com poucas ideias, repetidas por décadas.") + `
+  <div class="caso">
+    <p>Warren Buffett acumulou a maior parte da fortuna dele <b>depois dos 60
+      anos</b>. Não porque ficou melhor: porque o juro composto precisa de
+      décadas para mostrar do que é capaz.</p>
+  </div>
+  <h2>O que eles têm em comum</h2>
+  <p><b>Prazo.</b> Todos operam em décadas, não em meses. O tempo é o único
+    ingrediente que não dá para comprar nem acelerar.</p>
+  <p><b>Poucas decisões.</b> Carteiras concentradas em coisas que entendem, com
+    pouquíssima troca. O giro alto costuma ser sinal de dúvida, não de
+    competência.</p>
+  <p><b>Empresa, não papel.</b> Compram participação em negócios que continuam
+    valendo se ninguém abrir a cotação por cinco anos.</p>
+  <p><b>Não perder.</b> A regra que mais aparece na fala de todos eles é
+    defensiva. Recuperar de uma queda de 50% exige subir 100% — a matemática
+    castiga o erro grande muito mais do que premia o acerto grande.</p>
+  <h2>O que não dá para copiar</h2>
+  <p>O tamanho, o acesso e as condições que eles têm. E o principal: o que os
+    deixou ricos <b>não foi o mercado financeiro</b>, foi o negócio ou a
+    carreira que veio antes. O mercado multiplicou o que já existia.</p>
+  <p>É por isso que copiar carteira de gente famosa quase nunca funciona: você
+    copia a decisão sem copiar o contexto que a sustenta.</p>
+  <div class="trinca">
+    <div><span class="rot">Dá para copiar</span>
+      <p>Prazo longo, poucas trocas, entender o que se compra.</p></div>
+    <div><span class="rot">Não dá</span>
+      <p>Acesso, escala e as condições que só o tamanho oferece.</p></div>
+    <div><span class="rot">O essencial</span>
+      <p>Primeiro se junta com o que se faz. Depois o mercado multiplica.</p></div>
+  </div>
+  ` + `<a class="simule" href="#/publicar">
+    <span class="k">O simulador de carteiras</span>
+    <span class="t">Publique a sua e compare com as outras &rarr;</span>
+    <span class="d">O ranking mede todo mundo pela mesma régua: amador e profissional, no mesmo lugar.</span></a>`
+    + FIMP(); }
+
+function pagTrabalhar(){ $("#app").innerHTML =
+  TOPO("quando já há patrimônio","Pôr o patrimônio para trabalhar",
+    "Quem já juntou tem uma escolha que quem está começando não tem: gastar o dinheiro, ou deixar ele rendendo e pagar as coisas com o rendimento.") + `
+  <div class="caso">
+    <p>Você tem R$ 1 milhão e quer uma casa de R$ 1 milhão. Comprando à vista,
+      você fica com a casa e <b>sem o dinheiro</b>. Há outros caminhos em que,
+      dez anos depois, você tem a casa <b>e</b> o dinheiro.</p>
+  </div>
+  <h2>A ideia</h2>
+  <p>Dinheiro aplicado rende todo mês. Se esse rendimento cobrir a parcela de
+    algo que você ia comprar de qualquer jeito, você compra o bem <b>sem tocar
+    no principal</b> — e o principal continua crescendo.</p>
+  <p>É a diferença entre gastar patrimônio e usar a renda dele. Quem entende
+    isso para de trocar bens por dinheiro e passa a somar os dois.</p>
+  <h2>Onde isso vive ou morre</h2>
+  <p>Na distância entre <b>o que o seu dinheiro rende</b> e <b>o que o crédito
+    cobra</b>. Se o dinheiro rende bem e o crédito é barato, a conta fecha com
+    folga. Se o dinheiro está parado na conta, a mesma estratégia vira
+    prejuízo.</p>
+  <div class="trinca">
+    <div><span class="rot">Conservador</span>
+      <p>Compra à vista. Fica com o bem, sem o dinheiro, e sem risco.</p></div>
+    <div><span class="rot">Moderado</span>
+      <p>Compra parcelado barato e mantém o capital rendendo. Mais patrimônio no
+        fim, com compromisso no meio.</p></div>
+    <div><span class="rot">Arrojado</span>
+      <p>Repete a operação várias vezes. Cresce mais rápido — e sofre muito mais
+        se algo der errado.</p></div>
+  </div>
+  <h2>A pergunta certa</h2>
+  <p>Não é qual estratégia rende mais. É <b>qual delas você aguenta quando der
+    errado</b>. Quem tem cinco compromissos e uma fase ruim descobre isso do
+    jeito caro.</p>
+  ` + SIM("Veja o efeito do rendimento no seu caso",
+      "Mude a taxa e o prazo e repare em como a distância entre render e gastar muda tudo.")
+    + FIMP(); }
+
+function pagCasa(){ $("#app").innerHTML =
+  TOPO("quando já há patrimônio","Sair do aluguel e ter a casa própria",
+    "Três caminhos levam ao mesmo imóvel. O que muda entre eles não é o juro — é quando você põe a mão na chave, e quanto cobram por essa pressa.") + `
+  <div class="caso">
+    <p>Um apartamento de <b>R$ 500 mil</b>. Pelo financiamento, você paga
+      <b>R$ 1,14 milhão só de juro</b> — mais que o dobro do imóvel. Pelo
+      consórcio, paga <b>R$ 100 mil</b> de taxa. Juntando, não paga nada a
+      ninguém e leva <b>doze anos e meio</b>.</p>
+  </div>
+
+  <h2>Os três caminhos</h2>
+  <p><b>Financiamento.</b> Você tem o imóvel hoje. O banco põe o dinheiro e
+    cobra juro por isso — e o juro do prazo longo é o item mais caro de toda a
+    compra. Num imóvel de R$ 500 mil em 30 anos, a parcela sai perto de
+    R$ 4.600.</p>
+  <p><b>Consórcio.</b> Você entra num grupo, paga a parcela e recebe quando for
+    sorteado ou der lance. Não tem juro — tem taxa de administração, que fica
+    muito abaixo. A parcela sai por volta de R$ 3.000, mas <b>ninguém sabe a
+    data</b>.</p>
+  <p><b>Juntar e comprar à vista.</b> O mais barato de todos: você não paga nada
+    a ninguém. Só que passa mais de uma década sem o imóvel — e, se mora
+    alugado, pagando aluguel esse tempo todo.</p>
+
+  <h2>A pergunta que decide</h2>
+  <p>Não é "qual é mais barato". É <b>quando você precisa morar lá</b>.</p>
+  <div class="trinca">
+    <div><span class="rot">Preciso agora</span>
+      <p>Financiamento. O juro é o preço da pressa, e às vezes a pressa vale —
+        casamento, filho, mudança de cidade.</p></div>
+    <div><span class="rot">Tenho alguns anos</span>
+      <p>Consórcio. Muito mais barato, desde que o prazo não aperte. Não serve
+        para quem tem data marcada.</p></div>
+    <div><span class="rot">Não tenho pressa</span>
+      <p>Juntar. Nenhum custo — mas conte o aluguel que você vai pagar enquanto
+        espera.</p></div>
+  </div>
+
+  <h2>O aluguel que você paga hoje entra na conta</h2>
+  <p>É a parte que quase todo mundo esquece. Se você paga R$ 2.500 de aluguel e
+    a parcela do financiamento é R$ 4.600, a diferença real não é R$ 4.600 —
+    é <b>R$ 2.100</b>, porque o aluguel ia sair de qualquer jeito. Do outro lado,
+    quem escolhe juntar continua pagando aluguel durante os doze anos, e isso
+    precisa entrar na comparação.</p>
+
+  <h2>Quando o imóvel também pode render</h2>
+  <p>Se a ideia não é morar, mas ter patrimônio, o jogo muda: o imóvel
+    contemplado pode ser alugado, e o aluguel ajuda a pagar a parcela que
+    sobrou. Aí a compra deixa de ser gasto e vira construção — e essa conta tem
+    página própria.</p>
+
+  ` + `<a class="simule" href="#/comprar">
+    <span class="k">Simule aqui</span>
+    <span class="t">Compare os três com o seu valor &rarr;</span>
+    <span class="d">O preço do imóvel, quanto você pode pagar por mês e o
+      aluguel que paga hoje.</span></a>`
+  + `
+  <h2>Onde se perde dinheiro sem perceber</h2>
+  <p>Na escolha do banco, que muda mais que qualquer outra decisão: entre a
+    taxa mais barata e a mais cara do mercado, num contrato de 30 anos, a
+    diferença passa de <b>R$ 180 mil</b>. E na taxa anunciada, que quase nunca é
+    a que você consegue — <b>"a partir de" é a condição do melhor cliente do
+    banco</b>, e vem somada a um índice de correção.</p>
+  <p>Comparar proposta de banco, escolher grupo de consórcio e montar a ordem
+    certa das coisas é trabalho de quem faz isso todo dia. E são vinte, trinta
+    anos de contrato: <b>o erro aqui não se desfaz.</b></p>
+  ` + FIMP(); }
+
+
+function pagRisco(){ $("#app").innerHTML =
+  TOPO("montar a sua carteira","O risco de verdade",
+    "Perder 50% e ganhar 50% não te devolve ao ponto de partida. Essa assimetria é a coisa mais importante do mercado, e é a que menos gente calcula.") + `
+  <div class="caso">
+    <p>Você tinha R$ 100 mil. Caiu 50%, sobrou R$ 50 mil. No ano seguinte
+      subiu 50% — e você tem <b>R$ 75 mil</b>. Para voltar aos R$ 100 mil não
+      bastava subir 50%: <b class="destaque">tinha que subir 100%.</b></p>
+  </div>
+
+  <h2>A conta de perder não é a conta de ganhar</h2>
+  <p>Ganho e perda parecem simétricos e não são. Quando você perde, perde sobre
+    o valor cheio; quando recupera, sobe a partir de um valor menor. Quanto
+    maior a queda, mais desproporcional fica.</p>
+
+  <div class="figura">${tabelaVolta()}
+    <p class="notafig">Quanto o investimento precisa subir para voltar ao mesmo
+      valor, depois de cair.</p>
+  </div>
+
+  <h2>A barreira dos 25%</h2>
+  <p>Repare na terceira coluna. Até uns 10% de queda, a conta é quase justa:
+    caiu 10, sobe 11 e você voltou. <b>A partir de mais ou menos 25%, a relação
+    descola de vez.</b> Caiu 25, precisa de 33. Caiu 50, precisa de 100. Caiu
+    75, precisa de 300.</p>
+  <p>É por isso que perdas grandes são qualitativamente diferentes de perdas
+    pequenas — não é o mesmo problema em tamanho maior, é outro problema. <b>Uma
+    queda de 25% é o ponto em que a matemática deixa de te ajudar.</b></p>
+
+  <h2>Linear e logarítmico: onde entra o conhecimento e onde entra o controle</h2>
+  <p>Enquanto os movimentos são pequenos, o mundo parece linear e o que decide é
+    <b>conhecimento</b>: escolher bem, entender a empresa, saber o que se está
+    comprando.</p>
+  <p>Quando os movimentos ficam grandes, o mundo vira logarítmico e o que decide
+    é <b>controle de risco</b>. Nenhuma quantidade de conhecimento te devolve
+    de uma queda de 75% — só a decisão, tomada antes, de nunca chegar lá.</p>
+
+  <h2>Controle de risco não é só stop</h2>
+  <div class="trinca">
+    <div><span class="rot">Stop</span>
+      <p>Sair a um preço definido antes. Serve para posição de curto prazo e
+        exige disciplina para valer alguma coisa.</p></div>
+    <div><span class="rot">Diversificação</span>
+      <p>Nenhuma posição grande o bastante para te tirar do jogo. É o controle
+        de risco de quem investe, não de quem opera.</p></div>
+    <div><span class="rot">Qualidade</span>
+      <p>Empresa sólida cai e volta. Empresa ruim cai e fica. A escolha do que
+        se carrega é, em si, controle de risco.</p></div>
+  </div>
+
+  <h2>Risco e retorno: a relação 3 para 1</h2>
+  <p>Uma forma de tirar o resultado da sorte é só aceitar operações em que o
+    ganho possível vale <b>três vezes</b> o que você aceita perder. Com essa
+    proporção, você pode <b>errar três de cada quatro vezes e ainda empatar</b>.
+    Acertando 30%, já é lucro; acertando 40%, é lucro grande.</p>
+  <p>Isso muda a pergunta. Deixa de ser "vai subir?" e passa a ser <b>"quanto eu
+    ganho se eu estiver certo, e quanto eu perco se estiver errado?"</b> — que é
+    a única das duas que você controla.</p>
+
+  <h2>O grande e o pequeno não jogam o mesmo jogo</h2>
+  <p>Um investidor grande não tem as oportunidades do pequeno, e quase ninguém
+    conta isso. <b>O pequeno entra e sai quando quer. O grande entra e sai
+    quando consegue</b> — ele tem dificuldade para montar a posição sem empurrar
+    o preço, e dificuldade maior ainda para desmontar.</p>
+  <p>É uma vantagem real de quem tem pouco, e a maior parte das pessoas a
+    desperdiça tentando imitar quem tem muito.</p>
+
+  <h2>Rebalancear o que presta</h2>
+  <p>Rebalancear é vender o que subiu demais e comprar o que ficou para trás,
+    voltando aos pesos que você definiu. Obriga a vender na alta e comprar na
+    baixa — o contrário do instinto.</p>
+  <p>Mas há uma condição: <b>só funciona com ativo que presta</b>. Rebalancear
+    para dentro de uma empresa que está caindo por um motivo real não é comprar
+    na baixa, é aumentar a aposta no erro. A regra vale para carteira de coisas
+    boas; fora disso, vira armadilha.</p>
+
+  ` + SIM("Veja quanto o tempo faz pelo patrimônio",
+      "E quanto uma taxa menor custa — é o mesmo mecanismo que castiga a queda grande.")
+  + `
+  <h2>Onde isso costuma dar errado sozinho</h2>
+  <p>Concentrar sem perceber que concentrou, carregar o que caiu por motivo real
+    porque "já perdi mesmo", e descobrir a barreira dos 25% depois de
+    atravessá-la. São erros de risco, não de escolha — e é justamente o que uma
+    segunda leitura, de quem faz isso todo dia, pega antes.</p>
+  ` + FIMP(); }
+
+/* ─── roteador ─── */
+const TELAS = {
+  "": indice, "crescer": explicacao, "rendafixa": rendaFixa,
+  "dividas": dividas, "consorcio": consorcio, "carteira": carteira,
+  "risco": pagRisco, "real": pagReal, "rendavar": pagRendaVar, "previdencia": pagPrev,
+  "fundos": pagFundos, "clube": pagClube,
+  "alternativos": pagAlternativos, "internacional": pagInternacional,
+  "seguro": pagSeguro, "sessenta": pagSessenta, "grandes": pagGrandes,
+  "casa": pagCasa, "trabalhar": pagTrabalhar, "credito": pagCredito, "sucessao": pagSucessao,
+  "sim-crescer": simulador, "sim-renda": simRenda,
+  "sim-credito": simCredito, "sim-comprar": simComprar,
+   "servicos": servicos,
+  "s-rendafixa": servRendaFixa,
+  "s-internacional": servInternacional, "s-alternativos": servAlternativos
+};
+
+function tabelaVolta(){
+  const linhas = [1,5,10,20,25,30,50,75].map(q => {
+    const alta = (1/(1-q/100)-1)*100;
+    const pesado = q >= 25;
+    return `<tr>
+      <td class="mono">−${q}%</td>
+      <td class="mono ${pesado?"ruim":""}">+${alta.toFixed(alta<100?1:0).replace(".",",")}%</td>
+      <td>${pesado?`<b>${(alta/q).toFixed(2).replace(".",",")}×</b>`
+                 :`${(alta/q).toFixed(2).replace(".",",")}×`}</td></tr>`;
+  }).join("");
+  return `<table class="volta">
+    <thead><tr><th>Se cair</th><th>Precisa subir</th><th>Proporção</th></tr></thead>
+    <tbody>${linhas}</tbody></table>`;
+}
+
 function rotear(){
   clearInterval(window.__timerRank);
   clearInterval(window.__timerVivo);
@@ -8040,10 +10323,35 @@ function rotear(){
   if(h==="#/publicar")        return telaPublicar();
   if(h==="#/duelo")           return telaDuelo();
   if(h==="#/abertura")        return telaAbertura();
-  if(h==="#/aprender")        return telaAprender();
-  if(h==="#/crescer")         return telaCrescer();
+  if(h==="#/aprender")        return telaIndiceAprender();
+  if(h==="#/porque")          return telaAprender();
+  if(h==="#/corrigir")        return pagReal();
+  if(h==="#/risco")           return pagRisco();
+  if(h==="#/renda-fixa")      return pagRendaFixa();
+  if(h==="#/renda-variavel")  return pagRendaVar();
+  if(h==="#/previdencia")     return pagPrev();
+  if(h==="#/fundos")          return pagFundos();
+  if(h==="#/clubes")          return pagClube();
+  if(h==="#/alternativos")    return pagAlternativos();
+  if(h==="#/internacional")   return pagInternacional();
+  if(h==="#/consorcio")       return pagConsorcioBase();
+  if(h==="#/seguro-vida")     return pagSeguro();
+  if(h==="#/dividas")         return pagDividas();
+  if(h==="#/carteira-como")   return pagCarteiraComo();
+  if(h==="#/sessenta")        return pagSessenta();
+  if(h==="#/grandes")         return pagGrandes();
+  if(h==="#/casa")            return pagCasa();
+  if(h==="#/nao-perder")      return pagSucessaoNova();
+  if(h==="#/p-renda-fixa")    return servRendaFixa();
+  if(h==="#/p-internacional") return servInternacional();
+  if(h==="#/p-alternativos")  return servAlternativos();
+  if(h==="#/crescer")         return telaCrescerNova();
+  if(h==="#/sim-crescer")     return simulador();
+  if(h==="#/sim-renda")       return simRenda();
+  if(h==="#/sim-credito")     return simCredito();
+  if(h==="#/sim-comprar")     return simComprar();
   if(h==="#/comprar")         return telaComprar();
-  if(h==="#/credito")         return telaCredito();
+  if(h==="#/credito")         return pagCreditoNova();
   if(h==="#/escada")          return telaEscada();
   if(h==="#/aplicado")        return telaAplicado();
   if(h==="#/como-funciona")   return telaComo();
