@@ -915,6 +915,12 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
 }
 @media(max-width:460px){.campos{grid-template-columns:1fr !important}}
 
+.prods{display:flex;gap:9px;flex-wrap:wrap;margin:16px 0 4px}
+.prods a{font-size:12.5px;padding:7px 13px;border-radius:99px;
+  border:1px solid var(--ouro2);color:var(--tinta);background:var(--p2);
+  transition:background .15s}
+.prods a:hover{background:var(--p3)}
+
 .camada{margin-top:22px}
 .degrauS{display:flex;gap:14px;padding:16px 0;border-top:1px solid var(--linha)}
 .degrauS .q{flex:none;width:130px;font-size:11px;letter-spacing:.1em;
@@ -6011,6 +6017,11 @@ async function telaServicos(){
       contratados pontualmente ou dentro de um portfólio, e há equipe
       especializada em cada família — toda ela regulada, sem exceção.</p>
 
+    <div class="prods">
+      <a href="#/p-renda-fixa">Renda fixa &rarr;</a>
+      <a href="#/p-internacional">Conta internacional &rarr;</a>
+      <a href="#/p-alternativos">Ouro, dólar e bitcoin &rarr;</a>
+    </div>
     <p style="font-size:12.5px;color:var(--graf);margin-top:22px">
       ${SERVICOS.length} serviços · toque para abrir · marque os que te interessam e
       peça contato no fim da página</p>
@@ -8193,7 +8204,6 @@ function telaCredito(){
 /* ══ SIMULADORES (vindos do protótipo, já corrigidos) ══ */
 const P = { valor:100000, taxa:10, anos:10, vende:2 };
 
-const TX_C = {}; LINHAS_C.forEach(([n,t]) => TX_C[n] = t);
 
 const LINHAS_C = [
   ["Consórcio",0.62,"taxa de administração, sem juro"],
@@ -8205,6 +8215,7 @@ const LINHAS_C = [
   ["Rotativo do cartão",12.08,"o que sobra quando não se paga a fatura"],
   ["Cheque especial",12.68,"cobra por dia usado"]
 ];
+const TX_C = {}; LINHAS_C.forEach(([n,t]) => TX_C[n] = t);
 const B = { bem:500000, mensal:3000, aluguel:2500,
             prazoCon:200, adm:19, fr:5, juroFin:11.7, tr:2.02, prazoFin:360, taxa:10 };
 const C = { valor:50000, meses:24 };
@@ -9224,41 +9235,6 @@ function servAlternativos(){
 
 /* ─── PÁGINA: momentos ainda não desenhados ─── */
 /* ══ EDUCACIONAL: índice e tópicos ══ */
-/* ── auxiliares das páginas educacionais ── */
-const TOPO = (etapa,titulo,chapeu) => `
-  <div class="trilho"><a href="#/aprender" style="color:var(--ouro2);text-decoration:none">Aprender</a> · ${etapa}</div>
-  <h1>${titulo}</h1>
-  <p class="chapeu">${chapeu}</p>`;
-
-const FIMP = () => `
-  <div class="adiante">
-    <a class="bt cheio lacre" href="#/servicos">Consulte gratuitamente &rarr;</a>
-    <a class="bt" href="#/aprender">Ver todos os temas</a>
-  </div>`;
-
-const CART = (t,d) => `
-  <a class="simule" href="#/publicar">
-    <span class="k">O simulador de carteiras</span>
-    <span class="t">${t} &rarr;</span>
-    <span class="d">${d}</span></a>`;
-
-const SIM = (t,d) => `
-  <a class="simule" href="#/crescer">
-    <span class="k">Simule aqui</span>
-    <span class="t">${t} &rarr;</span>
-    <span class="d">${d}</span></a>`;
-
-const AVISO = `
-  <div class="aviso">
-    <b>Isto é conteúdo educacional, não uma proposta.</b>
-    <p>O simulador existe para você entender o raciocínio. Cada investidor tem
-      um perfil de crédito.</p>
-    <p style="margin-top:9px">A conta aqui serve para você chegar preparado à
-      conversa, não para substituí-la. <b>Quem vai encontrar as melhores
-      condições reais, no seu nome, é o especialista</b> — e é aí que a
-      diferença aparece.</p>
-  </div>`;
-
 const TOPICOS_AP = [
   ["Comece por aqui", [
     ["#/crescer","Como o dinheiro cresce","Juro composto, e o mês em que o seu dinheiro passa a render mais do que você deposita."],
@@ -9721,7 +9697,7 @@ function pagConsorcioBase(){
       <p>Corrige todo ano no aniversário do grupo, junto com o crédito.</p></div>
   </div>
 
-  <a class="simule" href="#/comprar">
+  <a class="simule" href="#/sim-comprar">
     <span class="k">Simule aqui</span>
     <span class="t">Compare com financiamento e com juntar &rarr;</span>
     <span class="d">Mesmo bem, três caminhos, e a diferença de custo entre
@@ -10147,7 +10123,7 @@ function pagCasa(){ $("#app").innerHTML =
     sobrou. Aí a compra deixa de ser gasto e vira construção — e essa conta tem
     página própria.</p>
 
-  ` + `<a class="simule" href="#/comprar">
+  ` + `<a class="simule" href="#/sim-comprar">
     <span class="k">Simule aqui</span>
     <span class="t">Compare os três com o seu valor &rarr;</span>
     <span class="d">O preço do imóvel, quanto você pode pagar por mês e o
@@ -10249,22 +10225,6 @@ function pagRisco(){ $("#app").innerHTML =
     atravessá-la. São erros de risco, não de escolha — e é justamente o que uma
     segunda leitura, de quem faz isso todo dia, pega antes.</p>
   ` + FIMP(); }
-
-/* ─── roteador ─── */
-const TELAS = {
-  "": indice, "crescer": explicacao, "rendafixa": rendaFixa,
-  "dividas": dividas, "consorcio": consorcio, "carteira": carteira,
-  "risco": pagRisco, "real": pagReal, "rendavar": pagRendaVar, "previdencia": pagPrev,
-  "fundos": pagFundos, "clube": pagClube,
-  "alternativos": pagAlternativos, "internacional": pagInternacional,
-  "seguro": pagSeguro, "sessenta": pagSessenta, "grandes": pagGrandes,
-  "casa": pagCasa, "trabalhar": pagTrabalhar, "credito": pagCredito, "sucessao": pagSucessao,
-  "sim-crescer": simulador, "sim-renda": simRenda,
-  "sim-credito": simCredito, "sim-comprar": simComprar,
-   "servicos": servicos,
-  "s-rendafixa": servRendaFixa,
-  "s-internacional": servInternacional, "s-alternativos": servAlternativos
-};
 
 function tabelaVolta(){
   const linhas = [1,5,10,20,25,30,50,75].map(q => {
