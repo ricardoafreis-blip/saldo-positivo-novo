@@ -67,11 +67,52 @@ nav .rotg{display:block;font-family:Newsreader,serif;font-size:19px;
   font-weight:500;letter-spacing:-.01em;color:var(--tinta);line-height:1.15}
 nav .def{display:block;font-size:11.5px;color:var(--ouro2);opacity:.85;
   font-style:italic;line-height:1.35;margin:5px 0 8px}
-nav select.menu{width:100%;background:var(--p2);border:1px solid var(--linha2);
-  color:var(--t2);border-radius:5px;padding:6px 9px;font-size:12.5px;
-  cursor:pointer;transition:border-color .15s,color .15s}
-nav select.menu:hover{border-color:var(--ouro2);color:var(--tinta)}
 nav .divisor,nav .rot,nav .gloss,nav .bloco{display:none}
+
+/* grupos curtos: os três itens ficam à vista, sem clique nenhum */
+nav .lista{display:flex;flex-direction:column;gap:2px}
+nav .lista a{display:block;font-size:12.5px;color:var(--t2);padding:3px 0;
+  border-bottom:1px solid transparent;width:fit-content;transition:color .15s}
+nav .lista a:hover{color:var(--ouro2)}
+nav .lista a.aqui{color:var(--ouro2);border-bottom-color:var(--ouro2)}
+
+/* grupos longos: o título é o botão que abre o painel */
+nav .grupo{position:relative}
+button.rotg{display:flex;align-items:center;gap:7px;padding:0;text-align:left}
+button.rotg .cv{width:0;height:0;border-left:4.5px solid transparent;
+  border-right:4.5px solid transparent;border-top:5px solid var(--ouro2);
+  opacity:.8;transition:transform .18s}
+button.rotg:hover{color:var(--ouro2)}
+nav .grupo.aberto button.rotg .cv{transform:rotate(180deg)}
+nav .painel{display:none;position:absolute;z-index:60;top:100%;left:8px;
+  min-width:274px;max-height:min(70vh,560px);overflow-y:auto;
+  background:var(--p2);border:1px solid var(--linha2);border-radius:7px;
+  padding:9px 0;box-shadow:0 18px 44px rgba(0,0,0,.55);text-align:left}
+nav .grupo.aberto .painel{display:block}
+nav .painel a{display:block;font-size:13px;color:var(--t2);
+  padding:6px 15px;line-height:1.32;transition:background .12s,color .12s}
+nav .painel a:hover{background:var(--p3);color:var(--tinta)}
+nav .painel a.aqui{color:var(--ouro2);background:var(--p3)}
+nav .painel a em{display:block;font-size:10.5px;font-style:normal;
+  color:var(--graf);letter-spacing:.02em;margin-top:1px}
+nav .painel a.topo{color:var(--ouro2);font-weight:500;margin:0 9px 5px;
+  padding:8px 12px;border:1px solid var(--linha2);border-radius:5px}
+nav .painel a.topo:hover{border-color:var(--ouro2);background:var(--p3)}
+nav .painel .sub{display:flex;align-items:center;gap:8px;font-size:9px;
+  letter-spacing:.15em;text-transform:uppercase;color:var(--ouro2);opacity:.75;
+  padding:11px 15px 4px}
+nav .painel .sub i{flex:none;width:15px;height:15px;border-radius:50%;
+  border:1px solid var(--ouro2);font-family:'IBM Plex Mono',monospace;
+  font-style:normal;font-size:9px;letter-spacing:0;
+  display:grid;place-items:center;opacity:.9}
+/* item já previsto, página ainda não escrita: aparece para não ser esquecido,
+   mas não é link — mandar para rota inexistente cai no ranking e confunde */
+nav .painel .falta{display:block;font-size:13px;color:var(--graf);
+  padding:6px 15px;line-height:1.32;cursor:default}
+nav .painel .falta em{display:inline-block;font-style:normal;font-size:9px;
+  letter-spacing:.11em;text-transform:uppercase;color:var(--ouro2);opacity:.55;
+  border:1px solid var(--linha2);border-radius:3px;padding:0 5px;margin-left:7px}
+nav .painel .risco{display:block;height:1px;background:var(--linha);margin:7px 15px}
 
 header .dir{display:flex;gap:12px;align-items:center;font-size:13px;flex:none}
 header .dir a,header .dir button.lnk{font-size:13px;color:var(--t2);background:none}
@@ -82,12 +123,17 @@ header .dir a:hover{color:var(--ouro2)}
 @media(max-width:1040px){
   header .marca{font-size:22px}
   nav .grupo{padding:6px 10px 0}
-  nav select.menu{font-size:12px;padding:5px 7px}
+  nav .lista a,nav .painel a{font-size:12px}
+  nav .painel{min-width:248px}
 }
 @media(max-width:700px){
   nav{grid-template-columns:repeat(2,1fr);row-gap:12px}
   nav .grupo+.grupo{border-left:none}
   nav .grupo:nth-child(even){border-left:1px solid var(--linha)}
+  /* em tela estreita o painel flutuante estoura pela lateral: vira bloco
+     empurrando o conteúdo, que é o comportamento que se espera no toque */
+  nav .painel{position:static;min-width:0;width:100%;max-height:none;
+    box-shadow:none;margin-top:7px}
 }
 @media(max-width:420px){
   nav{grid-template-columns:1fr;row-gap:9px}
@@ -895,6 +941,12 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
 .conclui{font-family:Newsreader,serif;font-size:22px;color:var(--tinta);
   line-height:1.45;margin:24px 0;padding-left:16px;
   border-left:3px solid var(--alta);max-width:58ch}
+.modos{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 4px}
+.modo{background:var(--p2);border:1px solid var(--linha2);color:var(--t2);
+  border-radius:99px;padding:8px 16px;font-size:13.5px;font-family:inherit;
+  cursor:pointer;transition:border-color .15s,color .15s}
+.modo:hover{border-color:var(--ouro2);color:var(--tinta)}
+.modo.on{border-color:var(--ouro2);color:var(--ouro2);background:var(--p3)}
 .figura{margin:26px 0 8px}
 .figura svg{width:100%;height:auto;display:block}
 .legenda{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;font-size:12px;color:var(--graf)}
@@ -1210,87 +1262,97 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
       <span class="pt2">mundo real</span>
     </div>
     <nav>
-      <div class="grupo"><span class="rotg">Aprender</span>
+      <div class="grupo" data-g="aprender">
+        <button type="button" class="rotg abre">Aprender<i class="cv"></i></button>
         <span class="def">antes de arriscar qualquer coisa</span>
-        <select class="menu" data-g="aprender">
-          <option value="">Escolha um tema &#9662;</option>
-          <option value="#/aprender">Comece por aqui</option>
-          <optgroup label="Comece por aqui">
-            <option value="#/crescer">Como o dinheiro cresce</option>
-            <option value="#/dividas">Antes de poupar, saia das dívidas</option>
-            <option value="#/corrigir">Corrigir não é crescer</option>
-          </optgroup>
-          <optgroup label="O que é cada coisa">
-            <option value="#/renda-fixa">Renda fixa</option>
-            <option value="#/renda-variavel">Renda variável</option>
-            <option value="#/previdencia">Previdência</option>
-            <option value="#/fundos">Fundo de investimento</option>
-            <option value="#/clubes">Clube de investimento</option>
-            <option value="#/alternativos">Ouro, dólar e bitcoin</option>
-            <option value="#/internacional">Investir no exterior</option>
-            <option value="#/consorcio">Consórcio</option>
-            <option value="#/seguro-vida">Seguro de vida</option>
-          </optgroup>
-          <optgroup label="Montar a sua carteira">
-            <option value="#/risco">O risco de verdade</option>
-            <option value="#/carteira-como">Como se monta uma carteira</option>
-            <option value="#/sessenta">A carteira 60/40</option>
-            <option value="#/grandes">Os grandes acumuladores</option>
-          </optgroup>
-          <optgroup label="Quando já há patrimônio">
-            <option value="#/casa">Sair do aluguel</option>
-            <option value="#/comprar">Comprar um bem</option>
-            <option value="#/escada">A escada do consórcio</option>
-            <option value="#/aplicado">Pôr o patrimônio para trabalhar</option>
-            <option value="#/credito">Quanto custa o dinheiro</option>
-            <option value="#/sucessao">Não perder na saída</option>
-            <option value="#/porque">Por que investir é difícil</option>
-          </optgroup>
-          <option value="#/como-funciona">Como funciona o site</option>
-        </select></div>
-      <div class="grupo"><span class="rotg">Especular</span>
+        <div class="painel">
+          <a class="topo" href="#/aprender">Índice completo dos temas</a>
+          <span class="sub"><i>1</i>Comece por aqui</span>
+          <a href="#/porque">Por que investir é difícil</a>
+          <a href="#/dividas">Antes de poupar, saia das dívidas</a>
+          <a href="#/crescer">Como o dinheiro cresce</a>
+          <a href="#/corrigir">Corrigir não é crescer</a>
+          <span class="sub"><i>2</i>O que é cada coisa</span>
+          <a href="#/renda-fixa">Renda fixa</a>
+          <a href="#/renda-variavel">Renda variável</a>
+          <a href="#/fundos">Fundo de investimento</a>
+          <a href="#/previdencia">Previdência</a>
+          <a href="#/clubes">Clube de investimento</a>
+          <a href="#/consorcio">Consórcio</a>
+          <a href="#/seguro-vida">Seguro de vida</a>
+          <a href="#/alternativos">Ouro, dólar e bitcoin</a>
+          <a href="#/internacional">Investir no exterior</a>
+          <span class="sub"><i>3</i>Montar a sua carteira</span>
+          <a href="#/risco">O risco de verdade</a>
+          <a href="#/carteira-como">Como se monta uma carteira</a>
+          <a href="#/sessenta">A carteira 60/40</a>
+          <a href="#/grandes">Os grandes acumuladores</a>
+          <span class="sub"><i>4</i>Quando já há patrimônio</span>
+          <a href="#/credito">Quanto custa o dinheiro</a>
+          <a href="#/casa">Sair do aluguel</a>
+          <a href="#/comprar">Comprar um bem</a>
+          <a href="#/escada">A escada do consórcio</a>
+          <a href="#/aplicado">Pôr o patrimônio para trabalhar</a>
+          <a href="#/nao-perder">Não perder na saída</a>
+          <span class="risco"></span>
+          <a href="#/como-funciona">Como funciona o site</a>
+        </div>
+      </div>
+
+      <div class="grupo" data-g="especular">
+        <span class="rotg">Especular</span>
         <span class="def">comprar para vender mais caro</span>
-        <select class="menu" data-g="especular">
-          <option value="">Escolha &#9662;</option>
-          <option value="#/tiro-curto">Tiro curto</option>
-          <option value="#/placar">Placar</option>
-          <option value="#/duelo">Duelo</option>
-        </select></div>
-      <div class="grupo"><span class="rotg">Investir</span>
+        <div class="lista">
+          <a href="#/tiro-curto">Tiro curto</a>
+          <a href="#/placar">Placar</a>
+          <a href="#/duelo">Duelo</a>
+        </div>
+      </div>
+
+      <div class="grupo" data-g="investir">
+        <span class="rotg">Investir</span>
         <span class="def">comprar para viver de renda</span>
-        <select class="menu" id="menuInv" data-g="investir">
-          <option value="">Escolha &#9662;</option>
-          <option value="#/ranking">Ranking</option>
-          <option value="#/screening">Screening</option>
-          <option value="#/publicar">Crie sua carteira</option>
-        </select></div>
-      <div class="grupo"><span class="rotg">Construir</span>
+        <div class="lista">
+          <a href="#/ranking">Ranking</a>
+          <a href="#/mais-escolhidos">Mais escolhidos</a>
+          <a href="#/screening">Screening</a>
+          <a href="#/publicar">Crie sua carteira</a>
+        </div>
+      </div>
+
+      <div class="grupo" data-g="construir">
+        <button type="button" class="rotg abre">Construir<i class="cv"></i></button>
         <span class="def">o patrimônio fora da tela</span>
-        <select class="menu" data-g="construir">
-          <option value="">Escolha &#9662;</option>
-          <option value="#/servicos">Com quem falar</option>
-          <option value="#/planejar">Fazer o meu planejamento</option>
-          <optgroup label="Quero alguém para me acompanhar">
-            <option value="#/servicos?s=assessoria">Assessoria de investimentos</option>
-            <option value="#/servicos?s=consultoria">Consultoria de investimentos</option>
-            <option value="#/servicos?s=planejamento">Planejamento financeiro</option>
-            <option value="#/servicos?s=gestao">Gestão de recursos</option>
-            <option value="#/servicos?s=fortunas">Gestão de grandes fortunas</option>
-            <option value="#/servicos?s=family">Multi family office</option>
-          </optgroup>
-          <optgroup label="Quero resolver uma coisa">
-            <option value="#/servicos?s=consorcio">Estratégias com consórcio</option>
-            <option value="#/servicos?s=clube">Clube de investimentos</option>
-            <option value="#/servicos?s=exterior">Conta no exterior</option>
-            <option value="#/servicos?s=offshore">Abertura de offshore</option>
-            <option value="#/servicos?s=empresarial">Estruturação empresarial</option>
-          </optgroup>
-          <optgroup label="Quero proteger o que já tenho">
-            <option value="#/servicos?s=sucessorio">Planejamento sucessório</option>
-            <option value="#/servicos?s=blindagem">Blindagem e proteção patrimonial</option>
-            <option value="#/sucessao">Seguro e sucessão</option>
-          </optgroup>
-        </select></div>
+        <div class="painel">
+          <a class="topo" href="#/servicos">Falar com um especialista</a>
+          <a href="#/planejar">Fazer o meu planejamento</a>
+          <span class="sub">Quem acompanha você</span>
+          <a href="#/servicos?s=planejamento">Planejamento financeiro</a>
+          <a href="#/servicos?s=assessoria">Assessoria de investimentos</a>
+          <a href="#/servicos?s=consultoria">Consultoria de investimentos</a>
+          <a href="#/servicos?s=gestao">Gestão de recursos</a>
+          <a href="#/servicos?s=fortunas">Gestão de grandes fortunas
+            <em>acima de R$ 20 milhões</em></a>
+          <span class="sub">Os produtos</span>
+          <a href="#/p-renda-fixa">Renda fixa</a>
+          <span class="falta">Renda variável<em>a escrever</em></span>
+          <span class="falta">Previdência<em>a escrever</em></span>
+          <span class="falta">Fundos de investimento<em>a escrever</em></span>
+          <a href="#/servicos?s=clube">Clube de investimentos</a>
+          <a href="#/servicos?s=consorcio">Estratégias com consórcio</a>
+          <a href="#/p-internacional">Conta internacional</a>
+          <a href="#/p-alternativos">Ouro, dólar e bitcoin</a>
+          <span class="sub">Abrir conta</span>
+          <span class="falta">Como abrir a sua conta<em>a escrever</em></span>
+          <span class="sub">Proteger o que já existe</span>
+          <a href="#/sucessao">Seguro e sucessão</a>
+          <a href="#/servicos?s=sucessorio">Planejamento sucessório</a>
+          <a href="#/servicos?s=blindagem">Blindagem e proteção patrimonial</a>
+          <a href="#/servicos?s=empresarial">Estruturação empresarial</a>
+          <a href="#/servicos?s=offshore">Abertura de offshore</a>
+          <a href="#/servicos?s=exterior">Conta no exterior</a>
+        </div>
+      </div>
     </nav>
   </div>
 </div></header>
@@ -1744,33 +1806,59 @@ async function carregarEu(){
   eu = data;
   if(eu) eu.email = session.user.email;
 }
-/* Marca em cada menu onde a pessoa está — e, quando ela não está em nenhum
-   destino daquele menu, volta o select para a opção neutra.
-   Isso é o que conserta o menu: um <select> só dispara "change" quando a opção
-   escolhida é DIFERENTE da que já está marcada. Sem esta sincronia o select
-   ficava congelado no primeiro item, e clicar justamente nele não fazia nada —
-   era preciso ir em Screening para depois conseguir ir ao Ranking. */
+/* Marca no menu onde a pessoa está e fecha os painéis abertos.
+   Os menus eram <select>, e um <select> só dispara "change" quando a opção
+   escolhida é DIFERENTE da já marcada — por isso clicar em Ranking, que era o
+   primeiro item, não fazia nada: era preciso passar pelo Screening antes.
+   Agora são links de verdade: clicar sempre navega, e dá para ver de fora o
+   que tem dentro. */
 function sincronizarMenus(){
   const bruto = location.hash || "#/";
   const aqui  = bruto.split("?")[0];
   const s     = new URLSearchParams(bruto.split("?")[1] || "").get("s");
-  // a home é o ranking: sem traduzir isso, quem chega pela raiz não vê o
-  // Ranking marcado e o primeiro clique nele morre
+  // a home é o ranking; sem traduzir isso o item não fica marcado
   const base  = (aqui === "#/" || aqui === "") ? "#/ranking" : aqui;
   const alvo  = s ? base + "?s=" + s : base;
-  document.querySelectorAll("nav select.menu").forEach(sel => {
-    const op = [...sel.options].find(o => o.value === alvo)
-            || [...sel.options].find(o => o.value === base);
-    sel.value = op ? op.value : "";
+  document.querySelectorAll("nav .painel, nav .lista").forEach(cx => {
+    const links = [...cx.querySelectorAll("a")];
+    links.forEach(a => a.classList.remove("aqui"));
+    const m = links.find(a => a.getAttribute("href") === alvo)
+           || links.find(a => a.getAttribute("href") === base);
+    if(m) m.classList.add("aqui");
+  });
+  document.querySelectorAll("nav .grupo.aberto").forEach(g => g.classList.remove("aberto"));
+}
+
+function ligarMenus(){
+  document.querySelectorAll("nav button.rotg").forEach(bt => {
+    if(bt.dataset.ligado) return;
+    bt.dataset.ligado = "1";
+    bt.onclick = ev => {
+      ev.stopPropagation();
+      const g = bt.closest(".grupo"), abrir = !g.classList.contains("aberto");
+      document.querySelectorAll("nav .grupo.aberto").forEach(o => o.classList.remove("aberto"));
+      if(abrir) g.classList.add("aberto");
+    };
+  });
+  if(document.body.dataset.menuFora) return;
+  document.body.dataset.menuFora = "1";
+  // clicar fora fecha. O link de dentro não precisa de tratamento: ele muda o
+  // hash, o rotear roda e a sincronia fecha tudo.
+  document.addEventListener("click", ev => {
+    // fecha ao clicar fora, e também ao clicar num link do próprio painel —
+    // senão, quem clica na página em que já está não muda o hash, o rotear não
+    // roda e o painel fica aberto na cara da pessoa
+    if(!ev.target.closest("nav .grupo") || ev.target.closest("nav a"))
+      document.querySelectorAll("nav .grupo.aberto").forEach(g => g.classList.remove("aberto"));
+  });
+  addEventListener("keydown", ev => {
+    if(ev.key === "Escape")
+      document.querySelectorAll("nav .grupo.aberto").forEach(g => g.classList.remove("aberto"));
   });
 }
 
 function pintarNav(){
-  document.querySelectorAll("nav select.menu").forEach(sel => {
-    if(sel.dataset.ligado) return;
-    sel.dataset.ligado = "1";
-    sel.onchange = () => { if(sel.value) location.hash = sel.value; };
-  });
+  ligarMenus();
   sincronizarMenus();
   $("#navDir").innerHTML = eu
     ? `<details class="eu" id="menuEu">
@@ -2336,7 +2424,7 @@ async function telaRanking(){
        sharpe:"retorno por unidade de risco · a partir de 20 pregões",
        dd:"maior queda desde o topo"}[ordem] || ""}</span>
     <span class="divisor"></span>
-    <a href="#/consenso" style="font-size:12px;color:var(--graf)"
+    <a href="#/mais-escolhidos" style="font-size:12px;color:var(--graf)"
       >Maiores posições das carteiras &rarr;</a>
   </div>
   ${quando && eu?.admin?`<p id="linhaViva" style="font-size:11.5px;color:var(--graf);margin:0 0 12px"></p>`:""}
@@ -5087,11 +5175,21 @@ const SERVICOS=[
       quanto rendeu no ano e passa a ser <b>quanto tempo o patrimônio dura</b>: política
       de investimento escrita, regra de retirada anual, caixa dimensionado para
       atravessar anos ruins sem vender na baixa, e a sucessão desenhada junto — não
-      depois.`,
+      depois.
+      <br><br>O dinheiro <b>fica onde a família quiser</b> — em qualquer banco, corretora
+      ou gestora, no Brasil e fora. Quem cuida não custodia nada e não disputa com
+      ninguém: enxerga tudo junto, num relatório só, e decide ao lado da família.
+      <br><br>Além dos investimentos, entra o que orbita o patrimônio: compra e venda de
+      ativos, imóvel, câmbio, contabilidade, sucessão, e o miúdo que ninguém lembra — o
+      seguro que vence, a escritura que falta registrar, a transferência entre países.
+      Dedicação exclusiva, com um objetivo só: <b>que a família não perca a situação que
+      levou uma vida para construir</b>, atravessando geração, separação, venda de
+      empresa e mudança de país.`,
   quem:`Autorização da CVM para <b>administrador de carteiras</b> (Res. 21), somada a
         economista, contador e, quando há bens fora, especialista em tributação
-        internacional. É o cuidado com a <i>carteira</i> — quem cuida do conjunto todo
-        é o family office, logo abaixo.`},
+        internacional — cada um com o registro da sua atividade, e a remuneração
+        declarada, porque quem ganha comissão do produto que indica deixou de cuidar do
+        conjunto. Pergunte quem responde por qual parte.`},
 
  {g:"resolver", id:"exterior", nome:"Conta no exterior",
   oq:`Conta em banco nos <b>Estados Unidos ou na Europa</b>, no nome da pessoa física.
@@ -5130,22 +5228,6 @@ const SERVICOS=[
         por instituição integrante do sistema. Depende de porte, garantia e qualidade do
         recebível — não é caminho para qualquer empresa, e um bom estruturador diz isso
         antes de cobrar.`},
-
- {g:"relacao", id:"family", nome:"Multi family office",
-  oq:`A partir de <b>R$ 20 milhões</b>, e a diferença aqui não é tamanho, é dispersão.
-      O dinheiro <b>fica onde a família quiser</b> — em qualquer banco, corretora ou
-      gestora, no Brasil e fora. O family office não custodia nada e não disputa com
-      ninguém: ele enxerga tudo junto, num relatório só, e decide ao lado da família.
-      <br><br>Além dos investimentos, cuida do que orbita o patrimônio: compra e venda
-      de ativos, imóvel, câmbio, contabilidade, sucessão, e o miúdo que ninguém lembra
-      — o seguro que vence, a escritura que falta registrar, a transferência entre
-      países. É uma consultoria de dedicação exclusiva, com um objetivo só:
-      <b>que a família não perca a situação que levou uma vida para construir</b>,
-      atravessando geração, separação, venda de empresa e mudança de país.`,
-  quem:`Estrutura própria ou rede de <b>profissionais habilitados</b>, cada um com o
-        registro da sua atividade — e a remuneração declarada, porque family office que
-        ganha comissão do produto que indica deixou de ser family office. Pergunte quem
-        responde por qual parte.`},
 ];
 
 const escolhidosS = new Set();
@@ -8692,8 +8774,8 @@ function telaCrescerNova(){
     o seu custo. Tende a melhorar.</b></p>
 
   <div class="adiante">
-    <a class="bt cheio" href="#/servicos">Consulte gratuitamente &rarr;</a>
-    <a class="bt" href="#/aprender">Ver todos os temas</a>
+    <a class="bt cheio" href="#/servicos">Consultar especialista &rarr;</a>
+    <a class="bt" href="#/aprender">Voltar ao índice</a>
   </div>`;
 }
 
@@ -8744,8 +8826,8 @@ function simulador(){
   ${AVISO}
 
   <div class="adiante">
-    <a class="bt cheio" href="#/servicos">Consulte gratuitamente &rarr;</a>
-    <a class="bt" href="#/aprender">Ver todos os temas</a>
+    <a class="bt cheio" href="#/servicos">Consultar especialista &rarr;</a>
+    <a class="bt" href="#/aprender">Voltar ao índice</a>
   </div>`;
 
   const liga = (id, campo, min, max) => {
@@ -8793,7 +8875,10 @@ function simRenda(){
       ? `O que sobra depois do saque, rendendo sozinho.`
       : u.perpetuo
         ? `O patrimônio não cai: você tira menos do que ele rende.`
-        : `O patrimônio sendo consumido até acabar.`}</p>
+        : u.dura
+          ? `O patrimônio sendo consumido até acabar.`
+          : `O patrimônio encolhendo devagar — o gráfico mostra 35 anos e ele
+             ainda não acabou.`}</p>
   </div>
 
   <div class="placar3">
@@ -8840,8 +8925,8 @@ function simRenda(){
   ${AVISO}
 
   <div class="adiante">
-    <a class="bt cheio" href="#/servicos">Consulte gratuitamente &rarr;</a>
-    <a class="bt" href="#/aprender">Ver todos os temas</a>
+    <a class="bt cheio" href="#/servicos">Consultar especialista &rarr;</a>
+    <a class="bt" href="#/aprender">Voltar ao índice</a>
   </div>`;
 
   const liga = (id, campo, min, max, alvo) => {
@@ -8931,8 +9016,8 @@ function simCredito(){
   ${AVISO}
 
   <div class="adiante">
-    <a class="bt cheio" href="#/servicos">Consulte gratuitamente &rarr;</a>
-    <a class="bt" href="#/aprender">Ver todos os temas</a>
+    <a class="bt cheio" href="#/servicos">Consultar especialista &rarr;</a>
+    <a class="bt" href="#/aprender">Voltar ao índice</a>
   </div>`;
 
   const num = el => { const x = Number(String(el.value).replace(/[^\d.,-]/g,"").replace(",",".")); return isFinite(x)?x:0; };
@@ -9025,8 +9110,8 @@ function simComprar(){
   ${AVISO}
 
   <div class="adiante">
-    <a class="bt cheio" href="#/servicos">Consulte gratuitamente &rarr;</a>
-    <a class="bt" href="#/aprender">Ver todos os temas</a>
+    <a class="bt cheio" href="#/servicos">Consultar especialista &rarr;</a>
+    <a class="bt" href="#/aprender">Voltar ao índice</a>
   </div>`;
 
   const num = el => { const x = Number(String(el.value).replace(/[^\d.,-]/g,"").replace(",",".")); return isFinite(x)?x:0; };
@@ -9146,7 +9231,7 @@ function servRendaFixa(){
     instituição autorizada. <b>Nada fora do que é regulado.</b></p>
 
   <div class="adiante">
-    <a class="bt cheio" href="#/servicos">Consulte gratuitamente &rarr;</a>
+    <a class="bt cheio" href="#/servicos">Consultar especialista &rarr;</a>
     <a class="bt" href="#/aprender">Voltar ao índice</a>
   </div>`;
 }
@@ -9158,7 +9243,7 @@ const TOPO = (etapa,titulo,chapeu) => `
   <p class="chapeu">${chapeu}</p>`;
 const FIMP = () => `
   <div class="adiante">
-    <a class="bt cheio" href="#/servicos">Consulte gratuitamente &rarr;</a>
+    <a class="bt cheio" href="#/servicos">Consultar especialista &rarr;</a>
     <a class="bt" href="#/aprender">Voltar ao índice</a>
   </div>`;
 const AVISO = `
@@ -9217,7 +9302,7 @@ function servInternacional(){
     regulado.</b></p>
 
   <div class="adiante">
-    <a class="bt cheio" href="#/servicos">Consulte gratuitamente &rarr;</a>
+    <a class="bt cheio" href="#/servicos">Consultar especialista &rarr;</a>
     <a class="bt" href="#/aprender">Voltar ao índice</a>
   </div>`;
 }
@@ -9270,7 +9355,7 @@ function servAlternativos(){
     aparece mais oferta sem registro nenhum.</p>
 
   <div class="adiante">
-    <a class="bt cheio" href="#/servicos">Consulte gratuitamente &rarr;</a>
+    <a class="bt cheio" href="#/servicos">Consultar especialista &rarr;</a>
     <a class="bt" href="#/aprender">Voltar ao índice</a>
   </div>`;
 }
@@ -9327,7 +9412,7 @@ function telaIndiceAprender(){
         <span class="t">${t}</span><span class="d">${d}</span></a>`).join("")}`).join("")}
   </div>
   <div class="adiante">
-    <a class="bt cheio lacre" href="#/servicos">Consulte gratuitamente &rarr;</a>
+    <a class="bt cheio lacre" href="#/servicos">Consultar especialista &rarr;</a>
   </div>`;
 }
 
@@ -9690,8 +9775,8 @@ function pagDividas(){
     mês</b>.</p>
 
   <div class="adiante">
-    <a class="bt cheio" href="#/servicos">Consulte gratuitamente &rarr;</a>
-    <a class="bt" href="#/aprender">Ver todos os temas</a>
+    <a class="bt cheio" href="#/servicos">Consultar especialista &rarr;</a>
+    <a class="bt" href="#/aprender">Voltar ao índice</a>
   </div>`;
 }
 
@@ -9754,8 +9839,8 @@ function pagConsorcioBase(){
     todo dia.</p>
 
   <div class="adiante">
-    <a class="bt cheio" href="#/servicos">Consulte gratuitamente &rarr;</a>
-    <a class="bt" href="#/aprender">Ver todos os temas</a>
+    <a class="bt cheio" href="#/servicos">Consultar especialista &rarr;</a>
+    <a class="bt" href="#/aprender">Voltar ao índice</a>
   </div>`;
 }
 
@@ -9813,8 +9898,8 @@ function pagCarteiraComo(){
   </a>
 
   <div class="adiante">
-    <a class="bt cheio" href="#/servicos">Consulte gratuitamente &rarr;</a>
-    <a class="bt" href="#/aprender">Ver todos os temas</a>
+    <a class="bt cheio" href="#/servicos">Consultar especialista &rarr;</a>
+    <a class="bt" href="#/aprender">Voltar ao índice</a>
   </div>`;
 }
 
@@ -10371,7 +10456,7 @@ function rotear(){
   if(h==="#/planejar")        return telaPlanejar();
   if(h==="#/sucessao")        return telaSucessao();
   if(h==="#/clube")           return telaClube();
-  if(h==="#/consenso")        return telaConsenso();
+  if(h==="#/consenso" || h==="#/mais-escolhidos") return telaConsenso();
   if(h.split("?")[0]==="#/universo") return telaUniverso();
   if(h.split("?")[0]==="#/leads") return telaLeads();
   if(h==="#/minhas")          return telaConta(true);
