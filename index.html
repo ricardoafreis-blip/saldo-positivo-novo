@@ -1213,6 +1213,7 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
       <div class="grupo"><span class="rotg">Aprender</span>
         <span class="def">antes de arriscar qualquer coisa</span>
         <select class="menu" data-g="aprender">
+          <option value="">Escolha um tema &#9662;</option>
           <option value="#/aprender">Comece por aqui</option>
           <optgroup label="Comece por aqui">
             <option value="#/crescer">Como o dinheiro cresce</option>
@@ -1250,6 +1251,7 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
       <div class="grupo"><span class="rotg">Especular</span>
         <span class="def">comprar para vender mais caro</span>
         <select class="menu" data-g="especular">
+          <option value="">Escolha &#9662;</option>
           <option value="#/tiro-curto">Tiro curto</option>
           <option value="#/placar">Placar</option>
           <option value="#/duelo">Duelo</option>
@@ -1257,6 +1259,7 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
       <div class="grupo"><span class="rotg">Investir</span>
         <span class="def">comprar para viver de renda</span>
         <select class="menu" id="menuInv" data-g="investir">
+          <option value="">Escolha &#9662;</option>
           <option value="#/ranking">Ranking</option>
           <option value="#/screening">Screening</option>
           <option value="#/publicar">Crie sua carteira</option>
@@ -1264,6 +1267,7 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
       <div class="grupo"><span class="rotg">Construir</span>
         <span class="def">o patrimônio fora da tela</span>
         <select class="menu" data-g="construir">
+          <option value="">Escolha &#9662;</option>
           <option value="#/servicos">Com quem falar</option>
           <option value="#/planejar">Fazer o meu planejamento</option>
           <optgroup label="Quero alguém para me acompanhar">
@@ -1740,18 +1744,34 @@ async function carregarEu(){
   eu = data;
   if(eu) eu.email = session.user.email;
 }
+/* Marca em cada menu onde a pessoa está — e, quando ela não está em nenhum
+   destino daquele menu, volta o select para a opção neutra.
+   Isso é o que conserta o menu: um <select> só dispara "change" quando a opção
+   escolhida é DIFERENTE da que já está marcada. Sem esta sincronia o select
+   ficava congelado no primeiro item, e clicar justamente nele não fazia nada —
+   era preciso ir em Screening para depois conseguir ir ao Ranking. */
+function sincronizarMenus(){
+  const bruto = location.hash || "#/";
+  const aqui  = bruto.split("?")[0];
+  const s     = new URLSearchParams(bruto.split("?")[1] || "").get("s");
+  // a home é o ranking: sem traduzir isso, quem chega pela raiz não vê o
+  // Ranking marcado e o primeiro clique nele morre
+  const base  = (aqui === "#/" || aqui === "") ? "#/ranking" : aqui;
+  const alvo  = s ? base + "?s=" + s : base;
+  document.querySelectorAll("nav select.menu").forEach(sel => {
+    const op = [...sel.options].find(o => o.value === alvo)
+            || [...sel.options].find(o => o.value === base);
+    sel.value = op ? op.value : "";
+  });
+}
+
 function pintarNav(){
   document.querySelectorAll("nav select.menu").forEach(sel => {
-    // marca onde a pessoa está, se for um destino deste menu
-    const aqui = (location.hash||"").split("?")[0];
-    const qs   = (location.hash||"").split("?")[1] || "";
-    const alvo = qs.includes("s=") ? aqui + "?s=" + new URLSearchParams(qs).get("s") : aqui;
-    const op = [...sel.options].find(o => o.value === alvo || o.value === aqui);
-    if(op) sel.value = op.value;
     if(sel.dataset.ligado) return;
     sel.dataset.ligado = "1";
     sel.onchange = () => { if(sel.value) location.hash = sel.value; };
   });
+  sincronizarMenus();
   $("#navDir").innerHTML = eu
     ? `<details class="eu" id="menuEu">
          <summary><span class="ini">${esc((eu.apelido||"?").trim().slice(0,2).toUpperCase())}</span
@@ -1924,11 +1944,17 @@ function colunasPorClasse(lista, ordem, rotulo){
 async function pintarFaixa(){
   const el = $("#faixa");
   if(!el) return;
-  const { data, error } = await sb.from("faixa_cotacao").select("*");
+  // a faixa lê a mesma tabela que o EA alimenta a cada 15s. Não existe
+  // "faixa_cotacao" no banco — era 404 a cada cinco minutos, calado na tela e
+  // barulhento no console.
+  const { data, error } = await sb.from("cotacao_viva")
+    .select("ativo,valor,preco,atualizado_em");
   if(error || !data || !data.length){ el.style.display = "none"; return; }
 
-  const ind = data.find(x => x.tipo === "indice");
-  const pap = data.filter(x => x.tipo !== "indice");
+  // o índice chega com o código do universo, que começa com "^"
+  const eIndice = x => x.ativo === "IBOV" || x.ativo.startsWith("^");
+  const ind = data.find(eIndice);
+  const pap = data.filter(x => !eIndice(x));
   const quando = (ind || data[0]).atualizado_em;
   const hora = new Date(quando).toLocaleTimeString("pt-BR",
     { hour:"2-digit", minute:"2-digit", timeZone:"America/Sao_Paulo" });
@@ -8367,27 +8393,37 @@ function usar(o){
   const iReal = (1+i)/(1+inf) - 1;
   const rendeMes = o.tenho*iReal, rendeAno = o.tenho*(Math.pow(1+iReal,12)-1);
   let saldo = o.tenho, meses = null, sobra = null, v = o.valor;
-  const limite = 35*12;
+  const limite = 35*12;        // o que o gráfico desenha
+  const anosMax = 60;          // até onde a conta procura o fim do dinheiro
+  // O gráfico mostra 35 anos, mas a conta precisa ir além: tirando um pouco
+  // acima do rendimento o dinheiro dura 40, 50 anos. O laço parava nos 35,
+  // "meses" voltava null e a tela imprimia Math.floor(null) — "até os 0 anos".
+  const horizonte = anosMax*12;
   const d = [{m:0, v:saldo}];
   if(o.modo === "unica"){
     sobra = Math.max(0, o.tenho - o.valor);
     saldo = sobra;
     for(let m=1; m<=limite; m++){ saldo = saldo*(1+iReal); d.push({m, v:saldo}); }
   } else {
-    for(let m=1; m<=limite; m++){
+    for(let m=1; m<=horizonte; m++){
       saldo = saldo*(1+i) - (o.modo === "mes" ? v : 0);
       if(o.modo === "ano" && m % 12 === 0) saldo -= v;
       v = v*(1+inf);
       if(saldo <= 0 && meses === null){ meses = m; saldo = 0; }
       // guardado em dinheiro de hoje, para a curva não mentir com a inflação
-      d.push({m, v:Math.max(0, saldo/Math.pow(1+inf, m))});
+      if(m <= limite) d.push({m, v:Math.max(0, saldo/Math.pow(1+inf, m))});
       if(meses !== null) break;
     }
   }
   const limiteSeguro = o.modo === "ano" ? rendeAno : rendeMes;
+  // "não acaba" é tirar menos do que o patrimônio rende DESCONTADA a inflação.
+  // Não uso "meses === null" porque o laço para em 35 anos: uma retirada um
+  // pouco acima do rendimento sobreviveria ao laço e a tela diria "para
+  // sempre" mentindo.
+  const perp = o.modo === "unica" ? true : o.valor <= limiteSeguro + 1e-9;
   return { d, i, iReal, rendeMes, rendeAno, meses, sobra, saldoFim:saldo,
            dura: meses === null ? null : o.idade + meses/12,
-           perpetuo: perp, limiteSeguro };
+           perpetuo: perp, limiteSeguro, anosMax };
 }
 
 function graficoUsar(u, o){
@@ -8772,10 +8808,13 @@ function simRenda(){
            <b>${rs(u.d[Math.min(120, u.d.length-1)].v)}</b>
            <span class="pe">se você não tirar mais nada</span></div>`
       : `<div class="forte"><span class="rot">Tirando ${rs(R.valor)} ${rot}</span>
-           <b>${u.perpetuo ? "para sempre" : "até os " + Math.floor(u.dura) + " anos"}</b>
+           <b>${u.perpetuo ? "para sempre"
+                : u.dura ? "até os " + Math.floor(u.dura) + " anos"
+                : "por mais de " + u.anosMax + " anos"}</b>
            <span class="pe">${u.perpetuo
              ? "o patrimônio não acaba"
-             : "quando o dinheiro termina"}</span></div>
+             : u.dura ? "quando o dinheiro termina"
+             : "encolhe devagar, mas dura a vida toda"}</span></div>
          <div><span class="rot">O limite sem consumir</span>
            <b>${rs(u.limiteSeguro)}</b>
            <span class="pe">${R.modo === "ano" ? "por ano" : "por mês"}, só do rendimento</span></div>
@@ -8790,8 +8829,9 @@ function simRenda(){
     : u.perpetuo
       ? `Tirando ${rs(R.valor)} ${rot}, <b class="destaque">o patrimônio não
          acaba</b>: você está tirando menos do que ele rende.`
-      : `Tirando ${rs(R.valor)} ${rot}, o dinheiro dura até os
-         <b class="destaque">${Math.floor(u.dura)} anos</b>. O limite para não
+      : `Tirando ${rs(R.valor)} ${rot}, o dinheiro dura ${u.dura
+           ? `até os <b class="destaque">${Math.floor(u.dura)} anos</b>`
+           : `<b class="destaque">por mais de ${u.anosMax} anos</b>`}. O limite para não
          consumir o principal é ${rs(u.limiteSeguro)} ${
          R.modo === "ano" ? "por ano" : "por mês"}.`}</div>
 
@@ -9132,16 +9172,18 @@ const AVISO = `
       diferença aparece.</p>
   </div>`;
 
-const CART = (t,d) => `
-  <a class="simule" href="#/servicos">
+const CART = (t,d,href="#/publicar") => `
+  <a class="simule" href="${href}">
     <span class="k">O simulador de carteiras</span>
     <span class="t">${t} &rarr;</span>
     <span class="d">${d}</span></a>`;
 
-const SIM = (t,d) => `
-  <a class="simule" href="#/servicos">
+// o destino é parâmetro: o cartão diz "simule aqui", então tem que cair num
+// simulador. Quem quer falar com gente clica no FIMP(), logo abaixo.
+const SIM = (t,d,href="#/sim-crescer") => `
+  <a class="simule" href="${href}">
     <span class="k">Simule aqui</span>
-    <span class="t">Veja o efeito da taxa no seu patrimônio &rarr;</span>
+    <span class="t">${t} &rarr;</span>
     <span class="d">${d}</span></a>`;
 
 function servInternacional(){
@@ -9882,7 +9924,8 @@ function pagRendaVar(){ $("#app").innerHTML =
   </div>
 
   ` + CART("Monte uma carteira e acompanhe",
-      "Cotação real da B3, apurada todo pregão. Sem dinheiro em risco, e ninguém muda o passado depois.") + `
+      "Cotação real da B3, apurada todo pregão. Sem dinheiro em risco, e ninguém muda o passado depois.",
+      "#/publicar") + `
 
   ` + FIMP(); }
 
@@ -10070,7 +10113,8 @@ function pagTrabalhar(){ $("#app").innerHTML =
     errado</b>. Quem tem cinco compromissos e uma fase ruim descobre isso do
     jeito caro.</p>
   ` + SIM("Veja o efeito do rendimento no seu caso",
-      "Mude a taxa e o prazo e repare em como a distância entre render e gastar muda tudo.")
+      "Mude a taxa e o prazo e repare em como a distância entre render e gastar muda tudo.",
+      "#/sim-renda")
     + FIMP(); }
 
 function pagCasa(){ $("#app").innerHTML =
@@ -10251,6 +10295,7 @@ function rotear(){
   clearInterval(window.__timerScr);
   window.__marcarAbas = null;
   RANK_CTX = null;
+  sincronizarMenus();
   const h = (location.hash||"#/").split("?")[0];
 
   // sem conta, o site inteiro é uma tela só: a abertura.
