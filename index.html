@@ -8357,72 +8357,84 @@ function cenarios(o){
 }
 
 
-/* A pergunta ao contrário, que é a que o cliente faz de verdade:
-   "para ter X por mês, quanto preciso ter juntado?" */
 function usar(o){
   const i = Math.pow(1 + o.taxa/100, 1/12) - 1;
   const inf = Math.pow(1 + (o.inflacao||0)/100, 1/12) - 1;
-  // a retirada precisa acompanhar a inflação, senão encolhe sozinha e a conta
-  // mente: o que decide se ela se sustenta é o ganho REAL, não o nominal
   const iReal = (1+i)/(1+inf) - 1;
-  const rendeMes = o.tenho*iReal, rendeAno = o.tenho*(Math.pow(1+iReal,12)-1);
+  const rendeMes = o.tenho * iReal;
+  const rendeAno = o.tenho * (Math.pow(1 + iReal, 12) - 1);
+  
   let saldo = o.tenho, meses = null, sobra = null, v = o.valor;
-  const limite = 35*12;
-  const d = [{m:0, v:saldo}];
+  const limite = 35 * 12;
+  const d = [{m: 0, v: saldo}];
+  
   if(o.modo === "unica"){
     sobra = Math.max(0, o.tenho - o.valor);
     saldo = sobra;
-    for(let m=1; m<=limite; m++){ saldo = saldo*(1+iReal); d.push({m, v:saldo}); }
+    for(let m = 1; m <= limite; m++){
+      saldo = saldo * (1 + iReal);
+      d.push({m, v: saldo});
+    }
   } else {
-    for(let m=1; m<=limite; m++){
-      saldo = saldo*(1+i) - (o.modo === "mes" ? v : 0);
-      if(o.modo === "ano" && m % 12 === 0) saldo -= v;
-      v = v*(1+inf);
-      if(saldo <= 0 && meses === null){ meses = m; saldo = 0; }
-      // guardado em dinheiro de hoje, para a curva não mentir com a inflação
-      d.push({m, v:Math.max(0, saldo/Math.pow(1+inf, m))});
+    const retirada = o.modo === "ano" ? v / 12 : v;
+    for(let m = 1; m <= limite; m++){
+      saldo = saldo * (1 + i) - retirada;
+      if(saldo < 0 && meses === null){
+        meses = m;
+        saldo = 0;
+      }
+      d.push({m, v: Math.max(0, saldo)});
       if(meses !== null) break;
     }
   }
-  const limiteSeguro = o.modo === "ano" ? rendeAno : rendeMes;
-  return { d, i, iReal, rendeMes, rendeAno, meses, sobra, saldoFim:saldo,
-           dura: meses === null ? null : o.idade + meses/12,
-           perpetuo: perp, limiteSeguro };
+  
+  return {
+    d,
+    i,
+    iReal,
+    rendeMes,
+    rendeAno,
+    meses,
+    sobra,
+    saldoFim: saldo,
+    dura: meses === null ? null : o.idade + meses/12,
+    perpetuo: saldo >= o.valor || (o.modo === "unica" && sobra >= 0)
+  };
 }
-
 function graficoUsar(u, o){
-  const L = 700, A = 240, G = {l:52, r:L-8, t:12, b:A-24};
-  const passo = Math.max(1, Math.round(u.d.length/160));
-  const d = u.d.filter((x,k) => k % passo === 0);
+  const L = 700, A = 240, G = {l: 52, r: L-8, t: 12, b: A-24};
+  const passo = Math.max(1, Math.round(u.d.length / 160));
+  const d = u.d.filter((x, k) => k % passo === 0);
   const mx = escalaBoa(Math.max(...d.map(x => x.v), 1));
-  const px = k => G.l + (k/(d.length-1))*(G.r-G.l);
-  const py = v => G.b - (v/mx)*(G.b-G.t);
-  const cam = d.map((x,k) => `${k?"L":"M"}${px(k).toFixed(1)} ${py(x.v).toFixed(1)}`).join(" ");
+  const px = k => G.l + (k / (d.length - 1)) * (G.r - G.l);
+  const py = v => G.b - (v / mx) * (G.b - G.t);
+  const cam = d.map((x, k) => `${k ? "L" : "M"}${px(k).toFixed(1)} ${py(x.v).toFixed(1)}`).join(" ");
+  
   let eixo = "";
-  for(let k=0; k<=4; k++){
-    const y = G.b - (k/4)*(G.b-G.t);
+  for(let k = 0; k <= 4; k++){
+    const y = G.b - (k/4) * (G.b - G.t);
     eixo += `<line x1="${G.l}" y1="${y.toFixed(1)}" x2="${G.r}" y2="${y.toFixed(1)}"
-      stroke="var(--linha)" stroke-opacity="${k?".45":"1"}"/>
-      <text x="${G.l-7}" y="${(y+3.4).toFixed(1)}" text-anchor="end" class="eixo">${
-        k ? rsCurto(mx*k/4) : "0"}</text>`;
+      stroke="var(--linha)" stroke-opacity="${k ? ".45" : "1"}"/>
+      <text x="${G.l - 7}" y="${(y + 3.4).toFixed(1)}" text-anchor="end" class="eixo">${
+        k ? rsCurto(mx * k / 4) : "0"}</text>`;
   }
-  const anos = Math.max(1, Math.round(d[d.length-1].m/12));
-  const pa = Math.max(1, Math.ceil(anos/6));
-  for(let a=0; a<=anos; a+=pa){
-    const x = G.l + (a/anos)*(G.r-G.l);
-    eixo += `<text x="${x.toFixed(1)}" y="${G.b+15}" text-anchor="middle"
-      class="eixo">${o.idade+a} anos</text>`;
+  
+  const anos = Math.max(1, Math.round(d[d.length - 1].m / 12));
+  const pa = Math.max(1, Math.ceil(anos / 6));
+  for(let a = 0; a <= anos; a += pa){
+    const x = G.l + (a / anos) * (G.r - G.l);
+    eixo += `<text x="${x.toFixed(1)}" y="${G.b + 15}" text-anchor="middle" class="eixo">${o.idade + a} anos</text>`;
   }
+  
   const sobe = u.perpetuo || o.modo === "unica";
   return `<svg viewBox="0 0 ${L} ${A}">
     <defs><linearGradient id="gu" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="${sobe?"var(--alta)":"var(--ouro2)"}" stop-opacity=".18"/>
-      <stop offset="100%" stop-color="${sobe?"var(--alta)":"var(--ouro2)"}" stop-opacity="0"/>
+      <stop offset="0%" stop-color="${sobe ? "var(--alta)" : "var(--ouro2)"}" stop-opacity=".18"/>
+      <stop offset="100%" stop-color="${sobe ? "var(--alta)" : "var(--ouro2)"}" stop-opacity="0"/>
     </linearGradient></defs>
     ${eixo}
     <path d="${cam} L${G.r} ${G.b} L${G.l} ${G.b} Z" fill="url(#gu)"/>
-    <path d="${cam}" fill="none" stroke="${sobe?"var(--alta)":"var(--ouro2)"}"
-      stroke-width="2.4"/>
+    <path d="${cam}" fill="none" stroke="${sobe ? "var(--alta)" : "var(--ouro2)"}" stroke-width="2.4"/>
   </svg>`;
 }
 
