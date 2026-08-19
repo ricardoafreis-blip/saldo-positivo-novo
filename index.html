@@ -1492,15 +1492,15 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
             <em>acima de R$ 20 milhões</em></a>
           <span class="sub">Os produtos</span>
           <a href="#/p-renda-fixa">Renda fixa</a>
-          <span class="falta">Renda variável<em>a escrever</em></span>
-          <span class="falta">Previdência<em>a escrever</em></span>
-          <span class="falta">Fundos de investimento<em>a escrever</em></span>
+          <a href="#/p-renda-variavel">Renda variável</a>
+          <a href="#/p-previdencia">Previdência</a>
+          <a href="#/p-fundos">Fundos de investimento</a>
           <a href="#/servicos?s=clube">Clube de investimentos</a>
           <a href="#/servicos?s=consorcio">Estratégias com consórcio</a>
           <a href="#/p-internacional">Conta internacional</a>
           <a href="#/p-alternativos">Ouro, dólar e bitcoin</a>
           <span class="sub">Abrir conta</span>
-          <span class="falta">Como abrir a sua conta<em>a escrever</em></span>
+          <a href="#/p-conta">Como abrir a sua conta</a>
           <span class="sub">Proteger o que já existe</span>
           <a href="#/sucessao">Seguro e sucessão</a>
           <a href="#/servicos?s=sucessorio">Planejamento sucessório</a>
@@ -8994,6 +8994,190 @@ function pagSucessaoNova(){ $("#app").innerHTML =
   ` + FIMP(); }
 
 
+function servRendaVar(){
+  $("#app").innerHTML = `
+  <div class="trilho"><a href="#/servicos" style="color:var(--ouro2);text-decoration:none">Serviços</a> · produtos</div>
+  <h1>Renda variável</h1>
+  <p class="chapeu">Ações, fundos imobiliários e ETFs. É a parte do patrimônio
+    que pode oscilar — e a que faz o dinheiro crescer de verdade em vez de só
+    acompanhar a inflação.</p>
+
+  <div class="caso">
+    <p>Duas pessoas compram as mesmas dez ações no mesmo dia. Uma põe 10% em
+      cada, a outra põe 60% numa só. <b>Cinco anos depois o resultado das duas
+      não tem nada a ver</b> — e a escolha dos papéis foi idêntica.</p>
+  </div>
+
+  <h2>Quando você precisa</h2>
+  <p>Quando existe dinheiro sem data marcada e o objetivo deixou de ser
+    preservar para ser <b>crescer</b>. Quando a renda fixa já dá conta do curto
+    prazo e o que sobra pode ficar parado por anos. E quando o patrimônio
+    cresceu ao ponto de a diferença entre 8% e 12% ao ano valer mais do que
+    qualquer economia de custo.</p>
+
+  <h2>O que o especialista faz</h2>
+  <p>Define <b>quanto</b> vai para renda variável antes de discutir qual papel —
+    porque é o peso que decide o resultado, não o acerto isolado. Escolhe entre
+    ação direta, fundo, ETF e fundo imobiliário conforme o seu caso, monta a
+    proporção que você aguenta carregar numa queda, e rebalanceia quando ela
+    sai do lugar.</p>
+  <p>Cuida também da parte que ninguém lembra: <b>tributação é diferente em cada
+    veículo</b>. Ação, fundo imobiliário, ETF e fundo de ações têm regra própria
+    de imposto, de compensação de prejuízo e de declaração — e o líquido é o
+    que importa.</p>
+
+  <h2>Que registro ele tem</h2>
+  <p>Recomendação e distribuição de produto de renda variável exigem registro na
+    CVM e certificação, e a gestão por mandato exige autorização de
+    administrador de carteiras. <b>Nada fora do que é regulado.</b></p>
+
+  <div class="adiante">
+    <a class="bt cheio" href="#/servicos">Consultar especialista &rarr;</a>
+    <a class="bt" href="#/aprender">Voltar ao índice</a>
+  </div>`;
+}
+
+function servPrev(){
+  $("#app").innerHTML = `
+  <div class="trilho"><a href="#/servicos" style="color:var(--ouro2);text-decoration:none">Serviços</a> · produtos</div>
+  <h1>Previdência</h1>
+  <p class="chapeu">Um plano que se contrata uma vez e se carrega por trinta
+    anos. As escolhas do primeiro dia valem mais do que a rentabilidade de
+    qualquer ano isolado.</p>
+
+  <div class="caso">
+    <p>Tipo do plano, regime de tributação e taxas são decididos na assinatura.
+      <b>Errar um dos três custa mais do que qualquer diferença de
+      rendimento</b> — e alguns deles não se desfazem depois.</p>
+  </div>
+
+  <h2>Quando você precisa</h2>
+  <p>Quando você quer guardar para um prazo realmente longo e o imposto começa a
+    pesar no caminho. Quando declara no modelo completo e tem renda tributável a
+    abater. E quando a sucessão faz parte da conta — previdência vai direto ao
+    beneficiário, sem passar por inventário.</p>
+
+  <h2>O que o especialista faz</h2>
+  <p>Decide PGBL ou VGBL a partir da <b>sua declaração de imposto</b>, não do
+    que é mais vendido. Escolhe o regime de tributação olhando o prazo real do
+    seu plano. Compara taxa de administração e taxa de carregamento entre
+    planos, porque plano caro derrota qualquer vantagem tributária. E, quando já
+    existe plano contratado, avalia se vale portabilidade — que se faz sem
+    resgatar e sem reiniciar a contagem do imposto.</p>
+  <p>Na parte sucessória, ajusta beneficiários e percentuais junto com o resto do
+    planejamento, para o dinheiro chegar a quem tem que chegar, rápido, numa
+    hora em que o restante do patrimônio está travado.</p>
+
+  <h2>Que registro ele tem</h2>
+  <p>Planos são operados por entidades autorizadas e fiscalizadas, e a
+    distribuição exige certificação. A parte tributária e sucessória envolve
+    contador e especialista em sucessão. <b>Nada fora do que é regulado.</b></p>
+
+  <div class="adiante">
+    <a class="bt cheio" href="#/servicos">Consultar especialista &rarr;</a>
+    <a class="bt" href="#/aprender">Voltar ao índice</a>
+  </div>`;
+}
+
+function servFundos(){
+  $("#app").innerHTML = `
+  <div class="trilho"><a href="#/servicos" style="color:var(--ouro2);text-decoration:none">Serviços</a> · produtos</div>
+  <h1>Fundos de investimento</h1>
+  <p class="chapeu">Você compra uma cota e o trabalho de escolher passa a ser de
+    um gestor. A pergunta deixa de ser qual ativo comprar e passa a ser em quem
+    delegar.</p>
+
+  <div class="caso">
+    <p>Dois fundos da mesma categoria, com a mesma promessa, entregam resultados
+      muito diferentes ao longo de dez anos. <b>A diferença raramente está no
+      nome da categoria</b> — está em quem gere, com que mandato e a que
+      custo.</p>
+  </div>
+
+  <h2>Quando você precisa</h2>
+  <p>Quando você quer exposição a algo que não consegue montar sozinho — crédito
+    privado, multimercado, ativos no exterior. Quando não tem tempo nem vontade
+    de acompanhar posição a posição. E quando o patrimônio cresceu e concentrar
+    a decisão numa cabeça só, a sua, virou o maior risco da carteira.</p>
+
+  <h2>O que o especialista faz</h2>
+  <p>Lê o regulamento antes da lâmina: qual é o mandato, o que o gestor pode e
+    não pode fazer, e o que acontece num resgate grande. Confere <b>prazo de
+    cotização e de liquidação</b> — o dinheiro que demora trinta dias para
+    voltar não serve para tudo. Compara taxa de administração e de performance
+    contra o que o fundo entrega de fato, e não contra o que promete.</p>
+  <p>E monta a combinação: fundo é peça de carteira, não carteira inteira. Dois
+    fundos que parecem diferentes e compram as mesmas coisas não diversificam
+    nada — só multiplicam a taxa.</p>
+
+  <h2>Que registro ele tem</h2>
+  <p>Gestão de fundo exige autorização da CVM como administrador de carteiras, e
+    a distribuição exige registro e certificação. <b>Nada fora do que é
+    regulado.</b></p>
+
+  <div class="adiante">
+    <a class="bt cheio" href="#/servicos">Consultar especialista &rarr;</a>
+    <a class="bt" href="#/aprender">Voltar ao índice</a>
+  </div>`;
+}
+
+function servAbrirConta(){
+  $("#app").innerHTML = `
+  <div class="trilho"><a href="#/servicos" style="color:var(--ouro2);text-decoration:none">Serviços</a> · produtos</div>
+  <h1>Como abrir a sua conta</h1>
+  <p class="chapeu">É a porta de entrada de todo o resto, e quase ninguém
+    escreve como funciona. São poucos passos, e a maior parte da demora não está
+    onde as pessoas imaginam.</p>
+
+  <div class="caso">
+    <p>Abrir a conta é rápido. O que costuma travar é o dinheiro chegar do outro
+      lado — <b>e a transferência só sai da sua conta bancária para uma conta de
+      investimento no seu próprio nome</b>.</p>
+  </div>
+
+  <h2>O que você precisa ter em mãos</h2>
+  <p>Documento de identidade com foto, CPF, um comprovante de residência
+    recente, e os dados da conta bancária que fica no seu nome. Se houver mais
+    de um titular, cada um apresenta o seu.</p>
+
+  <h2>Como é o caminho</h2>
+  <div class="passos">
+    <div class="passo"><span class="num">01</span>
+      <h4>Cadastro</h4>
+      <p>Dados pessoais, documentos e confirmação de identidade. Costuma sair no
+        mesmo dia.</p></div>
+    <div class="passo"><span class="num">02</span>
+      <h4>Perfil de investidor</h4>
+      <p>Um questionário que define a que produtos você tem acesso. Responder
+        pensando em impressionar limita você mesmo.</p></div>
+    <div class="passo"><span class="num">03</span>
+      <h4>Primeira transferência</h4>
+      <p>Da sua conta bancária para a de investimento, no mesmo CPF. É aqui que
+        a maioria das dúvidas aparece.</p></div>
+  </div>
+  <p>Feito isso, a conta está pronta para operar. O que vem depois — o que
+    comprar, em que proporção, com que prazo — é a conversa que vale a pena
+    ter antes do primeiro aporte, não depois.</p>
+
+  <h2>O que costuma dar errado</h2>
+  <p>Comprovante fora do prazo, nome divergente entre documento e cadastro, e
+    transferência partindo de conta de outra pessoa — <b>essa última não passa,
+    e não é burocracia</b>: conta de investimento é sempre no nome do titular.</p>
+  <p>E responder o perfil de investidor no automático. Ele não é formalidade:
+    é ele que decide o que você pode contratar depois.</p>
+
+  <h2>Que registro tem quem te atende</h2>
+  <p>A conta é aberta em instituição autorizada, e quem acompanha você tem
+    registro para isso. Você pode conferir nome e registro do profissional no
+    site da CVM antes de qualquer conversa sobre dinheiro. <b>Nada fora do que é
+    regulado.</b></p>
+
+  <div class="adiante">
+    <a class="bt cheio" href="#/servicos">Consultar especialista &rarr;</a>
+    <a class="bt" href="#/aprender">Voltar ao índice</a>
+  </div>`;
+}
+
 function servRendaFixa(){
   $("#app").innerHTML = `
   <div class="trilho"><a href="#/servicos" style="color:var(--ouro2);text-decoration:none">Serviços</a> · produtos</div>
@@ -9083,12 +9267,41 @@ function servInternacional(){
     lá. Quando o patrimônio cresceu e concentrar tudo aqui virou risco. E quando
     você quer acesso a ativos que não existem na bolsa brasileira.</p>
 
+  <h2>Por que os Estados Unidos</h2>
+  <p>Porque é o maior centro financeiro do mundo, com trilhões de dólares
+    circulando todo dia — é onde a liquidez está. E porque o dinheiro passa a
+    estar sob <b>outra legislação</b>, com outra moeda e outros riscos
+    políticos. Processo legal, declarado, e hoje bem mais rápido e simples do
+    que a fama sugere.</p>
+
+  <h2>O dinheiro não fica preso</h2>
+  <p>Mandar é uma decisão de ida — tem câmbio na entrada e na saída, e não se faz
+    pensando em desfazer no mês seguinte. Mas, uma vez lá, o valor fica <b>à sua
+    disposição no mundo inteiro</b>: com cartão de débito em dólar você gasta em
+    qualquer país, sem repatriar nada e sem novo câmbio a cada viagem.</p>
+
+  <h2>O imposto que pega desprevenido</h2>
+  <p>Há um imposto americano sobre sucessão com isenção de <b>apenas US$ 60
+    mil</b> para não residentes, e alíquotas de <b>18% a 40%</b> sobre o que
+    passa disso. Ele alcança ações de empresas americanas e imóveis nos EUA
+    <b>mesmo comprados por corretora de fora</b>, e não alcança ativos de outra
+    origem. <b>Evita-se na escolha do que comprar</b>, no primeiro dia — não
+    depois.</p>
+
+  <h2>Quando entra uma offshore</h2>
+  <p>Acima de <b>algo em torno de US$ 300 mil</b>, costuma compensar deter os
+    investimentos por uma empresa no exterior. A estrutura é simples e barata
+    perto do que protege. Mas ela organiza alocação e sucessão — <b>não resolve
+    imposto brasileiro</b>: desde 2023 o lucro de controlada no exterior é
+    tributado aqui todo ano, ainda que nada seja distribuído.</p>
+
   <h2>O que o especialista faz</h2>
-  <p>Escolhe a jurisdição e o tipo de conta conforme o seu objetivo, cuida da
-    <b>declaração ao Banco Central e à Receita</b> — que é obrigatória a partir
-    de certos valores e é onde a maioria erra —, e monta a carteira lá fora com
-    a tributação certa. Remessa, câmbio e imposto têm regras próprias, e errar
-    sai caro.</p>
+  <p>Escolhe a jurisdição e o tipo de conta conforme o seu objetivo, define
+    <b>em nome de quem e comprando o quê</b> — que é onde o imposto sucessório
+    se resolve —, cuida da <b>declaração ao Banco Central e à Receita</b>, que é
+    obrigatória a partir de certos valores e é onde a maioria erra, e monta a
+    carteira lá fora com a tributação certa. Remessa, câmbio e imposto têm
+    regras próprias, e errar sai caro.</p>
 
   <h2>Que registro ele tem</h2>
   <p>Distribuição e assessoria sobre esses produtos exigem registro, e a parte
@@ -9192,13 +9405,52 @@ const TOPICOS_AP = [
 
 function telaIndiceAprender(){
   app().innerHTML = `
-  <div class="cabeca" style="text-align:left;max-width:70ch">
-    <h1>Do começo, sem pular etapa</h1>
-    <p>Não adianta saber de renda variável, renda fixa, consórcio ou seguro se
-      ainda não há dinheiro para aplicar. Por isso a ordem aqui não é
-      alfabética: é a ordem em que as coisas acontecem na vida de quem está
-      construindo patrimônio.</p>
-  </div>
+<div class="cabeca" style="text-align:left;max-width:70ch">
+  <h1>Do começo, sem pular etapa</h1>
+  <p>A ordem aqui não é alfabética nem por dificuldade. É a ordem em que as
+    coisas acontecem na vida de quem está construindo patrimônio.</p>
+</div>
+
+<div class="caso">
+  <p>Sem dinheiro, não existe mágica. Nenhuma aplicação, nenhum produto e
+    nenhuma estratégia funciona antes de existir alguma coisa para aplicar.</p>
+</div>
+
+<h2>O que vem antes de tudo</h2>
+<p>Não adianta saber de renda fixa, renda variável, consórcio ou seguro se
+  ainda não sobra nada no fim do mês. A primeira conta é mais simples e mais
+  dura que todas as outras: <b>a receita precisa ser maior que a despesa</b>.
+  Só depois disso o resto do site tem para onde levar.</p>
+<p>E não é o que sobrar. É <b>um pedaço separado sempre</b>, antes do resto —
+  porque o que fica para o fim do mês nunca fica.</p>
+
+<h2>Por que isso muda de figura com o tempo</h2>
+<p>No começo custa e parece que não sai do lugar: o que você deposita é quase
+  tudo, e o que rende é quase nada. É a fase em que a maioria desiste, e ela
+  passa.</p>
+<p>Um mês vira. <b>O que o patrimônio rende passa o que você deposita</b> — e
+  dali em diante o trabalho pesado deixa de ser seu. Continuar depois desse
+  ponto é o que separa quem tem dinheiro de quem vive de renda.</p>
+
+<div class="trinca">
+  <div><span class="rot">Guardar</span>
+    <p>Receita acima da despesa, e um pedaço separado sempre. É o degrau que
+      não dá para pular.</p></div>
+  <div><span class="rot">A virada</span>
+    <p>O mês em que o rendimento passa o aporte. Depois dele, o tempo trabalha
+      no seu lugar.</p></div>
+  <div><span class="rot">Viver de renda</span>
+    <p>Retirar e ver o patrimônio continuar crescendo. É aqui que a palavra
+      aposentadoria muda de sentido.</p></div>
+</div>
+
+<h2>A bolsa é uma ferramenta dessa conta, não a conta</h2>
+<p>Ela aparece bastante aqui — o site é um simulador de carteiras. Mas ela é um
+  dos caminhos para o dinheiro render, e render é só a metade da conta. A outra
+  metade é o quanto entra e o quanto você separa.</p>
+<p>Os temas abaixo seguem essa ordem: sair das dívidas, entender como o dinheiro
+  cresce, saber o que é cada coisa, montar a sua carteira, e o que fazer quando
+  já há patrimônio.</p>
   <div class="indice">
     ${TOPICOS_AP.map(([etapa,itens]) => `
       <div class="etapa">${etapa}</div>
@@ -9369,72 +9621,140 @@ function pagFundos(){ $("#app").innerHTML =
   <p>Um fundo junta o dinheiro de vários investidores e aplica segundo uma
     regra escrita. Você não escolhe os papéis: escolhe <b>a regra e quem a
     executa</b>. O valor da sua cota sobe e desce conforme o que está dentro.</p>
+  <p>Quem decide o que comprar é o <b>gestor</b>. Quem cuida do funcionamento e
+    das contas é o <b>administrador</b>. E o dinheiro do fundo não se mistura com
+    o patrimônio de nenhum dos dois.</p>
 
-  <h2>Os tipos, do mais calmo ao mais agitado</h2>
+  <h2>Os tipos</h2>
+  <p>O nome da categoria diz onde o fundo aplica a maior parte do que tem — e
+    isso já define quase todo o comportamento dele.</p>
   <div class="trinca">
     <div><span class="rot">Renda fixa</span>
-      <p>Títulos de governo, banco e empresa. Oscila pouco e serve para
-        reserva.</p></div>
-    <div><span class="rot">Multimercado</span>
-      <p>Pode ir a vários lugares ao mesmo tempo: juro, moeda, bolsa, fora do
-        país.</p></div>
+      <p>Títulos de governo, banco e empresa. Oscila pouco, e é onde ficam caixa
+        e reserva.</p></div>
     <div><span class="rot">Ações</span>
-      <p>Só empresas. Oscila muito e é para prazo longo.</p></div>
+      <p>Empresas. Oscila muito e é para prazo longo. Uns seguem o índice, outros
+        tentam superá-lo.</p></div>
+    <div><span class="rot">Multimercado</span>
+      <p>Juro, moeda, bolsa e exterior ao mesmo tempo, e pode mudar de ideia. É a
+        categoria mais livre.</p></div>
   </div>
-
-  <h2>Pra que serve</h2>
-  <p>Para ter <b>diversificação pronta</b> e gestão profissional sem precisar
-    acompanhar nada. É a forma mais simples de acessar estratégias que sozinho
-    você não montaria — crédito privado, exterior, moedas.</p>
+  <div class="trinca">
+    <div><span class="rot">Cambiais</span>
+      <p>Acompanham uma moeda, quase sempre o dólar. Exposição ao câmbio sem sair
+        do Brasil.</p></div>
+    <div><span class="rot">Imobiliários</span>
+      <p>Imóveis e papéis de imóvel, negociados em bolsa. Distribuem aluguel em
+        dinheiro, quase sempre todo mês.</p></div>
+    <div><span class="rot">ETF</span>
+      <p>Fundo de índice comprado e vendido como ação. Só replica uma cesta — e
+        por isso custa pouco.</p></div>
+  </div>
+  <p>Há ainda os <b>previdenciários</b>, que só existem dentro de um plano de
+    previdência e seguem a regra de imposto do plano, e não a dos fundos
+    comuns.</p>
 
   <h2>Onde mora o cuidado</h2>
-  <p><b>A taxa.</b> Administração e, em alguns, performance. Uma taxa alta come
-    o retorno todo ano, e ela é cobrada mesmo quando o fundo vai mal.</p>
+  <p><b>A taxa.</b> Administração e, em alguns, performance. Ela é cobrada todo
+    ano, inclusive quando o fundo vai mal. Um fundo caro fazendo o que um título
+    direto faria é dinheiro saindo por nada.</p>
   <p><b>A liquidez.</b> Alguns devolvem o dinheiro em um dia, outros em trinta,
-    sessenta ou mais. Isso está no regulamento e quase ninguém lê — até
+    sessenta ou mais. Está escrito no regulamento e quase ninguém lê — até
     precisar do dinheiro.</p>
   <p><b>O que tem dentro.</b> Dois fundos com o mesmo nome podem carregar coisas
-    bem diferentes. O nome vende; o regulamento é que vale.</p>
-
-  <h2>Quando não serve</h2>
-  <p>Quando a taxa não se justifica pelo que o fundo entrega. Se um fundo de
-    renda fixa cobra caro para fazer o que um título direto faria, <b>você está
-    pagando por nada</b>.</p>
+    bem diferentes. O nome vende; o regulamento é que vale. E dois fundos que
+    parecem diferentes e compram as mesmas coisas não diversificam nada:
+    <b>só multiplicam a taxa</b>.</p>
 
   ` + FIMP(); }
 
 function pagClube(){ $("#app").innerHTML =
   TOPO("o que é cada coisa","O que é clube de investimento",
-    "Um grupo de pessoas que investe junto, com regras próprias e uma carteira só. Fica no meio do caminho entre investir sozinho e comprar um fundo.") + `
+    "De 3 a 50 pessoas investindo através de um CNPJ só, com carteira única e regra própria. É o degrau entre investir sozinho e ter um fundo.") + `
   <div class="caso">
-    <p>Amigos, colegas ou família juntam recursos, definem por escrito como as
-      decisões são tomadas, e passam a ter <b>uma carteira comum</b> — com custo
-      dividido e voz de todos.</p>
+    <p>Um grupo se junta, abre um CNPJ e passa a operar como um só. <b>Cada um
+      tem sua cota, a carteira é uma só</b>, e as decisões cabem a um gestor
+      escolhido pelo grupo — que pode ser um profissional contratado ou um dos
+      próprios participantes.</p>
   </div>
 
   <h2>O que é</h2>
-  <p>Um clube reúne um número limitado de participantes numa estrutura formal,
-    registrada e administrada por instituição autorizada. Cada um tem sua cota,
-    e a carteira é única.</p>
+  <p>Um clube é um condomínio de <b>no mínimo 3 e no máximo 50 pessoas
+    físicas</b>, constituído formalmente e registrado, com CNPJ próprio. Todo
+    mundo aplica no mesmo veículo e recebe cotas proporcionais ao que colocou.</p>
+  <p>Ele é administrado por instituição autorizada — corretora, distribuidora ou
+    banco de investimento — que responde pela custódia, pela contabilidade e
+    pela prestação de contas. <b>Não é uma vaquinha entre amigos:</b> tem
+    estatuto, assembleia e extrato mensal.</p>
 
-  <h2>Pra que serve</h2>
-  <p>Para <b>aprender junto e dividir custo</b>. Sozinho, com pouco dinheiro, a
-    diversificação é cara e limitada; somando, o grupo alcança o que ninguém
-    alcançaria separado.</p>
-  <p>E para quem quer participar das decisões em vez de terceirizar — é a
-    diferença em relação ao fundo, onde você entrega a escolha ao gestor.</p>
+  <h2>A regra que define o clube</h2>
+  <p>Um clube precisa manter, <b>o tempo todo, no mínimo 67% do patrimônio em
+    ações</b> e em papéis com característica de participação: ações, bônus de
+    subscrição, debêntures conversíveis, recibos de subscrição, ETFs de ações e
+    certificados de depósito de ações.</p>
+  <p>Não é um alvo para o fim do ano — é enquadramento permanente. <b>Clube é,
+    por construção, um veículo de renda variável.</b> Quem quiser passar longos
+    períodos fora da bolsa está no veículo errado.</p>
+
+  <h2>O que cabe no terço restante</h2>
+  <p>O que exceder os 67% pode ir para outros valores mobiliários de companhias
+    abertas, cotas de fundos de renda fixa e referenciados, e títulos públicos.
+    É a parte que dá caixa e sossego ao gestor.</p>
+  <p>O clube <b>pode operar derivativos</b>, com três limites: só em mercado de
+    bolsa, o total dado em garantia nessas operações e em empréstimo de ações
+    <b>não pode passar de 15% do patrimônio</b>, e <b>lançar opção a descoberto
+    é proibido</b>. Dá para proteger e para ajustar exposição; não dá para
+    transformar o clube numa mesa alavancada.</p>
+
+  <h2>Quem manda</h2>
+  <p>Quem decide é o <b>gestor</b>, dentro da política de investimento aprovada
+    em assembleia. E aqui há um detalhe que muda o formato do clube inteiro:</p>
+  <div class="trinca">
+    <div><span class="rot">Gestor profissional</span>
+      <p>Autorizado pela CVM, contratado, e <b>pode ser remunerado</b>. É o
+        arranjo de quem quer gestão de verdade.</p></div>
+    <div><span class="rot">Um dos cotistas</span>
+      <p>Um participante assume a gestão — e nesse caso <b>não pode receber
+        remuneração nenhuma</b>. É vedação, não escolha do grupo.</p></div>
+    <div><span class="rot">Todos veem</span>
+      <p>Extrato mensal com a carteira e assembleia para as decisões maiores. O
+        gestor decide; o grupo acompanha.</p></div>
+  </div>
+  <p>Existe ainda um limite de concentração: <b>nenhum cotista pode ter mais de
+    40% das cotas</b>. O clube é um grupo, e a regra impede que ele vire o
+    veículo particular de uma pessoa só.</p>
+
+  <h2>Por que custa menos que um fundo</h2>
+  <p>A estrutura é a mesma na essência, mas as exigências de auditoria,
+    contabilidade e divulgação são <b>bem menores</b>. Menos obrigação
+    acessória, menos custo fixo — e é isso que torna o clube viável num
+    patrimônio que não sustentaria um fundo.</p>
+  <p>Há ainda uma vantagem que passa despercebida: <b>o imposto não incide a
+    cada operação</b>. O gestor compra, vende e rebalanceia dentro do clube sem
+    gerar imposto no caminho. A tributação acontece quando o cotista resgata
+    suas cotas.</p>
+
+  <h2>Quanto precisa para fazer sentido</h2>
+  <p>Não existe mínimo legal, existe mínimo prático. Abaixo de <b>algo em torno
+    de R$ 500 mil</b> de patrimônio total, os custos fixos pesam demais sobre o
+    resultado e o clube deixa de compensar.</p>
+  <p>No outro extremo está o teto: <b>passou de 50 participantes, o caminho é um
+    fundo de investimento</b>. O clube foi desenhado como estrutura de grupo
+    fechado, e é exatamente por isso que ele é mais simples e mais barato.</p>
 
   <h2>Onde mora o cuidado</h2>
-  <p><b>As regras têm que estar escritas antes.</b> Quem decide, como se decide,
-    o que acontece se alguém quiser sair, quem responde pelo quê. Clube que
-    começa na confiança e sem estatuto termina em briga.</p>
-  <p><b>Não é informal.</b> Há registro, administrador e prestação de contas —
-    e é isso que separa um clube de uma vaquinha entre amigos.</p>
+  <p><b>O estatuto resolve antes o que a convivência não resolve depois.</b>
+    Quem gere, o que o gestor pode e não pode fazer, como alguém entra, como
+    alguém sai e com que prazo, o que acontece se o grupo discordar. Clube que
+    começa só na confiança termina em briga — e a briga é sobre dinheiro de
+    todo mundo.</p>
 
-  <h2>Quando não serve</h2>
-  <p>Quando o grupo não tem tempo nem interesse real em participar. Aí o clube
-    vira um fundo mais trabalhoso e sem gestor profissional — o pior dos dois
-    mundos.</p>
+  <h2>Abrir o seu</h2>
+  <p>Montar um clube envolve escolher o administrador, escrever o estatuto,
+    definir a política de investimento, registrar o veículo e organizar a
+    entrada dos participantes. Nada disso é difícil quando alguém já fez antes —
+    e é o tipo de coisa em que errar na largada custa caro depois.</p>
+  <p><b>Dá para fazer esse caminho acompanhado.</b></p>
 
   ` + FIMP(); }
 
@@ -9447,25 +9767,48 @@ function pagAlternativos(){ $("#app").innerHTML =
       subir. Isso muda o papel deles na carteira.</p>
   </div>
 
-  <h2>Para que cada um serve</h2>
+  <h2>Investir é uma coisa. Guardar é outra</h2>
+  <p>Quando você investe numa empresa, o seu dinheiro vai para dentro de algo que
+    <b>produz</b>. A empresa vende, contrata, abre uma fábrica, dobra de tamanho
+    — ou erra, encolhe e quebra. De um jeito ou de outro, existe uma atividade
+    acontecendo, e é dela que sai lucro ou prejuízo. <b>O bolo pode
+    crescer.</b></p>
+  <p>Ouro, dólar e bitcoin não fazem nada disso. Eles não têm operação, não têm
+    funcionário, não têm balanço. São <b>reserva de valor</b>: servem para
+    guardar poder de compra, não para multiplicá-lo. Ninguém está lá dentro
+    trabalhando para que eles valham mais.</p>
+  <p>Eles oscilam, e às vezes muito — mas oscilar não é a mesma coisa que
+    produzir. <b>O preço muda; a quantidade de riqueza no mundo, não.</b> Uma
+    onça de ouro daqui a vinte anos continua sendo uma onça de ouro. Uma ação
+    pode ser um pedaço de uma empresa três vezes maior.</p>
+
+  <h2>Cada um vem de um lugar diferente</h2>
   <div class="trinca">
-    <div><span class="rot">Dólar</span>
-      <p>Proteção contra o real perder valor. Quem tem gasto ou plano em dólar
-        deveria ter parte do patrimônio nele — é <b>casar a moeda com a
-        despesa</b>.</p></div>
     <div><span class="rot">Ouro</span>
-      <p>Reserva de valor de crise. Costuma subir quando quase tudo cai. Não
-        rende nada em tempos normais, e é esse o preço do seguro.</p></div>
+      <p>Vem do subsolo, e é escasso porque tirar mais custa caro. Reserva de
+        valor há milênios: costuma subir quando quase tudo cai, e não rende nada
+        em tempos normais.</p></div>
+    <div><span class="rot">Dólar</span>
+      <p>Vem de uma decisão de banco central — alguém escolhe quanto existe. Vale
+        pela confiança na economia que o emite. Proteção contra o real perder
+        valor, e forma de <b>casar a moeda com a despesa</b>.</p></div>
     <div><span class="rot">Bitcoin</span>
-      <p>Ativo novo, sem lastro em fluxo de caixa. Pode multiplicar e pode cair
-        80%. <b>Só entra em posição que você aceita perder inteira.</b></p></div>
+      <p>Vem de um protocolo de computador, com quantidade limitada por regra
+        escrita. É uma <b>tentativa de moeda</b>: não tem país por trás e não se
+        toca — o lastro é discutível. Ainda assim é aceito no mundo inteiro.</p></div>
   </div>
+  <p>Vale separar as duas coisas. <b>A origem do bitcoin é pouco ortodoxa</b> —
+    nenhum governo o emitiu, nenhum cofre o guarda, e ele não existe fisicamente.
+    Mas ele é aceito e negociado no mundo inteiro, e isso basta para que
+    <b>funcione como reserva de valor</b>. É a mais nova e a mais oscilante das
+    três; não é a menos real por causa disso.</p>
 
   <h2>Pra que serve</h2>
   <p>Para <b>diversificar de verdade</b>: não em mais papéis brasileiros, mas em
     coisas que se movem por razões diferentes. Quando o Brasil vai mal, esses
     costumam ir bem — e é justamente aí que você precisa deles.</p>
-  <p>É proteção de carteira, <b>não motor de crescimento</b>.</p>
+  <p>É proteção de carteira, <b>não motor de crescimento</b>. Serve para o
+    patrimônio não encolher; não serve para ele dobrar.</p>
 
   <h2>Quando não serve</h2>
   <p>Como aposta principal de quem ainda está formando patrimônio. E em
@@ -9490,6 +9833,18 @@ function pagInternacional(){ $("#app").innerHTML =
     governos, fundos internacionais. Dá para fazer <b>daqui</b>, por fundos e
     ETFs listados na B3, ou <b>lá fora</b>, com conta no exterior.</p>
 
+  <h2>Por que os Estados Unidos</h2>
+  <p>Porque é <b>o maior centro financeiro do mundo</b>, e não por pouco.
+    Trilhões de dólares circulam por lá todos os dias, e praticamente tudo que
+    é negociado no planeta passa por aquele sistema em algum momento. Não é
+    preferência: é onde a liquidez está.</p>
+  <p>E há o que vem junto com isso: o dinheiro passa a estar sob <b>outra
+    legislação</b>, com outra moeda e outro conjunto de riscos políticos. É um
+    processo legal, feito à luz do dia, declarado à Receita — e hoje é rápido,
+    prático e com muito menos burocracia do que a fama sugere.</p>
+  <p>Para quem já construiu patrimônio, ter uma parte dele em dólar, fora do
+    país, <b>deixou de ser sofisticação e virou higiene básica</b>.</p>
+
   <h2>Pra que serve</h2>
   <p>Para reduzir a dependência de um país só e para acessar o que não existe
     aqui — as maiores empresas do mundo, setores inteiros que a bolsa brasileira
@@ -9498,17 +9853,67 @@ function pagInternacional(){ $("#app").innerHTML =
     recorrente, plano de morar em outro lugar. Nesse caso não é diversificação,
     é casar o dinheiro com a despesa.</p>
 
+  <h2>O imposto que pega desprevenido</h2>
+  <p>Existe um imposto americano sobre sucessão que quase ninguém conhece antes
+    de precisar. Para quem não é residente nos Estados Unidos, a isenção é de
+    <b>apenas US$ 60 mil</b>. O que passa disso é tributado em <b>alíquotas de
+    18% a 40%</b>, chegando ao topo na faixa acima de US$ 1 milhão.</p>
+  <p>O detalhe que decide tudo é <b>o que</b> está sujeito a ele. A regra olha a
+    origem do ativo, não o endereço da corretora:</p>
+  <div class="trinca">
+    <div><span class="rot">Alcança</span>
+      <p>Ações de empresas americanas, imóveis nos EUA, fundos constituídos como
+        empresa americana — <b>mesmo comprados por uma corretora fora dos
+        EUA</b>.</p></div>
+    <div><span class="rot">Não alcança</span>
+      <p>Ações de empresas de outros países e determinados ativos fora dos EUA.
+        É por isso que a escolha do veículo importa tanto.</p></div>
+    <div><span class="rot">O que fazer</span>
+      <p>Decidir <b>onde alocar antes de aplicar</b>. Depois de montada, a
+        carteira só se ajusta vendendo — e vender tem custo.</p></div>
+  </div>
+  <p>Não é um imposto que se resolve depois. <b>Ele se evita na escolha do que
+    comprar</b>, e essa escolha é feita no primeiro dia.</p>
+
+  <h2>Quando entra uma offshore</h2>
+  <p>A partir de um certo tamanho, deixa de fazer sentido manter tudo em nome da
+    pessoa física. A referência de mercado fica <b>em torno de US$ 300 mil</b>:
+    daí para cima costuma compensar constituir uma empresa no exterior para
+    deter os investimentos.</p>
+  <p>A estrutura é mais simples do que o nome sugere. Custa <b>algo em torno de
+    US$ 1.500 para abrir e outro tanto por ano</b> de manutenção — valores que
+    ficam pequenos diante do que está em jogo, e é por isso que o número de US$
+    300 mil existe.</p>
+  <p>Só que ela não é passe livre. Desde 2023, os lucros de uma empresa
+    controlada no exterior por pessoa física brasileira são tributados no Brasil
+    <b>todo ano, à alíquota de 15%, mesmo que nada seja distribuído</b> — e
+    existe a opção de declarar os ativos como se fossem detidos diretamente. A
+    offshore hoje resolve organização, sucessão e alocação; <b>não resolve
+    imposto brasileiro</b>.</p>
+
   <h2>Onde mora o cuidado</h2>
   <p><b>A moeda vira parte do resultado.</b> Você pode acertar a empresa e errar
     o câmbio, ou o contrário. São dois riscos, não um.</p>
   <p><b>Imposto e declaração têm regras próprias.</b> Conta e bens no exterior
     são declarados à Receita e, acima de certos valores, ao Banco Central. É
     onde a maioria erra — e o erro aqui é caro.</p>
+  <p>Tudo isso se decide <b>antes</b> de mandar o primeiro dólar: qual conta,
+    qual veículo, em nome de quem, comprando o quê. É trabalho de quem faz isso
+    todo dia e conhece o que pode e o que não pode.</p>
 
-  <h2>Quando não serve</h2>
-  <p>Antes de ter reserva de emergência e o básico organizado aqui. E em
-    proporção que você não entenda: <b>não adianta ter dólar se você vai vender
-    na primeira alta do real</b>.</p>
+  <h2>Mandar é uma decisão de ida</h2>
+  <p>Levar dinheiro para fora não é uma aplicação que se faz e se desfaz no mês
+    seguinte. Tem câmbio na ida e câmbio na volta, e quem entra pensando em sair
+    logo paga duas vezes por nada. <b>A remessa se decide como quem decide onde
+    morar</b>, não como quem escolhe um fundo.</p>
+  <p>Mas ida não significa preso. Uma vez lá, o dinheiro fica <b>à sua
+    disposição no mundo inteiro</b>: com um cartão de débito em dólar você gasta
+    em qualquer país, sem repatriar nada, sem pedir licença e sem novo câmbio a
+    cada viagem. O patrimônio deixa de ser um valor que mora num lugar e passa a
+    ser um valor que anda com você.</p>
+  <p>É por isso que quem tem conta lá fora costuma descrever a mudança menos
+    como uma escolha de investimento e mais como <b>uma mudança de estilo de
+    vida</b>.</p>
 
   ` + FIMP(); }
 
@@ -9743,10 +10148,53 @@ function pagRendaVar(){ $("#app").innerHTML =
       mais e o lucro é seu. Se afundar, ninguém te devolve nada.</p>
   </div>
 
-  <h2>O que é</h2>
-  <p>É todo investimento em que <b>não há promessa de retorno</b>. O preço vem
-    da disputa entre quem quer comprar e quem quer vender, todo dia — e por isso
-    varia. Não é defeito: é o funcionamento.</p>
+  <h2>De que tamanho é o sócio</h2>
+  <p>Quando se fala em ser dono de empresa, existem dois caminhos. Você pode ser
+    <b>um grande sócio de um negócio pequeno</b> — e aí tudo depende de você
+    estar lá todo dia. Ou pode ser <b>um pequeno sócio de um negócio grande</b>,
+    e passar a ter gestão profissional, escala, presença em vários países e uma
+    estrutura que continua funcionando sem a sua presença.</p>
+  <p>O segundo caminho não se compra com conhecido nem com contrato de gaveta.
+    Compra-se com ação. <b>É por isso que a ação existe:</b> ela é o pedaço
+    negociável de uma empresa grande demais para caber num sócio só.</p>
+
+  <h2>Quanto vale uma ação de verdade</h2>
+  <p>Comece pelo patrimônio, que é a parte que não depende de opinião. Imagine
+    uma empresa com <b>R$ 1 milhão de patrimônio</b> dividido em <b>1 milhão de
+    ações</b>. Cada ação carrega, então, R$ 1,00 de patrimônio. Nada de mágico:
+    é uma divisão.</p>
+  <p>No fim do ano a empresa apura o resultado. Se ela deu <b>R$ 200 mil de
+    lucro</b>, o patrimônio vira R$ 1,2 milhão — sobre a mesma quantidade de
+    ações. Cada ação passa a carregar R$ 1,20. Se em vez disso ela deu
+    <b>R$ 200 mil de prejuízo</b>, o patrimônio cai para R$ 800 mil e cada ação
+    carrega R$ 0,80.</p>
+
+  <div class="trinca">
+    <div><span class="rot">No começo</span>
+      <p>R$ 1 milhão de patrimônio, 1 milhão de ações. <b>R$ 1,00 por
+        ação.</b></p></div>
+    <div><span class="rot">Com R$ 200 mil de lucro</span>
+      <p>Patrimônio sobe para R$ 1,2 milhão, mesma quantidade de ações.
+        <b>R$ 1,20 por ação.</b></p></div>
+    <div><span class="rot">Com R$ 200 mil de prejuízo</span>
+      <p>Patrimônio cai para R$ 800 mil, mesma quantidade de ações.
+        <b>R$ 0,80 por ação.</b></p></div>
+  </div>
+
+  <p>Guarde essa ideia, porque ela é o chão de tudo: <b>ser sócio é ter uma
+    fração de um patrimônio que aumenta quando a empresa lucra e diminui quando
+    ela perde.</b> O resto é consequência disso.</p>
+
+  <h2>O outro preço, o de mercado</h2>
+  <p>Só que ninguém compra ação pelo valor do patrimônio. Existe um segundo
+    preço, o da tela, e ele não mede o que a empresa <b>tem</b> — mede o que os
+    investidores <b>esperam</b> que esse patrimônio vá virar. É expectativa de
+    lucro futuro, com data em aberto.</p>
+  <p>Por isso o preço se desloca todo dia. Balanço, notícia, mudança de governo,
+    concorrente novo, análise publicada: cada coisa dessas altera a expectativa
+    de quanto a empresa vai lucrar daqui em diante, e o preço se ajusta na hora.
+    <b>O patrimônio muda uma vez por trimestre. A expectativa sobre ele muda a
+    cada minuto.</b></p>
 
   <h2>O que existe dentro dela</h2>
   <div class="trinca">
@@ -9779,6 +10227,39 @@ function pagRendaVar(){ $("#app").innerHTML =
     Se dá para ganhar bem sem risco, ninguém paga caro por risco. É a mesma
     conta que move o prefixado.</p>
 
+  <h2>Como se estuda uma empresa</h2>
+  <p>Há dois caminhos principais, e eles nem olham para a mesma coisa.</p>
+  <p>A <b>análise fundamentalista</b> parte do balanço: quanto a empresa fatura,
+    quanto lucra, quanto deve, o que ela faz com o dinheiro que sobra. A partir
+    daí estima como esses números devem se comportar daqui para frente. É a
+    análise que responde <b>quanto a empresa vale</b>.</p>
+  <p>A <b>análise gráfica</b> não olha o balanço. Ela mede a relação entre quem
+    está comprando e quem está vendendo, acompanha para onde o preço se desloca e
+    procura, no histórico de preços, padrões que ajudem a seguir esse fluxo. É a
+    análise que responde <b>para onde o preço está indo agora</b>.</p>
+  <p>São perguntas distintas, e nenhuma das duas garante nada. <b>Uma tenta
+    medir a empresa; a outra tenta medir o mercado.</b></p>
+
+  <h2>Onde nasce a oportunidade</h2>
+  <p>Nada disso é decidido por máquina. Do outro lado de cada ordem há uma
+    pessoa, com pressa, medo, euforia ou necessidade de caixa. E gente com pressa
+    erra o preço.</p>
+  <p>É daí que sai o <b>ágio</b> — pagar caro demais por uma história boa — e o
+    <b>desconto</b> — vender barato demais por causa de um susto. Quando o exagero
+    não se justifica pelos números da empresa, existe uma distância entre o preço
+    da tela e o valor do patrimônio. <b>É nessa distância que mora a
+    oportunidade</b>, e é por isso que ela aparece justamente quando parece
+    desconfortável comprar.</p>
+
+  <h2>Pechincha ou empresa afundando</h2>
+  <p>Só que o preço baixo tem duas explicações possíveis, e elas terminam de
+    formas opostas. Ou o mercado exagerou no pessimismo e você está comprando
+    patrimônio barato, ou o mercado está certo e a empresa está mesmo a caminho
+    de perder valor ano após ano.</p>
+  <p>Não existe jeito de separar as duas no gráfico de preço. Separa-se
+    estudando o quanto a empresa vale — o que ela tem, o que ela lucra e o que
+    ela deve. <b>Sem saber precificar, "está barato" é só uma frase.</b></p>
+
   <h2>Pra que serve</h2>
   <p>Para a parte do patrimônio que não vai ser usada tão cedo. No prazo longo,
     ser sócio de boas empresas costuma render acima da inflação de forma
@@ -9792,6 +10273,14 @@ function pagRendaVar(){ $("#app").innerHTML =
   <p>E não serve para quem não aguenta ver o valor cair. Não é questão de
     coragem: é que <b>vender no fundo transforma oscilação em prejuízo</b>. Quem
     sabe que vai vender numa queda deveria carregar menos risco desde o começo.</p>
+
+  <h2>Onde está a maior chance dos dois lados</h2>
+  <p>É aqui que o patrimônio tem <b>a maior probabilidade de crescer bem</b> — e
+    também a maior de encolher, quando se compra sem saber o que se está
+    comprando. As duas pontas vêm do mesmo lugar: ninguém combinou retorno com
+    você.</p>
+  <p>A diferença entre uma ponta e outra quase nunca é sorte. É saber o que a
+    empresa vale antes de aceitar o preço que a tela oferece.</p>
 
   <div class="trinca">
     <div><span class="rot">O preço cai</span>
@@ -9816,26 +10305,124 @@ function pagPrev(){ $("#app").innerHTML =
       regime de tributação certo e a outra não. <b>Na hora de sacar, a
       diferença pode passar de 20% do que foi acumulado.</b></p>
   </div>
+
   <h2>O que é</h2>
   <p>Um plano de previdência é um fundo com duas particularidades: o imposto só
     é cobrado quando você tira o dinheiro, e a alíquota <b>cai com o tempo</b>,
     podendo chegar a 10% se você deixar por mais de dez anos.</p>
-  <p>Há dois tipos. O <b>PGBL</b> permite abater até 12% da renda tributável no
-    imposto de renda, mas cobra imposto sobre tudo no resgate. O <b>VGBL</b> não
-    abate nada, mas o imposto incide só sobre o rendimento.</p>
-  <h2>Pra que serve</h2>
-  <p>Para aposentadoria de verdade, com prazo longo. E, em alguns casos, para
-    sucessão: o valor vai direto ao beneficiário sem passar por inventário.</p>
-  <p>O Supremo decidiu, no <b>Tema 1214</b>, que o ITCMD — o imposto sobre
-    herança — <b>não incide</b> sobre o repasse de VGBL e PGBL aos
-    beneficiários. Para a Corte, não é herança: é cumprimento de um contrato
-    firmado em vida. Na prática, é dinheiro que chega inteiro e rápido, numa
-    hora em que o resto do patrimônio está travado.</p>
+  <p>Há dois tipos, e eles não competem entre si: <b>servem para coisas
+    diferentes</b>. O PGBL abate imposto na entrada e cobra imposto sobre tudo na
+    saída. O VGBL não abate nada, e cobra imposto só sobre o rendimento.</p>
+
+  <h2>Para que o PGBL foi feito</h2>
+  <p>Ele tem dois usos bons, e fora deles costuma decepcionar.</p>
+  <p><b>O primeiro é completar a aposentadoria.</b> A ideia é que, lá na frente,
+    você retire um valor por mês — como um salário — e não que saque tudo de uma
+    vez. Não é detalhe de estilo: no regime progressivo, o que você recebe entra
+    na sua declaração como renda, na mesma tabela do salário. Quem recebe um
+    valor mensal moderado paga pouco. <b>Quem tira tudo de uma vez cai na faixa
+    cheia sobre o montante inteiro.</b></p>
+  <p><b>O segundo é abater imposto de quem paga muito imposto.</b> Aqui o
+    benefício é grande de verdade, e é o assunto do bloco seguinte.</p>
+  <p>Por isso vale gravar o contrário: <b>PGBL não é produto para saque
+    grande.</b> Como o imposto do resgate incide sobre o total — principal mais
+    rendimento, e não só o rendimento — tirar um valor alto de uma vez é o pior
+    uso possível dele.</p>
+
+  <h2>Onde o abatimento fica enorme</h2>
+  <p>Quem tem renda baixa quase não sente. Quem paga a alíquota cheia sente
+    muito — e é aqui que a previdência deixa de ser detalhe e vira uma das
+    decisões de dinheiro mais relevantes do ano.</p>
+  <p>A conta é direta. Uma renda tributável de <b>R$ 1 milhão por ano</b> permite
+    aportar até <b>R$ 120 mil</b> em PGBL. Esses R$ 120 mil saem da base de
+    cálculo: a <b>27,5%</b>, são cerca de <b>R$ 33 mil que deixam de ir para o
+    Leão neste ano</b> e ficam aplicados junto com o resto.</p>
+  <p>E não é uma vez só. Repetido todo ano, o valor que deixou de virar imposto
+    continua rendendo por duas, três décadas. <b>O ganho não é o desconto: é o
+    que o desconto rende no tempo em que ele ficou com você.</b></p>
+
+  <div class="trinca">
+    <div><span class="rot">Na entrada</span>
+      <p>Até 12% da renda sai da base de cálculo. Na faixa cheia, são 27,5% que
+        não saem do seu bolso agora.</p></div>
+    <div><span class="rot">No meio do caminho</span>
+      <p>O imposto adiado fica investido o tempo todo. É a parte que não aparece
+        em nenhum extrato.</p></div>
+    <div><span class="rot">Na saída</span>
+      <p>Aos poucos, como renda mensal. É assim que o plano foi desenhado — e é
+        assim que o imposto sai barato.</p></div>
+  </div>
+
+  <h2>Quem não consegue fugir da pessoa física</h2>
+  <p>Boa parte da alta renda no Brasil reduz imposto virando empresa. Só que
+    existe um grupo grande que <b>não tem essa porta</b>: a renda chega
+    obrigatoriamente na pessoa física, mês a mês, na alíquota cheia.</p>
+  <p>É o caso de <b>titulares de cartório</b>, cuja delegação é pessoal e não se
+    transfere para uma empresa. É o caso de quem tem salário alto com carteira
+    assinada, com tudo retido na fonte. E é o caso de profissionais liberais que,
+    pela natureza do que fazem, recebem como pessoa física.</p>
+  <p>Para essas pessoas os 12% do PGBL costumam ser <b>a maior dedução
+    disponível na declaração</b> — em geral maior que saúde e educação somadas.
+    Quem está nessa situação e não usa o limite deixa dinheiro na mesa todo mês
+    de abril.</p>
+
+  <h2>O VGBL é outra coisa</h2>
+  <p>No VGBL o imposto <b>incide só sobre o rendimento</b>, nunca sobre o
+    principal. Ele não abate nada hoje, mas também não cobra pedágio sobre o
+    dinheiro que já era seu. É o que o torna um <b>veículo de investimento</b>, e
+    não um plano de aposentadoria disfarçado.</p>
+  <p>Serve para quem declara no simplificado, para quem já usou os 12% do PGBL, e
+    para quem está guardando um valor grande e quer a regra de imposto do longo
+    prazo sem a limitação da faixa de dedução.</p>
+
+  <h2>Um bom veículo para transmitir</h2>
+  <p>O dinheiro que está num plano de previdência <b>não passa por
+    inventário</b>. Vai direto a quem você indicou no contrato, em semanas,
+    justamente na hora em que imóvel, conta e empresa estão todos travados.</p>
+  <p>A vantagem aqui tem uma qualidade que passa despercebida: <b>não é um custo
+    à parte</b>. É o mesmo dinheiro que já estava aplicado, rendendo o tempo
+    todo, e que na hora certa muda de mão sem fila e sem cartório. Você não paga
+    nada a mais para ter isso.</p>
+
+  <h2>E complemento de aposentadoria, para quem pensa longe</h2>
+  <p>A matéria-prima aqui é <b>tempo</b>. A alíquota cai conforme os anos passam,
+    o imposto adiado fica rendendo, e o plano foi desenhado para virar uma renda
+    mensal lá na frente. Nada disso funciona em três anos — e tudo isso funciona
+    muito bem em vinte.</p>
+  <p>É também o veículo mais flexível do conjunto. Dentro de um plano cabe renda
+    fixa, multimercado e <b>renda variável</b>, e a alocação pode mudar ao longo
+    da vida sem que você precise resgatar nada. Dá para trocar de plano por
+    <b>portabilidade</b>, sem sacar e sem reiniciar a contagem do imposto. É por
+    isso que ela é, de longe, a mais usada.</p>
+
+  <h2>O seguro cumpre outro papel</h2>
+  <p>Ele não disputa espaço com a previdência, porque não faz a mesma coisa. A
+    previdência entrega <b>o que você acumulou</b>. O seguro entrega <b>o que
+    você não teve tempo de acumular</b> — e entrega inteiro, desde o primeiro
+    ano, sem depender de quantos anos você teve para guardar.</p>
+  <p>Numa sucessão, é ele que responde pela conta imediata: imposto, honorários,
+    custas e as despesas da família enquanto o resto está parado. Comparar
+    rendimento entre os dois é olhar pelo lado errado. <b>Um é o patrimônio; o
+    outro é a garantia de que o patrimônio chega inteiro.</b></p>
+
+  <h2>O teto dos 12% e o que fazer com o resto</h2>
+  <p>O benefício do PGBL tem limite, e ele é do tamanho da sua renda: <b>12% da
+    renda bruta tributável do ano</b>, na declaração completa, para quem
+    contribui ao INSS ou a regime próprio. O que passar disso continua sendo
+    investimento, mas sem abatimento nenhum.</p>
+  <p>Quem quer guardar mais do que os 12% normalmente leva o excedente para
+    VGBL. Aí entra uma regra nova que pega justamente quem tem muito para
+    aportar: desde 2026, aportes em VGBL que somem <b>mais de R$ 600 mil no ano
+    por CPF</b> — contando todas as seguradoras juntas — pagam <b>5% de IOF sobre
+    o que passar</b>. É pedágio na entrada, não imposto sobre rendimento, e muda
+    a ordem em que faz sentido encher cada plano.</p>
+
   <h2>Quando não serve</h2>
   <p>Quando você vai precisar do dinheiro em poucos anos — a alíquota alta no
     começo come o ganho. E quando o plano cobra taxa de administração alta e
     taxa de carregamento: <b>plano caro derrota qualquer vantagem
     tributária</b>.</p>
+
   <div class="trinca">
     <div><span class="rot">PGBL</span>
       <p>Só vale se você declara no modelo completo e tem renda tributável.</p></div>
@@ -9844,6 +10431,7 @@ function pagPrev(){ $("#app").innerHTML =
     <div><span class="rot">Olhe as taxas</span>
       <p>Carregamento deveria ser zero. Administração alta anula o benefício.</p></div>
   </div>
+
   <h2>Onde erra quem faz sozinho</h2>
   <p>Escolher o tipo errado, escolher o regime de tributação errado, e aceitar
     taxa alta por conveniência. Os três são difíceis de desfazer depois e valem
@@ -9858,29 +10446,84 @@ function pagSeguro(){ $("#app").innerHTML =
       morrer no ano seis, <b>ela não se aposenta e as crianças não estudam</b> —
       o plano parou junto com você.</p>
   </div>
+
   <h2>O que é</h2>
   <p>Você paga um valor mensal e, se morrer, a seguradora entrega de uma vez um
     capital combinado a quem você indicou. Esse dinheiro <b>não entra em
     inventário</b>: vai direto ao beneficiário, em semanas.</p>
-  <h2>Pra que serve — e é só isto</h2>
+
+  <h2>O que ele faz melhor que qualquer outra coisa</h2>
   <p>Toda a conta de aposentadoria supõe que você esteja vivo para fazer os
     aportes. O seguro entrega, de uma vez, <b>o patrimônio que os aportes
     futuros iriam construir</b>. Ele não rende: ele completa.</p>
   <p>Onde o risco é mais alto: quem tem filho pequeno, quem sustenta alguém,
     quem está em segundo casamento, e quem é bem mais velho que o cônjuge. Em
     todos, o plano inteiro depende de uma vida só.</p>
+
+  <h2>E continua servindo depois que o patrimônio já existe</h2>
+  <p>Costuma-se dizer que, sem dependentes e com patrimônio formado, o seguro
+    perde a função. <b>Não é bem assim</b> — muda o motivo.</p>
+  <p>O capital de um seguro de vida <b>não responde pelas dívidas do segurado e
+    não se considera herança</b>. É uma quantia que chega ao beneficiário por
+    direito próprio, fora do inventário e fora da fila dos credores. Por isso
+    ele é uma peça de <b>proteção patrimonial</b>, e não só de amparo familiar.</p>
+  <p>E há a diferença de natureza: num seguro <b>sem valor de resgate</b> não
+    existe saldo acumulado — existe cobertura contratada. Não é uma aplicação
+    que engorda o patrimônio; é uma proteção que só aparece quando é
+    acionada.</p>
+  <h2>Nem todo seguro cobre tudo desde o primeiro dia</h2>
+  <p>Existe a ideia de que o seguro cobre o risco assim que é assinado. <b>Alguns
+    sim, outros não.</b> Há prazos de carência, há exclusões, há coberturas que
+    dependem de como o evento aconteceu, e há o que foi ou não declarado na
+    entrada.</p>
+  <p>Nada disso é armadilha escondida: está escrito. O problema é que quase
+    ninguém lê — e a hora em que se descobre é <b>a pior hora possível</b>, com
+    a família precisando do dinheiro.</p>
+
+  <h2>Ler antes é a parte que decide</h2>
+  <p>Cláusula de carência, de exclusão, de reajuste por faixa etária, de
+    renovação, de que acontece se você atrasar. <b>Tudo isso se resolve na
+    contratação e quase nada se resolve depois.</b></p>
+  <p>É por isso que um especialista em seguros vale o que cobra: ele conhece as
+    pegadinhas que você só descobriria no dia do sinistro, e ajusta o contrato
+    antes que ele exista. Ler cem páginas de apólice sozinho, sem saber o que
+    procurar, não é a mesma coisa.</p>
+
+  <h2>Não é só seguro de vida</h2>
+  <p>A palavra "seguro" cobre uma família inteira de contratos, e cada um
+    resolve um problema diferente.</p>
+  <div class="trinca">
+    <div><span class="rot">Com ou sem resgate</span>
+      <p>Uns devolvem parte do que foi pago; outros são só proteção, e por isso
+        custam menos pelo mesmo capital.</p></div>
+    <div><span class="rot">Saúde e pessoa</span>
+      <p>Saúde, invalidez, doenças graves, acidentes. Cobrem o que acontece
+        <b>enquanto você está vivo</b>.</p></div>
+    <div><span class="rot">Patrimônio e negócio</span>
+      <p>Empresarial, fiança locatícia, responsabilidade civil, sócios. Protegem
+        o que você construiu, não a sua vida.</p></div>
+  </div>
+  <p>São contratos diferentes, com regras diferentes, e escolher o errado é tão
+    caro quanto não ter nenhum.</p>
+
   <h2>Quando não serve</h2>
-  <p>Quando não há ninguém que dependa financeiramente de você e o patrimônio já
-    está formado. Aí a fase de risco passou, e o seguro deixa de ter função.</p>
+  <p>Quando é comprado como investimento, para comparar rendimento com aplicação
+    — é a maneira errada de olhar, e a frustração é certa. Quando o prêmio
+    aperta o orçamento a ponto de você não conseguir manter o contrato: seguro
+    cancelado no meio do caminho é dinheiro perdido sem proteção nenhuma.</p>
+  <p>E quando é contratado no impulso, sem ninguém ter lido o que está
+    coberto.</p>
+
   <div class="trinca">
     <div><span class="rot">Contratar cedo</span>
       <p>A saúde é avaliada uma vez, na entrada. Depois o contrato vale.</p></div>
-    <div><span class="rot">Resgatável</span>
-      <p>Alguns permitem resgate depois de anos. É bom que exista, mas não é o
-        motivo de comprar.</p></div>
+    <div><span class="rot">Manter</span>
+      <p>Proteção que se cancela no aperto não protegeu ninguém. O prêmio tem
+        que caber.</p></div>
     <div><span class="rot">Ler antes</span>
       <p>Cláusula ruim se resolve na contratação. Depois, só na Justiça.</p></div>
   </div>
+
   ` + FIMP(); }
 
 function pagSessenta(){ $("#app").innerHTML =
@@ -10153,6 +10796,10 @@ function rotear(){
   if(h==="#/p-renda-fixa")    return servRendaFixa();
   if(h==="#/p-internacional") return servInternacional();
   if(h==="#/p-alternativos")  return servAlternativos();
+  if(h==="#/p-renda-variavel") return servRendaVar();
+  if(h==="#/p-previdencia")    return servPrev();
+  if(h==="#/p-fundos")         return servFundos();
+  if(h==="#/p-conta")          return servAbrirConta();
   if(h==="#/crescer")         return telaCrescerNova();
   if(h==="#/sim-crescer" || h==="#/sim-renda" || h==="#/simulador"
      || h==="#/planejar")     return simTudo();
