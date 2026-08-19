@@ -642,6 +642,70 @@ footer{border-top:1px solid var(--linha);margin-top:64px;padding:26px 0 52px;
   .termo .ver{font-size:15.5px;margin-top:9px}
 }
 
+/* o pulo de uma conta para a outra dentro do simulador único */
+.pula{display:flex;align-items:center;justify-content:space-between;gap:18px;
+  flex-wrap:wrap;margin:30px 0 8px;padding:16px 20px;background:var(--p2);
+  border:1px solid var(--linha2);border-left:3px solid var(--ouro2);
+  border-radius:6px}
+.pula p{margin:0;font-size:14.5px;color:var(--t2);max-width:52ch;line-height:1.5}
+.pula .bt{flex:none}
+button.lig{padding:0;font-size:inherit;color:var(--ouro2);
+  border-bottom:1px solid var(--ouro2);line-height:1.2}
+button.lig:hover{color:var(--tinta);border-bottom-color:var(--tinta)}
+.abas button.aba{background:none;font-family:inherit}
+@media(max-width:620px){
+  .pula{padding:13px 14px;gap:12px}
+  .pula p{font-size:13.5px}
+  .pula .bt{width:100%;text-align:center}
+}
+
+/* o questionário do simulador: perguntas escritas como perguntas, em três
+   blocos, com a resposta viva embaixo */
+.quest{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:24px 0 8px}
+.qbloco{background:var(--p2);border:1px solid var(--linha);border-radius:8px;
+  padding:16px 18px 18px}
+.qbloco .qt{display:block;font-size:9.5px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--ouro2);margin-bottom:13px}
+.q{margin-bottom:13px}
+.q:last-child{margin-bottom:0}
+.q label{display:block;font-size:13px;color:var(--tinta);margin-bottom:5px;
+  line-height:1.35}
+.q input{width:100%;background:var(--p1);border:1px solid var(--linha2);
+  border-radius:5px;padding:8px 11px;color:var(--tinta);font-size:15px;
+  font-family:'IBM Plex Mono',monospace;transition:border-color .15s}
+.q input:focus{outline:none;border-color:var(--ouro2)}
+.q .d,.dica{display:block;font-size:11px;color:var(--graf);margin-top:5px;
+  line-height:1.45}
+.dica{margin:0}
+
+/* divisor das duas metades: juntar e tirar */
+.parte{display:flex;align-items:center;gap:12px;margin:38px 0 18px;
+  font-family:Newsreader,serif;font-size:25px;color:var(--tinta)}
+.parte i{flex:none;width:32px;height:32px;border-radius:50%;
+  border:1px solid var(--ouro2);color:var(--ouro2);font-style:normal;
+  font-family:'IBM Plex Mono',monospace;font-size:14px;
+  display:grid;place-items:center}
+.parte::after{content:"";flex:1;height:1px;background:var(--linha)}
+
+/* comparação de quanto muda guardar um pouco mais */
+.barras{margin:18px 0 6px}
+.br{margin-bottom:15px}
+.br .rot{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--graf);margin-bottom:6px}
+.br .tr{height:14px;background:var(--p3);border-radius:99px;overflow:hidden}
+.br .tr i{display:block;height:100%;background:var(--alta);border-radius:99px;
+  transition:width .25s}
+.br:first-child .tr i{background:var(--graf)}
+.br .v{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:17px;
+  color:var(--tinta);margin-top:7px}
+.br .pe{display:block;font-size:12px;color:var(--graf);margin-top:2px;line-height:1.5}
+
+@media(max-width:860px){
+  .quest{grid-template-columns:1fr;gap:11px}
+  .parte{font-size:21px;margin:30px 0 14px}
+  .q input{font-size:16px;padding:10px 11px}
+}
+
 .abas{display:flex;gap:2px;flex-wrap:wrap;margin:6px 0 0;
   justify-content:center;border-bottom:1px solid var(--linha)}
 @media(max-width:620px){.abas{justify-content:flex-start}}
@@ -1882,7 +1946,14 @@ function ligarMenus(){
       ev.stopPropagation();
       const g = bt.closest(".grupo"), abrir = !g.classList.contains("aberto");
       document.querySelectorAll("nav .grupo.aberto").forEach(o => o.classList.remove("aberto"));
-      if(abrir) g.classList.add("aberto");
+      if(abrir){
+        g.classList.add("aberto");
+        // o painel rola por dentro (25 itens não cabem em 560px). Sem zerar,
+        // ele reabre onde tinha parado — e a pessoa cai no último item em vez
+        // do primeiro.
+        const p = g.querySelector(".painel");
+        if(p) p.scrollTop = 0;
+      }
     };
   });
   if(document.body.dataset.menuFora) return;
@@ -5366,7 +5437,7 @@ function resumoDe(html){
 
 // ── Planejamento ────────────────────────────────────────────────
 const PL = { idade:35, ate:100, apos:65, renda:"", gasto:"", tem:"", quer:"",
-             jaTem:"", suc:"", casos:[], real:5, passo:1, feito:false, metas:[] };
+             jaTem:"", suc:"", casos:[], real:5, passo:1, feito:false, tocado:false, metas:[] };
 
 const rs = v => v==null||!isFinite(v) ? "—"
   : "R$ " + Math.round(v).toLocaleString("pt-BR");
@@ -5451,6 +5522,7 @@ function contasPL(){
 }
 
 function telaPlanejar(){
+  semearPL();
   const c = contasPL();
   const campo = (id,rot,val,dica="") => `
     <label>${rot}</label>
@@ -5593,6 +5665,7 @@ function lerPL(){
   const p = id => { const el = $("#"+id); return el ? numPL(el) : null; };
   const v = {};
   ["pIdade","pApos","pAte","pRenda","pGasto","pTem","pQuer","pJa"].forEach(id => v[id] = p(id));
+  if(v.pIdade || v.pApos) PL.tocado = true;
   if(v.pIdade)  PL.idade = Math.min(90, Math.max(14, v.pIdade));
   if(v.pApos)   PL.apos  = Math.min(95, Math.max(PL.idade, v.pApos));
   if(v.pAte)    PL.ate   = Math.min(120, Math.max(PL.apos + 1, v.pAte));
@@ -5609,6 +5682,32 @@ function lerPL(){
     const i = +el.dataset.i; if(PL.metas[i]) PL.metas[i].valor = numPL(el); });
   const sc = $("#pSuc"); if(sc) PL.suc = numPL(sc);
   const s = $("#pReal"); if(s) PL.real = +s.value;
+  sincronizarConta();
+}
+
+/* O plano e o simulador perguntam as mesmas quatro coisas: idade, quando parar,
+   quanto já tenho e quanto rende. Antes eram dois estados separados e a pessoa
+   digitava tudo de novo ao trocar de tela. Agora um alimenta o outro.
+   Sentido plano → simulador: */
+function sincronizarConta(){
+  if(typeof CONTA === "undefined") return;
+  CONTA.idade = PL.idade;
+  CONTA.para  = Math.max(PL.idade + 1, PL.apos);
+  CONTA.aos   = Math.max(PL.idade + 1, PL.apos);
+  if(PL.tem !== "" && PL.tem != null) CONTA.tem = PL.tem;
+  if(PL.quer !== "" && PL.quer != null && PL.quer > 0) CONTA.quero = PL.quer;
+  // o plano trabalha em ganho REAL; o simulador, em taxa nominal. Sem recompor
+  // a inflação, o simulador passaria a mentir para baixo.
+  CONTA.taxa = Number(((1 + PL.real/100) * (1 + CONTA.inflacao/100) - 1) * 100).toFixed(2) * 1;
+  CONTA.tenho = null;   // volta a herdar o patrimônio projetado
+}
+
+/* Sentido simulador → plano, aplicado quando o plano abre em branco. */
+function semearPL(){
+  if(typeof CONTA === "undefined" || PL.feito) return;
+  if(PL.tem === ""  && CONTA.tem   > 0) PL.tem  = CONTA.tem;
+  if(PL.quer === "" && CONTA.quero > 0) PL.quer = CONTA.quero;
+  if(!PL.tocado){ PL.idade = CONTA.idade; PL.apos = Math.max(CONTA.idade+1, CONTA.para); }
 }
 
 function graficoPL(c){
@@ -8517,8 +8616,6 @@ function cenarios(o){
 }
 
 
-/* A pergunta ao contrário, que é a que o cliente faz de verdade:
-   "para ter X por mês, quanto preciso ter juntado?" */
 function usar(o){
   const i = Math.pow(1 + o.taxa/100, 1/12) - 1;
   const inf = Math.pow(1 + (o.inflacao||0)/100, 1/12) - 1;
@@ -8596,81 +8693,6 @@ function graficoUsar(u, o){
   </svg>`;
 }
 
-function aoContrario(o){
-  const iNom = Math.pow(1 + o.taxa/100, 1/12) - 1;
-  const inf  = Math.pow(1 + (o.inflacao||0)/100, 1/12) - 1;
-  // ⚠️ tudo em termos REAIS. A renda precisa manter o poder de compra, então
-  // o capital tem que render acima da inflação — usar a taxa nominal aqui
-  // subestima o alvo em milhões.
-  const i = (1+iNom)/(1+inf) - 1;
-  const renda = Math.max(0, o.rendaQuero||0);
-  const anosJunta = Math.max(1, (o.rendaAos||60) - o.idade);
-  const perpetuo = i > 0 ? renda/i : Infinity;
-  const nCons = Math.max(1, (o.rendaDura||0)*12);
-  const consumindo = o.rendaDura > 0
-    ? (i > 0 ? renda*(1 - Math.pow(1+i,-nCons))/i : renda*nCons) : null;
-  const alvo = consumindo != null ? consumindo : perpetuo;
-  const nJunta = anosJunta*12;
-  const jaTem = (o.tem||0) * Math.pow(1+i, nJunta);
-  const falta = Math.max(0, alvo - jaTem);
-  const aporte = i > 0 ? falta*i/(Math.pow(1+i,nJunta)-1) : falta/nJunta;
-  return { renda, anosJunta, perpetuo, consumindo, alvo, aporte, jaTem, i,
-           iAno: (Math.pow(1+i,12)-1)*100 };
-}
-
-function blocoContrario(o){
-  const c = aoContrario(o);
-  return `
-  <h2>A pergunta ao contrário</h2>
-  <p>É a que quase todo mundo faz primeiro: <b>para ter uma renda de tanto por
-    mês, quanto preciso ter juntado?</b> Preencha a renda que você quer e a
-    idade em que quer começar.</p>
-
-  <div class="campos" style="grid-template-columns:repeat(4,1fr)">
-    <div><label>Renda que quero</label><input id="q1" value="${o.rendaQuero}"></div>
-    <div><label>A partir dos</label><input id="q2" value="${o.rendaAos}"></div>
-    <div><label>Durante quantos anos</label><input id="q3" value="${o.rendaDura}"></div>
-    <div><label>Inflação %</label><input id="q4" value="${o.inflacao}"></div>
-  </div>
-  <p style="font-size:12.5px;color:var(--graf);margin:-2px 0 4px">
-    No campo dos anos, <b>0 significa uma renda que nunca acaba</b>.</p>
-
-  <div class="placar3">
-    <div class="forte"><span class="rot">Preciso ter juntado</span>
-      <b>${rs(c.alvo)}</b>
-      <span class="pe">aos ${o.rendaAos} anos${c.consumindo != null
-        ? ", consumindo em " + o.rendaDura + " anos"
-        : ", sem nunca acabar"}</span></div>
-    <div><span class="rot">Guardando por mês</span>
-      <b>${rs(c.aporte)}</b>
-      <span class="pe">durante ${c.anosJunta} anos, corrigido pela inflação</span></div>
-    <div><span class="rot">Ganho real usado</span>
-      <b>${c.iAno.toFixed(2).replace(".",",")}% ao ano</b>
-      <span class="pe">${o.taxa.toString().replace(".",",")}% menos inflação de ${
-        o.inflacao.toString().replace(".",",")}%</span></div>
-  </div>
-
-  <div class="conclui">Para receber <b class="destaque">${rs(c.renda)} por
-    mês</b> a partir dos ${o.rendaAos}, você precisa juntar
-    <b class="destaque">${rs(c.alvo)}</b> — o que dá
-    <b>${rs(c.aporte)} por mês</b> pelos próximos ${c.anosJunta} anos.</div>
-
-  <p>${c.consumindo != null
-    ? `Nesta conta o dinheiro <b>acaba</b> no fim dos ${o.rendaDura} anos. Se
-       quiser uma renda que não acabe, ponha 0 no campo dos anos — e repare no
-       quanto o alvo sobe.`
-    : `Aqui você retira <b>só o ganho real</b> e nunca toca no principal: por
-       isso a renda não tem prazo. Não é mágica nem promessa — é a consequência
-       de tirar menos do que o patrimônio rende acima da inflação. Na prática,
-       <b>ninguém vive para sempre</b>: aceitar consumir o principal ao longo de
-       20 ou 30 anos derruba bastante o alvo. Ponha o número de anos e
-       compare.`}</p>
-  <p><b>Começar cedo é a variável mais barata.</b> Adiar cinco anos não aumenta
-    o aporte em 20%: aumenta muito mais, porque você tira do juro composto
-    justamente os anos em que ele mais trabalha.</p>`;
-}
-
-/* ─── cabeçalho ─── */
 function graficoPrefixado(){
   const valor=100000, taxa=10, anos=10, sai=2, restam=anos-sai;
   const noFim = valor*Math.pow(1+taxa/100,anos);
@@ -8832,101 +8854,126 @@ function telaCrescerNova(){
 }
 
 /* ─── PÁGINA: renda fixa (segundo tópico, para ver o padrão repetir) ─── */
-function simulador(){
-  const s = serie(S);
+/* ─── SIMULADOR ÚNICO ────────────────────────────────────────────────
+   Eram três telas fazendo a mesma conta com três estados separados, e quem
+   preenchia uma digitava tudo de novo na outra. Agora é uma só, com as três
+   perguntas na ordem em que a vida as faz:
+     1. guardando o que guardo, quanto vou ter
+     2. para ter a renda que quero, quanto preciso ter juntado
+     3. tendo isso, quanto dá para tirar e por quanto tempo dura
+   Idade, taxa e inflação são os mesmos nas três — é o que evita o retrabalho. */
+const CONTA = {
+  idade:35, contribuiAte:65, contaAte:90, taxa:10, inflacao:4.5,
+  renda:8000, gasto:6000, poupo:null,   // poupo null = usa a sobra
+  tem:0,
+  modo:"mes", valor:null,               // valor null = usa o limite do ganho real
+  aba:"frente"
+};
+
+const sobraCONTA = () => Math.max(0, (CONTA.renda||0) - (CONTA.gasto||0));
+const poupoCONTA = () => CONTA.poupo == null ? sobraCONTA() : CONTA.poupo;
+
+const oJuntar = () => ({ tem:CONTA.tem, aporte:poupoCONTA(), taxa:CONTA.taxa,
+  idade:CONTA.idade, para:CONTA.contribuiAte, ate:CONTA.contaAte,
+  retira:false, retiraMes:0, saque:0, inflacao:CONTA.inflacao });
+
+const oTirar = pico => ({ tenho:pico, taxa:CONTA.taxa, inflacao:CONTA.inflacao,
+  idade:CONTA.contribuiAte, modo:CONTA.modo,
+  valor:CONTA.valor == null ? limitePadrao(pico) : CONTA.valor });
+
+// quanto dá para tirar sem encostar no principal, no formato de cada modo
+function limitePadrao(pico){
+  const iNom = Math.pow(1 + CONTA.taxa/100, 1/12) - 1;
+  const inf  = Math.pow(1 + CONTA.inflacao/100, 1/12) - 1;
+  const iR = (1+iNom)/(1+inf) - 1;
+  // para baixo, sempre: arredondar para cima passa do limite por alguns reais
+  // e a tela passaria a dizer que o patrimônio acaba
+  if(CONTA.modo === "unica") return Math.floor(pico*0.2);
+  if(CONTA.modo === "ano")   return Math.floor(pico*(Math.pow(1+iR,12)-1));
+  return Math.floor(pico*iR);
+}
+
+function simTudo(){
+  const o = oJuntar(), s = serie(o), pico = s.pico;
+  const ot = oTirar(pico), u = usar(ot);
+  const rot = { mes:"por mês", ano:"por ano", unica:"de uma vez" }[CONTA.modo];
+
   $("#app").innerHTML = `
-  <div class="trilho">Simulador · acumulação</div>
-  <h1>Quanto o meu dinheiro rende</h1>
-  <p class="chapeu">Mexa nos campos e veja o que muda. Nada é salvo.</p>
+  <div class="trilho">Simulador · a conta da sua vida financeira</div>
+  <h1>Quanto dá para juntar, e quanto dá para tirar depois</h1>
+  <p class="chapeu">Responda as perguntas e as duas contas aparecem embaixo, ao
+    vivo. Não precisa saber de investimento — precisa saber quanto entra e
+    quanto sai. Nada é salvo: some quando você fechar a página.</p>
 
-  <div class="campos" style="grid-template-columns:repeat(5,1fr)">
-    <div><label>Tenho hoje</label><input id="a" value="${S.tem}"></div>
-    <div><label>Guardo por mês</label><input id="b" value="${S.aporte}"></div>
-    <div><label>Rende ao ano %</label><input id="c" value="${S.taxa}"></div>
-    <div><label>Minha idade</label><input id="d" value="${S.idade}"></div>
-    <div><label>Aporto até os</label><input id="e" value="${S.para}"></div>
-  </div>
+  ${perguntas()}
 
-  <div class="figura">${graficoAc(s, S, 290, true)}
+  <div class="parte"><i>1</i>Juntar</div>
+
+  <div class="figura">${graficoAc(s, o, 290, true)}
     <div class="legenda">
-      <span><i style="background:var(--alta)"></i>o que você tem</span>
+      <span><i style="background:var(--alta)"></i>o que você vai ter</span>
       <span><i style="background:var(--graf)"></i>só o que você depositou</span>
-      ${S.tem>0?`<span><i style="background:var(--ouro2)"></i>sem aportar nada</span>`:""}
+      ${CONTA.tem>0?`<span><i style="background:var(--ouro2)"></i>o que você já tem, sem guardar mais nada</span>`:""}
     </div>
-    ${S.tem===0 && S.aporte>0 ? `<p class="notafig"><b>Quem não guarda nada fica
-      na linha do zero.</b> Não existe rendimento sobre dinheiro que não existe.</p>` : ""}
+    <p class="notafig">A curva só sobe: esta é a fase de juntar. A distância
+      entre as duas linhas <b>é o que o tempo fez por você</b>, sem nenhum
+      esforço a mais.</p>
   </div>
 
   <div class="placar3">
-    <div><span class="rot">Aos ${S.para} anos</span><b>${rs(s.pico)}</b>
-      <span class="pe">depois de ${S.para-S.idade} anos guardando</span></div>
+    <div><span class="rot">Aos ${CONTA.contribuiAte} anos você tem</span>
+      <b>${rs(pico)}</b>
+      <span class="pe">depois de ${CONTA.contribuiAte-CONTA.idade} anos guardando
+        ${rs(poupoCONTA())} por mês</span></div>
     <div><span class="rot">Saiu do seu bolso</span><b>${rs(s.aportado)}</b>
-      <span class="pe">${Math.round(s.aportado/s.pico*100)}% do total</span></div>
+      <span class="pe">${Math.round(s.aportado/pico*100)}% do total</span></div>
     <div class="forte"><span class="rot">O dinheiro fez sozinho</span>
       <b>${rs(s.juro)}</b>
-      <span class="pe">${Math.round(s.juro/s.pico*100)}% do total</span></div>
+      <span class="pe">${Math.round(s.juro/pico*100)}% do total — você não depositou</span></div>
   </div>
 
   <div class="conclui">${s.virada == null
-    ? `Com esses números a virada não chega. Aumente o prazo, o aporte ou a taxa
-       e veja o que acontece.`
-    : `Aos <b class="destaque">${S.idade + Math.floor(s.virada/12)} anos</b> o
-       seu dinheiro passa a render mais do que você deposita todo mês.`}</div>
+    ? `Com esses números o dinheiro nunca chega a render mais do que você
+       deposita. Aumente o prazo ou o quanto guarda e veja o ponto aparecer.`
+    : `Aos <b class="destaque">${CONTA.idade + Math.floor(s.virada/12)} anos</b> o
+       seu dinheiro passa a render mais do que você deposita todo mês. Daí em
+       diante, o trabalho pesado não é mais seu.`}</div>
 
-  ${cenarios(S)}
+  ${blocoPouparMais(s)}
 
-  ${AVISO}
+  <div class="parte"><i>2</i>Tirar</div>
 
-  <div class="adiante">
-    <a class="bt cheio" href="#/servicos">Consultar especialista &rarr;</a>
-    <a class="bt" href="#/aprender">Voltar ao índice</a>
-  </div>`;
-
-  const liga = (id, campo, min, max) => {
-    const el = $("#"+id); if(!el) return;
-    el.oninput = () => {
-      let v = Number(String(el.value).replace(/[^\d.,-]/g,"").replace(",","."));
-      if(!isFinite(v)) v = 0;
-      S[campo] = Math.min(max, Math.max(min, v));
-      if(S.para <= S.idade) S.para = S.idade + 1;
-      if(S.ate <= S.para) S.ate = S.para + 25;
-      const pos = el.selectionStart;
-      simulador();
-      const n = $("#"+id); if(n){ n.focus(); try{ n.setSelectionRange(pos,pos); }catch(e){} }
-    };
-  };
-  liga("a","tem",0,1e9); liga("b","aporte",0,1e7); liga("c","taxa",0,60);
-  liga("d","idade",16,90); liga("e","para",17,95);
-}
-
-function simRenda(){
-  const u = usar(R);
-  const rot = { mes:"por mês", ano:"por ano", unica:"de uma vez" }[R.modo];
-  $("#app").innerHTML = `
-  <div class="trilho">Simulador · o que dá para fazer com o que juntei</div>
-  <h1>Quanto posso usar</h1>
-  <p class="chapeu">Você já tem, ou vai ter, um valor guardado. A pergunta agora
-    é outra: <b>quanto dá para tirar, de que jeito, e por quanto tempo dura.</b></p>
-
-  <div class="campos" style="grid-template-columns:repeat(4,1fr)">
-    <div><label>Tenho juntado</label><input id="r1" value="${R.tenho}"></div>
-    <div><label>Rende ao ano (%)</label><input id="r2" value="${R.taxa}"></div>
-    <div><label>Minha idade</label><input id="r3" value="${R.idade}"></div>
-    <div><label>Quero tirar ${rot}</label><input id="r4" value="${R.valor}"></div>
-  </div>
+  <p>Chegando aos ${CONTA.contribuiAte} com <b>${rs(pico)}</b>, existem três
+    caminhos — e eles não são a mesma coisa. <b>Tirar só o ganho real</b> mantém
+    o patrimônio de pé para sempre. <b>Consumir o principal</b> paga mais por
+    mês, e acaba num dia com data. <b>Sacar de uma vez</b> resolve uma compra e
+    o que sobra continua rendendo.</p>
 
   <div class="modos">
-    ${[["mes","Uma renda todo mês"],["ano","Uma retirada por ano"],
-       ["unica","Uma retirada única, agora"]]
-      .map(([k,t]) => `<button type="button" class="modo${R.modo===k?" on":""}"
+    ${[["mes","Tirar todo mês"],["ano","Tirar uma vez por ano"],
+       ["unica","Sacar de uma vez"]]
+      .map(([k,t]) => `<button type="button" class="modo${CONTA.modo===k?" on":""}"
         data-modo="${k}">${t}</button>`).join("")}
   </div>
 
-  <div class="figura">${graficoUsar(u, R)}
-    <p class="notafig">${R.modo === "unica"
+  <div class="campos" style="grid-template-columns:1fr 1fr;margin-top:12px">
+    <div><label>Quanto quer tirar ${rot}</label>
+      <input id="cValor" value="${Math.round(ot.valor)}"></div>
+    <div style="display:flex;align-items:flex-end">
+      ${CONTA.valor == null
+        ? `<p class="dica">Este é o valor que <b>não encosta no principal</b>.
+             Digite por cima para testar outro.</p>`
+        : `<button type="button" class="lig" id="voltarLim">voltar ao valor que
+             não consome o patrimônio</button>`}
+    </div>
+  </div>
+
+  <div class="figura">${graficoUsar(u, ot)}
+    <p class="notafig">${CONTA.modo === "unica"
       ? `O que sobra depois do saque, rendendo sozinho.`
       : u.perpetuo
-        ? `O patrimônio não cai: você tira menos do que ele rende.`
+        ? `A linha fica de pé: você tira menos do que o patrimônio rende acima
+           da inflação. <b>Não acaba.</b>`
         : u.dura
           ? `O patrimônio sendo consumido até acabar.`
           : `O patrimônio encolhendo devagar — o gráfico mostra 35 anos e ele
@@ -8934,79 +8981,204 @@ function simRenda(){
   </div>
 
   <div class="placar3">
-    ${R.modo === "unica"
+    ${CONTA.modo === "unica"
       ? `<div class="forte"><span class="rot">Sobra depois do saque</span>
-           <b>${rs(u.sobra)}</b>
-           <span class="pe">e continua rendendo</span></div>
-         <div><span class="rot">Isso passa a render</span>
-           <b>${rs(u.sobra*u.i)}</b>
+           <b>${rs(u.sobra)}</b><span class="pe">e continua rendendo</span></div>
+         <div><span class="rot">Isso passa a render</span><b>${rs(u.sobra*u.i)}</b>
            <span class="pe">por mês, sem tocar no principal</span></div>
          <div><span class="rot">Em dez anos vira</span>
            <b>${rs(u.d[Math.min(120, u.d.length-1)].v)}</b>
            <span class="pe">se você não tirar mais nada</span></div>`
-      : `<div class="forte"><span class="rot">Tirando ${rs(R.valor)} ${rot}</span>
+      : `<div class="forte"><span class="rot">Tirando ${rs(ot.valor)} ${rot}</span>
            <b>${u.perpetuo ? "para sempre"
                 : u.dura ? "até os " + Math.floor(u.dura) + " anos"
                 : "por mais de " + u.anosMax + " anos"}</b>
-           <span class="pe">${u.perpetuo
-             ? "o patrimônio não acaba"
+           <span class="pe">${u.perpetuo ? "o patrimônio não acaba"
              : u.dura ? "quando o dinheiro termina"
              : "encolhe devagar, mas dura a vida toda"}</span></div>
          <div><span class="rot">O limite sem consumir</span>
            <b>${rs(u.limiteSeguro)}</b>
-           <span class="pe">${R.modo === "ano" ? "por ano" : "por mês"}, só do rendimento</span></div>
-         <div><span class="rot">Seu patrimônio rende</span>
-           <b>${rs(u.rendeMes)}</b>
-           <span class="pe">por mês, sobre ${rs(R.tenho)}</span></div>`}
+           <span class="pe">${CONTA.modo === "ano" ? "por ano" : "por mês"}, só do ganho real</span></div>
+         <div><span class="rot">Para tirar ${rs(ot.valor)} sem fim</span>
+           <b>${rs(precisaTer(ot.valor))}</b>
+           <span class="pe">${pico >= precisaTer(ot.valor)
+             ? "você chega lá com folga" : "faltam " + rs(precisaTer(ot.valor)-pico)}</span></div>`}
   </div>
 
-  <div class="conclui">${R.modo === "unica"
-    ? `Tirando ${rs(R.valor)} de uma vez, sobram ${rs(u.sobra)} — que passam a
+  <div class="conclui">${CONTA.modo === "unica"
+    ? `Sacando ${rs(ot.valor)} de uma vez, sobram ${rs(u.sobra)} — que passam a
        render <b class="destaque">${rs(u.sobra*u.i)} por mês</b>.`
     : u.perpetuo
-      ? `Tirando ${rs(R.valor)} ${rot}, <b class="destaque">o patrimônio não
-         acaba</b>: você está tirando menos do que ele rende.`
-      : `Tirando ${rs(R.valor)} ${rot}, o dinheiro dura ${u.dura
+      ? `Tirando ${rs(ot.valor)} ${rot}, <b class="destaque">o patrimônio não
+         acaba</b>: você tira menos do que ele rende acima da inflação.`
+      : `Tirando ${rs(ot.valor)} ${rot}, o dinheiro dura ${u.dura
            ? `até os <b class="destaque">${Math.floor(u.dura)} anos</b>`
-           : `<b class="destaque">por mais de ${u.anosMax} anos</b>`}. O limite para não
-         consumir o principal é ${rs(u.limiteSeguro)} ${
-         R.modo === "ano" ? "por ano" : "por mês"}.`}</div>
+           : `<b class="destaque">por mais de ${u.anosMax} anos</b>`}. Para não
+         consumir o principal, o limite é ${rs(u.limiteSeguro)} ${
+         CONTA.modo === "ano" ? "por ano" : "por mês"}.`}</div>
 
-  ${blocoContrario(S)}
+  ${blocoDisciplina(s, pico)}
 
   ${AVISO}
 
   <div class="adiante">
-    <a class="bt cheio" href="#/servicos">Consultar especialista &rarr;</a>
+    <a class="bt cheio lacre" href="#/servicos">Consultar especialista &rarr;</a>
+    <a class="bt" href="#/planejar">Incluir metas e sucessão</a>
     <a class="bt" href="#/aprender">Voltar ao índice</a>
   </div>`;
 
-  const liga = (id, campo, min, max, alvo) => {
+  ligarSim();
+}
+
+/* quanto seria preciso ter para tirar esse valor sem nunca acabar */
+function precisaTer(valor){
+  const iNom = Math.pow(1 + CONTA.taxa/100, 1/12) - 1;
+  const inf  = Math.pow(1 + CONTA.inflacao/100, 1/12) - 1;
+  const iR = (1+iNom)/(1+inf) - 1;
+  if(iR <= 0) return Infinity;
+  return CONTA.modo === "ano" ? valor/(Math.pow(1+iR,12)-1) : valor/iR;
+}
+
+/* As perguntas. Escritas como perguntas mesmo: quem nunca fez isso não sabe
+   responder "aporte mensal", mas sabe dizer quanto ganha e quanto gasta —
+   e o quanto dá para guardar sai daí, não da cabeça dela. */
+function perguntas(){
+  const sobra = sobraCONTA();
+  const q = (id,txt,val,dica="") => `
+    <div class="q"><label for="${id}">${txt}</label>
+      <input id="${id}" inputmode="decimal" value="${val}">
+      ${dica?`<span class="d">${dica}</span>`:""}</div>`;
+  return `
+  <div class="quest">
+    <div class="qbloco">
+      <span class="qt">Você</span>
+      ${q("cIdade","Quantos anos você tem?",CONTA.idade)}
+      ${q("cAte","Até que idade quer guardar?",CONTA.contribuiAte,
+          "depois disso você para de depositar")}
+      ${q("cFim","A conta vai até que idade?",CONTA.contaAte,
+          "quem tem 35 hoje passa dos 90 com facilidade")}
+    </div>
+    <div class="qbloco">
+      <span class="qt">Hoje</span>
+      ${q("cRenda","Quanto entra por mês, líquido?",CONTA.renda)}
+      ${q("cGasto","Quanto sai por mês, tudo somado?",CONTA.gasto,
+          "sem chutar para baixo: o gasto esquecido é o que derruba a conta")}
+      ${q("cPoupo","Quanto dá para guardar por mês?",poupoCONTA(),
+          CONTA.poupo == null
+            ? `sobram <b>${rs(sobra)}</b> — é o que estamos usando`
+            : `da sua sobra de ${rs(sobra)}`)}
+      ${q("cTem","Já tem alguma coisa guardada?",CONTA.tem,
+          "só o que está investido; a casa onde você mora não entra")}
+    </div>
+    <div class="qbloco">
+      <span class="qt">A conta usa</span>
+      ${q("cTaxa","Quanto rende ao ano, %?",CONTA.taxa,
+          "10% é uma referência conservadora de longo prazo")}
+      ${q("cInf","Inflação ao ano, %?",CONTA.inflacao,
+          "o que sobra dos dois é o seu ganho real")}
+      <p class="dica" style="margin-top:10px">Seu ganho real é de
+        <b>${(((1+CONTA.taxa/100)/(1+CONTA.inflacao/100)-1)*100).toFixed(2).replace(".",",")}%
+        ao ano</b>. É esse que faz o trabalho — o resto só repõe o poder de compra.</p>
+    </div>
+  </div>`;
+}
+
+/* O poder de guardar um pouco mais. É o argumento que mais muda comportamento,
+   porque a diferença é desproporcional ao esforço. */
+function blocoPouparMais(s){
+  const base = poupoCONTA();
+  if(base <= 0) return `
+  <div class="pula"><p>Você não está guardando nada por mês — e sem depósito não
+    existe rendimento. Ponha qualquer valor em "quanto dá para guardar" e veja o
+    que acontece.</p></div>`;
+  const cen = [0, .1, .25, .5].map(p => {
+    const ap = Math.round(base*(1+p));
+    const se = serie({ ...oJuntar(), aporte:ap });
+    return { p, ap, pico:se.pico, mais:se.pico - s.pico, esforco:ap - base };
+  });
+  const mx = cen[cen.length-1].pico;
+  return `
+  <h2>E se você guardar um pouco mais?</h2>
+  <p>Esta é a parte que quase ninguém calcula. O esforço a mais é mensal e
+    pequeno; o resultado é o esforço multiplicado por todos os anos de juro que
+    vêm depois dele.</p>
+  <div class="barras">
+    ${cen.map(c => `
+      <div class="br">
+        <span class="rot">${c.p === 0 ? "o que você guarda hoje"
+          : "+" + Math.round(c.p*100) + "% por mês"}</span>
+        <div class="tr"><i style="width:${(c.pico/mx*100).toFixed(1)}%"></i></div>
+        <span class="v">${rs(c.pico)}</span>
+        <span class="pe">${c.p === 0
+          ? rs(c.ap) + " por mês"
+          : `${rs(c.ap)} por mês — <b>${rs(c.mais)} a mais</b> no fim,
+             por ${rs(c.esforco)} a mais por mês`}</span>
+      </div>`).join("")}
+  </div>
+  <p class="notafig">Guardar <b>${rs(cen[1].esforco)} a mais por mês</b> — o
+    preço de um jantar — devolve <b>${rs(cen[1].mais)}</b> lá na frente. Não é a
+    quantia que faz isso: é o tempo que ela fica rendendo.</p>`;
+}
+
+/* O fecho: método e disciplina, e por que isso raramente se faz sozinho. */
+function blocoDisciplina(s, pico){
+  const anos = CONTA.contribuiAte - CONTA.idade;
+  return `
+  <h2>A conta é fácil. Cumprir é que é o problema</h2>
+  <p>Nada aqui é complicado: guardar todo mês, deixar o juro trabalhar por
+    ${anos} anos, e não deixar nenhum erro sozinho ser grande o bastante para
+    apagar o resto. <b>É simples de escrever e difícil de cumprir</b> — porque
+    exige fazer a mesma coisa por ${anos} anos e resistir a mexer justamente
+    quando o mercado assusta.</p>
+  <div class="trinca">
+    <div><span class="rot">Método</span>
+      <p>Uma política escrita: quanto entra, onde vai, quando rebalancear. Sem
+        isso, cada decisão vira uma discussão nova.</p></div>
+    <div><span class="rot">Disciplina</span>
+      <p>${anos} anos de aporte sem falhar. O valor importa menos que a
+        constância — parar dois anos custa mais que guardar 20% a menos.</p></div>
+    <div><span class="rot">Alguém junto</span>
+      <p>Quem faz isso todo dia segura a sua mão na queda, que é o único momento
+        em que o plano de verdade é testado.</p></div>
+  </div>
+  <p>É isso que um planejador, um consultor ou um assessor faz: <b>não é
+    adivinhar o mercado — é fazer você cumprir o que já está calculado aí em
+    cima.</b> A conta você acabou de ver. O difícil é chegar aos
+    ${CONTA.contribuiAte} anos com ela cumprida.</p>`;
+}
+
+function ligarSim(){
+  const liga = (id, aplica) => {
     const el = $("#"+id); if(!el) return;
     el.oninput = () => {
       let v = Number(String(el.value).replace(/[^\d.,-]/g,"").replace(",","."));
       if(!isFinite(v)) v = 0;
-      alvo[campo] = Math.min(max, Math.max(min, v));
+      aplica(v);
+      if(CONTA.contribuiAte <= CONTA.idade) CONTA.contribuiAte = CONTA.idade + 1;
+      if(CONTA.contaAte <= CONTA.contribuiAte) CONTA.contaAte = CONTA.contribuiAte + 20;
       const pos = el.selectionStart;
-      simRenda();
+      simTudo();
       const n = $("#"+id); if(n){ n.focus(); try{ n.setSelectionRange(pos,pos); }catch(e){} }
     };
   };
-  liga("r1","tenho",0,1e10,R); liga("r2","taxa",0,60,R);
-  liga("r3","idade",18,100,R); liga("r4","valor",0,1e10,R);
-  liga("q1","rendaQuero",0,1e7,S); liga("q2","rendaAos",18,100,S);
-  liga("q3","rendaDura",0,60,S);
-  document.querySelectorAll("[data-modo]").forEach(b =>
-    b.onclick = () => {
-      R.modo = b.dataset.modo;
-      if(R.modo === "ano" && R.valor < 50000) R.valor = 240000;
-      if(R.modo === "mes" && R.valor > 200000) R.valor = 20000;
-      if(R.modo === "unica" && R.valor < 50000) R.valor = 500000;
-      simRenda();
-    });
-}
+  const lim = (v,a,b) => Math.min(b, Math.max(a, v));
+  liga("cIdade", v => CONTA.idade        = lim(v,14,90));
+  liga("cAte",   v => CONTA.contribuiAte = lim(v,15,95));
+  liga("cFim",   v => CONTA.contaAte     = lim(v,16,120));
+  liga("cRenda", v => CONTA.renda        = lim(v,0,1e7));
+  liga("cGasto", v => CONTA.gasto        = lim(v,0,1e7));
+  liga("cPoupo", v => CONTA.poupo        = lim(v,0,1e7));
+  liga("cTem",   v => CONTA.tem          = lim(v,0,1e10));
+  liga("cTaxa",  v => CONTA.taxa         = lim(v,0,60));
+  liga("cInf",   v => CONTA.inflacao     = lim(v,0,40));
+  liga("cValor", v => CONTA.valor        = lim(v,0,1e10));
 
-/* ─── SIMULADOR: quanto custa o dinheiro ─── */
+  const vl = $("#voltarLim");
+  if(vl) vl.onclick = () => { CONTA.valor = null; simTudo(); };
+
+  document.querySelectorAll("[data-modo]").forEach(b =>
+    b.onclick = () => { CONTA.modo = b.dataset.modo; CONTA.valor = null; simTudo(); });
+}
 
 
 function simCredito(){
@@ -9416,20 +9588,21 @@ function servAlternativos(){
 /* ══ EDUCACIONAL: índice e tópicos ══ */
 const TOPICOS_AP = [
   ["Comece por aqui", [
-    ["#/crescer","Como o dinheiro cresce","Juro composto, e o mês em que o seu dinheiro passa a render mais do que você deposita."],
+    ["#/porque","Por que investir é difícil","A lógica que a vida inteira nos ensinou a ignorar."],
     ["#/dividas","Antes de poupar, saia das dívidas","Nenhuma aplicação paga o que o cartão cobra. A ordem importa."],
+    ["#/crescer","Como o dinheiro cresce","Juro composto, e o mês em que o seu dinheiro passa a render mais do que você deposita."],
     ["#/corrigir","Corrigir não é crescer","A diferença entre acompanhar a inflação e ficar de fato mais rico."]
   ]],
   ["O que é cada coisa", [
     ["#/renda-fixa","O que é renda fixa","Você empresta e sabe a regra do retorno desde o começo."],
     ["#/renda-variavel","O que é renda variável","Você vira sócio. O retorno não é combinado."],
-    ["#/previdencia","O que é previdência","Para que serve, quando vale e quando é caro demais."],
     ["#/fundos","O que é fundo de investimento","Você compra uma cota e o trabalho de escolher passa a ser de um gestor."],
+    ["#/previdencia","O que é previdência","Para que serve, quando vale e quando é caro demais."],
     ["#/clubes","O que é clube de investimento","Um grupo investindo junto, com regras próprias e carteira só."],
-    ["#/alternativos","Ouro, dólar e bitcoin","Nenhum paga renda. Servem para proteger, não para crescer."],
-    ["#/internacional","O que é investir no exterior","Não depender de um país só, nem de uma moeda só."],
     ["#/consorcio","O que é consórcio","Um grupo de pessoas poupando junto, e um por mês leva o valor."],
-    ["#/seguro-vida","O que é seguro de vida","Não é investimento. É o capital que você não vai ter tempo de acumular."]
+    ["#/seguro-vida","O que é seguro de vida","Não é investimento. É o capital que você não vai ter tempo de acumular."],
+    ["#/alternativos","Ouro, dólar e bitcoin","Nenhum paga renda. Servem para proteger, não para crescer."],
+    ["#/internacional","O que é investir no exterior","Não depender de um país só, nem de uma moeda só."]
   ]],
   ["Montar a sua carteira", [
     ["#/risco","O risco de verdade","Cair 50% exige subir 100% para voltar. A assimetria que decide tudo."],
@@ -9438,15 +9611,15 @@ const TOPICOS_AP = [
     ["#/grandes","Os grandes acumuladores","O que Buffett e outros gestores têm em comum — e não é palpite."]
   ]],
   ["Quando já há patrimônio", [
+    ["#/credito","Quanto custa o dinheiro","A mesma dívida custa de 0,6% a 12,7% ao mês."],
     ["#/casa","Sair do aluguel e ter a casa própria","Consórcio, financiamento ou juntar. A diferença passa de um milhão."],
     ["#/comprar","Comprar um bem","Os três caminhos lado a lado, com os números."],
     ["#/escada","A escada do consórcio","Lance embutido, aluguel pagando parcela, degraus."],
     ["#/aplicado","Pôr o patrimônio para trabalhar","Comprar à vista ou deixar rendendo e pagar de outro jeito."],
-    ["#/credito","Quanto custa o dinheiro","A mesma dívida custa de 0,6% a 12,7% ao mês."],
-    ["#/nao-perder","Não perder na saída","Inventário, holding e liquidez — o último degrau da mesma escada."],
-    ["#/porque","Por que investir é difícil","A lógica que a vida inteira nos ensinou a ignorar."]
+    ["#/nao-perder","Não perder na saída","Inventário, holding e liquidez — o último degrau da mesma escada."]
   ]]
 ];
+
 
 function telaIndiceAprender(){
   app().innerHTML = `
@@ -10435,6 +10608,16 @@ function rotear(){
   sincronizarMenus();
   const h = (location.hash||"#/").split("?")[0];
 
+  // Trocar de página tem que levar ao topo. Sem isto o navegador guarda a
+  // rolagem e a pessoa cai no meio do texto seguinte.
+  // Compara só a rota, ignorando o que vem depois do "?": as abas do
+  // screening, a ordenação do ranking e o ?s= dos serviços mexem na query
+  // sem mudar de página — nesses, tirar a pessoa do lugar seria pior.
+  if(window.__rotaAnterior !== h){
+    window.__rotaAnterior = h;
+    window.scrollTo(0, 0);
+  }
+
   // sem conta, o site inteiro é uma tela só: a abertura.
   // Quem CHEGA vê a mensagem — inclusive se a aba tinha outra rota guardada.
   // O login só aparece depois de um clique, e guarda o destino.
@@ -10488,8 +10671,8 @@ function rotear(){
   if(h==="#/p-internacional") return servInternacional();
   if(h==="#/p-alternativos")  return servAlternativos();
   if(h==="#/crescer")         return telaCrescerNova();
-  if(h==="#/sim-crescer")     return simulador();
-  if(h==="#/sim-renda")       return simRenda();
+  if(h==="#/sim-crescer" || h==="#/sim-renda" || h==="#/simulador")
+                              return simTudo();
   if(h==="#/sim-credito")     return simCredito();
   if(h==="#/sim-comprar")     return simComprar();
   if(h==="#/comprar")         return telaComprar();
@@ -10531,6 +10714,9 @@ addEventListener("hashchange", rotear);
       <b>publishable</b> do Supabase (a que começa com <b class="mono">sb_publishable_</b>).</p></div>`;
     return;
   }
+  // o navegador guarda a rolagem e a devolve depois que já pintamos a tela,
+  // desfazendo o scrollTo do rotear. Quem manda na rolagem aqui é o rotear.
+  if("scrollRestoration" in history) history.scrollRestoration = "manual";
   if(location.hash.includes("type=recovery")) location.hash = "#/nova-senha";
   await carregarEu(); pintarNav(); rotear();
   sb.auth.onAuthStateChange(async()=>{
