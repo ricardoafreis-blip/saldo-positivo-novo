@@ -5691,23 +5691,35 @@ function lerPL(){
    Sentido plano → simulador: */
 function sincronizarConta(){
   if(typeof CONTA === "undefined") return;
-  CONTA.idade = PL.idade;
-  CONTA.para  = Math.max(PL.idade + 1, PL.apos);
-  CONTA.aos   = Math.max(PL.idade + 1, PL.apos);
-  if(PL.tem !== "" && PL.tem != null) CONTA.tem = PL.tem;
-  if(PL.quer !== "" && PL.quer != null && PL.quer > 0) CONTA.quero = PL.quer;
+  CONTA.idade        = PL.idade;
+  CONTA.contribuiAte = Math.max(PL.idade + 1, PL.apos);
+  CONTA.contaAte     = Math.max(CONTA.contribuiAte + 1, PL.ate);
+  if(PL.tem   !== "" && PL.tem   != null) CONTA.tem   = PL.tem;
+  if(PL.renda !== "" && PL.renda != null && PL.renda > 0) CONTA.renda = PL.renda;
+  if(PL.gasto !== "" && PL.gasto != null && PL.gasto > 0) CONTA.gasto = PL.gasto;
   // o plano trabalha em ganho REAL; o simulador, em taxa nominal. Sem recompor
   // a inflação, o simulador passaria a mentir para baixo.
   CONTA.taxa = Number(((1 + PL.real/100) * (1 + CONTA.inflacao/100) - 1) * 100).toFixed(2) * 1;
-  CONTA.tenho = null;   // volta a herdar o patrimônio projetado
+  // a renda desejada do plano vira o quanto tirar no simulador
+  if(PL.quer !== "" && PL.quer != null && PL.quer > 0){
+    CONTA.modo = "mes";
+    CONTA.valor = Math.max(0, PL.quer - (PL.jaTem || 0));
+  }
+  CONTA.poupo = null;   // volta a derivar da sobra entre renda e gasto
 }
 
 /* Sentido simulador → plano, aplicado quando o plano abre em branco. */
 function semearPL(){
   if(typeof CONTA === "undefined" || PL.feito) return;
-  if(PL.tem === ""  && CONTA.tem   > 0) PL.tem  = CONTA.tem;
-  if(PL.quer === "" && CONTA.quero > 0) PL.quer = CONTA.quero;
-  if(!PL.tocado){ PL.idade = CONTA.idade; PL.apos = Math.max(CONTA.idade+1, CONTA.para); }
+  if(PL.tem   === "" && CONTA.tem   > 0) PL.tem   = CONTA.tem;
+  if(PL.renda === "" && CONTA.renda > 0) PL.renda = CONTA.renda;
+  if(PL.gasto === "" && CONTA.gasto > 0) PL.gasto = CONTA.gasto;
+  if(PL.quer  === "" && CONTA.valor > 0) PL.quer  = CONTA.valor;
+  if(!PL.tocado){
+    PL.idade = CONTA.idade;
+    PL.apos  = Math.max(CONTA.idade + 1, CONTA.contribuiAte);
+    PL.ate   = Math.max(PL.apos + 1, CONTA.contaAte);
+  }
 }
 
 function graficoPL(c){
@@ -8826,18 +8838,11 @@ function telaCrescerNova(){
         quitar vem primeiro.</p></div>
   </div>
 
-  <a class="simule" href="#/sim-crescer">
-    <span class="k">Simule aqui · acumulação</span>
-    <span class="t">Quanto o meu dinheiro rende &rarr;</span>
-    <span class="d">Sua idade, quanto você guarda por mês e por quantos anos.
-      Leva dez segundos.</span>
-  </a>
-
-  <a class="simule" href="#/sim-renda" style="margin-top:12px">
-    <span class="k">Simule aqui · renda</span>
-    <span class="t">Quanto posso usar depois &rarr;</span>
-    <span class="d">Renda todo mês, retirada uma vez por ano ou saque único —
-      e por quanto tempo o dinheiro dura.</span>
+  <a class="simule" href="#/simulador">
+    <span class="k">Simule aqui · com os seus números</span>
+    <span class="t">Quanto dá para juntar, e quanto dá para tirar depois &rarr;</span>
+    <span class="d">Não precisa saber de investimento: diga quanto entra e quanto
+      sai por mês, e as duas contas aparecem. Leva um minuto.</span>
   </a>
 
   <h2>E se eu não souber por onde começar?</h2>
