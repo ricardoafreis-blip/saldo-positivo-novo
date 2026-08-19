@@ -706,6 +706,53 @@ button.lig:hover{color:var(--tinta);border-bottom-color:var(--tinta)}
   .q input{font-size:16px;padding:10px 11px}
 }
 
+/* a conta do três para um, e a escada do grande investidor */
+.conta3,.escadaP{margin:20px 0;border:1px solid var(--linha2);border-radius:8px;
+  background:var(--p2);overflow:hidden}
+.conta3 .l,.escadaP .l{display:grid;align-items:center;gap:12px;
+  padding:12px 18px;border-bottom:1px solid var(--linha)}
+.conta3 .l{grid-template-columns:1fr 1.5fr auto}
+.escadaP .l{grid-template-columns:1.2fr 1fr auto}
+.conta3 .l:last-child,.escadaP .l:last-child{border-bottom:none}
+.conta3 .q,.escadaP .p{font-size:14px;color:var(--tinta)}
+.conta3 .c,.escadaP .q{font-size:12.5px;color:var(--graf);
+  font-family:'IBM Plex Mono',monospace}
+.conta3 .v,.escadaP .m{font-family:'IBM Plex Mono',monospace;font-size:19px;
+  text-align:right;white-space:nowrap}
+.conta3 .v.ok{color:var(--alta)}
+.conta3 .v.ruim{color:var(--baixa)}
+.conta3 .tot{background:var(--p3)}
+.conta3 .tot .q{font-weight:500}
+.escadaP .m{color:var(--t2)}
+.escadaP .volta{background:var(--p3)}
+.escadaP .volta .p{color:var(--ouro2)}
+.escadaP .m.forte{color:var(--ouro2);font-size:22px}
+
+/* o bloco que interrompe para dizer o que a conta não resolve */
+.destaqueP{margin:24px 0;padding:18px 22px;background:var(--p2);
+  border:1px solid var(--linha2);border-left:3px solid var(--lacre);
+  border-radius:6px}
+.destaqueP p{margin:0;font-family:Newsreader,serif;font-size:21px;
+  color:var(--tinta);line-height:1.35}
+.destaqueP .pe{font-family:inherit;font-size:14.5px;color:var(--t2);
+  margin-top:11px;line-height:1.6}
+
+/* os pares que reagem ao contrário um do outro */
+.pares{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0}
+.pares > div{background:var(--p2);border:1px solid var(--linha);
+  border-radius:7px;padding:15px 17px}
+.pares .rot{display:block;font-size:9.5px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ouro2);margin-bottom:9px}
+.pares p{margin:0;font-size:13.5px;color:var(--t2);line-height:1.55}
+
+@media(max-width:760px){
+  .pares{grid-template-columns:1fr}
+  .conta3 .l,.escadaP .l{grid-template-columns:1fr auto;gap:4px 10px;padding:11px 14px}
+  .conta3 .c,.escadaP .q{grid-column:1;font-size:11.5px}
+  .conta3 .v,.escadaP .m{grid-row:1 / span 2;font-size:17px}
+  .destaqueP p{font-size:18px}
+}
+
 .abas{display:flex;gap:2px;flex-wrap:wrap;margin:6px 0 0;
   justify-content:center;border-bottom:1px solid var(--linha)}
 @media(max-width:620px){.abas{justify-content:flex-start}}
@@ -1436,7 +1483,7 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
         <span class="def">o patrimônio fora da tela</span>
         <div class="painel">
           <a class="topo" href="#/servicos">Falar com um especialista</a>
-          <a href="#/planejar">Fazer o meu planejamento</a>
+          <a href="#/simulador">Fazer a minha conta</a>
           <span class="sub">Quem acompanha você</span>
           <a href="#/servicos?s=planejamento">Planejamento financeiro</a>
           <a href="#/servicos?s=assessoria">Assessoria de investimentos</a>
@@ -2463,7 +2510,7 @@ async function telaRanking(){
         <span class="r">Vamos competir.</span>
         <span class="vai">publicar carteira &rarr;</span>
       </a>
-      <a href="#/planejar" class="pt">
+      <a href="#/simulador" class="pt">
         <span class="q">“Quero me planejar.”</span>
         <span class="r">Vamos planejar.</span>
         <span class="vai">montar o meu plano &rarr;</span>
@@ -5444,348 +5491,6 @@ const rs = v => v==null||!isFinite(v) ? "—"
 const numPL = el => { const v = Number(String(el.value).replace(/[^\d,-]/g,"").replace(",","."));
   return isFinite(v) ? v : 0; };
 
-function contasPL(){
-  const r = PL.real/100;
-  const anos = Math.max(0, PL.apos - PL.idade);
-  const m = Math.max(1, PL.ate - PL.apos);
-  const sobra = Math.max(0, PL.renda - PL.gasto);
-  // o que a pessoa ja vai receber (INSS, aluguel) nao precisa sair do bolo
-  const precisaTirar = Math.max(0, PL.quer - PL.jaTem);
-  const quer12 = precisaTirar * 12;
-
-  // acumulação em termos reais: patrimônio de hoje + aportes anuais
-  const cresce = Math.pow(1 + r, anos);
-  const fator = r === 0 ? anos : (cresce - 1) / r;
-
-  // cada objetivo do caminho é um saque: sai na idade dele e deixa de render
-  let saques = 0;
-  (PL.metas||[]).forEach(mt => {
-    const q = Number(mt.valor)||0, quando = Number(mt.idade)||0;
-    if(q <= 0) return;
-    const faltam = quando - PL.idade;
-    if(faltam < 0 || faltam > anos) return;
-    saques += q * Math.pow(1 + r, anos - faltam);
-  });
-
-  const projetado = PL.tem * cresce + sobra * 12 * fator - saques;
-
-  // quanto precisa aos {apos}: viver só de juros, ou consumir o principal
-  const preservar = quer12 / r;
-  const consumir  = quer12 * (1 - Math.pow(1 + r, -m)) / r;
-
-  // aporte mensal necessário para cada um
-  const precisa = alvo => {
-    if(anos <= 0) return null;
-    const falta = alvo - PL.tem * cresce;
-    if(falta <= 0) return 0;
-    return falta / (fator * 12);
-  };
-
-  // quanto duraria o que ele vai ter, tirando o que quer tirar
-  let dura = null;
-  if(projetado > 0 && quer12 > 0){
-    const juros = projetado * r;
-    if(juros >= quer12) dura = Infinity;
-    else {
-      const x = 1 - (projetado * r) / quer12;
-      dura = x <= 0 ? Infinity : -Math.log(x) / Math.log(1 + r);
-    }
-  }
-
-  let veredito = "sem_meta";
-  if(quer12 > 0){
-    if(projetado >= preservar)      veredito = "preserva";
-    else if(projetado >= consumir)  veredito = "consome";
-    else                            veredito = "falta";
-  }
-
-  // curva ano a ano: acumula até parar, depois saca o que falta
-  const curva = [];
-  let saldo = PL.tem;
-  for(let k = 0; k <= (PL.ate - PL.idade); k++){
-    const idadeK = PL.idade + k;
-    if(k > 0){
-      if(idadeK <= PL.apos) saldo = saldo * (1 + r) + sobra * 12;
-      else                  saldo = saldo * (1 + r) - quer12;
-      (PL.metas||[]).forEach(mt => {
-        if(Number(mt.idade) === idadeK) saldo -= Number(mt.valor)||0; });
-    }
-    curva.push({ idade: idadeK, v: Math.max(0, saldo) });
-  }
-  const acabaEm = curva.find(x => x.idade > PL.apos && x.v <= 0);
-
-  return { anos, m, sobra, projetado, preservar, consumir, dura, veredito, saques,
-           precisaTirar, curva, acabaEm,
-           taxaPoupanca: PL.renda > 0 ? sobra / PL.renda : 0,
-           aportePreservar: precisa(preservar), aporteConsumir: precisa(consumir),
-           rendaPossivel: projetado * r / 12 };
-}
-
-function telaPlanejar(){
-  semearPL();
-  const c = contasPL();
-  const campo = (id,rot,val,dica="") => `
-    <label>${rot}</label>
-    <input id="${id}" inputmode="decimal" value="${val===""?"":val}"
-      ${dica?`placeholder="${dica}"`:""}>`;
-
-  const passo = (n,tit,dentro) => `
-    <div class="ab${PL.passo===n?" aberta":""}${PL.passo>n?" feita":""}" id="abP${n}">
-      <div class="cabAb" data-passo="${n}"><i class="n">${n}</i>
-        <span class="tt">${tit}</span></div>
-      <div class="corpo">${dentro}</div>
-    </div>`;
-
-  app().innerHTML = `
-  <div class="cabeca" style="text-align:left;max-width:66ch">
-    <h1>Monte o seu plano</h1>
-    <p>Seis perguntas e a conta que quase ninguém fez: <b>com o que você tem
-      hoje e o que consegue guardar, dá para parar de trabalhar quando você
-      quer?</b> Depois, a segunda conta que ninguém faz — a de quando você não
-      estiver mais aqui. Nada fica salvo: some quando você fechar a página.</p>
-  </div>
-
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:22px"
-       class="planoG">
-    <div>
-      ${passo(1,"Você", `
-        ${campo("pIdade","Sua idade hoje",PL.idade)}
-        ${campo("pApos","Com que idade quer poder parar",PL.apos)}
-        ${campo("pAte","A conta vai até que idade",PL.ate)}
-        <p style="font-size:11.5px;color:var(--graf);margin:9px 0 0">
-          Quem tem 35 hoje tem chance real de passar dos 90 — por isso o padrão
-          é 100. Botar 80 para o número ficar bonito é enganar a si mesmo:
-          viver mais que o dinheiro é o risco que ninguém calcula.</p>`)}
-
-      ${passo(2,"Quanto entra e quanto sai", `
-        ${campo("pRenda","Renda líquida por mês",PL.renda,"8.000")}
-        ${campo("pGasto","Gasto por mês, tudo somado",PL.gasto,"6.000")}
-        <p style="font-size:11.5px;color:var(--graf);margin:9px 0 0">
-          Sem chutar para baixo. O gasto que você esquece é justamente o que
-          derruba a projeção.</p>`)}
-
-      ${passo(3,"O que você já tem", `
-        ${campo("pTem","Investimentos e reserva, hoje",PL.tem,"50.000")}
-        <p style="font-size:11.5px;color:var(--graf);margin:9px 0 0">
-          Só o que está investido ou guardado. Imóvel onde você mora não
-          entra: ele não paga sua conta de luz.</p>`)}
-
-      ${passo(4,"Quanto quer receber por mês", `
-        ${campo("pQuer","Renda mensal quando parar",PL.quer,"10.000")}
-        ${campo("pJa","Do que já vai receber: INSS, aluguel, pensão",PL.jaTem,"2.500")}
-        <p style="font-size:11.5px;color:var(--graf);margin:9px 0 0">
-          Em dinheiro de hoje — a conta corrige a inflação por dentro. A segunda
-          linha é o que entra sem você tirar do investimento; só a diferença
-          precisa vir do patrimônio.</p>`)}
-
-      ${passo(5,"Outros planos pelo caminho", `
-        <p style="font-size:12.5px;color:var(--t2);margin:0 0 11px;line-height:1.55">
-          Casa, faculdade de filho, viagem grande. Cada um é uma retirada na
-          idade que você marcar — e deixa de render daí em diante.</p>
-        <div id="pMetas">${(PL.metas||[]).map((mt,i)=>`
-          <div style="display:grid;grid-template-columns:1fr 66px 1fr 30px;gap:7px;
-            align-items:center;margin-bottom:7px">
-            <input class="mNome" data-i="${i}" value="${esc(mt.nome||"")}" placeholder="o quê">
-            <input class="mIdade" data-i="${i}" inputmode="numeric"
-              value="${mt.idade||""}" placeholder="idade">
-            <input class="mValor" data-i="${i}" inputmode="decimal"
-              value="${mt.valor||""}" placeholder="quanto">
-            <button type="button" class="bt mX" data-i="${i}"
-              style="padding:6px 9px;margin:0">&times;</button>
-          </div>`).join("")}</div>
-        <button type="button" class="bt" id="pAddMeta" style="margin-top:4px">
-          Adicionar plano</button>`)}
-
-      ${passo(6,"Quanto render por ano, acima da inflação", `
-        <label>Retorno real ao ano</label>
-        <select id="pReal">
-          ${[["3","3% — conservador, quase tudo em renda fixa"],
-             ["4","4% — mistura, com pouca bolsa"],
-             ["5","5% — equilibrado"],
-             ["6","6% — bolsa relevante, oscila mais"],
-             ["7","7% — arrojado, aguenta anos ruins"]]
-            .map(([v,r])=>`<option value="${v}"${+v===PL.real?" selected":""}>${r}</option>`).join("")}
-        </select>
-        <p style="font-size:11.5px;color:var(--graf);margin:9px 0 0">
-          É o ganho <b>acima</b> da inflação. Ninguém entrega isso todo ano —
-          é média longa, e ela varia.</p>`)}
-
-      <button class="bt cheio lacre" id="pCalc" style="margin-top:14px;width:100%">
-        ${PL.feito?"Refazer a conta":"Ver o resultado"}</button>
-    </div>
-
-    <div id="pRes">${PL.feito ? (faltaPL().length ? pedirPL(faltaPL()) : resultadoPL(c)) : `
-      <div class="card" style="color:var(--graf);font-size:13px">
-        Preencha ao lado e o resultado aparece aqui.</div>`}</div>
-  </div>
-
-  `;
-
-  document.querySelectorAll("[data-passo]").forEach(el =>
-    el.onclick = () => { PL.passo = PL.passo === +el.dataset.passo ? 0 : +el.dataset.passo;
-      lerPL(); telaPlanejar(); });
-
-  const bm = $("#pAddMeta");
-  if(bm) bm.onclick = () => { lerPL(); PL.metas.push({nome:"",idade:PL.idade+5,valor:""});
-    telaPlanejar(); };
-  document.querySelectorAll(".mX").forEach(el =>
-    el.onclick = () => { lerPL(); PL.metas.splice(+el.dataset.i,1); telaPlanejar(); });
-
-  document.querySelectorAll(".cSuc").forEach(el =>
-    el.onchange = () => { const id = el.dataset.c;
-      PL.casos = el.checked ? [...new Set([...PL.casos, id])]
-                            : PL.casos.filter(x => x !== id);
-      el.closest(".caso").classList.toggle("on", el.checked);
-      const r = $("#sucRes"); if(r) r.innerHTML = sucessaoHTML(); });
-
-  const bs = $("#irSuc");
-  if(bs) bs.onclick = () => {
-    // a parte sucessória não usa esses números; preencho o mínimo para
-    // liberar a tela e o Ricardo cai direto onde ele quer
-    if(!(PL.renda>0)) PL.renda = 1;
-    if(!(PL.gasto>0)) PL.gasto = 1;
-    if(!(PL.quer >0)) PL.quer  = 1;
-    PL.soSuc = true; telaPlanejar();
-    const a = $("#sucAncora"); if(a) a.scrollIntoView({behavior:"smooth"});
-  };
-
-  const es = $("#pSuc");
-  if(es) es.oninput = () => { PL.suc = numPL(es);
-    const r = $("#sucRes"); if(r) r.innerHTML = sucessaoHTML(); };
-
-  document.querySelectorAll(".irPasso").forEach(el =>
-    el.onclick = () => { lerPL(); PL.passo = +el.dataset.ir; telaPlanejar();
-      const a = $("#abP"+PL.passo); if(a) a.scrollIntoView({behavior:"smooth",block:"center"}); });
-
-  $("#pCalc").onclick = () => { lerPL(); PL.feito = true; PL.passo = 0; telaPlanejar();
-    const r = $("#pRes"); if(r && innerWidth < 900) r.scrollIntoView({behavior:"smooth"}); };
-}
-
-function lerPL(){
-  const p = id => { const el = $("#"+id); return el ? numPL(el) : null; };
-  const v = {};
-  ["pIdade","pApos","pAte","pRenda","pGasto","pTem","pQuer","pJa"].forEach(id => v[id] = p(id));
-  if(v.pIdade || v.pApos) PL.tocado = true;
-  if(v.pIdade)  PL.idade = Math.min(90, Math.max(14, v.pIdade));
-  if(v.pApos)   PL.apos  = Math.min(95, Math.max(PL.idade, v.pApos));
-  if(v.pAte)    PL.ate   = Math.min(120, Math.max(PL.apos + 1, v.pAte));
-  if(v.pRenda != null) PL.renda = v.pRenda;
-  if(v.pGasto != null) PL.gasto = v.pGasto;
-  if(v.pTem   != null) PL.tem   = v.pTem;
-  if(v.pQuer  != null) PL.quer  = v.pQuer;
-  if(v.pJa    != null) PL.jaTem = v.pJa;
-  document.querySelectorAll(".mNome").forEach(el => {
-    const i = +el.dataset.i; if(PL.metas[i]) PL.metas[i].nome = el.value; });
-  document.querySelectorAll(".mIdade").forEach(el => {
-    const i = +el.dataset.i; if(PL.metas[i]) PL.metas[i].idade = numPL(el); });
-  document.querySelectorAll(".mValor").forEach(el => {
-    const i = +el.dataset.i; if(PL.metas[i]) PL.metas[i].valor = numPL(el); });
-  const sc = $("#pSuc"); if(sc) PL.suc = numPL(sc);
-  const s = $("#pReal"); if(s) PL.real = +s.value;
-  sincronizarConta();
-}
-
-/* O plano e o simulador perguntam as mesmas quatro coisas: idade, quando parar,
-   quanto já tenho e quanto rende. Antes eram dois estados separados e a pessoa
-   digitava tudo de novo ao trocar de tela. Agora um alimenta o outro.
-   Sentido plano → simulador: */
-function sincronizarConta(){
-  if(typeof CONTA === "undefined") return;
-  CONTA.idade        = PL.idade;
-  CONTA.contribuiAte = Math.max(PL.idade + 1, PL.apos);
-  CONTA.contaAte     = Math.max(CONTA.contribuiAte + 1, PL.ate);
-  if(PL.tem   !== "" && PL.tem   != null) CONTA.tem   = PL.tem;
-  if(PL.renda !== "" && PL.renda != null && PL.renda > 0) CONTA.renda = PL.renda;
-  if(PL.gasto !== "" && PL.gasto != null && PL.gasto > 0) CONTA.gasto = PL.gasto;
-  // o plano trabalha em ganho REAL; o simulador, em taxa nominal. Sem recompor
-  // a inflação, o simulador passaria a mentir para baixo.
-  CONTA.taxa = Number(((1 + PL.real/100) * (1 + CONTA.inflacao/100) - 1) * 100).toFixed(2) * 1;
-  // a renda desejada do plano vira o quanto tirar no simulador
-  if(PL.quer !== "" && PL.quer != null && PL.quer > 0){
-    CONTA.modo = "mes";
-    CONTA.valor = Math.max(0, PL.quer - (PL.jaTem || 0));
-  }
-  CONTA.poupo = null;   // volta a derivar da sobra entre renda e gasto
-}
-
-/* Sentido simulador → plano, aplicado quando o plano abre em branco. */
-function semearPL(){
-  if(typeof CONTA === "undefined" || PL.feito) return;
-  if(PL.tem   === "" && CONTA.tem   > 0) PL.tem   = CONTA.tem;
-  if(PL.renda === "" && CONTA.renda > 0) PL.renda = CONTA.renda;
-  if(PL.gasto === "" && CONTA.gasto > 0) PL.gasto = CONTA.gasto;
-  if(PL.quer  === "" && CONTA.valor > 0) PL.quer  = CONTA.valor;
-  if(!PL.tocado){
-    PL.idade = CONTA.idade;
-    PL.apos  = Math.max(CONTA.idade + 1, CONTA.contribuiAte);
-    PL.ate   = Math.max(PL.apos + 1, CONTA.contaAte);
-  }
-}
-
-function graficoPL(c){
-  const d = c.curva || [];
-  if(d.length < 2) return "";
-  const L = 700, A = 230;
-  const G = { l:56, r:L-10, t:12, b:A-26 };
-  const mx = escalaBoa(Math.max(...d.map(x => x.v), 1));
-  const px = i => G.l + (i / (d.length - 1)) * (G.r - G.l);
-  const py = v => G.b - (v / mx) * (G.b - G.t);
-
-  const linha = d.map((x,i) => `${i?"L":"M"}${px(i).toFixed(1)},${py(x.v).toFixed(1)}`).join(" ");
-  const area  = linha + ` L${G.r},${G.b} L${G.l},${G.b} Z`;
-
-  // marcas de idade no eixo do tempo
-  const nA = d.length - 1;
-  const pIdade = Math.max(1, Math.ceil(nA/6));
-  const marcasX = [];
-  for(let i = 0; i <= nA; i += pIdade) marcasX.push([i/nA, d[i].idade]);
-  if(marcasX[marcasX.length-1][0] < 0.97) marcasX.push([1, d[nA].idade]);
-  const iPara = d.findIndex(x => x.idade === PL.apos);
-  const xPara = iPara >= 0 ? px(iPara) : null;
-  const cor = c.veredito === "falta" ? "var(--baixa)"
-            : c.veredito === "consome" ? "var(--ouro2)" : "var(--alta)";
-
-  const marcas = (PL.metas||[]).map(mt => {
-    const i = d.findIndex(x => x.idade === Number(mt.idade));
-    if(i < 0 || !(Number(mt.valor)>0)) return "";
-    return `<line x1="${px(i).toFixed(1)}" y1="${py(d[i].v).toFixed(1)}"
-      x2="${px(i).toFixed(1)}" y2="${G.b}" stroke="var(--linha2)" stroke-dasharray="2 3"/>
-      <circle cx="${px(i).toFixed(1)}" cy="${py(d[i].v).toFixed(1)}" r="3"
-        fill="var(--papel)" stroke="var(--ouro2)" stroke-width="1.4"/>`;
-  }).join("");
-
-  return `
-  <div class="card" style="margin-top:12px;padding-bottom:9px">
-    <div style="font-size:10px;letter-spacing:.16em;text-transform:uppercase;
-      color:var(--graf);margin-bottom:2px">Seu patrimônio, ano a ano</div>
-    <div style="font-size:11.5px;color:var(--graf);margin-bottom:8px">
-      em dinheiro de hoje · eixo de baixo em anos de idade</div>
-    <svg viewBox="0 0 ${L} ${A}" style="width:100%;height:auto;display:block">
-      <defs><linearGradient id="gPL" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="${cor}" stop-opacity=".26"/>
-        <stop offset="100%" stop-color="${cor}" stop-opacity="0"/>
-      </linearGradient></defs>
-      ${eixoY(mx, G)}
-      ${eixoX(marcasX, G)}
-      <path d="${area}" fill="url(#gPL)"/>
-      <path d="${linha}" fill="none" stroke="${cor}" stroke-width="1.9"
-        stroke-linejoin="round"/>
-      ${xPara==null?"":`<line x1="${xPara.toFixed(1)}" y1="${G.t}" x2="${xPara.toFixed(1)}"
-        y2="${G.b}" stroke="var(--lacre)" stroke-dasharray="3 3" stroke-width="1"/>
-        <text x="${xPara.toFixed(1)}" y="${G.t-2}" text-anchor="middle" class="eixo"
-          fill="var(--lacre)">para aos ${PL.apos}</text>`}
-      ${marcas}
-    </svg>
-    <p style="font-size:12px;color:var(--t2);line-height:1.55;margin:9px 0 0">
-      ${c.acabaEm
-        ? `A linha chega a zero aos <b style="color:var(--baixa)">${c.acabaEm.idade}</b>
-           anos. Daí em diante você dependeria só do que já recebe.`
-        : `A linha não chega a zero até os ${PL.ate}. O dinheiro dura o que
-           você precisa que ele dure.`}
-      ${(PL.metas||[]).length ? " Os pontos marcam os planos do caminho." : ""}</p>
-  </div>`;
-}
-
 const CASOS = [
   { id:"filhos", t:"Tenho filhos de mais de um casamento",
     p:"Herdeiro necessário de união diferente não abre mão do que é dele, e o cônjuge atual também tem direito. É a combinação que mais transforma inventário em processo de anos — e cada ano é mais custo e mais bem parado." },
@@ -5908,45 +5613,6 @@ function sucessaoHTML(){
     com o acordo entre herdeiros.</p>`;
 }
 
-function faltaPL(){
-  const f = [];
-  if(!(PL.renda > 0))                    f.push([2,"quanto entra por mês"]);
-  if(!(PL.gasto > 0))                    f.push([2,"quanto sai por mês"]);
-  if(!(PL.quer  > 0))                    f.push([4,"quanto quer receber quando parar"]);
-  return f;
-}
-
-function pedirPL(f){
-  return `
-  <div class="card" style="border-left:2px solid var(--ouro2)">
-    <div style="font-size:10px;letter-spacing:.16em;text-transform:uppercase;
-      color:var(--graf);margin-bottom:5px">Ainda não dá para fechar a conta</div>
-    <h3 style="font-family:Newsreader,serif;font-size:20px;margin:0 0 10px;
-      color:var(--ouro2)">Falta ${f.length===1?"um dado":"preencher "+f.length+" campos"}</h3>
-    <div>${f.map(([n,q])=>`
-      <button type="button" class="irPasso" data-ir="${n}"
-        style="display:flex;width:100%;align-items:center;gap:10px;text-align:left;
-        background:none;border:none;border-bottom:1px solid var(--linha);
-        padding:9px 0;cursor:pointer;color:inherit;font:inherit">
-        <i style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;
-          color:var(--lacre);font-style:normal">0${n}</i>
-        <span style="flex:1;font-size:13.5px;color:var(--t2)">${q}</span>
-        <span style="font-size:11px;color:var(--graf)">preencher &rarr;</span>
-      </button>`).join("")}</div>
-    <p style="font-size:12px;color:var(--graf);line-height:1.55;margin:11px 0 0">
-      Sem isso a conta sai errada e parece certa, que é pior do que não sair.</p>
-  </div>
-
-  <div class="card" style="margin-top:12px">
-    <b style="font-size:13.5px">Não quer preencher isso agora?</b>
-    <p style="font-size:12.5px;color:var(--t2);line-height:1.6;margin:5px 0 10px">
-      A segunda parte desta página não depende da conta de aposentadoria: é o
-      que acontece com o seu patrimônio quando você não estiver aqui. Costuma
-      ser mais urgente, e leva dois minutos.</p>
-    <button type="button" class="bt" id="irSuc">Ver a parte sucessória &rarr;</button>
-  </div>`;
-}
-
 function telaSucessao(){
   app().innerHTML = `
   <div class="cabeca" style="text-align:left;max-width:72ch">
@@ -5964,7 +5630,7 @@ function telaSucessao(){
   ${blocoSucessao()}
 
   <div class="pontes">
-    <a href="#/planejar" class="bt">Fazer o plano completo</a>
+    <a href="#/simulador" class="bt">Fazer a minha conta</a>
     <a href="#/servicos" class="bt cheio lacre">Falar com quem faz &rarr;</a>
   </div>`;
 
@@ -6040,201 +5706,6 @@ function blocoSucessao(){
     <div id="sucRes" style="margin-top:12px">${sucessaoHTML()}</div>
   </div>
 `;
-}
-
-function resultadoPL(c){
-  const V = {
-    preserva:["var(--alta)","Dá, e ainda sobra",
-      `Aos ${PL.apos} você teria <b>${rs(c.projetado)}</b>. Isso rende
-       ${rs(c.rendaPossivel)} por mês <b>sem encostar no principal</b> — você
-       tira o que quer, e o patrimônio continua de pé.`],
-    consome:["var(--ouro2)","Dá, gastando o que juntou",
-      `Aos ${PL.apos} você teria <b>${rs(c.projetado)}</b>. Dá para tirar
-       ${rs(c.precisaTirar)} por mês até os ${PL.ate}, mas consumindo o principal:
-       o dinheiro acaba junto com a conta. Para viver só de juros e não
-       encostar no principal, precisaria de ${rs(c.preservar)}.`],
-    falta:["var(--baixa)","Assim não fecha",
-      `Aos ${PL.apos} você teria <b>${rs(c.projetado)}</b>, e para tirar
-       ${rs(c.precisaTirar)} por mês até os ${PL.ate} precisaria de
-       <b>${rs(c.consumir)}</b>. Falta ${rs(c.consumir - c.projetado)}.`],
-    sem_meta:["var(--graf)","Falta dizer quanto você quer receber",
-      "Preencha o passo 4 para a conta fechar."]
-  }[c.veredito];
-
-  const linha = (r,v,cor="") => `<div style="display:flex;justify-content:space-between;
-    gap:12px;padding:7px 0;border-bottom:1px solid var(--linha);font-size:13px">
-    <span style="color:var(--t2)">${r}</span>
-    <b class="mono" style="${cor?`color:${cor}`:""}">${v}</b></div>`;
-
-  const falta = c.veredito === "falta" || c.veredito === "consome";
-
-  return `
-  <div class="card" style="border-left:2px solid ${V[0]}">
-    <div style="font-size:10px;letter-spacing:.16em;text-transform:uppercase;
-      color:var(--graf);margin-bottom:5px">Diagnóstico</div>
-    <h3 style="font-family:Newsreader,serif;font-size:22px;margin:0 0 9px;color:${V[0]}">
-      ${V[1]}</h3>
-    <p style="color:var(--t2);font-size:13.5px;line-height:1.6;margin:0">${V[2]}</p>
-  </div>
-
-  ${graficoPL(c)}
-
-  <div class="card" style="margin-top:12px">
-    <div style="font-size:10px;letter-spacing:.16em;text-transform:uppercase;
-      color:var(--graf);margin-bottom:8px">Onde você está hoje</div>
-    ${linha("Sobra por mês", rs(c.sobra), c.sobra<=0?"var(--baixa)":"")}
-    ${linha("Da sua renda, você guarda", (c.taxaPoupanca*100).toFixed(0)+"%",
-      c.taxaPoupanca<0.1?"var(--baixa)":c.taxaPoupanca>=0.2?"var(--alta)":"")}
-    ${linha("Anos até os "+PL.apos, c.anos)}
-    ${PL.jaTem>0 ? linha("Do que você quer, já está garantido",
-      rs(PL.jaTem)+"/mês","var(--alta)") : ""}
-    ${PL.jaTem>0 ? linha("Precisa vir do investimento", rs(c.precisaTirar)+"/mês") : ""}
-    ${c.saques>0 ? linha("Custo dos outros planos, aos "+PL.apos,
-      "− "+rs(c.saques),"var(--ouro2)") : ""}
-    ${linha("Patrimônio projetado", rs(c.projetado))}
-    ${c.dura===Infinity
-      ? linha("Quanto o dinheiro dura","não acaba","var(--alta)")
-      : c.dura!=null ? linha("Quanto o dinheiro dura",
-          Math.round(c.dura)+" anos — até os "+Math.round(PL.apos+c.dura),
-          PL.apos+c.dura < PL.ate ? "var(--baixa)":"var(--alta)") : ""}
-  </div>
-
-  ${!falta ? "" : `
-  <div class="card" style="margin-top:12px">
-    <div style="font-size:10px;letter-spacing:.16em;text-transform:uppercase;
-      color:var(--graf);margin-bottom:8px">O que muda o resultado</div>
-    <p style="color:var(--t2);font-size:13px;line-height:1.55;margin:0 0 10px">
-      Três alavancas, e você escolhe qual dá para puxar:</p>
-    ${linha("Guardar por mês, para o dinheiro durar até os "+PL.ate,
-      c.aporteConsumir==null?"—":rs(c.aporteConsumir),
-      c.aporteConsumir>c.sobra?"var(--ouro2)":"var(--alta)")}
-    ${linha("Guardar por mês, para viver só de juros",
-      c.aportePreservar==null?"—":rs(c.aportePreservar),
-      c.aportePreservar>c.sobra?"var(--ouro2)":"var(--alta)")}
-    ${linha("Hoje você guarda", rs(c.sobra))}
-    <p style="color:var(--graf);font-size:12px;line-height:1.55;margin:11px 0 0">
-      Se o número acima é maior do que você consegue guardar, as outras duas
-      alavancas são <b>trabalhar alguns anos a mais</b> ou <b>aceitar uma renda
-      menor</b>. Mude os campos ao lado e veja o efeito de cada uma.</p>
-  </div>`}
-
-  <div class="card" style="margin-top:12px;border-color:var(--linha2)">
-    <p style="color:var(--graf);font-size:12px;line-height:1.6;margin:0">
-      <b style="color:var(--t2)">Como a conta é feita.</b> Tudo em dinheiro de
-      hoje: o retorno que você escolheu já é o que sobra acima da inflação, então
-      os valores mantêm o poder de compra. O patrimônio cresce pelo que você tem
-      mais o que guarda, e a renda na aposentadoria sai dos ${PL.real}% ao ano
-      sobre o que sobrou. Os planos do caminho saem na idade que você marcou e
-      deixam de render daí em diante — por isso R$ 100 mil gastos aos 50 custam
-      bem mais que R$ 100 mil aos 64. É aritmética, não previsão: não é
-      recomendação de investimento, e a realidade tem anos ruins que a conta
-      não tem.</p>
-  </div>
-
-  <div class="card" style="margin-top:12px">
-    <div style="font-size:10px;letter-spacing:.16em;text-transform:uppercase;
-      color:var(--graf);margin-bottom:6px">E depois de você</div>
-    <p style="color:var(--t2);font-size:13.5px;line-height:1.6;margin:0 0 10px">
-      ${c.acabaEm
-        ? `Do jeito que está, o patrimônio se esgota aos ${c.acabaEm.idade} —
-           não sobra nada para deixar, e o assunto vira outro: como não faltar
-           antes disso.`
-        : `Aos ${PL.ate} ainda sobrariam cerca de
-           <b>${rs((c.curva[c.curva.length-1]||{}).v)}</b>. Isso é herança, e
-           herança tem custo e tem fila.`}</p>
-    <p style="color:var(--t2);font-size:13px;line-height:1.6;margin:0 0 10px">
-      No Brasil o ITCMD varia por estado e há proposta de subir. Inventário
-      judicial costuma levar anos e consumir parte do que ficou; o extrajudicial
-      é mais rápido, mas exige herdeiros de acordo e nenhum menor envolvido.
-      Enquanto corre, os bens ficam travados — e é aí que a família vende mal,
-      com pressa.</p>
-    <p style="color:var(--t2);font-size:13px;line-height:1.6;margin:0 0 12px">
-      O caminho depende do <b>tipo de bem</b>, e é aqui que muita gente erra:</p>
-
-    <div style="border-top:1px solid var(--linha)">
-      <div style="padding:10px 0;border-bottom:1px solid var(--linha)">
-        <b style="font-size:13px">Imóveis e empresa</b>
-        <p style="font-size:12.5px;color:var(--t2);line-height:1.55;margin:3px 0 0">
-          Holding familiar. As cotas é que passam adiante, não a matrícula de
-          cada imóvel — o que evita inventário sobre cada bem, organiza a
-          gestão e costuma reduzir a conta tributária.</p>
-      </div>
-      <div style="padding:10px 0;border-bottom:1px solid var(--linha)">
-        <b style="font-size:13px">Dinheiro e investimentos</b>
-        <p style="font-size:12.5px;color:var(--t2);line-height:1.55;margin:3px 0 0">
-          Holding não serve bem aqui. Para patrimônio financeiro há o seguro
-          resgatável — com prazo costumeiro de dez anos —, que você pode
-          resgatar em vida e que, não sendo herança, vai direto ao beneficiário
-          sem entrar no inventário. É liquidez para a família justamente
-          enquanto o resto está travado.</p>
-      </div>
-      <div style="padding:10px 0">
-        <b style="font-size:13px">O que muda tudo</b>
-        <p style="font-size:12.5px;color:var(--t2);line-height:1.55;margin:3px 0 0">
-          Se há herdeiros necessários, se é primeiro ou segundo casamento, qual
-          o regime de bens, se existem filhos de uniões diferentes, se você tem
-          sócios e o que diz o contrato social. Segundo casamento com filhos do
-          primeiro é o caso clássico em que não planejar termina em briga.</p>
-      </div>
-    </div>
-
-    <p style="color:var(--graf);font-size:12.5px;line-height:1.6;margin:12px 0 0">
-      Nenhum desses caminhos serve a todos, e a escolha errada custa mais do
-      que não ter feito nada.</p>
-  </div>
-
-
-  ${blocoSucessao()}
-
-  <h3 style="font-family:Newsreader,serif;font-size:20px;margin:26px 0 4px">
-    Agora vem a parte que a conta não faz</h3>
-  <p style="color:var(--t2);font-size:13.5px;line-height:1.6;margin:0 0 14px">
-    ${c.veredito==="falta"
-      ? `Saber que falta é metade do caminho. A outra metade é fazer os
-         ${rs(c.aporteConsumir)} por mês virarem realidade — e é aí que
-         aparecem as perguntas de verdade:`
-      : `A conta diz que dá. Só que ela assume ${PL.real}% ao ano acima da
-         inflação todo santo ano, e isso não cai do céu — sai de onde o
-         dinheiro está aplicado. As perguntas que sobram:`}</p>
-
-  <div>
-    ${[["Em que aplicar para render isso?",
-        `${PL.real}% acima da inflação é a média longa de uma carteira montada
-         para o seu prazo — não é o rendimento da poupança nem o de um CDB
-         qualquer. Quanto maior o prazo, mais a bolsa costuma pesar. Você pode
-         estudar isso aqui mesmo: <a href="#/">publique uma carteira</a>,
-         veja como ela se comporta com cotação real, e compare com quem está
-         na frente.`],
-       ["Dá para pagar menos imposto no caminho?",
-        `Costuma dar, e em prazo longo o efeito é grande: PGBL abate da base do
-         IR de quem declara completa, previdência tem tabela que cai com o
-         tempo, e a ordem em que se vende posição muda o que fica com o Fisco.
-         O que serve para quem declara simplificado não serve para quem declara
-         completa.`],
-       ["Existe profissional que monta isso?",
-        `Existe, e são categorias diferentes com registros diferentes:
-         planejador financeiro para o plano, assessor para a carteira, gestor
-         para quem prefere dar mandato e não decidir. A página de
-         <a href="#/servicos">serviços</a> explica cada um e qual registro ele
-         precisa ter.`],
-       ["E se eu não quiser ninguém?",
-        `Perfeitamente possível, e muita gente faz. Este site continua aberto
-         publique carteiras, acompanhe as suas por meses, e descubra
-         se você é bom nisso antes de ter dinheiro de verdade em jogo. Se for,
-         não precisa de mais ninguém.`]]
-      .map(([q,r])=>`<details class="qa"><summary>${q}</summary><p>${r}</p></details>`).join("")}
-  </div>
-
-  <div class="chamada" style="margin-top:16px">
-    <div>
-      <h3 style="font-size:16px;margin-bottom:3px">Quer discutir esses números?</h3>
-      <p style="color:var(--t2);margin:0;font-size:12.5px;max-width:46ch">
-        Deixe o contato e um profissional registrado retorna. Ele olha o caso
-        inteiro — imposto, sucessão, e o que uma conta de cinco campos não
-        pega. Sem custo e sem compromisso.</p>
-    </div>
-    <a href="#/servicos" class="bt lacre">Falar com alguém</a>
-  </div>`;
 }
 
 async function telaServicos(){
@@ -6935,76 +6406,163 @@ function telaAprender(){
   </div>
 
   <div class="apr">
-    <h2>O que fazer com isso, na prática</h2>
+    <h2>O pequeno não controla o mercado. Controla a aposta.</h2>
+    <p class="apP">Você não domina o jogo, e o adversário do outro lado da tela
+      pode ser melhor do que você — mais informado, mais rápido, mais capital.
+      Nada disso está sob o seu controle. <b>O que está é quanto você arrisca
+      em cada tentativa e quanto você espera ganhar quando dá certo.</b></p>
+
+    <p class="apP">Suponha uma operação no índice futuro com alvo de
+      <b>200 pontos</b> e stop de <b>50</b>. Ou ganha 200, ou perde 50. Agora
+      suponha que você seja ruim de serviço e acerte apenas <b>3 em cada 10</b>:</p>
+
+    <div class="conta3">
+      <div class="l"><span class="q">3 acertos</span>
+        <span class="c">3 × 200 pontos</span><span class="v ok">+600</span></div>
+      <div class="l"><span class="q">7 erros</span>
+        <span class="c">7 × 50 pontos</span><span class="v ruim">−350</span></div>
+      <div class="l tot"><span class="q">no fim de dez</span>
+        <span class="c">errando sete vezes</span><span class="v ok">+250</span></div>
+    </div>
+
+    <p class="apP">Errou <b>setenta por cento</b> das vezes e terminou ganhando.
+      Fazendo a conta ao contrário: com essa relação, <b>bastam 2 acertos em 10
+      para não perder dinheiro</b>. É o poder do três para um — e ele vale mais
+      quanto pior você for.</p>
+
+    <div class="destaqueP">
+      <p>O problema não é a matemática. É que você vai se sentir um idiota.</p>
+      <p class="pe">Sete derrotas em dez, uma atrás da outra, com a conta
+        vermelha em quatro dias seguidos. A escola te ensinou que 30% é nota de
+        reprovação, e todo instinto vai mandar você aumentar o alvo, apertar o
+        stop ou abandonar o método justamente na sequência ruim — que é quando
+        ele está funcionando exatamente como previsto. <b>A conta é fácil. O
+        psicológico é o adversário de verdade.</b></p>
+    </div>
+
+    <h2>O grande não controla o preço. Controla o preço médio.</h2>
+    <p class="apP">Quem tem muito tem o problema oposto: <b>não consegue entrar
+      nem sair na hora que quer.</b> A posição é grande demais para o volume do
+      dia — se tentar comprar tudo de uma vez, ele mesmo empurra o preço contra
+      si. Então programa o dinheiro para comprar <b>em escada</b>, e cada degrau
+      abaixo é maior que o anterior.</p>
+
+    <div class="escadaP">
+      <div class="l"><span class="p">a R$ 10,00</span><span class="q">compra 1.000</span>
+        <span class="m">médio 10,00</span></div>
+      <div class="l"><span class="p">caiu para R$ 9,00</span><span class="q">compra 3.000</span>
+        <span class="m">médio 9,25</span></div>
+      <div class="l"><span class="p">caiu para R$ 8,00</span><span class="q">compra 9.000</span>
+        <span class="m">médio 8,38</span></div>
+      <div class="l"><span class="p">caiu para R$ 7,00</span><span class="q">compra 27.000</span>
+        <span class="m">médio 7,45</span></div>
+      <div class="l volta"><span class="p">voltou para R$ 8,00</span>
+        <span class="q">vende as 27.000</span><span class="m forte">médio 6,31</span></div>
+    </div>
+
+    <p class="apP">Repare no que aconteceu. Ele vendeu a R$ 8,00 o lote que
+      comprou a R$ 7,00 e realizou <b>R$ 27 mil</b>. Sobraram 13.000 ações que
+      custaram R$ 82 mil — <b class="destaque">R$ 6,31 cada</b>. Ele comprou a
+      dez, a nove e a oito, e o papel nem chegou perto de R$ 6,31 em momento
+      nenhum. <b>O papel só voltou de 7 para 8 e ele já está com metade do preço
+      de entrada.</b></p>
+
+    <p class="apP">O grande <b>só consegue comprar quando cai e vender quando
+      sobe</b> — é a condição dele, não uma escolha de estilo. Volume grande não
+      entra de uma vez sem empurrar o preço. Por isso o preço médio não é um
+      truque: <b>é a única saída que ele tem</b>, e é a arma que faz o método
+      funcionar.</p>
+
+    <div class="destaqueP">
+      <p>Essa arma é dele. Não é sua.</p>
+      <p class="pe">Ele tem dinheiro e tem tempo — <b>aguenta comprar de R$ 10,00
+        até R$ 0,01</b> e esperar o quanto for preciso. O pequeno não aguenta:
+        acaba o dinheiro no terceiro degrau, e ele <b>morre no meio do
+        caminho</b>, com a posição toda no prejuízo e sem bala para o degrau
+        seguinte — que era justamente o que faria o preço médio cair.
+        <b>Fazer preço médio sem os dois é só perder mais.</b></p>
+    </div>
+
+    <h2>Vinte papéis que discordam entre si</h2>
+    <p class="apP">A escada sozinha não basta, porque nenhuma carteira aguenta
+      cair de mãos dadas. O grande espalha em <b>vinte papéis antagônicos</b> —
+      escolhidos justamente porque reagem ao contrário um do outro:</p>
+
+    <div class="pares">
+      <div><span class="rot">minério sobe</span>
+        <p>Quem <b>vende</b> minério ganha. Quem <b>compra</b> minério como
+          insumo perde. Você vai vendendo pedaço de uma e comprando da outra.</p></div>
+      <div><span class="rot">dólar sobe</span>
+        <p>Quem <b>recebe</b> em dólar ganha. Quem <b>deve</b> em dólar perde.
+          O mesmo movimento paga os dois lados da carteira.</p></div>
+      <div><span class="rot">juro sobe</span>
+        <p>Quem tem <b>muita dívida</b> sofre. Quem tem <b>caixa líquido</b>
+          passa a render mais. De novo, um evento, duas direções.</p></div>
+    </div>
+
+    <p class="apP">E é por isso que ele precisa de <b>giro</b>. A carteira só
+      trabalha se houver o que vender quando alguma coisa sobe demais e o que
+      comprar quando alguma cai. Papel parado não gera degrau. O grande não
+      espera o papel voltar: <b>ele fabrica o retorno vendendo para quem está
+      com pressa e comprando de quem está com medo.</b></p>
+
+    <p class="apP">É isso que faz o rebalanceamento funcionar sem depender de
+      palpite: <b>a que subiu financia a compra da que caiu</b>, e você não
+      precisa saber qual das duas vai andar primeiro. Não é indecisão — é
+      construir uma carteira que não depende de você ter razão sobre o minério,
+      sobre o dólar ou sobre o juro.</p>
+
+    <div class="destaqueP">
+      <p>Só que nada disso salva empresa ruim.</p>
+      <p class="pe">Escada, rebalanceamento e diversificação pressupõem que o
+        papel <b>volta</b>. Empresa sem fundamento não volta: cai até zero e
+        fica lá. Aí a escada vira o pior instrumento possível, porque faz você
+        comprar cada vez mais do que está morrendo. <b>Separar o papel bom que
+        caiu do papel que caiu porque é ruim é o trabalho inteiro</b> — e é onde
+        entra estudar fundamento, não gráfico.</p>
+    </div>
+
+  <div class="apr">
+    <h2>São dois jogos diferentes</h2>
+    <p class="apP">Quem tem um bilhão <b>não entra na corrida</b>. Não pode:
+      comprar na alta, com todo mundo comprando, é pagar caro pelo próprio
+      volume. Ele entra quando o mercado está <b>vendendo para ele</b> — na
+      queda, no pânico, no papel que ninguém quer. E quando vem a correria, ele
+      está do outro lado, realizando o lucro para quem chegou depois.</p>
+
     <div class="duasL">
       <div class="lg">
-        <span class="rot">para quem tem pouco</span>
-        <b>Ganhar mais do que perde</b>
-        <p>Uma relação de <b>três para um</b>, no mínimo: quando acerta, ganha
-          três vezes o que perde quando erra. Com isso dá para errar mais da
-          metade das vezes e ainda terminar no azul. É o oposto da escola, onde
-          o que conta é a taxa de acerto.</p>
-        <p class="ex">Com pouco dinheiro não dá para diversificar de verdade —
-          então a defesa é o tamanho do erro, não a quantidade deles.</p>
+        <span class="rot">o pequeno</span>
+        <b>Opera a tendência</b>
+        <p>Entra no movimento que já começou, e o gráfico é a ferramenta.
+          A defesa é o <b>rigor no stop</b>: alvo largo, perda curta, e a
+          disciplina de sair na hora combinada mesmo achando que dessa vez vai
+          voltar. Ele não tem dinheiro para esperar — então o tempo é inimigo,
+          e o erro precisa ser barato.</p>
       </div>
-      <div class="lg">
-        <span class="rot">para quem tem muito</span>
-        <b>Diversificação e fundamento</b>
-        <p>Com patrimônio maior, a defesa é espalhar: papéis mais líquidos e
-          menos líquidos, setores diferentes, e <b>rebalancear</b> — vender um
-          pedaço do que subiu, comprar do que ficou para trás. Isso obriga a
-          fazer o que o instinto não deixa.</p>
-        <p class="ex">Coisa boa que cai é oportunidade. Mas <b>nem todo papel
-          que cai é bom</b> — uns caem porque são ruins, e esses não se
-          levantam. Separar os dois é o trabalho inteiro.</p>
+      <div class="lg lgOuro">
+        <span class="rot">o grande</span>
+        <b>Opera contra a tendência</b>
+        <p>Compra o que está caindo e vende o que está subindo, porque é a única
+          forma de o volume dele caber no mercado. A defesa é o <b>preço médio,
+          o giro e a diversificação</b>. Ele tem dinheiro para esperar — então o
+          tempo é aliado, e o erro pode demorar a virar acerto.</p>
       </div>
     </div>
+
+    <p class="apP">Repare que <b>o controle de risco muda de natureza</b>. Para
+      o pequeno, risco é o tamanho da perda em cada tentativa. Para o grande,
+      risco é o tamanho da posição em cada papel e a correlação entre eles.
+      <b>São jogos diferentes, com regras diferentes</b> — e copiar o
+      comportamento do outro é o erro mais comum dos dois lados.</p>
+
+    <p class="apP">O pequeno que tenta operar como o grande faz preço médio
+      até acabar o dinheiro. O grande que tenta operar como o pequeno não
+      consegue nem montar a posição.</p>
   </div>
 
   <div class="apr">
-    <h2>A estratégia inteira cabe em duas palavras</h2>
-    <p class="apP"><b>Poupar e esperar.</b> Não é frase de efeito — é onde o
-      dinheiro de verdade é feito. Quem guarda mil reais por mês e deixa render
-      6% ao ano acima da inflação chega assim:</p>
-
-    <div class="juros">
-      <div class="cabJ"><span>tempo</span><span>o que você guardou</span>
-        <span>o que o juro fez</span><span>total</span></div>
-      ${[[10,120000,162473],[20,240000,453439],[30,360000,974513],[40,480000,1907678]]
-        .map(([anos,guardou,total])=>{
-          const juro = total - guardou, pj = juro/total*100;
-          return `<div class="lnJ">
-            <span class="tJ">${anos} anos</span>
-            <span class="bJ">
-              <i class="bg" style="width:${(1-pj/100)*100}%"></i>
-              <i class="bj" style="width:${pj}%"></i></span>
-            <span class="vJ">${pj.toFixed(0)}% do total</span>
-            <span class="tot">R$ ${Math.round(total/1000)} mil</span></div>`;
-        }).join("")}
-      <div class="legJ">
-        <span><i class="q bg"></i>o que saiu do seu bolso</span>
-        <span><i class="q bj"></i>o que o juro trouxe</span></div>
-    </div>
-
-    <p class="apP" style="margin-top:16px">Repare no que acontece com o tempo.
-      Em dez anos, três quartos do bolo ainda são <b>o seu esforço</b>. Em
-      trinta, <b>63% já é juro</b> — o dinheiro trabalhando mais que você. Em
-      quarenta, três quartos. <b>O mesmo aporte, a mesma taxa: o que muda é
-      quanto tempo você deixou quieto.</b></p>
-    <p class="apP">É por isso que começar cedo vale mais do que acertar o papel.
-      Dez anos a menos custam mais caro que uma escolha ruim — e são
-      irrecuperáveis, porque tempo não se compra.</p>
-    <p class="apP">Depois de anos assim, chega o dia em que o rendimento do mês
-      passa a ser maior do que você conseguiria guardar no mês. Dali em diante,
-      trabalhar vira escolha. <b>É esse o ponto que o planejamento calcula —
-      quando ele chega, no seu caso.</b></p>
-    <div class="apLinks">
-      <a href="#/planejar" class="bt lacre">Ver quando chega, para você &rarr;</a>
-    </div>
-  </div>
-
-  <div class="apr">
-    <h2>E a diversificação é o que te salva quando você erra</h2>
+    <h2>Quanto custa cada erro</h2>
     <p class="apP">Porque você vai errar. Todo mundo erra — a diferença é
       quanto custa cada erro. Com dez papéis, um que vá a zero custa 10% do
       total e os outros nove seguem trabalhando. Com dois papéis, o mesmo erro
@@ -7013,45 +6571,33 @@ function telaAprender(){
     <p class="apP"><b>Diversificar não é indecisão, é seguro.</b> Você não sabe
       qual das dez está errada — se soubesse, não a teria comprado. O que dá
       para garantir é que nenhuma delas sozinha derrube o conjunto.</p>
-
-    <div class="citacao">
-      Rebalancear é vender um pedaço do que subiu e comprar do que ficou para
-      trás. Parece contra a intuição, e é exatamente por isso que funciona:
-      obriga a realizar lucro e a comprar barato, que são as duas coisas que
-      ninguém faz sozinho.
-    </div>
-
-    <p class="apP" style="margin-top:16px">Mas há um limite que o rebalanceamento
-      não cobre. <b>Fruta podre tem que sair do cesto.</b> Comprar mais de um
-      papel que cai porque "ficou barato" só funciona se ele for bom e o preço
-      estiver errado. Se a empresa é que está errada, você está aumentando a
-      posição no que vai continuar caindo — e a fruta podre acaba estragando o
-      resto do cesto.</p>
-    <p class="apP">Separar o papel bom que caiu do papel que caiu porque é ruim
-      é o trabalho inteiro, e é onde entra estudar fundamento. Quando não dá
-      para separar, o tamanho da posição responde por você: pequena o bastante
-      para que estar errado não seja fatal.</p>
+    <p class="apP">Quando não dá para separar a boa da ruim, <b>o tamanho da
+      posição responde por você</b>: pequena o bastante para que estar errado
+      não seja fatal.</p>
   </div>
 
   <div class="apr">
     <h2>A lição zero, que vem antes de todas</h2>
     <p class="apP">Nada disto funciona sem a primeira parte: <b>ter o que
       investir</b>. Ajustar a despesa à receita, e não o contrário. Nenhuma
-      técnica compensa aporte que não existe, e a maior parte de quem chega ao
-      fim da vida com patrimônio chegou por aqui — não por acerto genial.</p>
-    <p class="apP">Junte as três coisas e está feito: <b>poupar todo mês, deixar
-      o juro trabalhar por décadas, e não deixar nenhum erro sozinho ser grande
-      o bastante para apagar o resto.</b> É simples de escrever e difícil de
-      cumprir — porque exige fazer a mesma coisa por vinte anos e resistir a
-      mexer quando o mercado assusta.</p>
+      técnica compensa aporte que não existe — e essa conta é outra, está em
+      <a href="#/crescer">como o dinheiro cresce</a>.</p>
+    <p class="apP">O que esta página tenta dizer é uma coisa só: <b>em ação,
+      você não controla o resultado. Controla o tamanho do erro.</b> O pequeno
+      controla pela relação entre alvo e stop. O grande controla pelo preço
+      médio e pela carteira que discorda de si mesma. Nenhum dos dois controla
+      para onde o papel vai amanhã, e nenhum dos dois precisa disso para ganhar
+      dinheiro.</p>
+    <p class="apP">O que os dois precisam é da mesma coisa, e é a parte que não
+      tem técnica: <b>fazer o combinado quando dói fazer o combinado.</b></p>
     <div class="apLinks">
-      <a href="#/planejar" class="bt lacre">Montar o meu plano &rarr;</a>
+      <a href="#/simulador" class="bt lacre">Montar o meu plano &rarr;</a>
       <a href="#/publicar" class="bt">Treinar com uma carteira</a>
     </div>
     <p class="apP" style="margin-top:18px;font-size:13px;color:var(--graf)">
       E se algo acontecer com você antes de a conta fechar, um seguro leva a
       família ao ponto onde o plano ia chegar. É a única peça que não depende
-      de tempo — está em <a href="#/planejar">planejamento</a>.</p>
+      de tempo — está em <a href="#/simulador">planejamento</a>.</p>
   </div>
   ${FIMP()}`;
 }
@@ -7337,7 +6883,7 @@ function telaCrescer(){
 
   <div class="pontes">
     <a href="#/comprar" class="bt">E se eu quiser comprar um bem?</a>
-    <a href="#/planejar" class="bt cheio lacre">Montar o meu plano &rarr;</a>
+    <a href="#/simulador" class="bt cheio lacre">Montar o meu plano &rarr;</a>
   </div>`;
 
   const liga = (id, campo, min, max) => {
@@ -7666,7 +7212,7 @@ function telaComprar(){
   <div class="pontes">
     <a href="#/escada" class="bt cheio lacre">A escada do consórcio &rarr;</a>
     <a href="#/crescer" class="bt">Ver como o dinheiro cresce</a>
-    <a href="#/planejar" class="bt">Montar o meu plano</a>
+    <a href="#/simulador" class="bt">Montar o meu plano</a>
   </div>`;
 
   const liga = (id, campo, min, max) => {
@@ -8260,7 +7806,7 @@ function telaAplicado(){
   <div class="pontes">
     <a href="#/escada" class="bt">A escada do consórcio</a>
     <a href="#/comprar" class="bt">Comparar com financiamento</a>
-    <a href="#/planejar" class="bt cheio lacre">Montar o meu plano &rarr;</a>
+    <a href="#/simulador" class="bt cheio lacre">Montar o meu plano &rarr;</a>
   </div>`;
 
   const liga = (id, campo, min, max) => {
@@ -9028,7 +8574,7 @@ function simTudo(){
 
   <div class="adiante">
     <a class="bt cheio lacre" href="#/servicos">Consultar especialista &rarr;</a>
-    <a class="bt" href="#/planejar">Incluir metas e sucessão</a>
+    <a class="bt" href="#/sucessao">Seguro e sucessão</a>
     <a class="bt" href="#/aprender">Voltar ao índice</a>
   </div>`;
 
@@ -10676,8 +10222,8 @@ function rotear(){
   if(h==="#/p-internacional") return servInternacional();
   if(h==="#/p-alternativos")  return servAlternativos();
   if(h==="#/crescer")         return telaCrescerNova();
-  if(h==="#/sim-crescer" || h==="#/sim-renda" || h==="#/simulador")
-                              return simTudo();
+  if(h==="#/sim-crescer" || h==="#/sim-renda" || h==="#/simulador"
+     || h==="#/planejar")     return simTudo();
   if(h==="#/sim-credito")     return simCredito();
   if(h==="#/sim-comprar")     return simComprar();
   if(h==="#/comprar")         return telaComprar();
@@ -10693,7 +10239,6 @@ function rotear(){
   if(h==="#/assinar")         return telaAssinar();
   if(h==="#/admin")           return telaAdmin();
   if(h==="#/servicos")        return telaServicos();
-  if(h==="#/planejar")        return telaPlanejar();
   if(h==="#/sucessao")        return telaSucessao();
   if(h==="#/clube")           return telaClube();
   if(h==="#/consenso" || h==="#/mais-escolhidos") return telaConsenso();
