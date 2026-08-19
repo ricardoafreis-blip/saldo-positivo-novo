@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict QoQSchePpYf03EmdlVl6W551CzO5uuNbfK4kSAxGoKPukmEVbbmVNHxLGM3xFfG
+\restrict cLfOHFvWsUzY6GM8YXUJInQ10T4HFUGkVjzRRLuZXRYLPBt8i6STTWwgcCBqUpD
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.11 (Ubuntu 17.11-1.pgdg24.04+2)
@@ -1863,6 +1863,19 @@ exception
   when unique_violation then raise exception 'esse CPF já está em outra conta';
   when check_violation  then raise exception 'CPF, CEP, UF ou telefone inválido';
 end $$;
+
+
+--
+-- Name: seguidores_por_carteira(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.seguidores_por_carteira() RETURNS TABLE(carteira_id bigint, n bigint)
+    LANGUAGE sql
+    AS $$
+  SELECT carteira_id, COUNT(*)::bigint
+  FROM seguidor
+  GROUP BY carteira_id;
+$$;
 
 
 --
@@ -3939,5 +3952,5 @@ CREATE POLICY universo_mexer ON public.universo TO authenticated USING ((EXISTS 
 -- PostgreSQL database dump complete
 --
 
-\unrestrict QoQSchePpYf03EmdlVl6W551CzO5uuNbfK4kSAxGoKPukmEVbbmVNHxLGM3xFfG
+\unrestrict cLfOHFvWsUzY6GM8YXUJInQ10T4HFUGkVjzRRLuZXRYLPBt8i6STTWwgcCBqUpD
 
