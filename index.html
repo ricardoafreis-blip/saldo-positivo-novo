@@ -1426,28 +1426,27 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
         <div class="painel">
           <a class="topo" href="#/aprender">Índice completo dos temas</a>
           <span class="sub"><i>1</i>Comece por aqui</span>
-          <a href="#/porque">Por que investir é difícil</a>
           <a href="#/dividas">Antes de poupar, saia das dívidas</a>
           <a href="#/crescer">Como o dinheiro cresce</a>
           <a href="#/corrigir">Corrigir não é crescer</a>
           <span class="sub"><i>2</i>O que é cada coisa</span>
-          <a href="#/renda-fixa">Renda fixa</a>
-          <a href="#/renda-variavel">Renda variável</a>
-          <a href="#/fundos">Fundo de investimento</a>
-          <a href="#/previdencia">Previdência</a>
-          <a href="#/clubes">Clube de investimento</a>
-          <a href="#/consorcio">Consórcio</a>
-          <a href="#/seguro-vida">Seguro de vida</a>
+          <a href="#/renda-fixa">O que é renda fixa</a>
+          <a href="#/renda-variavel">O que é renda variável</a>
+          <a href="#/fundos">O que é fundo de investimento</a>
+          <a href="#/previdencia">O que é previdência privada</a>
+          <a href="#/clubes">O que é clube de investimento</a>
+          <a href="#/consorcio">O que é consórcio</a>
+          <a href="#/seguro-vida">O que é seguro de vida</a>
           <a href="#/alternativos">Ouro, dólar e bitcoin</a>
-          <a href="#/internacional">Investir no exterior</a>
+          <a href="#/internacional">O que é investir no exterior</a>
           <span class="sub"><i>3</i>Montar a sua carteira</span>
-          <a href="#/risco">O risco de verdade</a>
+          <a href="#/porque">Uma conta que ninguém faz</a>
           <a href="#/carteira-como">Como se monta uma carteira</a>
           <a href="#/sessenta">A carteira 60/40</a>
           <a href="#/grandes">Os grandes acumuladores</a>
           <span class="sub"><i>4</i>Quando já há patrimônio</span>
           <a href="#/credito">Quanto custa o dinheiro</a>
-          <a href="#/casa">Sair do aluguel</a>
+          <a href="#/casa">Sair do aluguel e ter a casa própria</a>
           <a href="#/comprar">Comprar um bem</a>
           <a href="#/escada">A escada do consórcio</a>
           <a href="#/aplicado">Pôr o patrimônio para trabalhar</a>
@@ -5027,6 +5026,7 @@ function telaComo(){
   const P = (q,r) => `<details class="qa"><summary>${q}</summary><p>${r}</p></details>`;
   app().innerHTML = `
   <div style="max-width:74ch;margin:34px 0 0">
+    <div class="trilho">Como funciona o site</div>
     <h1 style="font-size:31px;line-height:1.18;margin-bottom:10px">
       Aprenda a investir no lugar onde ninguém perde dinheiro.</h1>
     <p style="color:var(--t2);font-size:14.5px;line-height:1.6;margin:0 0 10px">
@@ -5650,7 +5650,7 @@ function blocoSucessao(){
   return `
   <div class="card" style="margin-top:12px" id="sucAncora">
     <div style="font-size:10px;letter-spacing:.16em;text-transform:uppercase;
-      color:var(--graf);margin-bottom:5px">A conta que ninguém faz</div>
+      color:var(--graf);margin-bottom:5px">O que trava no dia seguinte</div>
     <h3 style="font-family:Newsreader,serif;font-size:20px;margin:0 0 3px">
       Quatro perguntas. Se você tiver resposta para as quatro, pule esta parte.</h3>
     <p style="color:var(--graf);font-size:12.5px;margin:0 0 14px">
@@ -6326,11 +6326,12 @@ function telaAprender(){
   for(let i=0, v=1; i<=10; i++, v*=2) dobra.push(v);
 
   app().innerHTML = `
-  <div class="trilho"><a href="#/aprender" style="color:var(--ouro2);text-decoration:none">Aprender</a> · comece por aqui</div>
+  <div class="trilho"><a href="#/aprender" style="color:var(--ouro2);text-decoration:none">Aprender</a> · montar a sua carteira</div>
   <div class="cabeca" style="text-align:left;max-width:70ch">
-    <h1>Por que investir é difícil</h1>
-    <p>Não é falta de informação, e não é falta de inteligência. É que o
-      mercado funciona numa lógica que a vida inteira nos ensinou a ignorar.</p>
+    <h1>Uma conta que ninguém faz</h1>
+    <p>Não é falta de informação, e não é falta de inteligência. É que a bolsa
+      funciona numa lógica que a vida inteira nos ensinou a ignorar — e nela
+      <b>a taxa de acerto não é o que decide quem ganha dinheiro.</b></p>
   </div>
 
   <div class="apr">
@@ -6388,6 +6389,20 @@ function telaAprender(){
       simétrico, indolor. Perder metade exige <b>dobrar</b> o que sobrou.
       Perder 80% exige multiplicar por cinco. Perder 90%, por dez.
       <b>É por isso que não perder muito importa mais do que ganhar muito.</b></p>
+
+    <p class="apP" style="margin-top:16px">Repare onde a conta vira. Até uns 10%
+      de queda, ela é quase justa: caiu 10, sobe 11 e você voltou. <b>A partir de
+      mais ou menos 25%, a relação descola de vez.</b> Caiu 25, precisa de 33.
+      Caiu 50, precisa de 100. Caiu 75, precisa de 300.</p>
+    <p class="apP">Perda grande não é perda pequena em tamanho maior — <b>é outro
+      problema</b>. Uma queda de 25% é o ponto em que a matemática deixa de te
+      ajudar e passa a trabalhar contra.</p>
+    <p class="apP">E é aí que muda quem decide o jogo. Enquanto os movimentos são
+      pequenos, o mundo parece linear e o que decide é <b>conhecimento</b>:
+      escolher bem, entender a empresa, saber o que se está comprando. Quando os
+      movimentos ficam grandes, o mundo vira logarítmico e o que decide é
+      <b>controle de risco</b>. Nenhuma quantidade de conhecimento te devolve de
+      uma queda de 75% — só a decisão, tomada antes, de nunca chegar lá.</p>
   </div>
 
   <div class="apr">
@@ -6574,30 +6589,34 @@ function telaAprender(){
     <p class="apP">Quando não dá para separar a boa da ruim, <b>o tamanho da
       posição responde por você</b>: pequena o bastante para que estar errado
       não seja fatal.</p>
+    <p class="apP">Três erros aparecem sempre, e nenhum deles é de escolha:
+      <b>concentrar sem perceber que concentrou</b>, carregar o que caiu por
+      motivo real porque "já perdi mesmo", e descobrir a barreira dos 25% depois
+      de já tê-la atravessado. São erros de risco — e é justamente o que uma
+      segunda leitura, de quem faz isso todo dia, pega antes.</p>
   </div>
 
   <div class="apr">
-    <h2>A lição zero, que vem antes de todas</h2>
-    <p class="apP">Nada disto funciona sem a primeira parte: <b>ter o que
-      investir</b>. Ajustar a despesa à receita, e não o contrário. Nenhuma
-      técnica compensa aporte que não existe — e essa conta é outra, está em
-      <a href="#/crescer">como o dinheiro cresce</a>.</p>
-    <p class="apP">O que esta página tenta dizer é uma coisa só: <b>em ação,
-      você não controla o resultado. Controla o tamanho do erro.</b> O pequeno
-      controla pela relação entre alvo e stop. O grande controla pelo preço
-      médio e pela carteira que discorda de si mesma. Nenhum dos dois controla
-      para onde o papel vai amanhã, e nenhum dos dois precisa disso para ganhar
-      dinheiro.</p>
+    <h2>O que fica de tudo isso</h2>
+    <p class="apP">Uma coisa só: <b>em ação, você não controla o resultado.
+      Controla o tamanho do erro.</b> O pequeno controla pela relação entre alvo
+      e stop. O grande controla pelo preço médio, pelo giro e por uma carteira
+      que discorda de si mesma. Nenhum dos dois sabe para onde o papel vai
+      amanhã — e nenhum dos dois precisa saber para ganhar dinheiro.</p>
     <p class="apP">O que os dois precisam é da mesma coisa, e é a parte que não
-      tem técnica: <b>fazer o combinado quando dói fazer o combinado.</b></p>
+      tem técnica: <b>fazer o combinado quando dói fazer o combinado.</b> Sair
+      no stop achando que dessa vez ia voltar. Comprar o degrau seguinte com a
+      posição toda no vermelho. Vender um pedaço do que está subindo bem.
+      Nenhuma dessas três é difícil de entender. As três são difíceis de
+      fazer.</p>
+    <p class="apP">E antes de qualquer uma delas vem o começo, que não é sobre
+      ação nenhuma: <b>ter o que investir</b>. Ajustar a despesa à receita, e não
+      o contrário. Nenhuma técnica compensa aporte que não existe — essa conta
+      está em <a href="#/crescer">como o dinheiro cresce</a>.</p>
     <div class="apLinks">
-      <a href="#/simulador" class="bt lacre">Montar o meu plano &rarr;</a>
-      <a href="#/publicar" class="bt">Treinar com uma carteira</a>
+      <a href="#/publicar" class="bt lacre">Treinar com uma carteira &rarr;</a>
+      <a href="#/screening" class="bt">Ver em que fase cada papel está</a>
     </div>
-    <p class="apP" style="margin-top:18px;font-size:13px;color:var(--graf)">
-      E se algo acontecer com você antes de a conta fechar, um seguro leva a
-      família ao ponto onde o plano ia chegar. É a única peça que não depende
-      de tempo — está em <a href="#/simulador">planejamento</a>.</p>
   </div>
   ${FIMP()}`;
 }
@@ -9139,7 +9158,6 @@ function servAlternativos(){
 /* ══ EDUCACIONAL: índice e tópicos ══ */
 const TOPICOS_AP = [
   ["Comece por aqui", [
-    ["#/porque","Por que investir é difícil","A lógica que a vida inteira nos ensinou a ignorar."],
     ["#/dividas","Antes de poupar, saia das dívidas","Nenhuma aplicação paga o que o cartão cobra. A ordem importa."],
     ["#/crescer","Como o dinheiro cresce","Juro composto, e o mês em que o seu dinheiro passa a render mais do que você deposita."],
     ["#/corrigir","Corrigir não é crescer","A diferença entre acompanhar a inflação e ficar de fato mais rico."]
@@ -9148,7 +9166,7 @@ const TOPICOS_AP = [
     ["#/renda-fixa","O que é renda fixa","Você empresta e sabe a regra do retorno desde o começo."],
     ["#/renda-variavel","O que é renda variável","Você vira sócio. O retorno não é combinado."],
     ["#/fundos","O que é fundo de investimento","Você compra uma cota e o trabalho de escolher passa a ser de um gestor."],
-    ["#/previdencia","O que é previdência","Para que serve, quando vale e quando é caro demais."],
+    ["#/previdencia","O que é previdência privada","Para que serve, quando vale e quando é caro demais."],
     ["#/clubes","O que é clube de investimento","Um grupo investindo junto, com regras próprias e carteira só."],
     ["#/consorcio","O que é consórcio","Um grupo de pessoas poupando junto, e um por mês leva o valor."],
     ["#/seguro-vida","O que é seguro de vida","Não é investimento. É o capital que você não vai ter tempo de acumular."],
@@ -9156,7 +9174,7 @@ const TOPICOS_AP = [
     ["#/internacional","O que é investir no exterior","Não depender de um país só, nem de uma moeda só."]
   ]],
   ["Montar a sua carteira", [
-    ["#/risco","O risco de verdade","Cair 50% exige subir 100% para voltar. A assimetria que decide tudo."],
+    ["#/porque","Uma conta que ninguém faz","Dá para errar sete vezes em dez e terminar ganhando. A escola ensinou o contrário."],
     ["#/carteira-como","Como se monta uma carteira","Peso importa mais que escolha. É aqui que o site vira ferramenta."],
     ["#/sessenta","A carteira 60/40","Por que ela atravessou setenta anos, e quando ela falha."],
     ["#/grandes","Os grandes acumuladores","O que Buffett e outros gestores têm em comum — e não é palpite."]
@@ -10046,91 +10064,6 @@ function pagCasa(){ $("#app").innerHTML =
   ` + FIMP(); }
 
 
-function pagRisco(){ $("#app").innerHTML =
-  TOPO("montar a sua carteira","O risco de verdade",
-    "Perder 50% e ganhar 50% não te devolve ao ponto de partida. Essa assimetria é a coisa mais importante do mercado, e é a que menos gente calcula.") + `
-  <div class="caso">
-    <p>Você tinha R$ 100 mil. Caiu 50%, sobrou R$ 50 mil. No ano seguinte
-      subiu 50% — e você tem <b>R$ 75 mil</b>. Para voltar aos R$ 100 mil não
-      bastava subir 50%: <b class="destaque">tinha que subir 100%.</b></p>
-  </div>
-
-  <h2>A conta de perder não é a conta de ganhar</h2>
-  <p>Ganho e perda parecem simétricos e não são. Quando você perde, perde sobre
-    o valor cheio; quando recupera, sobe a partir de um valor menor. Quanto
-    maior a queda, mais desproporcional fica.</p>
-
-  <div class="figura">${tabelaVolta()}
-    <p class="notafig">Quanto o investimento precisa subir para voltar ao mesmo
-      valor, depois de cair.</p>
-  </div>
-
-  <h2>A barreira dos 25%</h2>
-  <p>Repare na terceira coluna. Até uns 10% de queda, a conta é quase justa:
-    caiu 10, sobe 11 e você voltou. <b>A partir de mais ou menos 25%, a relação
-    descola de vez.</b> Caiu 25, precisa de 33. Caiu 50, precisa de 100. Caiu
-    75, precisa de 300.</p>
-  <p>É por isso que perdas grandes são qualitativamente diferentes de perdas
-    pequenas — não é o mesmo problema em tamanho maior, é outro problema. <b>Uma
-    queda de 25% é o ponto em que a matemática deixa de te ajudar.</b></p>
-
-  <h2>Linear e logarítmico: onde entra o conhecimento e onde entra o controle</h2>
-  <p>Enquanto os movimentos são pequenos, o mundo parece linear e o que decide é
-    <b>conhecimento</b>: escolher bem, entender a empresa, saber o que se está
-    comprando.</p>
-  <p>Quando os movimentos ficam grandes, o mundo vira logarítmico e o que decide
-    é <b>controle de risco</b>. Nenhuma quantidade de conhecimento te devolve
-    de uma queda de 75% — só a decisão, tomada antes, de nunca chegar lá.</p>
-
-  <h2>Controle de risco não é só stop</h2>
-  <div class="trinca">
-    <div><span class="rot">Stop</span>
-      <p>Sair a um preço definido antes. Serve para posição de curto prazo e
-        exige disciplina para valer alguma coisa.</p></div>
-    <div><span class="rot">Diversificação</span>
-      <p>Nenhuma posição grande o bastante para te tirar do jogo. É o controle
-        de risco de quem investe, não de quem opera.</p></div>
-    <div><span class="rot">Qualidade</span>
-      <p>Empresa sólida cai e volta. Empresa ruim cai e fica. A escolha do que
-        se carrega é, em si, controle de risco.</p></div>
-  </div>
-
-  <h2>Risco e retorno: a relação 3 para 1</h2>
-  <p>Uma forma de tirar o resultado da sorte é só aceitar operações em que o
-    ganho possível vale <b>três vezes</b> o que você aceita perder. Com essa
-    proporção, você pode <b>errar três de cada quatro vezes e ainda empatar</b>.
-    Acertando 30%, já é lucro; acertando 40%, é lucro grande.</p>
-  <p>Isso muda a pergunta. Deixa de ser "vai subir?" e passa a ser <b>"quanto eu
-    ganho se eu estiver certo, e quanto eu perco se estiver errado?"</b> — que é
-    a única das duas que você controla.</p>
-
-  <h2>O grande e o pequeno não jogam o mesmo jogo</h2>
-  <p>Um investidor grande não tem as oportunidades do pequeno, e quase ninguém
-    conta isso. <b>O pequeno entra e sai quando quer. O grande entra e sai
-    quando consegue</b> — ele tem dificuldade para montar a posição sem empurrar
-    o preço, e dificuldade maior ainda para desmontar.</p>
-  <p>É uma vantagem real de quem tem pouco, e a maior parte das pessoas a
-    desperdiça tentando imitar quem tem muito.</p>
-
-  <h2>Rebalancear o que presta</h2>
-  <p>Rebalancear é vender o que subiu demais e comprar o que ficou para trás,
-    voltando aos pesos que você definiu. Obriga a vender na alta e comprar na
-    baixa — o contrário do instinto.</p>
-  <p>Mas há uma condição: <b>só funciona com ativo que presta</b>. Rebalancear
-    para dentro de uma empresa que está caindo por um motivo real não é comprar
-    na baixa, é aumentar a aposta no erro. A regra vale para carteira de coisas
-    boas; fora disso, vira armadilha.</p>
-
-  ` + SIM("Veja quanto o tempo faz pelo patrimônio",
-      "E quanto uma taxa menor custa — é o mesmo mecanismo que castiga a queda grande.")
-  + `
-  <h2>Onde isso costuma dar errado sozinho</h2>
-  <p>Concentrar sem perceber que concentrou, carregar o que caiu por motivo real
-    porque "já perdi mesmo", e descobrir a barreira dos 25% depois de
-    atravessá-la. São erros de risco, não de escolha — e é justamente o que uma
-    segunda leitura, de quem faz isso todo dia, pega antes.</p>
-  ` + FIMP(); }
-
 function tabelaVolta(){
   const linhas = [1,5,10,20,25,30,50,75].map(q => {
     const alta = (1/(1-q/100)-1)*100;
@@ -10202,7 +10135,6 @@ function rotear(){
   if(h==="#/aprender")        return telaIndiceAprender();
   if(h==="#/porque")          return telaAprender();
   if(h==="#/corrigir")        return pagReal();
-  if(h==="#/risco")           return pagRisco();
   if(h==="#/renda-fixa")      return pagRendaFixa();
   if(h==="#/renda-variavel")  return pagRendaVar();
   if(h==="#/previdencia")     return pagPrev();
