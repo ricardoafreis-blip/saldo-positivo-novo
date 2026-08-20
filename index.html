@@ -1137,6 +1137,15 @@ button.lig:hover{color:var(--tinta);border-bottom-color:var(--tinta)}
   border:1px solid var(--ouro2);color:var(--tinta);background:var(--p2);
   transition:background .15s}
 .prods a:hover{background:var(--p3)}
+.marcas{display:flex;gap:9px;flex-wrap:wrap;margin:14px 0 4px}
+.marcas button{font-family:inherit;font-size:12.5px;padding:8px 14px;
+  border-radius:99px;border:1px solid var(--ouro2);color:var(--tinta);
+  background:var(--p2);cursor:pointer;
+  transition:background .15s,border-color .15s,color .15s}
+.marcas button:hover{background:var(--p3)}
+.marcas button.on{border-color:var(--lacre);color:var(--ouro2);
+  background:var(--ouro-fraco)}
+.marcas button i{font-style:normal;margin-right:6px}
 
 .camada{margin-top:22px}
 .degrauS{display:flex;gap:14px;padding:16px 0;border-top:1px solid var(--linha)}
@@ -1424,8 +1433,8 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
         <button type="button" class="rotg abre">Aprender<i class="cv"></i></button>
         <span class="def">antes de arriscar qualquer coisa</span>
         <div class="painel">
-          <a class="topo" href="#/aprender">Índice completo dos temas</a>
           <span class="sub"><i>1</i>Comece por aqui</span>
+          <a href="#/aprender">Do começo, sem pular etapa</a>
           <a href="#/dividas">Antes de poupar, saia das dívidas</a>
           <a href="#/crescer">Como o dinheiro cresce</a>
           <a href="#/corrigir">Corrigir não é crescer</a>
@@ -5756,29 +5765,19 @@ async function telaServicos(){
 
     <div class="prods">
       <a href="#/p-renda-fixa">Renda fixa &rarr;</a>
+      <a href="#/p-renda-variavel">Renda variável &rarr;</a>
+      <a href="#/p-fundos">Fundos de investimento &rarr;</a>
+      <a href="#/p-previdencia">Previdência &rarr;</a>
       <a href="#/p-internacional">Conta internacional &rarr;</a>
       <a href="#/p-alternativos">Ouro, dólar e bitcoin &rarr;</a>
+      <a href="#/p-conta">Como abrir a sua conta &rarr;</a>
     </div>
-    <p style="font-size:12.5px;color:var(--graf);margin-top:22px">
-      ${SERVICOS.length} serviços · toque para abrir · marque os que te interessam e
-      peça contato no fim da página</p>
     ${GRUPOS_S.map(([gid,tit,sub])=>`
     <div class="secaoS">
       <div class="cabsec"><h2>${tit}</h2><span>${sub}</span></div>
-      <div class="gradeS">${SERVICOS.filter(v=>v.g===gid).map(v=>`
-        <div class="srv${escolhidosS.has(v.id)?" on":""}${abertosS.has(v.id)?" aberto":""}">
-          <div class="cab" data-abrir="${v.id}">
-            <h3>${v.nome}</h3><span class="seta">&#9654;</span></div>
-          <p class="resumo">${resumoDe(v.oq)}</p>
-          <div class="miolo">
-            <div class="oq">${v.oq}</div>
-            <div class="quem"><span class="rotq">Quem pode exercer</span>
-              <div class="txq">${v.quem}</div></div>
-          </div>
-          <div class="escolher" data-srv="${v.id}"><i class="cx">${
-            escolhidosS.has(v.id)?"✓":""}</i>${
-            escolhidosS.has(v.id)?"escolhido — vai no pedido":"quero falar sobre isso"}</div>
-        </div>`).join("")}</div>
+      <div class="marcas">${SERVICOS.filter(v=>v.g===gid).map(v=>`
+        <button type="button" class="${escolhidosS.has(v.id)?"on":""}" data-srv="${v.id}"
+          >${escolhidosS.has(v.id)?"<i>\u2713</i>":""}${v.nome}</button>`).join("")}</div>
     </div>`).join("")}
     <div class="contatoS">
       <div>
@@ -5813,18 +5812,10 @@ async function telaServicos(){
           ruim?"var(--baixa)":"var(--alta)"}">${esc(recado)}</div>
       </div>
     </div>
-    <div class="msg" style="margin-top:34px"><b>Por que esta página não vende nada.</b>
-      Consultoria, assessoria e gestão de recursos são atividades reguladas, e cada uma
-      exige um registro diferente na CVM. O Saldo Positivo é um caderno de estudo.
-      Encaminhar alguém a um profissional habilitado é diferente de recomendar
-      investimento — e nada nesta página é recomendação.</div>`;
+    `;
 
-    document.querySelectorAll("[data-abrir]").forEach(el =>
-      el.onclick = () => { const id = el.dataset.abrir;
-        abertosS.has(id) ? abertosS.delete(id) : abertosS.add(id); pintar(); });
-
-    document.querySelectorAll(".escolher[data-srv]").forEach(el =>
-      el.onclick = e => { e.stopPropagation(); const id = el.dataset.srv;
+    document.querySelectorAll(".marcas button[data-srv]").forEach(el =>
+      el.onclick = () => { const id = el.dataset.srv;
         escolhidosS.has(id) ? escolhidosS.delete(id) : escolhidosS.add(id); pintar(); });
 
     document.getElementById("sEnv").onclick = async () => {
@@ -5847,12 +5838,12 @@ async function telaServicos(){
       pintar("Pedido registrado. Alguém entra em contato em até um dia útil.");
     };
   };
-  // veio do menu do cabeçalho com um serviço escolhido: abre e rola até ele
+  // veio do menu do cabeçalho com um serviço escolhido: marca e rola até ele
   const alvo = new URLSearchParams((location.hash||"").split("?")[1]||"").get("s");
-  if(alvo && SERVICOS.some(v => v.id === alvo)) abertosS.add(alvo);
+  if(alvo && SERVICOS.some(v => v.id === alvo)) escolhidosS.add(alvo);
   pintar();
   if(alvo){
-    const el = document.querySelector(`[data-abrir="${alvo}"]`);
+    const el = document.querySelector(`[data-srv="${alvo}"]`);
     if(el) setTimeout(() => el.scrollIntoView({behavior:"smooth", block:"center"}), 60);
   }
 }
