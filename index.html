@@ -2957,7 +2957,7 @@ async function telaPublicar(){
       sessenta_quarenta: P("A grade vale <b>dentro da parte de ações</b> e soma 100%. "
           + "O site converte para porcentagem do dinheiro ao salvar.")
         + P("Aqui o rebalanceamento olha a <b>proporção</b> entre renda fixa e ações, não "
-          + "papel a papel: uma 60/40 que virar 65/35 estourou uma banda de 5 pontos."),
+          + "papel a papel: uma 60/40 que virar 63/37 estourou uma banda de 5%."),
       long_short: P("Venda a descoberto entra dinheiro: 130 comprado e 40 vendido dá 10% "
           + "de caixa, não −30%. Os limites entram: exatamente 100% é aceito."),
       vendida: P("A venda a descoberto entra como garantia, que rende. O limite de 100% "
@@ -3014,7 +3014,7 @@ async function telaPublicar(){
           ${esc(f.get("descricao")||"sem descrição")}</div>
         <div style="margin-top:10px"><span class="tag al">${cl.nome}</span>
           <span class="tag">${f.get("rebalancear")==="banda"
-            ? `banda de ${n2(Number(f.get("banda_pct")||5),0)} p.p.`
+            ? `banda de ${n2(Number(f.get("banda_pct")||5),0)}% do peso`
             : `rebalanceia ${f.get("rebalancear")||"nunca"}`}</span></div>
       </div>
       <div class="corpo">
@@ -3086,9 +3086,13 @@ async function telaPublicar(){
 function reguaHTML(regra, pesos, decl){
   if(!regra || !regra.rebalancear) return "";
   const dec = {}; (decl||[]).forEach(p => dec[p.ativo] = Math.abs(p.peso));
+  // ⚠️ MESMA CONTA DA fora_da_banda NO BANCO: o desvio é relativo ao peso
+  // declarado, não em pontos. Um papel de 5% que anda 0,4 está 8% fora;
+  // um de 25% que anda 0,6 está 2,4%. Em pontos a ordem inverte e o
+  // termômetro aponta o papel errado.
   const desvios = (pesos||[])
-    .filter(p => dec[p.ativo] != null)
-    .map(p => ({ a:p.ativo, v: Math.abs(Math.abs(p.peso) - dec[p.ativo]) }))
+    .filter(p => dec[p.ativo] > 0)
+    .map(p => ({ a:p.ativo, v: Math.abs(Math.abs(p.peso) - dec[p.ativo]) / dec[p.ativo] * 100 }))
     .sort((x,y) => y.v - x.v);
   const pior = desvios[0];
 
@@ -3098,7 +3102,7 @@ function reguaHTML(regra, pesos, decl){
         rebalanceia: quem sobe mais que a carteira ganha espaço e fica maior — isso é o
         resultado aparecendo na composição, não um descuido.</div>
       ${pior?`<p class="obs">Maior afastamento até aqui: <b>${esc(pior.a)}</b>,
-        ${n2(pior.v,1)} p.p. do que foi declarado. Só volta ao lugar se o autor declarar
+        ${n2(pior.v,1)}% além do que foi declarado. Só volta ao lugar se o autor declarar
         de novo — e a declaração fica no extrato.</p>`:""}</div>`;
   }
   if(regra.rebalancear !== "banda" || !regra.banda_pct){
@@ -3106,36 +3110,36 @@ function reguaHTML(regra, pesos, decl){
       <div class="oq">Rebalanceia <b>${esc(regra.rebalancear)}</b>: na virada do período
         os pesos voltam ao que foi declarado, sem o autor precisar fazer nada.</div>
       ${pior?`<p class="obs">Maior afastamento agora: <b>${esc(pior.a)}</b>,
-        ${n2(pior.v,1)} p.p.</p>`:""}</div>`;
+        ${n2(pior.v,1)}% do peso.</p>`:""}</div>`;
   }
 
   const b = regra.banda_pct;
   const frac = pior ? Math.min(pior.v / b, 1) : 0;
-  const armado = pior && pior.v >= b;
+  const armado = pior && pior.v > b;   // o SQL usa > , não >=
   return `<div class="regua">
     <div class="oq">Refaz a carteira <b>inteira</b> quando <b>um</b> papel se afastar
-      <b>${n2(b,0)} p.p.</b> do peso declarado. A régua foi escolhida no nascimento da
+      <b>${n2(b,0)}%</b> do peso declarado. A régua foi escolhida no nascimento da
       carteira e não pode ser afrouxada depois.</div>
     ${!pior ? "" : `<div class="gatilho">
       <div>
         <div class="quanto" style="color:${armado?"var(--ouro2)":"var(--tinta)"}">${n2(pior.v,1)}
-          <span style="font-size:14px;opacity:.6;letter-spacing:0"> p.p.</span></div>
+          <span style="font-size:14px;opacity:.6;letter-spacing:0">% do peso</span></div>
         <div class="quem">maior afastamento agora · <b>${esc(pior.a)}</b></div>
       </div>
-      <div class="fim">dispara em ${n2(b,0)}</div>
+      <div class="fim">dispara em ${n2(b,0)}%</div>
       <div class="trilha">
         <span class="via"></span>
         <span class="ate" style="width:${(frac*100).toFixed(1)}%"></span>
-        ${desvios.slice(1).map(d=>`<span class="pino" title="${esc(d.a)} · ${n2(d.v,1)} p.p."
+        ${desvios.slice(1).map(d=>`<span class="pino" title="${esc(d.a)} · ${n2(d.v,1)}%"
           style="left:${Math.min(d.v/b*100,100).toFixed(1)}%"></span>`).join("")}
-        <span class="pino max" title="${esc(pior.a)} · ${n2(pior.v,1)} p.p."
+        <span class="pino max" title="${esc(pior.a)} · ${n2(pior.v,1)}%"
           style="left:${(frac*100).toFixed(1)}%"></span>
         <span class="parede"></span>
       </div>
     </div>
     <p class="obs">${armado
       ? "A banda estourou: o rebalanceamento entra no próximo fechamento e a linha vai para o extrato."
-      : `Faltam <b>${n2(b-pior.v,1)} p.p.</b> de afastamento em ${esc(pior.a)} para o
+      : `Faltam <b>${n2(b-pior.v,1)}%</b> de afastamento em ${esc(pior.a)} para o
          rebalanceamento disparar. Cada traço claro é um dos outros papéis.`}</p>`}
   </div>`;
 }
@@ -4242,7 +4246,7 @@ async function telaEditar(id){
       if(e2) return $("#erro").innerHTML=aviso(e2.message,true);
       await sb.from("nota").insert({ carteira_id:id,
         texto:`Passou a rebalancear ${novoReb==="banda"
-          ? `por banda de ${novaBanda} p.p.` : novoReb}, a partir de ${dataBR(vale)}` });
+          ? `por banda de ${novaBanda}% do peso` : novoReb}, a partir de ${dataBR(vale)}` });
     }
     $("#erro").innerHTML=aviso("Salvo."); telaEditar(id);
   };
