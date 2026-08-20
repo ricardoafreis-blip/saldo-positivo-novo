@@ -2349,12 +2349,28 @@ function montarExtrato(todas, rebal){
     return { data:d, abertura:false, acoes };
   });
 
+  // ajuste é o jsonb {ativo:[antes,depois]} gravado pela fechar_dia.
+  // Só existe a partir do dia em que a coluna passou a ser preenchida —
+  // rebalanceamento antigo cai no texto genérico e é assim mesmo.
+  const linhasAjuste = aj => {
+    // o delta em pontos: positivo é compra, negativo é venda — inclusive
+    // na vendida, onde ir de -12,07 para -12,20 é aumentar a posição.
+    const itens = Object.entries(aj || {})
+      .map(([a,par]) => ({ a, d: Number(par?.[1]) - Number(par?.[0]) }))
+      .filter(x => Number.isFinite(x.d) && Math.round(x.d * 100) !== 0)
+      .sort((x,y) => Math.abs(y.d) - Math.abs(x.d));
+    if(!itens.length) return ["os pesos voltaram ao que foi declarado"];
+    return itens.map(x => `${x.a} ${x.d > 0 ? "+" : "\u2212"}${n2(Math.abs(x.d),2)}%`);
+  };
+
   (rebal||[]).forEach(r => {
     const d = String(r.data).slice(0,10);
     const mesmo = eventos.find(e => String(e.data).slice(0,10) === d);
-    if(mesmo){ mesmo.regra = r.motivo || "rebalanceamento"; return; }
+    if(mesmo){ mesmo.regra = r.motivo || "rebalanceamento";
+               if(r.ajuste) mesmo.acoes = mesmo.acoes.concat(linhasAjuste(r.ajuste));
+               return; }
     eventos.push({ data:d, abertura:false, regra: r.motivo || "rebalanceamento",
-                   acoes: ["os pesos voltaram ao que foi declarado"] });
+                   acoes: linhasAjuste(r.ajuste) });
   });
 
   eventos.sort((a,b) => String(a.data).localeCompare(String(b.data)));
@@ -3203,7 +3219,7 @@ async function telaCarteira(id){
 
   const rebal = {}; let rebalLista = [];
   { const { data:rb } = await sb.from("rebalanceamento")
-      .select("data,motivo").eq("carteira_id", id).order("data");
+      .select("data,motivo,ajuste").eq("carteira_id", id).order("data");
     rebalLista = rb || [];
     rebalLista.forEach(r => rebal[String(r.data).slice(0,10)] = r.motivo || ""); }
 
