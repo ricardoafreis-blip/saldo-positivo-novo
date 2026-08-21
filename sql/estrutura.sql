@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict dnoC3yoDtHk9bOU2xKtUxOzOuP0xBnc0MrL8FV59zgTosUzm3EtaPddzDeBXN5m
+\restrict W4qKmeHbXjFw82FIe1lx3wKBsRN3YMWFEVfdrfLa0WHr0wXytgNw9rvlMsGAK7v
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.11 (Ubuntu 17.11-1.pgdg24.04+2)
@@ -805,6 +805,7 @@ declare
   dia date := coalesce(d, (select max(data) from oscilacao), hoje_br());
   vira_sem boolean; vira_mes boolean; vira_ano boolean;
   jafechou boolean; motivo text;
+  aj jsonb;                                   -- ⚠️ NOVO: foto do ajuste
 begin
   if coalesce(current_setting('request.jwt.claim.role', true), '') <> 'service_role'
      and not coalesce((select admin from perfil where id = auth.uid()), false) then
@@ -922,14 +923,37 @@ begin
     end if;
 
     if motivo is not null then
+      -- ⚠️ NOVO: fotografa o antes/depois ANTES de apagar o peso_atual.
+      -- Neste ponto o peso_atual já tem o drift do dia — é exatamente o
+      -- "antes". O full join pega papel que entrou e papel que saiu; o
+      -- where no fim descarta quem não se mexeu, então o jsonb só carrega
+      -- o que virou ordem de verdade.
+      aj := null;
+      select jsonb_object_agg(x.ativo,
+               jsonb_build_array(round(x.antes::numeric,2), round(x.depois::numeric,2)))
+        into aj
+        from (select coalesce(pa.ativo, p.ativo) as ativo,
+                     coalesce(pa.peso, 0)        as antes,
+                     coalesce(p.peso,  0)        as depois
+                from (select ativo, peso from peso_atual
+                       where carteira_id = c.id) pa
+                full join (select ativo, sum(peso) as peso from posicao
+                            where carteira_id = c.id and valida_de = m_atual
+                            group by ativo) p on p.ativo = pa.ativo) x
+       where round(x.antes::numeric,2) <> round(x.depois::numeric,2);
+
       delete from peso_atual where carteira_id = c.id;
       insert into peso_atual (carteira_id, ativo, peso, marco)
       select carteira_id, ativo, sum(peso), m_atual
         from posicao where carteira_id = c.id and valida_de = m_atual
        group by carteira_id, ativo;
-      insert into rebalanceamento (carteira_id, data, motivo)
-      values (c.id, dia, motivo)
-      on conflict (carteira_id, data) do update set motivo = excluded.motivo;
+
+      -- ⚠️ o on conflict atualiza o ajuste também: sem isso, um `refazer`
+      -- deixaria a foto velha presa na linha.
+      insert into rebalanceamento (carteira_id, data, motivo, ajuste)
+      values (c.id, dia, motivo, aj)
+      on conflict (carteira_id, data) do update
+         set motivo = excluded.motivo, ajuste = excluded.ajuste;
     end if;
 
     perform recalcular_exposicao_atual(c.id);
@@ -2848,7 +2872,8 @@ CREATE VIEW public.ranking_dt AS
 CREATE TABLE public.rebalanceamento (
     carteira_id bigint NOT NULL,
     data date NOT NULL,
-    motivo text NOT NULL
+    motivo text NOT NULL,
+    ajuste jsonb
 );
 
 
@@ -3952,5 +3977,5 @@ CREATE POLICY universo_mexer ON public.universo TO authenticated USING ((EXISTS 
 -- PostgreSQL database dump complete
 --
 
-\unrestrict dnoC3yoDtHk9bOU2xKtUxOzOuP0xBnc0MrL8FV59zgTosUzm3EtaPddzDeBXN5m
+\unrestrict W4qKmeHbXjFw82FIe1lx3wKBsRN3YMWFEVfdrfLa0WHr0wXytgNw9rvlMsGAK7v
 
