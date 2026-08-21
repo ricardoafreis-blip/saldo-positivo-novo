@@ -1500,16 +1500,14 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
           <a href="#/servicos?s=fortunas">Gestão de grandes fortunas
             <em>acima de R$ 20 milhões</em></a>
           <span class="sub">Os produtos</span>
-          <a href="#/p-renda-fixa">Renda fixa</a>
-          <a href="#/p-renda-variavel">Renda variável</a>
-          <a href="#/p-previdencia">Previdência</a>
-          <a href="#/p-fundos">Fundos de investimento</a>
+          <a href="#/servicos?s=rendafixa">Renda fixa</a>
+          <a href="#/servicos?s=rendavar">Renda variável</a>
+          <a href="#/servicos?s=previdencia">Previdência</a>
+          <a href="#/servicos?s=fundos">Fundos de investimento</a>
           <a href="#/servicos?s=clube">Clube de investimentos</a>
           <a href="#/servicos?s=consorcio">Estratégias com consórcio</a>
-          <a href="#/p-internacional">Conta internacional</a>
-          <a href="#/p-alternativos">Ouro, dólar e bitcoin</a>
-          <span class="sub">Abrir conta</span>
-          <a href="#/p-conta">Como abrir a sua conta</a>
+          <a href="#/servicos?s=internacional">Conta internacional</a>
+          <a href="#/servicos?s=alternativos">Ouro, dólar e bitcoin</a>
           <span class="sub">Proteger o que já existe</span>
           <a href="#/sucessao">Seguro e sucessão</a>
           <a href="#/servicos?s=sucessorio">Planejamento sucessório</a>
@@ -5301,7 +5299,7 @@ function telaTermos(){
 
 const GRUPOS_S=[
  ["relacao","Quem acompanha você","A escolha depende do tamanho do que você tem — e um degrau leva ao outro."],
- ["resolver","Para resolver uma coisa","Produtos e operações contratados pontualmente, ou dentro de um portfólio."],
+ ["produtos","Os produtos","Onde o dinheiro fica. Cada família tem regra própria, imposto próprio e equipe própria."],
  ["proteger","Para proteger o que já existe","Quando o patrimônio está formado e o assunto passa a ser não perdê-lo."]];
 
 const SERVICOS=[
@@ -5327,13 +5325,57 @@ const SERVICOS=[
         distribuição (<b>Resolução CVM 178</b>). Pergunte a qual instituição
         o profissional está vinculado.`},
 
- {g:"resolver", id:"clube", nome:"Clube de investimentos",
+ {g:"produtos", id:"rendafixa", nome:"Renda fixa",
+  oq:`Emprestar dinheiro e receber juro por isso, com prazo e regra combinados desde o
+      início. É onde ficam caixa e reserva — a parte do patrimônio que precisa estar
+      inteira no dia em que for chamada.`,
+  quem:`Distribuição de títulos e produtos de renda fixa exige registro na CVM e
+        certificação. <b>Nada fora do que é regulado.</b>`},
+
+ {g:"produtos", id:"rendavar", nome:"Renda variável",
+  oq:`Ações, fundos imobiliários e ETFs. Você deixa de emprestar e passa a ser dono —
+      ninguém combina retorno com você, e é por isso que ele pode ser bem maior. Define-se
+      primeiro <b>quanto</b>, depois qual papel: é o peso que decide o resultado.`,
+  quem:`Recomendação e distribuição exigem registro na CVM e certificação; gestão por
+        mandato exige autorização de administrador de carteiras.`},
+
+ {g:"produtos", id:"previdencia", nome:"Previdência",
+  oq:`Longo prazo com regra de imposto própria. PGBL abate até 12% da renda tributável e
+      cobra imposto sobre tudo na saída; VGBL não abate nada e cobra só sobre o
+      rendimento. Tipo, regime e taxas se decidem na assinatura — e alguns não se
+      desfazem depois.`,
+  quem:`Planos são operados por entidades autorizadas e fiscalizadas, e a distribuição
+        exige certificação. A parte tributária envolve contador.`},
+
+ {g:"produtos", id:"fundos", nome:"Fundos de investimento",
+  oq:`Você compra uma cota e o trabalho de escolher passa a ser de um gestor. A pergunta
+      deixa de ser qual ativo comprar e passa a ser <b>em quem delegar</b> — e o que vale
+      é o regulamento, não o nome na lâmina.`,
+  quem:`Gestão exige autorização da CVM como administrador de carteiras; a distribuição
+        exige registro e certificação.`},
+
+ {g:"produtos", id:"internacional", nome:"Conta internacional",
+  oq:`Patrimônio fora do país e fora do real, sob outra legislação. Existe um imposto
+      americano sobre sucessão com isenção de apenas <b>US$ 60 mil</b> para não
+      residentes, e alíquota de 18% a 40% — ele se evita na escolha do que comprar, no
+      primeiro dia.`,
+  quem:`Distribuição e assessoria exigem registro; a declaração ao Banco Central e à
+        Receita envolve contador.`},
+
+ {g:"produtos", id:"alternativos", nome:"Ouro, dólar e bitcoin",
+  oq:`Reserva de valor: guarda poder de compra, não multiplica. Nenhum dos três paga
+      renda — não têm operação, funcionário nem balanço. Servem para o patrimônio não
+      encolher; não servem para ele dobrar.`,
+  quem:`É a categoria em que mais aparece oferta sem registro. Procure quem tenha
+        registro na CVM e produto de instituição autorizada.`},
+
+ {g:"produtos", id:"clube", nome:"Clube de investimentos",
   oq:`Um condomínio de 3 a 50 pessoas que juntam recursos numa carteira comum, com
       regulamento próprio. Custo menor que um fundo e decisão mais próxima do grupo.`,
   quem:`Administrado por instituição autorizada pela CVM e registrado na B3. A gestão
         pode caber a um cotista, se o regulamento permitir.`},
 
- {g:"resolver", id:"consorcio", nome:"Estratégias com consórcio",
+ {g:"produtos", id:"consorcio", nome:"Estratégias com consórcio",
   oq:`Compra programada sem juros, com taxa de administração. Serve para quem tem
       prazo e não tem pressa — e também como carta de crédito para investir em
       imóvel ou equipamento.`,
@@ -5385,7 +5427,7 @@ const SERVICOS=[
         declarada, porque quem ganha comissão do produto que indica deixou de cuidar do
         conjunto. Pergunte quem responde por qual parte.`},
 
- {g:"resolver", id:"exterior", nome:"Conta no exterior",
+ {g:"proteger", id:"exterior", nome:"Conta no exterior",
   oq:`Conta em banco nos <b>Estados Unidos ou na Europa</b>, no nome da pessoa física.
       Tirar dinheiro do país é a parte fácil; o que decide o resultado é a legislação
       que se aplica a <b>brasileiro com bens fora</b> — em que nome o ativo fica, qual
@@ -5400,7 +5442,7 @@ const SERVICOS=[
         acima de US$ 1 milhão e, desde a <b>Lei 14.754/2023</b>, tributação anual dos
         lucros da offshore, tenha havido distribuição ou não.`},
 
- {g:"resolver", id:"offshore", nome:"Abertura de offshore",
+ {g:"proteger", id:"offshore", nome:"Abertura de offshore",
   oq:`Constituir uma empresa fora do país para ser <b>dona dos investimentos</b>. Serve
       para consolidar aplicações em várias moedas e instituições sob um só titular,
       separar o patrimônio investido do pessoal e resolver a sucessão sem inventário
@@ -5414,7 +5456,7 @@ const SERVICOS=[
         tenha havido distribuição ou não. Offshore não declarada não é planejamento —
         é problema esperando data.`},
 
- {g:"resolver", id:"empresarial", nome:"Estruturação empresarial",
+ {g:"proteger", id:"empresarial", nome:"Estruturação empresarial",
   oq:`Do lado da empresa: desenhar a estrutura societária, trocar capital de giro caro
       por dívida bem estruturada e captar no mercado — <b>CRI e CRA</b> lastreados em
       recebíveis, além de operações estruturadas com os grandes bancos.`,
@@ -5777,21 +5819,7 @@ async function telaServicos(){
             mercado financeiro, foi o que veio antes dele.</p></div></div>
     </div>
 
-    <h2 style="font-family:Newsreader,serif;font-size:25px;font-weight:500;margin:34px 0 8px">
-      Depois: o que você vai usar</h2>
-    <p style="color:var(--t2);max-width:64ch;line-height:1.6">Os produtos são
-      contratados pontualmente ou dentro de um portfólio, e há equipe
-      especializada em cada família — toda ela regulada, sem exceção.</p>
 
-    <div class="prods">
-      <a href="#/p-renda-fixa">Renda fixa &rarr;</a>
-      <a href="#/p-renda-variavel">Renda variável &rarr;</a>
-      <a href="#/p-fundos">Fundos de investimento &rarr;</a>
-      <a href="#/p-previdencia">Previdência &rarr;</a>
-      <a href="#/p-internacional">Conta internacional &rarr;</a>
-      <a href="#/p-alternativos">Ouro, dólar e bitcoin &rarr;</a>
-      <a href="#/p-conta">Como abrir a sua conta &rarr;</a>
-    </div>
     ${GRUPOS_S.map(([gid,tit,sub])=>`
     <div class="secaoS">
       <div class="cabsec"><h2>${tit}</h2><span>${sub}</span></div>
@@ -9005,225 +9033,10 @@ function pagSucessaoNova(){ $("#app").innerHTML =
   ` + FIMP(); }
 
 
-function servRendaVar(){
-  $("#app").innerHTML = `
-  <div class="trilho"><a href="#/servicos" style="color:var(--ouro2);text-decoration:none">Serviços</a> · produtos</div>
-  <h1>Renda variável</h1>
-  <p class="chapeu">Ações, fundos imobiliários e ETFs. É a parte do patrimônio
-    que pode oscilar — e a que faz o dinheiro crescer de verdade em vez de só
-    acompanhar a inflação.</p>
 
-  <div class="caso">
-    <p>Duas pessoas compram as mesmas dez ações no mesmo dia. Uma põe 10% em
-      cada, a outra põe 60% numa só. <b>Cinco anos depois o resultado das duas
-      não tem nada a ver</b> — e a escolha dos papéis foi idêntica.</p>
-  </div>
 
-  <h2>Quando você precisa</h2>
-  <p>Quando existe dinheiro sem data marcada e o objetivo deixou de ser
-    preservar para ser <b>crescer</b>. Quando a renda fixa já dá conta do curto
-    prazo e o que sobra pode ficar parado por anos. E quando o patrimônio
-    cresceu ao ponto de a diferença entre 8% e 12% ao ano valer mais do que
-    qualquer economia de custo.</p>
 
-  <h2>O que o especialista faz</h2>
-  <p>Define <b>quanto</b> vai para renda variável antes de discutir qual papel —
-    porque é o peso que decide o resultado, não o acerto isolado. Escolhe entre
-    ação direta, fundo, ETF e fundo imobiliário conforme o seu caso, monta a
-    proporção que você aguenta carregar numa queda, e rebalanceia quando ela
-    sai do lugar.</p>
-  <p>Cuida também da parte que ninguém lembra: <b>tributação é diferente em cada
-    veículo</b>. Ação, fundo imobiliário, ETF e fundo de ações têm regra própria
-    de imposto, de compensação de prejuízo e de declaração — e o líquido é o
-    que importa.</p>
 
-  <h2>Que registro ele tem</h2>
-  <p>Recomendação e distribuição de produto de renda variável exigem registro na
-    CVM e certificação, e a gestão por mandato exige autorização de
-    administrador de carteiras. <b>Nada fora do que é regulado.</b></p>
-
-  <div class="adiante">
-    <a class="bt cheio" href="#/servicos">Consultar especialista &rarr;</a>
-    <a class="bt" href="#/aprender">Voltar ao índice</a>
-  </div>`;
-}
-
-function servPrev(){
-  $("#app").innerHTML = `
-  <div class="trilho"><a href="#/servicos" style="color:var(--ouro2);text-decoration:none">Serviços</a> · produtos</div>
-  <h1>Previdência</h1>
-  <p class="chapeu">Um plano que se contrata uma vez e se carrega por trinta
-    anos. As escolhas do primeiro dia valem mais do que a rentabilidade de
-    qualquer ano isolado.</p>
-
-  <div class="caso">
-    <p>Tipo do plano, regime de tributação e taxas são decididos na assinatura.
-      <b>Errar um dos três custa mais do que qualquer diferença de
-      rendimento</b> — e alguns deles não se desfazem depois.</p>
-  </div>
-
-  <h2>Quando você precisa</h2>
-  <p>Quando você quer guardar para um prazo realmente longo e o imposto começa a
-    pesar no caminho. Quando declara no modelo completo e tem renda tributável a
-    abater. E quando a sucessão faz parte da conta — previdência vai direto ao
-    beneficiário, sem passar por inventário.</p>
-
-  <h2>O que o especialista faz</h2>
-  <p>Decide PGBL ou VGBL a partir da <b>sua declaração de imposto</b>, não do
-    que é mais vendido. Escolhe o regime de tributação olhando o prazo real do
-    seu plano. Compara taxa de administração e taxa de carregamento entre
-    planos, porque plano caro derrota qualquer vantagem tributária. E, quando já
-    existe plano contratado, avalia se vale portabilidade — que se faz sem
-    resgatar e sem reiniciar a contagem do imposto.</p>
-  <p>Na parte sucessória, ajusta beneficiários e percentuais junto com o resto do
-    planejamento, para o dinheiro chegar a quem tem que chegar, rápido, numa
-    hora em que o restante do patrimônio está travado.</p>
-
-  <h2>Que registro ele tem</h2>
-  <p>Planos são operados por entidades autorizadas e fiscalizadas, e a
-    distribuição exige certificação. A parte tributária e sucessória envolve
-    contador e especialista em sucessão. <b>Nada fora do que é regulado.</b></p>
-
-  <div class="adiante">
-    <a class="bt cheio" href="#/servicos">Consultar especialista &rarr;</a>
-    <a class="bt" href="#/aprender">Voltar ao índice</a>
-  </div>`;
-}
-
-function servFundos(){
-  $("#app").innerHTML = `
-  <div class="trilho"><a href="#/servicos" style="color:var(--ouro2);text-decoration:none">Serviços</a> · produtos</div>
-  <h1>Fundos de investimento</h1>
-  <p class="chapeu">Você compra uma cota e o trabalho de escolher passa a ser de
-    um gestor. A pergunta deixa de ser qual ativo comprar e passa a ser em quem
-    delegar.</p>
-
-  <div class="caso">
-    <p>Dois fundos da mesma categoria, com a mesma promessa, entregam resultados
-      muito diferentes ao longo de dez anos. <b>A diferença raramente está no
-      nome da categoria</b> — está em quem gere, com que mandato e a que
-      custo.</p>
-  </div>
-
-  <h2>Quando você precisa</h2>
-  <p>Quando você quer exposição a algo que não consegue montar sozinho — crédito
-    privado, multimercado, ativos no exterior. Quando não tem tempo nem vontade
-    de acompanhar posição a posição. E quando o patrimônio cresceu e concentrar
-    a decisão numa cabeça só, a sua, virou o maior risco da carteira.</p>
-
-  <h2>O que o especialista faz</h2>
-  <p>Lê o regulamento antes da lâmina: qual é o mandato, o que o gestor pode e
-    não pode fazer, e o que acontece num resgate grande. Confere <b>prazo de
-    cotização e de liquidação</b> — o dinheiro que demora trinta dias para
-    voltar não serve para tudo. Compara taxa de administração e de performance
-    contra o que o fundo entrega de fato, e não contra o que promete.</p>
-  <p>E monta a combinação: fundo é peça de carteira, não carteira inteira. Dois
-    fundos que parecem diferentes e compram as mesmas coisas não diversificam
-    nada — só multiplicam a taxa.</p>
-
-  <h2>Que registro ele tem</h2>
-  <p>Gestão de fundo exige autorização da CVM como administrador de carteiras, e
-    a distribuição exige registro e certificação. <b>Nada fora do que é
-    regulado.</b></p>
-
-  <div class="adiante">
-    <a class="bt cheio" href="#/servicos">Consultar especialista &rarr;</a>
-    <a class="bt" href="#/aprender">Voltar ao índice</a>
-  </div>`;
-}
-
-function servAbrirConta(){
-  $("#app").innerHTML = `
-  <div class="trilho"><a href="#/servicos" style="color:var(--ouro2);text-decoration:none">Serviços</a> · produtos</div>
-  <h1>Como abrir a sua conta</h1>
-  <p class="chapeu">É a porta de entrada de todo o resto, e quase ninguém
-    escreve como funciona. São poucos passos, e a maior parte da demora não está
-    onde as pessoas imaginam.</p>
-
-  <div class="caso">
-    <p>Abrir a conta é rápido. O que costuma travar é o dinheiro chegar do outro
-      lado — <b>e a transferência só sai da sua conta bancária para uma conta de
-      investimento no seu próprio nome</b>.</p>
-  </div>
-
-  <h2>O que você precisa ter em mãos</h2>
-  <p>Documento de identidade com foto, CPF, um comprovante de residência
-    recente, e os dados da conta bancária que fica no seu nome. Se houver mais
-    de um titular, cada um apresenta o seu.</p>
-
-  <h2>Como é o caminho</h2>
-  <div class="passos">
-    <div class="passo"><span class="num">01</span>
-      <h4>Cadastro</h4>
-      <p>Dados pessoais, documentos e confirmação de identidade. Costuma sair no
-        mesmo dia.</p></div>
-    <div class="passo"><span class="num">02</span>
-      <h4>Perfil de investidor</h4>
-      <p>Um questionário que define a que produtos você tem acesso. Responder
-        pensando em impressionar limita você mesmo.</p></div>
-    <div class="passo"><span class="num">03</span>
-      <h4>Primeira transferência</h4>
-      <p>Da sua conta bancária para a de investimento, no mesmo CPF. É aqui que
-        a maioria das dúvidas aparece.</p></div>
-  </div>
-  <p>Feito isso, a conta está pronta para operar. O que vem depois — o que
-    comprar, em que proporção, com que prazo — é a conversa que vale a pena
-    ter antes do primeiro aporte, não depois.</p>
-
-  <h2>O que costuma dar errado</h2>
-  <p>Comprovante fora do prazo, nome divergente entre documento e cadastro, e
-    transferência partindo de conta de outra pessoa — <b>essa última não passa,
-    e não é burocracia</b>: conta de investimento é sempre no nome do titular.</p>
-  <p>E responder o perfil de investidor no automático. Ele não é formalidade:
-    é ele que decide o que você pode contratar depois.</p>
-
-  <h2>Que registro tem quem te atende</h2>
-  <p>A conta é aberta em instituição autorizada, e quem acompanha você tem
-    registro para isso. Você pode conferir nome e registro do profissional no
-    site da CVM antes de qualquer conversa sobre dinheiro. <b>Nada fora do que é
-    regulado.</b></p>
-
-  <div class="adiante">
-    <a class="bt cheio" href="#/servicos">Consultar especialista &rarr;</a>
-    <a class="bt" href="#/aprender">Voltar ao índice</a>
-  </div>`;
-}
-
-function servRendaFixa(){
-  $("#app").innerHTML = `
-  <div class="trilho"><a href="#/servicos" style="color:var(--ouro2);text-decoration:none">Serviços</a> · produtos</div>
-  <h1>Renda fixa</h1>
-  <p class="chapeu">Do título do governo ao crédito privado estruturado. É onde
-    fica a parte do patrimônio que não pode oscilar — e onde a escolha do papel
-    certo vale mais do que parece.</p>
-
-  <div class="caso">
-    <p>Dois títulos com o mesmo prazo e o mesmo emissor podem ter
-      <b>tributação diferente</b>. Um isento e outro não muda o retorno líquido
-      em vários pontos ao ano, sem mudar nada do risco.</p>
-  </div>
-
-  <h2>Quando você precisa</h2>
-  <p>Quando tem dinheiro com data marcada, quando quer reserva de emergência
-    que renda, ou quando o patrimônio cresceu e a parte estável precisa parar
-    de ficar na poupança.</p>
-
-  <h2>O que o especialista faz</h2>
-  <p>Compara emissores e garantias, ajusta prazo ao seu uso do dinheiro, e
-    escolhe entre prefixado, pós e híbrido conforme o cenário — não conforme o
-    que está em promoção. E, principalmente, olha a <b>tributação</b>, que é
-    onde a maior parte do ganho se perde sem ninguém notar.</p>
-
-  <h2>Que registro ele tem</h2>
-  <p>Distribuição e recomendação de produto de renda fixa exigem registro e
-    certificação — e todo profissional indicado aqui atua vinculado a
-    instituição autorizada. <b>Nada fora do que é regulado.</b></p>
-
-  <div class="adiante">
-    <a class="bt cheio" href="#/servicos">Consultar especialista &rarr;</a>
-    <a class="bt" href="#/aprender">Voltar ao índice</a>
-  </div>`;
-}
 
 
 const TOPO = (etapa,titulo,chapeu) => `
@@ -9260,123 +9073,7 @@ const SIM = (t,d,href="#/sim-crescer") => `
     <span class="t">${t} &rarr;</span>
     <span class="d">${d}</span></a>`;
 
-function servInternacional(){
-  $("#app").innerHTML = `
-  <div class="trilho"><a href="#/servicos" style="color:var(--ouro2);text-decoration:none">Serviços</a> · produtos</div>
-  <h1>Conta internacional</h1>
-  <p class="chapeu">Ter parte do patrimônio fora do país e fora do real. Não é
-    coisa só de quem tem muito — mudou bastante nos últimos anos.</p>
 
-  <div class="caso">
-    <p>O risco que quase ninguém mede é ter <b>100% do patrimônio numa moeda
-      só</b>, num país só. Não é sobre desconfiar do Brasil: é sobre não depender
-      de uma aposta única.</p>
-  </div>
-
-  <h2>Quando você precisa</h2>
-  <p>Quando tem gasto em dólar — filho estudando fora, viagem recorrente, imóvel
-    lá. Quando o patrimônio cresceu e concentrar tudo aqui virou risco. E quando
-    você quer acesso a ativos que não existem na bolsa brasileira.</p>
-
-  <h2>Por que os Estados Unidos</h2>
-  <p>Porque é o maior centro financeiro do mundo, com trilhões de dólares
-    circulando todo dia — é onde a liquidez está. E porque o dinheiro passa a
-    estar sob <b>outra legislação</b>, com outra moeda e outros riscos
-    políticos. Processo legal, declarado, e hoje bem mais rápido e simples do
-    que a fama sugere.</p>
-
-  <h2>O dinheiro não fica preso</h2>
-  <p>Mandar é uma decisão de ida — tem câmbio na entrada e na saída, e não se faz
-    pensando em desfazer no mês seguinte. Mas, uma vez lá, o valor fica <b>à sua
-    disposição no mundo inteiro</b>: com cartão de débito em dólar você gasta em
-    qualquer país, sem repatriar nada e sem novo câmbio a cada viagem.</p>
-
-  <h2>O imposto que pega desprevenido</h2>
-  <p>Há um imposto americano sobre sucessão com isenção de <b>apenas US$ 60
-    mil</b> para não residentes, e alíquotas de <b>18% a 40%</b> sobre o que
-    passa disso. Ele alcança ações de empresas americanas e imóveis nos EUA
-    <b>mesmo comprados por corretora de fora</b>, e não alcança ativos de outra
-    origem. <b>Evita-se na escolha do que comprar</b>, no primeiro dia — não
-    depois.</p>
-
-  <h2>Quando entra uma offshore</h2>
-  <p>Acima de <b>algo em torno de US$ 300 mil</b>, costuma compensar deter os
-    investimentos por uma empresa no exterior. A estrutura é simples e barata
-    perto do que protege. Mas ela organiza alocação e sucessão — <b>não resolve
-    imposto brasileiro</b>: desde 2023 o lucro de controlada no exterior é
-    tributado aqui todo ano, ainda que nada seja distribuído.</p>
-
-  <h2>O que o especialista faz</h2>
-  <p>Escolhe a jurisdição e o tipo de conta conforme o seu objetivo, define
-    <b>em nome de quem e comprando o quê</b> — que é onde o imposto sucessório
-    se resolve —, cuida da <b>declaração ao Banco Central e à Receita</b>, que é
-    obrigatória a partir de certos valores e é onde a maioria erra, e monta a
-    carteira lá fora com a tributação certa. Remessa, câmbio e imposto têm
-    regras próprias, e errar sai caro.</p>
-
-  <h2>Que registro ele tem</h2>
-  <p>Distribuição e assessoria sobre esses produtos exigem registro, e a parte
-    tributária e declaratória envolve contador. <b>Nada fora do que é
-    regulado.</b></p>
-
-  <div class="adiante">
-    <a class="bt cheio" href="#/servicos">Consultar especialista &rarr;</a>
-    <a class="bt" href="#/aprender">Voltar ao índice</a>
-  </div>`;
-}
-
-function servAlternativos(){
-  $("#app").innerHTML = `
-  <div class="trilho"><a href="#/servicos" style="color:var(--ouro2);text-decoration:none">Serviços</a> · produtos</div>
-  <h1>Ouro, dólar e bitcoin</h1>
-  <p class="chapeu">Três coisas diferentes que costumam ser tratadas como uma
-    só. Nenhuma delas paga renda — todas servem para outra coisa.</p>
-
-  <div class="caso">
-    <p>Ação paga dividendo. Título paga juro. Imóvel paga aluguel. <b>Ouro,
-      dólar e bitcoin não pagam nada</b>: o retorno vem só do preço subir. Isso
-      muda o papel deles na carteira.</p>
-  </div>
-
-  <h2>Para que cada um serve</h2>
-  <div class="trinca">
-    <div><span class="rot">Dólar</span>
-      <p>Proteção contra o real perder valor. Quem tem gasto ou plano em dólar
-        deveria ter parte do patrimônio nele — é casar a moeda com a
-        despesa.</p></div>
-    <div><span class="rot">Ouro</span>
-      <p>Reserva de valor de crise. Costuma subir quando quase tudo cai. Não
-        rende nada em tempos normais, e é esse o preço do seguro.</p></div>
-    <div><span class="rot">Bitcoin</span>
-      <p>Ativo novo, sem lastro em fluxo de caixa. Pode multiplicar e pode cair
-        80%. <b>Só entra em posição que você aceita perder inteira.</b></p></div>
-  </div>
-
-  <h2>Quando você precisa</h2>
-  <p>Quando o patrimônio já está formado e você quer <b>diversificar de
-    verdade</b> — não em mais papéis brasileiros, mas em coisas que se movem por
-    razões diferentes. É proteção de carteira, não motor de crescimento.</p>
-
-  <h2>Quando não serve</h2>
-  <p>Como aposta principal, para quem ainda está formando patrimônio. E em
-    proporção grande: <b>ativo que não paga renda não sustenta ninguém</b> — ele
-    protege o que já existe.</p>
-
-  <h2>O que o especialista faz</h2>
-  <p>Define a proporção certa para o seu tamanho e perfil, escolhe o veículo —
-    fundo, ETF, exposição direta —, e cuida da <b>tributação</b>, que é diferente
-    em cada um e muda o líquido de forma relevante.</p>
-
-  <h2>Que registro ele tem</h2>
-  <p>Recomendação e distribuição desses produtos exigem registro e certificação.
-    <b>Nada fora do que é regulado</b> — e é justamente nessa categoria que
-    aparece mais oferta sem registro nenhum.</p>
-
-  <div class="adiante">
-    <a class="bt cheio" href="#/servicos">Consultar especialista &rarr;</a>
-    <a class="bt" href="#/aprender">Voltar ao índice</a>
-  </div>`;
-}
 
 /* ─── PÁGINA: momentos ainda não desenhados ─── */
 /* ══ EDUCACIONAL: índice e tópicos ══ */
@@ -10804,13 +10501,6 @@ function rotear(){
   if(h==="#/grandes")         return pagGrandes();
   if(h==="#/casa")            return pagCasa();
   if(h==="#/nao-perder")      return pagSucessaoNova();
-  if(h==="#/p-renda-fixa")    return servRendaFixa();
-  if(h==="#/p-internacional") return servInternacional();
-  if(h==="#/p-alternativos")  return servAlternativos();
-  if(h==="#/p-renda-variavel") return servRendaVar();
-  if(h==="#/p-previdencia")    return servPrev();
-  if(h==="#/p-fundos")         return servFundos();
-  if(h==="#/p-conta")          return servAbrirConta();
   if(h==="#/crescer")         return telaCrescerNova();
   if(h==="#/sim-crescer" || h==="#/sim-renda" || h==="#/simulador"
      || h==="#/planejar")     return simTudo();
