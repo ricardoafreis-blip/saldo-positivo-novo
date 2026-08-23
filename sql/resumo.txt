@@ -38,7 +38,7 @@ peso_atual_backup | 46
 posicao | 560
 rebalanceamento | 365
 referencia | 11
-refresh_tokens | 69
+refresh_tokens | 70
 regra | 80
 resumo | 80
 retorno_dia | 2080
