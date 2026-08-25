@@ -60,13 +60,44 @@ header .marca:hover{color:var(--tinta)}
 /* grade centralizada. O divisor mora na coluna da direita, não no "grupo que
    vem depois" — senão, ao quebrar em duas filas, o terceiro herda o recuo do
    segundo e a fila de baixo sai torta. */
-nav{display:grid;grid-template-columns:repeat(4,1fr);align-items:start;gap:0}
-nav .grupo{padding:6px 16px 0;text-align:left}
-nav .grupo+.grupo{border-left:1px solid var(--linha)}
+/* v3 simétrico: um eixo só. As pontas são fixas em 176px e o nav avança sobre
+   o padding lateral, então Aprender e Construir ficam à mesma distância das
+   bordas. O meio é bloco fixo, sempre aberto — é o coração do site e não custa
+   um clique para aparecer. As bordas moram nas laterais do meio: com três
+   blocos simétricos, o par é o que fecha o centro.
+   Cuidado: as defs são nowrap, e é isso que põe "venha pro mundo real" numa
+   linha só. Def mais longa que essas vaza para fora da coluna em vez de
+   quebrar — as duas atuais são o teto de comprimento.                        */
+nav{display:grid;grid-template-columns:176px 1fr 176px;align-items:start;
+  gap:0;margin:0 -20px}
+nav>.grupo,nav>.meio{padding-top:6px}
+nav>.grupo{text-align:center;padding-left:8px;padding-right:8px}
+nav>.meio{border-left:1px solid var(--linha);border-right:1px solid var(--linha)}
+.meio .cab{text-align:center;padding:0 12px}
+.meio .cab .rotg{font-size:20px}
+.meio .filete{width:52px;height:1px;margin:11px auto 13px;
+  background:linear-gradient(90deg,transparent,var(--ouro2),transparent);opacity:.7}
+.trio{display:grid;grid-template-columns:repeat(3,1fr)}
+.trio>div{padding:0 14px;text-align:center}
+.trio>div+div{border-left:1px solid rgba(31,48,73,.6)}
+.rams{display:block;font-family:'IBM Plex Mono',monospace;font-size:9.5px;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--ouro2);opacity:.7;
+  margin-bottom:8px}
+.trio a{display:block;font-size:12.5px;color:var(--t2);padding:3px 0;
+  transition:color .15s}
+.trio a:hover{color:var(--ouro2)}
+.trio a.aqui{color:var(--ouro2)}
+.trio .falta{display:block;font-size:12.5px;color:var(--graf);padding:3px 0;
+  cursor:default}
+.trio .falta em{font-style:normal;font-size:8.5px;letter-spacing:.11em;
+  text-transform:uppercase;color:var(--ouro2);opacity:.5;
+  border:1px solid var(--linha2);border-radius:3px;padding:0 4px;margin-left:6px}
+.trio a .ag{display:block;font-size:10px;color:var(--graf)}
 nav .rotg{display:block;font-family:Newsreader,serif;font-size:19px;
   font-weight:500;letter-spacing:-.01em;color:var(--tinta);line-height:1.15}
 nav .def{display:block;font-size:11.5px;color:var(--ouro2);opacity:.85;
-  font-style:italic;line-height:1.35;margin:5px 0 8px}
+  font-style:italic;line-height:1.35;margin:5px 0 0;text-align:center;
+  white-space:nowrap}
 nav .divisor,nav .rot,nav .gloss,nav .bloco{display:none}
 
 /* grupos curtos: os três itens ficam à vista, sem clique nenhum */
@@ -78,8 +109,8 @@ nav .lista a.aqui{color:var(--ouro2);border-bottom-color:var(--ouro2)}
 
 /* grupos longos: o título é o botão que abre o painel */
 nav .grupo{position:relative}
-button.rotg{display:flex;align-items:center;gap:8px;padding:0;text-align:left;
-  transition:color .15s}
+button.rotg{display:flex;align-items:center;justify-content:center;gap:8px;
+  padding:0;width:100%;text-align:center;transition:color .15s}
 button.rotg .cv{flex:none;width:0;height:0;border-left:5px solid transparent;
   border-right:5px solid transparent;border-top:5.5px solid var(--ouro2);
   opacity:.85;transition:transform .18s}
@@ -124,14 +155,25 @@ header .dir a:hover{color:var(--ouro2)}
 
 @media(max-width:1040px){
   header .marca{font-size:22px}
-  nav .grupo{padding:6px 10px 0}
-  nav .lista a,nav .painel a{font-size:12px}
+  nav{grid-template-columns:158px 1fr 158px}
+  .trio>div{padding:0 10px}
+  .trio a,.trio .falta{font-size:12px}
+  nav .def{font-size:11px}
+  nav .painel a{font-size:12px}
   nav .painel{min-width:248px}
 }
+@media(max-width:820px){
+  nav{grid-template-columns:1fr;margin:0}
+  nav>.grupo,nav>.meio{border:none;border-top:1px solid var(--linha);padding:12px 8px}
+  nav>.grupo:first-child{border-top:none}
+}
+@media(max-width:560px){
+  .trio{grid-template-columns:1fr;row-gap:14px}
+  .trio>div+div{border-left:none;border-top:1px solid rgba(31,48,73,.6);
+    padding-top:12px}
+}
 @media(max-width:700px){
-  nav{grid-template-columns:repeat(2,1fr);row-gap:14px}
-  nav .grupo+.grupo{border-left:none}
-  nav .grupo:nth-child(even){border-left:1px solid var(--linha)}
+  nav .rotg{font-size:17px}
   nav .rotg{font-size:17px}
   nav .def{font-size:10.5px;margin:3px 0 7px}
   /* em tela estreita o painel flutuante estoura pela lateral: vira bloco
@@ -1411,6 +1453,77 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
   .passos{grid-template-columns:1fr;gap:11px}
   .classes{grid-template-columns:1fr}
 }
+/* ===== Certificado =====
+   Folha branca dentro do site escuro: certificado se imprime, e fundo escuro
+   imprime mal e gasta tinta. Na impressão some tudo menos a folha.            */
+.certTopo{display:flex;justify-content:space-between;align-items:center;
+  gap:14px;flex-wrap:wrap;margin:26px 0 14px}
+.folha{background:#FFFFFF;color:#14202F;max-width:720px;margin:0 auto;
+  padding:44px 46px 34px;border-radius:4px;
+  box-shadow:0 10px 40px rgba(0,0,0,.45);position:relative}
+.folha::before{content:"";position:absolute;inset:13px;
+  border:1px solid #C9A227;border-radius:2px;pointer-events:none}
+.folha::after{content:"";position:absolute;inset:17px;
+  border:1px solid rgba(201,162,39,.34);border-radius:2px;pointer-events:none}
+.folha .fMarca{font-size:11.5px;letter-spacing:.22em;text-transform:uppercase;
+  color:#9A7B1B;text-align:center;margin:0 0 22px}
+.folha .fTit{font-size:31px;text-align:center;margin:0 0 4px;
+  color:#14202F;letter-spacing:.01em}
+.folha .fSub{font-size:12.5px;text-align:center;color:#5C6B80;margin:0 0 26px}
+.folha .fLead{font-size:13px;text-align:center;color:#5C6B80;margin:0 0 6px}
+.folha .fNome{font-size:27px;text-align:center;margin:0 0 4px;color:#14202F}
+.folha .fCart{font-size:13.5px;text-align:center;color:#5C6B80;margin:0 0 22px}
+.folha .fFrase{font-size:15px;line-height:1.62;text-align:center;
+  color:#14202F;margin:0 auto 24px;max-width:520px}
+.folha .fFrase b{color:#8A6C10}
+.folha .fPos{font-size:44px;text-align:center;color:#8A6C10;margin:0 0 2px;
+  line-height:1}
+.folha .fPosL{font-size:12px;text-align:center;color:#5C6B80;
+  letter-spacing:.1em;text-transform:uppercase;margin:0 0 22px}
+.folha .fNums{display:flex;justify-content:center;gap:0;flex-wrap:wrap;
+  border-top:1px solid #E4E8EE;border-bottom:1px solid #E4E8EE;
+  padding:15px 0;margin:0 0 20px}
+.folha .fNums div{flex:1;min-width:104px;text-align:center;padding:0 8px}
+.folha .fNums .v{font-size:17px;color:#14202F;display:block}
+.folha .fNums .l{font-size:10.5px;color:#7A8798;letter-spacing:.06em;
+  text-transform:uppercase;display:block;margin-top:3px}
+.folha .fPe{font-size:11px;color:#7A8798;text-align:center;line-height:1.65;
+  margin:0}
+.folha .fPe b{color:#5C6B80;font-weight:600}
+@media(max-width:620px){
+  .folha{padding:32px 22px 26px}
+  .folha .fTit{font-size:25px}
+  .folha .fNome{font-size:21px}
+  .folha .fPos{font-size:36px}
+}
+@media print{
+  header,footer,.naoImprime{display:none!important}
+  body{background:#FFFFFF!important}
+  .w{max-width:none!important;padding:0!important}
+  .folha{box-shadow:none;max-width:none;margin:0;padding:38px 40px}
+}
+/* escudo do time: iniciais sobre cor derivada do nome. Sem upload de imagem,
+   sem arquivo para hospedar, e cada time fica com a sua cor.                  */
+.escudo{display:inline-flex;align-items:center;justify-content:center;
+  border-radius:9px;border:1px solid var(--linha2);color:var(--tinta);
+  font-weight:600;letter-spacing:.02em;flex:none;line-height:1}
+.chip.mono{padding:4px 10px;border:1px solid var(--linha2);border-radius:6px;
+  border-bottom-width:1px;background:var(--p2)}
+.chip.mono[data-on="1"],.chip.mono.on{border-color:var(--lacre);color:var(--ouro2)}
+.msgL:last-child{border-bottom:none!important}
+/* totem: a medalha ao lado do apelido. Pequena de propósito — ela marca, não
+   grita, e precisa caber numa linha de tabela sem empurrar as colunas.      */
+.totem{display:inline-flex;align-items:center;gap:3px;font-size:10px;
+  font-family:'IBM Plex Mono',monospace;border:1px solid;border-radius:99px;
+  padding:0 5px;margin-left:6px;vertical-align:middle;line-height:1.6}
+.totem i{width:5px;height:5px;border-radius:50%;background:currentColor;
+  flex:none}
+.comTotem{font-weight:500}
+.totens{display:flex;flex-wrap:wrap;gap:8px;margin:0}
+.totemCard{display:flex;align-items:center;gap:9px;border:1px solid var(--linha2);
+  border-radius:7px;padding:8px 12px;background:var(--p2)}
+.totemCard .tt{font-size:13px}
+.totemCard .ts{font-size:11px;color:var(--graf);display:block}
 </style>
 </head>
 <body>
@@ -1431,7 +1544,7 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
     <nav>
       <div class="grupo" data-g="aprender">
         <button type="button" class="rotg abre">Aprender<i class="cv"></i></button>
-        <span class="def">antes de arriscar qualquer coisa</span>
+        <span class="def">antes de arriscar</span>
         <div class="painel">
           <span class="sub"><i>1</i>Comece por aqui</span>
           <a href="#/aprender">Do começo, sem pular etapa</a>
@@ -1465,30 +1578,35 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
         </div>
       </div>
 
-      <div class="grupo" data-g="especular">
-        <span class="rotg">Especular</span>
-        <span class="def">comprar para vender mais caro</span>
-        <div class="lista">
-          <a href="#/tiro-curto">Tiro curto</a>
-          <a href="#/placar">Placar</a>
-          <a href="#/duelo">Duelo</a>
-        </div>
-      </div>
-
-      <div class="grupo" data-g="investir">
-        <span class="rotg">Investir</span>
-        <span class="def">comprar para viver de renda</span>
-        <div class="lista">
-          <a href="#/ranking">Ranking</a>
-          <a href="#/mais-escolhidos">Mais escolhidos</a>
-          <a href="#/screening">Screening</a>
-          <a href="#/publicar">Crie sua carteira</a>
+      <div class="meio" data-g="competicoes">
+        <div class="cab"><span class="rotg">Competições</span>
+          <span class="def">mostre do que você é capaz</span></div>
+        <div class="filete"></div>
+        <div class="trio">
+          <div><span class="rams">Intraday</span>
+            <span class="falta">Valendo agora<em>a fazer</em></span>
+            <a href="#/tiro-curto">Tiro curto</a>
+            <span class="falta">Duelo e torneio<em>a fazer</em></span>
+            <a href="#/placar">Placar</a>
+          </div>
+          <div><span class="rams">Carteira individual</span>
+            <a href="#/ranking">Ranking</a>
+            <a href="#/mais-escolhidos">Mais escolhidos</a>
+            <a href="#/publicar">Crie sua carteira</a>
+            <a href="#/screening">Screening</a>
+            <a href="#/duelo">Duelo de carteiras</a>
+          </div>
+          <div><span class="rams">Em time</span>
+            <a href="#/times">Ranking de equipe</a>
+            <a href="#/criar-time">Crie seu time</a>
+            <a href="#/meu-time">Meu time</a>
+          </div>
         </div>
       </div>
 
       <div class="grupo" data-g="construir">
         <button type="button" class="rotg abre">Construir<i class="cv"></i></button>
-        <span class="def">o patrimônio fora da tela</span>
+        <span class="def">venha pro mundo real</span>
         <div class="painel">
           <a class="topo" href="#/servicos">Falar com um especialista</a>
           <a href="#/simulador">Fazer a minha conta</a>
@@ -1981,7 +2099,9 @@ function sincronizarMenus(){
   // a home é o ranking; sem traduzir isso o item não fica marcado
   const base  = (aqui === "#/" || aqui === "") ? "#/ranking" : aqui;
   const alvo  = s ? base + "?s=" + s : base;
-  document.querySelectorAll("nav .painel, nav .lista").forEach(cx => {
+  /* .trio é o bloco fixo do meio; sem ele aqui, nenhum item de Competições
+     ficaria marcado ao navegar. */
+  document.querySelectorAll("nav .painel, nav .lista, nav .trio").forEach(cx => {
     const links = [...cx.querySelectorAll("a")];
     links.forEach(a => a.classList.remove("aqui"));
     const m = links.find(a => a.getAttribute("href") === alvo)
@@ -2071,12 +2191,20 @@ function retornoDe(serie, k){
   if(jan.length < 1) return null;
   return jan.reduce((a,x) => a * (1 + x.retorno), 1) - 1;
 }
-function metricas(serie){
+/* minSharpe: quantos pregões a série precisa ter para o Sharpe existir.
+   Vinte é o piso das carteiras individuais, que competem no perpétuo e
+   começaram em datas diferentes — com poucos dias o desvio-padrão é ruído.
+   Os times usam 2, que é o mínimo matemático: com um retorno só não há
+   dispersão nenhuma e a conta não fecha. Baixar o piso não distorce a
+   disputa do time porque, dentro de um ciclo, todos têm o mesmo número de
+   pregões — e o encolhimento n/(n+40) multiplica todo mundo igual, segurando
+   o tamanho do número sem mexer na ordem de ninguém.                        */
+function metricas(serie, minSharpe = 20){
   if(!serie || !serie.length) return {dias:0,acum:0,vol:null,sharpe:null,dd:0,hoje:0,sem:null,mes:null};
   const r = serie.map(x=>x.retorno), n = r.length;
   const acum = serie[serie.length-1].indice/100 - 1;
   let vol=null, sharpe=null;
-  if(n>=20){
+  if(n >= Math.max(2, minSharpe)){
     const m = r.reduce((a,b)=>a+b,0)/n;
     vol = Math.sqrt(r.reduce((a,b)=>a+(b-m)**2,0)/(n-1))*Math.sqrt(252);
     if(vol>0){
@@ -3892,6 +4020,18 @@ async function telaConta(soCarteiras){
     <a href="#/publicar" class="bt lacre" style="margin-left:6px;padding:5px 12px;font-size:12px">Criar carteira</a>
   </p></div>
 
+  <h2 style="font-size:19px;margin:26px 0 12px">Seus títulos</h2>
+  <div class="card" id="meusTotens"><p style="margin:0;color:var(--t2);font-size:13px">
+    …</p></div>
+
+  <h2 style="font-size:19px;margin:26px 0 12px">Seu time</h2>
+  <div class="card" id="meuTimeCx"><p style="margin:0;color:var(--t2);font-size:13px">
+    verificando…</p></div>
+
+  <h2 style="font-size:19px;margin:26px 0 12px">Seus certificados</h2>
+  <div class="card" id="meusCerts"><p style="margin:0;color:var(--t2);font-size:13px">
+    apurando…</p></div>
+
   <h2 style="font-size:19px;margin:32px 0 12px">Encerrar conta</h2>
   <div class="card" style="max-width:560px;border-color:rgba(242,104,95,.3)">
     <p style="font-size:12.5px;color:var(--t2);margin:0 0 12px">
@@ -4010,6 +4150,12 @@ async function telaConta(soCarteiras){
 
 function ligarApagarMinhas(){
   document.querySelectorAll(".del-minha").forEach(b=> b.onclick = ()=> apagarMinha(b));
+
+  /* certificados: precisa do painel para saber a posição de cada carteira no
+     ranking. Vai depois de pintar a tela para a conta abrir na hora.          */
+  pintarMeusCertificados((cs||[]).map(c=>c.id));
+  pintarMeuTime();
+  pintarMeusTotens();
   async function apagarMinha(b){
     const temDias = Number(b.dataset.dias||0) > 0;
     const texto = temDias
@@ -5187,6 +5333,60 @@ function telaComo(){
   <p style="color:var(--graf);font-size:12.5px;line-height:1.55;max-width:74ch;margin:14px 0 0">
     Contratar serviço não melhora a sua posição em nenhum deles — se melhorasse, o ranking
     não valeria nada, e é o ranking que dá sentido ao resto.</p>
+
+  <h2 id="regras-do-time" style="font-size:20px;margin:38px 0 6px">As regras da competição em time</h2>
+  <div style="max-width:74ch">
+    <p style="color:var(--t2);font-size:14px;line-height:1.6;margin:0 0 14px">
+      Escritas antes de a temporada começar, e iguais para todo mundo. É isso
+      que faz o troféu significar alguma coisa: ninguém muda critério com a
+      competição andando.</p>
+
+    <h3 style="font-size:15px;margin:0 0 5px">Quem pode entrar</h3>
+    <p style="color:var(--t2);font-size:13.5px;line-height:1.65;margin:0 0 13px">
+      Qualquer pessoa com conta e com uma <b>carteira da classe Comprada</b>
+      publicada — dez papéis, dez por cento em cada. Ao entrar, você indica qual
+      das suas carteiras concorre pelo time, e pode trocar quando quiser.
+      <b>Uma pessoa, um time por ciclo.</b> O capitão aprova quem entra. O time
+      só pontua com pelo menos cinco integrantes, e não há teto.</p>
+
+    <h3 style="font-size:15px;margin:0 0 5px">A carteira do time</h3>
+    <p style="color:var(--t2);font-size:13.5px;line-height:1.65;margin:0 0 13px">
+      São os <b>dez papéis mais presentes</b> nas carteiras dos integrantes, com
+      dez por cento em cada. Cada pessoa vale <b>um voto por papel</b>: quem
+      concentra mais num papel não pesa mais que os outros. Você mexe na sua
+      carteira quando quiser, e a mudança entra na do time <b>no pregão
+      seguinte</b> — o que já passou não muda.</p>
+
+    <h3 style="font-size:15px;margin:0 0 5px">Empate na décima vaga</h3>
+    <p style="color:var(--t2);font-size:13.5px;line-height:1.65;margin:0 0 13px">
+      A preferência é do <b>capitão</b>, até a abertura do pregão seguinte, entre
+      os papéis empatados. Se ele não escolher, entra o de <b>maior volume
+      financeiro médio</b>. Assim o time nunca fica sem carteira por causa de um
+      capitão ausente.</p>
+
+    <h3 style="font-size:15px;margin:0 0 5px">Os campeonatos</h3>
+    <p style="color:var(--t2);font-size:13.5px;line-height:1.65;margin:0 0 13px">
+      Dois: um <b>mensal</b> e um <b>trimestral</b>, que começa em janeiro, abril,
+      julho e outubro. O time se inscreve num, no outro, ou nos dois. O elenco
+      <b>congela quando o ciclo começa</b>: quem entra ou sai depois só vale no
+      ciclo seguinte, e time criado no meio joga o próximo.</p>
+
+    <h3 style="font-size:15px;margin:0 0 5px">Como se ganha</h3>
+    <p style="color:var(--t2);font-size:13.5px;line-height:1.65;margin:0 0 13px">
+      Três réguas: <b>rentabilidade</b>, <b>índice Sharpe</b> e <b>menor queda</b>.
+      O campeão geral é quem soma as menores posições nas três — primeiro lugar
+      vale um ponto, segundo vale dois. Rentabilidade e queda contam desde o
+      primeiro pregão; o Sharpe entra no segundo, porque com um retorno só não há
+      dispersão para medir.</p>
+
+    <h3 style="font-size:15px;margin:0 0 5px">O que se ganha</h3>
+    <p style="color:var(--t2);font-size:13.5px;line-height:1.65;margin:0 0 10px">
+      Não há prêmio em dinheiro. O que se ganha é <b>reconhecimento</b>: título no
+      perfil, destaque do apelido no ranking e certificado para imprimir — do time,
+      de cada integrante e do capitão.</p>
+    <p style="margin:0"><a href="#/times" class="bt">Ver o ranking de equipes</a>
+      <a href="#/criar-time" class="bt lacre" style="margin-left:8px">Criar meu time</a></p>
+  </div>
 
   <h2 style="font-size:20px;margin:38px 0 6px">Sala de aula</h2>
   <div style="max-width:74ch">
@@ -10430,6 +10630,1106 @@ function tabelaVolta(){
     <tbody>${linhas}</tbody></table>`;
 }
 
+/* ===== Certificados =====
+   Atesta a posição de uma carteira no ranking. Só existe para quem está entre
+   os três primeiros de alguma régua, e só depois de 20 pregões apurados — que é
+   o mínimo que o site já exige para conseguir calcular o Sharpe. Usa apenas
+   valor fechado, nunca o parcial do dia: certificado não pode mudar de número
+   enquanto a pessoa olha para ele.
+   O que ele atesta é a posição NA DATA DA EMISSÃO. Congelar de verdade — do
+   tipo "campeão de março" — depende da rotina de fechamento de ciclo, que ainda
+   não existe no banco; enquanto não existir, o caminho do time cai no aviso lá
+   embaixo em vez de inventar dado.                                            */
+const CERT_MIN_DIAS = 20;
+const CERT_TOP = 3;
+
+const CERT_REGUAS = {
+  rentabilidade: { curto:"Rentabilidade",
+    frase:"a maior rentabilidade acumulada",
+    valor: c => c.acumulado, fmt: v => pct(v) },
+  sharpe: { curto:"Índice Sharpe",
+    frase:"a melhor relação entre retorno e risco, medida pelo índice Sharpe",
+    valor: c => c.sharpe, fmt: v => n2(v) },
+  queda: { curto:"Menor queda",
+    frase:"a menor queda máxima do período",
+    valor: c => c.drawdown, fmt: v => pct(v) },
+};
+
+const ORDINAL = n => n + "ª";
+
+/* posição da carteira em cada régua, no geral e dentro da classe dela.
+   Só entram carteiras com pregões suficientes — senão quem publicou ontem
+   apareceria em primeiro por acaso.                                           */
+function certPosicoes(carteiras, id){
+  const elegiveis = (carteiras||[]).filter(c => (c.dias||0) >= CERT_MIN_DIAS);
+  const alvo = elegiveis.find(c => String(c.id) === String(id));
+  if(!alvo) return null;
+  const reguas = {};
+  Object.entries(CERT_REGUAS).forEach(([k, r]) => {
+    const com = elegiveis.filter(c => r.valor(c) != null);
+    if(r.valor(alvo) == null) return;
+    const ordena = (a,b) => r.valor(b) - r.valor(a);
+    const geral   = [...com].sort(ordena);
+    const naClasse = com.filter(c => (c.classe||"sem") === (alvo.classe||"sem")).sort(ordena);
+    const pg = geral.findIndex(c => String(c.id) === String(id)) + 1;
+    const pc = naClasse.findIndex(c => String(c.id) === String(id)) + 1;
+    if(!pg) return;
+    reguas[k] = { geral:pg, totalGeral:geral.length,
+                  classe:pc, totalClasse:naClasse.length,
+                  valor:r.valor(alvo),
+                  vale: pg <= CERT_TOP || pc <= CERT_TOP };
+  });
+  return { carteira: alvo, reguas };
+}
+
+/* das duas posições, a que o certificado deve anunciar é a mais forte:
+   ser 1º entre todos vale mais do que ser 1º entre os da mesma classe.        */
+function certRecorte(pos){
+  if(pos.geral <= CERT_TOP && pos.geral <= pos.classe)
+    return { n:pos.geral, total:pos.totalGeral, onde:"geral" };
+  if(pos.classe <= CERT_TOP)
+    return { n:pos.classe, total:pos.totalClasse, onde:"classe" };
+  return { n:pos.geral, total:pos.totalGeral, onde:"geral" };
+}
+
+function certAviso(texto){
+  app().innerHTML = `<div class="cabeca"><h1>Certificado</h1></div>
+    ${aviso(texto)}
+    <p style="margin-top:14px"><a href="#/conta" class="bt">Voltar para Minha conta</a></p>`;
+}
+
+async function telaCertificado(){
+  const q = new URLSearchParams(location.hash.split("?")[1] || "");
+
+  /* certificado de ciclo: sai da conquista, que a fechar_ciclo grava. Ao
+     contrário do de posição, este é fixo — o ciclo acabou e o resultado não
+     muda mais.                                                                */
+  if(q.get("conq")) return certificadoDeCiclo(q.get("conq"));
+
+  const id = q.get("c");
+  const chave = q.get("r") || "rentabilidade";
+  const regua = CERT_REGUAS[chave];
+  if(!id || !regua) return certAviso("Endereço de certificado incompleto.");
+
+  app().innerHTML = `<div class="carreg">emitindo…</div>`;
+  const pn = await painelCache();
+  if(pn.erro) return certAviso("Erro ao ler o banco: " + pn.erro);
+
+  const r = certPosicoes(pn.carteiras || [], id);
+  if(!r) return certAviso(`Esta carteira ainda não tem ${CERT_MIN_DIAS} pregões `
+    + "apurados, ou não está mais no ranking.");
+
+  const pos = r.reguas[chave];
+  if(!pos) return certAviso("Esta régua ainda não pode ser medida nesta carteira.");
+  if(!pos.vale) return certAviso("O certificado existe só para as três primeiras "
+    + "colocadas de cada régua. Esta carteira ainda não está entre elas.");
+
+  const c  = r.carteira;
+  const rc = certRecorte(pos);
+  const nomeClasse = (c.classe && CLASSE[c.classe]) ? CLASSE[c.classe].nome : null;
+  const ondeTexto = rc.onde === "geral"
+    ? `entre as ${rc.total} carteiras em disputa`
+    : `entre as ${rc.total} carteiras da classe ${esc(nomeClasse||"")}`;
+
+  app().innerHTML = `
+  <div class="certTopo naoImprime">
+    <a href="#/conta" style="color:var(--t2);font-size:13px">&larr; Minha conta</a>
+    <span>
+      <a href="#/carteira/${c.id}" class="bt" style="padding:6px 13px;font-size:12.5px">Ver a carteira</a>
+      <button class="bt cheio" id="btImprimir" style="padding:6px 14px;font-size:12.5px;margin-left:6px">Imprimir</button>
+    </span>
+  </div>
+
+  <div class="folha">
+    <p class="fMarca">Saldo Positivo</p>
+    <h1 class="fTit">Certificado</h1>
+    <p class="fSub">${esc(regua.curto)}</p>
+
+    <p class="fLead">Certificamos que</p>
+    <p class="fNome">${esc(c.apelido || "—")}</p>
+    <p class="fCart">com a carteira <b>${esc(c.nome || "—")}</b>${
+      nomeClasse ? ` · classe ${esc(nomeClasse)}` : ""}</p>
+
+    <p class="fPos">${ORDINAL(rc.n)}</p>
+    <p class="fPosL">colocada ${esc(ondeTexto)}</p>
+
+    <p class="fFrase">alcançou <b>${esc(regua.frase)}</b> entre as carteiras
+      publicadas no Saldo Positivo, apuradas todos os dias pelo fechamento real
+      da B3, sob a mesma regra e à vista de todos.</p>
+
+    <div class="fNums">
+      <div><span class="v">${regua.fmt(pos.valor)}</span><span class="l">${esc(regua.curto)}</span></div>
+      <div><span class="v">${pct(c.acumulado)}</span><span class="l">Acumulado</span></div>
+      <div><span class="v">${c.dias || 0}</span><span class="l">Pregões apurados</span></div>
+      <div><span class="v">${pct(c.drawdown)}</span><span class="l">Maior queda</span></div>
+    </div>
+
+    <p class="fPe">
+      Apurado no fechamento de <b>${dataBR(c.ultimo_dia) || "—"}</b> ·
+      emitido em <b>${dataBR(HOJE_BR())}</b> ·
+      carteira nº <b>${esc(String(c.id))}</b><br>
+      Competição de carteiras simuladas. <b>Não há dinheiro real em risco</b>,
+      e nada aqui é recomendação de investimento.
+    </p>
+  </div>`;
+
+  const bi = document.getElementById("btImprimir");
+  if(bi) bi.onclick = () => window.print();
+}
+
+
+/* lista, dentro de Minha conta, os certificados a que as carteiras da pessoa
+   têm direito hoje. Quem não está entre os três primeiros de nenhuma régua vê
+   quanto falta, em vez de um espaço vazio sem explicação.                     */
+async function pintarMeusCertificados(ids){
+  const alvo = document.getElementById("meusCerts");
+  if(!alvo) return;
+  const pn = await painelCache();
+  if(pn.erro){
+    alvo.innerHTML = `<p style="margin:0;color:var(--t2);font-size:13px">Não
+      consegui apurar agora: ${esc(pn.erro)}</p>`;
+    return;
+  }
+  const linhas = [];
+  let novatas = 0;
+  (ids||[]).forEach(id => {
+    const r = certPosicoes(pn.carteiras || [], id);
+    if(!r){ novatas++; return; }
+    const ganhos = Object.entries(r.reguas).filter(([,p]) => p.vale);
+    if(!ganhos.length) return;
+    linhas.push(`<div style="padding:11px 0;border-bottom:1px solid var(--linha)">
+      <div style="font-size:14px"><b>${esc(r.carteira.nome||"—")}</b></div>
+      <div style="margin-top:7px;display:flex;gap:7px;flex-wrap:wrap">
+        ${ganhos.map(([k,p]) => {
+          const rc = certRecorte(p);
+          return `<a href="#/certificado?c=${r.carteira.id}&r=${k}" class="bt lacre"
+            style="padding:5px 12px;font-size:12px">${esc(CERT_REGUAS[k].curto)}
+            · ${ORDINAL(rc.n)}</a>`; }).join("")}
+      </div></div>`);
+  });
+  const pe = `<p style="margin:12px 0 0;color:var(--graf);font-size:11.5px">
+    O certificado existe para as três primeiras colocadas de cada régua, e só
+    depois de ${CERT_MIN_DIAS} pregões apurados.${
+      novatas ? ` ${novatas} ${novatas===1?"carteira sua ainda não chegou":"carteiras suas ainda não chegaram"} lá.` : ""}</p>`;
+  alvo.innerHTML = linhas.length
+    ? linhas.join("") + pe
+    : `<p style="margin:0;color:var(--t2);font-size:13px">Nenhuma das suas
+        carteiras está entre as três primeiras de alguma régua por enquanto.</p>${pe}`;
+}
+
+/* =====================================================================
+   COMPETIÇÃO DE TIMES
+   Regras fechadas em 25/08/2026, implementadas no banco em 01_times.sql:
+     · o time tem UMA carteira: os 10 papéis mais presentes entre as
+       carteiras designadas dos membros, 10% em cada, só comprado
+     · contagem por cabeça — o peso que o membro deu não pesa, porque na
+       classe Comprada todo mundo tem 10% em cada de qualquer forma
+     · uma pessoa, um time por ciclo (o banco recusa o segundo)
+     · elenco congela no início do ciclo
+     · empate na 10ª vaga: liquidez decide, capitão pode trocar entre as
+       empatadas até a abertura seguinte
+   Aqui só há tela. Quem manda nas regras é o banco — a interface esconde
+   botão, o RLS é que recusa de fato.
+   ===================================================================== */
+
+const TIME_MIN = 5;
+const TEMAS = { escola:"Escola", faculdade:"Faculdade", amigos:"Grupo de amigos",
+                empresa:"Empresa", associacao:"Associação", outros:"Outros" };
+
+function escudo(nome, tam){
+  const t = tam || 42;
+  const ini = String(nome||"?").trim().replace(/[^A-Za-zÀ-ÿ0-9 ]/g,"")
+    .split(/\s+/).slice(0,2).map(p=>p[0]||"").join("").toUpperCase() || "?";
+  let h = 0; for(const ch of String(nome||"")) h = (h*31 + ch.charCodeAt(0)) % 360;
+  return `<span class="escudo" style="width:${t}px;height:${t}px;
+    font-size:${Math.round(t*0.36)}px;
+    background:hsl(${h} 42% 22%);border-color:hsl(${h} 48% 44%)">${esc(ini)}</span>`;
+}
+
+/* ---------- leitura ---------- */
+
+async function cicloAberto(){
+  const { data } = await sb.from("ciclo").select("*")
+    .in("situacao", ["aberto","inscricoes"]).order("inicio", { ascending:false });
+  return data || [];
+}
+
+/* apelidos vêm da perfil_publico: a perfil em si não é lida por terceiros */
+async function apelidosDe(ids){
+  const u = [...new Set((ids||[]).filter(Boolean))];
+  if(!u.length) return {};
+  const { data } = await sb.from("perfil_publico").select("id,apelido").in("id", u);
+  const m = {}; (data||[]).forEach(p => m[p.id] = p.apelido);
+  return m;
+}
+
+async function meuTime(){
+  if(!eu) return null;
+  const { data } = await sb.from("time_membro")
+    .select("time_id,situacao,carteira_id").eq("usuario_id", eu.id)
+    .in("situacao", ["pedido","ativo"]).maybeSingle();
+  return data || null;
+}
+
+/* minhas carteiras Compradas — é a única classe que entra em time */
+async function minhasCompradas(){
+  if(!eu) return [];
+  const { data } = await sb.from("carteira").select("id,nome,criada_em")
+    .eq("usuario_id", eu.id).eq("ativa", true).eq("classe","diversificada")
+    .order("criada_em");
+  return data || [];
+}
+
+/* ---------- #/times : a lista e o ranking ---------- */
+
+async function telaTimes(){
+  const q = new URLSearchParams(location.hash.split("?")[1] || "");
+  const cod = (q.get("cod")||"").trim().toUpperCase();
+  app().innerHTML = `<div class="carreg">carregando times…</div>`;
+
+  const [{ data:times }, ciclos, meu] = await Promise.all([
+    sb.from("time_").select("id,nome,tema,codigo,capitao,criado_em")
+      .is("encerrado_em", null).order("criado_em"),
+    cicloAberto(), meuTime()
+  ]);
+  const lista = times || [];
+  const ids = lista.map(t => t.id);
+
+  let membros = [], dias = [];
+  if(ids.length){
+    const a = await sb.from("time_membro").select("time_id,usuario_id,situacao")
+      .in("time_id", ids).eq("situacao","ativo");
+    membros = a.data || [];
+    const b = await sb.from("time_carteira_dia")
+      .select("time_id,data,indice,retorno,ativos").in("time_id", ids)
+      .order("data", { ascending:false }).limit(600);
+    dias = b.data || [];
+  }
+  const conta = {}; membros.forEach(m => conta[m.time_id] = (conta[m.time_id]||0)+1);
+  const ultimo = {};
+  dias.forEach(d => { if(!ultimo[d.time_id]) ultimo[d.time_id] = d; });
+
+  const nomes = await apelidosDe(lista.map(t => t.capitao));
+  const totens = await conquistasDoTime(ids);
+
+  /* as três réguas do time saem da mesma metricas() das carteiras: a série do
+     time tem retorno e indice no mesmo formato. Uma conta só no site inteiro. */
+  const serieDe = {};
+  dias.filter(d => d.retorno != null).forEach(d => {
+    (serieDe[d.time_id] = serieDe[d.time_id] || []).push(d); });
+  const met = {};
+  lista.forEach(t => {
+    const sr = (serieDe[t.id] || []).slice()
+      .sort((a,b) => a.data < b.data ? -1 : 1);
+    met[t.id] = sr.length ? metricas(sr, 2) : null;
+  });
+
+  /* posição em cada régua; o geral é a soma das três, e menor soma ganha —
+     é a mesma conta que a fechar_ciclo faz no banco no fim do ciclo.         */
+  const comDado = lista.filter(t => met[t.id] && met[t.id].dias > 0);
+  const posDe = {};
+  const temSharpe = comDado.some(t => met[t.id].sharpe != null);
+  const usadas = temSharpe ? ["acum","sharpe","dd"] : ["acum","dd"];
+  usadas.forEach(k => {
+    const v = t => met[t.id][k];
+    const com = comDado.filter(t => v(t) != null).sort((a,b) => v(b) - v(a));
+    com.forEach((t,i) => { (posDe[t.id] = posDe[t.id] || {})[k] = i + 1; });
+    /* quem não tem a régua vai para o fim dela, e não some da conta:
+       excluir daria vantagem a quem tem menos dado.                          */
+    comDado.filter(t => v(t) == null).forEach(t => {
+      (posDe[t.id] = posDe[t.id] || {})[k] = com.length + 1; });
+  });
+  comDado.forEach(t => {
+    const p = posDe[t.id] || {};
+    p.geral = usadas.reduce((a,k) => a + (p[k] || 0), 0) || null;
+    posDe[t.id] = p;
+  });
+
+  const REGUAS_TIME = {
+    geral:  { nome:"Geral",         fmt: t => posDe[t.id]?.geral ?? null,
+              val: t => posDe[t.id]?.geral ?? null, menor:true },
+    acum:   { nome:"Rentabilidade", fmt: t => pct(met[t.id]?.acum),
+              val: t => met[t.id]?.acum ?? null },
+    sharpe: { nome:"Sharpe",        fmt: t => n2(met[t.id]?.sharpe),
+              val: t => met[t.id]?.sharpe ?? null },
+    dd:     { nome:"Menor queda",   fmt: t => pct(met[t.id]?.dd),
+              val: t => met[t.id]?.dd ?? null },
+  };
+  const chave = REGUAS_TIME[q.get("r")] ? q.get("r") : "acum";
+  const R = REGUAS_TIME[chave];
+  const ord = [...lista].sort((a,b) => {
+    const va = R.val(a), vb = R.val(b);
+    if(va == null && vb == null) return 0;
+    if(va == null) return 1;
+    if(vb == null) return -1;
+    return R.menor ? va - vb : vb - va;
+  });
+
+  app().innerHTML = `
+  <div class="cabeca">
+    <h1>Ranking de equipes</h1>
+    <p>Faculdade, escola, empresa, associação ou um grupo de amigos. O time tem
+      <b>uma carteira só</b>: os dez papéis que mais aparecem nas carteiras dos
+      membros, dez por cento em cada. Cada pessoa conta como um voto por papel.
+      Quem entra, quem sai e quem manda no desempate está nas
+      <a href="#/como-funciona" style="color:var(--ouro2)">regras</a>.</p>
+    <div class="prova">
+      <span class="p"><span class="n">${lista.length}</span>${
+        lista.length===1?"time":"times"}</span>
+      <span class="p"><span class="n">${membros.length}</span>${
+        membros.length===1?"integrante":"integrantes"}</span>
+      ${ciclos.length?`<span class="p viva"><span class="pontinho"></span>ciclo
+        <span class="n" style="color:var(--ouro2)">${esc(ciclos[0].tipo)}</span></span>`:""}
+    </div>
+    ${meu ? `<a href="#/time/${meu.time_id}" class="bt lacre" style="margin-top:20px">
+        Ir para o meu time &rarr;</a>`
+          : `<a href="#/criar-time" class="bt lacre" style="margin-top:20px">Criar meu time &rarr;</a>`}
+  </div>
+
+  ${cod ? `<div class="card" style="border-color:var(--lacre)">
+      <p style="margin:0 0 10px;font-size:13.5px">Você chegou por um convite —
+        código <b class="mono">${esc(cod)}</b>.</p>
+      <button class="bt cheio" id="btConvite">Pedir para entrar neste time</button>
+    </div>` : ""}
+
+  ${!ciclos.length ? aviso("Nenhum ciclo aberto no momento. Dá para criar time e "
+    + "juntar gente; a disputa começa quando o próximo ciclo abrir.") : ""}
+
+  ${!ord.length
+    ? `<div class="card"><p style="margin:0;color:var(--t2)">Nenhum time ainda.
+        O primeiro pode ser o seu.</p></div>`
+    : `<div class="chips">${Object.entries(REGUAS_TIME).map(([k,r])=>
+        `<a href="#/times?r=${k}" class="chip${k===chave?" on":""}">${esc(r.nome)}</a>`).join("")}</div>
+      <table><thead><tr><th class="d">#</th><th></th><th>Time</th><th>Capitão</th>
+        <th class="d">Gente</th><th class="d">Rent.</th><th class="d">Sharpe</th>
+        <th class="d">Queda</th><th class="d">Geral</th></tr></thead><tbody>
+      ${ord.map((t,i)=>{
+        const m = met[t.id], p = posDe[t.id] || {}, n = conta[t.id] || 0;
+        const cel = (v, txt, pos) => `<td class="d mono ${v==null?"nulo":""}">${
+          v==null?"—":txt}${pos?`<div style="font-size:10px;color:var(--graf)">${pos}º</div>`:""}</td>`;
+        return `<tr onclick="location.hash='#/time/${t.id}'" style="cursor:pointer">
+          <td class="d mono" style="width:34px;color:var(--graf)">${
+            m && m.dias ? i+1 : "—"}</td>
+          <td style="width:48px">${escudo(t.nome, 34)}</td>
+          <td><b>${esc(t.nome)}</b>${(totens[t.id]||[]).slice(0,2).map(q =>
+              medalha(q.posicao, tituloConquista(q, q.ciclo))).join("")}
+            <div style="font-size:11px;color:var(--graf)">${esc(TEMAS[t.tema]||t.tema)}${
+              m && m.dias ? ` · ${m.dias} ${m.dias===1?"pregão":"pregões"}` : ""}</div></td>
+          <td style="color:var(--t2);font-size:13px">${esc(nomes[t.capitao]||"—")}</td>
+          <td class="d mono ${n<TIME_MIN?"nulo":""}">${n}${
+            n<TIME_MIN?`<div style="font-size:10px;color:var(--graf)">faltam ${TIME_MIN-n}</div>`:""}</td>
+          ${cel(m?.acum,   `<span class="${m?cor(m.acum):""}">${pct(m?.acum)}</span>`, p.acum)}
+          ${cel(m?.sharpe, n2(m?.sharpe), p.sharpe)}
+          ${cel(m?.dd,     `<span class="baixa">${pct(m?.dd)}</span>`, p.dd)}
+          <td class="d mono ${p.geral==null?"nulo":""}"><b>${p.geral ?? "—"}</b></td>
+        </tr>`; }).join("")}
+      </tbody></table>
+      <p style="margin:12px 0 0;font-size:11.5px;color:var(--graf)">
+        Rentabilidade e queda contam desde o primeiro pregão. O Sharpe entra no
+        segundo — com um retorno só não há dispersão para medir — e vai ganhando
+        corpo a cada dia. O <b>Geral</b> soma as posições das réguas que já
+        existem no dia; quem soma menos está na frente, e é a mesma conta que
+        fecha o ciclo.</p>`}`;
+
+  const bc = document.getElementById("btConvite");
+  if(bc) bc.onclick = () => pedirEntrada(cod);
+}
+
+/* ---------- entrar num time ---------- */
+
+async function pedirEntrada(cod){
+  if(!eu) return location.hash = "#/entrar";
+  const jaTem = await meuTime();
+  if(jaTem) return alert("Você já está num time. Uma pessoa, um time por ciclo.");
+
+  const cart = await minhasCompradas();
+  if(!cart.length) return alert("Para entrar num time você precisa de uma carteira "
+    + "da classe Comprada publicada. Crie a sua primeiro.");
+
+  const { data:t } = await sb.from("time_").select("id,nome")
+    .eq("codigo", cod).is("encerrado_em", null).maybeSingle();
+  if(!t) return alert("Não achei time com este código.");
+
+  const qual = cart.length === 1 ? cart[0].id : escolherCarteira(cart);
+  if(!qual) return;
+
+  const { error } = await sb.from("time_membro")
+    .insert({ time_id:t.id, usuario_id:eu.id, carteira_id:qual, situacao:"pedido" });
+  if(error) return alert("Não consegui pedir: " + error.message);
+  alert("Pedido enviado. O capitão precisa aprovar.");
+  location.hash = "#/time/" + t.id; rotear();
+}
+
+function escolherCarteira(cart){
+  const txt = cart.map((c,i)=> `${i+1}) ${c.nome}`).join("\n");
+  const r = prompt("Qual carteira vai concorrer pelo time?\n\n" + txt
+    + "\n\nDigite o número:");
+  const i = parseInt(r, 10);
+  return (i >= 1 && i <= cart.length) ? cart[i-1].id : null;
+}
+
+/* ---------- #/criar-time ---------- */
+
+async function telaCriarTime(){
+  if(!eu) { location.hash = "#/entrar?de=" + encodeURIComponent("#/criar-time");
+            return rotear(); }
+  app().innerHTML = `<div class="carreg">…</div>`;
+  const [cart, jaTem] = await Promise.all([minhasCompradas(), meuTime()]);
+
+  if(jaTem) return app().innerHTML = `<div class="cabeca"><h1>Criar time</h1></div>
+    ${aviso("Você já está num time. Uma pessoa, um time por ciclo — saia do atual "
+      + "para poder criar outro, e a mudança vale no ciclo seguinte.")}
+    <p style="margin-top:14px"><a href="#/time/${jaTem.time_id}" class="bt">Ver meu time</a></p>`;
+
+  if(!cart.length) return app().innerHTML = `<div class="cabeca"><h1>Criar time</h1></div>
+    ${aviso("Para ter time você precisa antes de uma carteira da classe Comprada — "
+      + "dez papéis, dez por cento em cada. É ela que vai contar pelo time.")}
+    <p style="margin-top:14px"><a href="#/publicar" class="bt lacre">Criar carteira</a></p>`;
+
+  app().innerHTML = `
+  <div class="cabeca">
+    <h1>Criar time</h1>
+    <p>Você vira o capitão: aprova quem entra, resolve o desempate da carteira e
+      inscreve o time no campeonato. O time só pontua com pelo menos
+      <b>${TIME_MIN} integrantes</b>.</p>
+  </div>
+  <div id="erro"></div>
+  <div class="card" style="max-width:560px">
+    <label>Nome do time</label>
+    <input id="tNome" maxlength="48" placeholder="Turma de Economia da UFMG">
+    <label>Tema</label>
+    <select id="tTema">${Object.entries(TEMAS).map(([k,v])=>
+      `<option value="${k}">${v}</option>`).join("")}</select>
+    <label>Uma linha sobre o time <span style="color:var(--graf);font-weight:400">— opcional</span></label>
+    <input id="tDesc" maxlength="140" placeholder="quem são vocês">
+    <label>Sua carteira no time</label>
+    <select id="tCart">${cart.map(c=>
+      `<option value="${c.id}">${esc(c.nome)}</option>`).join("")}</select>
+    <p style="font-size:11.5px;color:var(--graf);margin:8px 0 13px">
+      É esta carteira que vai contar na hora de montar a carteira do time. Você
+      pode trocar depois, e a troca vale do pregão seguinte.</p>
+    <button class="bt cheio" id="btCriarTime">Criar o time</button>
+  </div>`;
+
+  document.getElementById("btCriarTime").onclick = async () => {
+    const nome = document.getElementById("tNome").value.trim();
+    if(nome.length < 3) return $("#erro").innerHTML = aviso("Dê um nome ao time.", true);
+    const codigo = "T" + Math.random().toString(36).slice(2, 9).toUpperCase();
+    const { data:t, error } = await sb.from("time_").insert({
+      nome, tema: document.getElementById("tTema").value,
+      descricao: document.getElementById("tDesc").value.trim() || null,
+      capitao: eu.id, codigo }).select("id").single();
+    if(error) return $("#erro").innerHTML = aviso("Não consegui criar: " + error.message, true);
+
+    const { error:e2 } = await sb.from("time_membro").insert({
+      time_id: t.id, usuario_id: eu.id,
+      carteira_id: +document.getElementById("tCart").value,
+      situacao: "ativo", aprovado_em: new Date().toISOString() });
+    if(e2) return $("#erro").innerHTML = aviso("O time foi criado, mas não consegui "
+      + "te pôr nele: " + e2.message, true);
+    location.hash = "#/time/" + t.id; rotear();
+  };
+}
+
+/* ---------- #/time/<id> : a página do time ---------- */
+
+async function telaTime(id){
+  app().innerHTML = `<div class="carreg">carregando o time…</div>`;
+
+  const { data:t, error } = await sb.from("time_").select("*").eq("id", id).maybeSingle();
+  if(error || !t) return app().innerHTML = `<div class="cabeca"><h1>Time</h1></div>`
+    + aviso("Não achei este time.", true);
+
+  const [{ data:ms }, { data:ds }, { data:ins }, ciclos] = await Promise.all([
+    sb.from("time_membro").select("*").eq("time_id", id).order("pediu_em"),
+    sb.from("time_carteira_dia").select("*").eq("time_id", id)
+      .order("data", { ascending:false }).limit(120),
+    sb.from("time_inscricao").select("ciclo_id").eq("time_id", id),
+    cicloAberto()
+  ]);
+  const membros = ms || [], serie = (ds || []).slice().reverse();
+  const ativos  = membros.filter(m => m.situacao === "ativo");
+  const pedidos = membros.filter(m => m.situacao === "pedido");
+  const nomes = await apelidosDe(membros.map(m => m.usuario_id).concat([t.capitao]));
+  const totemT = (await conquistasDoTime([t.id]))[t.id] || [];
+  const totemP = await conquistasDe(membros.map(m => m.usuario_id));
+
+  const souCap = eu && eu.id === t.capitao;
+  const souMembro = !!(eu && ativos.find(m => m.usuario_id === eu.id));
+  const hoje = serie.length ? serie[serie.length-1] : null;
+  const ac = hoje && hoje.indice != null ? hoje.indice/100 - 1 : null;
+  const comRet = serie.filter(d => d.retorno != null);
+  const cicloDoTime = ciclos.filter(c => (ins||[]).some(i => i.ciclo_id === c.id));
+
+  app().innerHTML = `
+  <div class="cabeca" style="display:flex;gap:16px;align-items:flex-start">
+    ${escudo(t.nome, 58)}
+    <div style="flex:1;min-width:0">
+      <h1 style="margin:0">${esc(t.nome)}</h1>
+      ${totemT.length ? `<div class="totens" style="margin:9px 0 0">${totemT.map(q =>
+        `<span class="totemCard"><span class="tt">${esc(POS_NOME[q.posicao]||q.posicao+"º")}
+          <span class="ts">${esc((REGUA_NOME[q.regua]||q.regua))} · ${esc(nomeCiclo(q.ciclo))}</span>
+        </span></span>`).join("")}</div>` : ""}
+      <p style="margin:6px 0 0">${esc(TEMAS[t.tema]||t.tema)} ·
+        capitão <b>${esc(nomes[t.capitao]||"—")}</b>
+        ${t.descricao ? "<br>"+esc(t.descricao) : ""}</p>
+      <div class="prova" style="margin-top:12px">
+        <span class="p"><span class="n">${ativos.length}</span>${
+          ativos.length===1?"integrante":"integrantes"}</span>
+        <span class="p"><span class="n">${comRet.length}</span>${
+          comRet.length===1?"pregão apurado":"pregões apurados"}</span>
+        ${ac!=null?`<span class="p"><span class="n ${cor(ac)}">${pct(ac)}</span>no período</span>`:""}
+      </div>
+      ${ativos.length < TIME_MIN ? `<p style="margin:12px 0 0;color:var(--ouro2);font-size:13px">
+        Faltam ${TIME_MIN - ativos.length} para o time pontuar.</p>` : ""}
+    </div>
+  </div>
+
+  ${souCap ? `<p style="margin:0 0 18px">
+    <a href="#/time/${t.id}/capitao" class="bt lacre">Painel do capitão${
+      pedidos.length?` · ${pedidos.length} pedido${pedidos.length>1?"s":""}`:""}</a></p>` : ""}
+
+  ${!souMembro && !souCap && eu ? `<p style="margin:0 0 18px">
+    <button class="bt" id="btEntrarTime">Pedir para entrar</button></p>` : ""}
+
+  <h2 style="font-size:19px;margin:26px 0 12px">A carteira do time</h2>
+  ${!hoje || !hoje.ativos || !hoje.ativos.length
+    ? `<div class="card"><p style="margin:0;color:var(--t2);font-size:13px">
+        Ainda não há carteira montada. Ela nasce do fechamento do primeiro pregão
+        depois que o time tem ${TIME_MIN} integrantes e está inscrito num ciclo.</p></div>`
+    : `<div class="card">
+        <p style="margin:0 0 12px;font-size:12.5px;color:var(--t2)">
+          Valendo para o pregão de <b>${dataBR(hoje.data)}</b> · dez por cento em cada
+          ${hoje.retorno!=null?` · no dia <b class="${cor(hoje.retorno)}">${pct(hoje.retorno)}</b>`:""}</p>
+        <div class="chips">${hoje.ativos.map(a =>
+          `<span class="chip mono">${esc(a)}</span>`).join("")}</div>
+      </div>`}
+
+  <h2 style="font-size:19px;margin:26px 0 12px">Quem está no time</h2>
+  <table><thead><tr><th>Integrante</th><th>Carteira</th><th class="d">Desde</th></tr></thead>
+  <tbody>${ativos.map(m => `<tr>
+    <td>${apelidoComTotem(nomes[m.usuario_id], totemP[m.usuario_id])}${
+      m.usuario_id===t.capitao?' <span class="pill">capitão</span>':""}${
+      m.silenciado?' <span class="pill">silenciado</span>':""}</td>
+    <td style="color:var(--t2);font-size:12.5px">${m.carteira_id
+      ? `<a href="#/carteira/${m.carteira_id}" style="color:var(--ouro2)">ver a carteira</a>`
+      : "sem carteira designada"}</td>
+    <td class="d mono" style="font-size:11.5px;color:var(--graf)">${
+      m.aprovado_em ? dataBR(m.aprovado_em) : "—"}</td>
+  </tr>`).join("")}</tbody></table>
+
+  ${cicloDoTime.length ? `<p style="margin:14px 0 0;font-size:12.5px;color:var(--t2)">
+    Inscrito em: ${cicloDoTime.map(c=>`<b>${esc(c.tipo)}</b> (${dataBR(c.inicio)}
+    a ${dataBR(c.fim)})`).join(" · ")}</p>`
+    : `<p style="margin:14px 0 0;font-size:12.5px;color:var(--graf)">
+       Este time ainda não está inscrito em nenhum campeonato.</p>`}
+
+  ${(souMembro || souCap) ? `
+  <h2 style="font-size:19px;margin:30px 0 12px">Mural do time</h2>
+  <div class="card">
+    <div id="mural" style="max-height:340px;overflow:auto"></div>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <input id="mTexto" maxlength="1200" placeholder="escreva para o time"
+        style="flex:1;margin:0">
+      <button class="bt cheio" id="btMsg" style="flex:none">Enviar</button>
+    </div>
+  </div>` : ""}`;
+
+  const be = document.getElementById("btEntrarTime");
+  if(be) be.onclick = () => pedirEntrada(t.codigo);
+  if(souMembro || souCap) ligarMural(t.id, t.capitao, nomes);
+}
+
+/* ---------- mural, em tempo real ---------- */
+
+function linhaMsg(m, nomes, capitao){
+  const meu = eu && m.autor === eu.id;
+  return `<div class="msgL" data-id="${m.id}" style="padding:9px 0;
+      border-bottom:1px solid var(--linha)">
+    <div style="font-size:11.5px;color:var(--graf)">
+      <b style="color:var(--t2)">${esc(nomes[m.autor] || "alguém")}</b>${
+        m.autor===capitao?' <span class="pill">capitão</span>':""}
+      · ${haQuantoTempo(m.criada_em)}
+      ${(meu || (eu && eu.id===capitao) || (eu && eu.admin))
+        ? `<button class="lnk apagaMsg" data-id="${m.id}"
+             style="float:right;color:var(--baixa);font-size:11px">apagar</button>` : ""}
+    </div>
+    <div style="font-size:13.5px;margin-top:3px;white-space:pre-wrap">${esc(m.texto)}</div>
+  </div>`;
+}
+
+async function ligarMural(timeId, capitao, nomes){
+  const cx = document.getElementById("mural");
+  if(!cx) return;
+
+  async function pintar(){
+    const { data, error } = await sb.from("time_msg").select("*")
+      .eq("time_id", timeId).is("apagada_em", null)
+      .order("criada_em", { ascending:true }).limit(300);
+    if(!document.body.contains(cx)) return;   // trocou de tela no meio
+    if(error){ cx.innerHTML = aviso("Não consegui ler o mural: "+error.message, true); return; }
+    const faltam = (data||[]).map(m=>m.autor).filter(a => !nomes[a]);
+    if(faltam.length) Object.assign(nomes, await apelidosDe(faltam));
+    cx.innerHTML = (data||[]).length
+      ? data.map(m => linhaMsg(m, nomes, capitao)).join("")
+      : `<p style="margin:0;color:var(--graf);font-size:13px">Ninguém escreveu ainda.</p>`;
+    cx.scrollTop = cx.scrollHeight;
+    cx.querySelectorAll(".apagaMsg").forEach(b => b.onclick = async () => {
+      await sb.from("time_msg").update({ apagada_em:new Date().toISOString(),
+        apagada_por: eu.id }).eq("id", b.dataset.id);
+      pintar();
+    });
+  }
+  await pintar();
+
+  /* a leitura acima é assíncrona: se a pessoa mudou de tela no meio, estes
+     elementos já não existem e ligar evento neles quebraria a navegação.     */
+  const bt = document.getElementById("btMsg");
+  const el = document.getElementById("mTexto");
+  if(!bt || !el) return;
+
+  bt.onclick = async () => {
+    const texto = el.value.trim();
+    if(!texto) return;
+    el.value = "";
+    const { error } = await sb.from("time_msg")
+      .insert({ time_id:timeId, autor:eu.id, texto });
+    if(error) alert("Não consegui enviar: " + error.message);
+  };
+  el.onkeydown = ev => { if(ev.key === "Enter") bt.click(); };
+
+  /* tempo real: a mensagem do outro aparece sem recarregar.
+     O canal é derrubado ao trocar de tela, senão sobra escutando. */
+  if(window.__canalMural) sb.removeChannel(window.__canalMural);
+  window.__canalMural = sb.channel("mural-" + timeId)
+    .on("postgres_changes",
+        { event:"*", schema:"public", table:"time_msg",
+          filter:"time_id=eq." + timeId }, pintar)
+    .subscribe();
+}
+
+/* ---------- #/time/<id>/capitao : o painel ---------- */
+
+async function telaCapitao(id){
+  if(!eu) { location.hash = "#/entrar"; return rotear(); }
+  app().innerHTML = `<div class="carreg">…</div>`;
+
+  const { data:t } = await sb.from("time_").select("*").eq("id", id).maybeSingle();
+  if(!t) return app().innerHTML = aviso("Não achei este time.", true);
+  if(t.capitao !== eu.id && !eu.admin)
+    return app().innerHTML = `<div class="cabeca"><h1>Painel do capitão</h1></div>`
+      + aviso("Este painel é do capitão do time.", true);
+
+  const [{ data:ms }, { data:ins }, ciclos, { data:emp }] = await Promise.all([
+    sb.from("time_membro").select("*").eq("time_id", id).order("pediu_em"),
+    sb.from("time_inscricao").select("ciclo_id").eq("time_id", id),
+    cicloAberto(),
+    sb.from("time_empate").select("*").eq("time_id", id)
+      .order("data", { ascending:false }).limit(1)
+  ]);
+  const membros = ms || [];
+  const nomes = await apelidosDe(membros.map(m => m.usuario_id));
+  const pedidos = membros.filter(m => m.situacao === "pedido");
+  const ativos  = membros.filter(m => m.situacao === "ativo");
+  const inscrito = id2 => (ins||[]).some(i => i.ciclo_id === id2);
+  const e = (emp||[])[0];
+  const empateAberto = e && !e.escolha;
+
+  const link = location.origin + location.pathname + "#/times?cod=" + t.codigo;
+
+  app().innerHTML = `
+  <div class="cabeca">
+    <h1>Painel do capitão</h1>
+    <p>${esc(t.nome)} · ${ativos.length} ${ativos.length===1?"integrante":"integrantes"}
+      ${ativos.length < TIME_MIN ? ` · <b style="color:var(--ouro2)">faltam ${
+        TIME_MIN-ativos.length} para pontuar</b>` : ""}</p>
+  </div>
+  <div id="erro"></div>
+
+  <h2 style="font-size:19px;margin:26px 0 12px">Convidar</h2>
+  <div class="card">
+    <p style="margin:0 0 10px;font-size:12.5px;color:var(--t2)">Quem abrir este
+      link e tiver conta com carteira Comprada pede para entrar, e você aprova
+      aqui embaixo.</p>
+    <input id="linkConvite" readonly value="${esc(link)}" style="margin:0">
+    <button class="bt" id="btCopiar" style="margin-top:9px">Copiar o link</button>
+  </div>
+
+  <h2 style="font-size:19px;margin:26px 0 12px">Pedidos para entrar${
+    pedidos.length?` <span class="pill">${pedidos.length}</span>`:""}</h2>
+  ${!pedidos.length
+    ? `<div class="card"><p style="margin:0;color:var(--t2);font-size:13px">Nenhum
+        pedido aguardando.</p></div>`
+    : `<table><tbody>${pedidos.map(m=>`<tr>
+        <td><b>${esc(nomes[m.usuario_id]||"—")}</b>
+          <div style="font-size:11px;color:var(--graf)">pediu em ${dataBR(m.pediu_em)}</div></td>
+        <td style="font-size:12.5px">${m.carteira_id
+          ? `<a href="#/carteira/${m.carteira_id}" style="color:var(--ouro2)">ver a carteira</a>`
+          : "sem carteira"}</td>
+        <td class="d">
+          <button class="bt lacre sim" data-id="${m.id}"
+            style="padding:5px 12px;font-size:12px">aprovar</button>
+          <button class="bt nao" data-id="${m.id}"
+            style="padding:5px 12px;font-size:12px;margin-left:5px;
+                   border-color:var(--baixa);color:var(--baixa)">recusar</button></td>
+      </tr>`).join("")}</tbody></table>`}
+
+  <h2 style="font-size:19px;margin:26px 0 12px">Elenco</h2>
+  <table><tbody>${ativos.map(m=>`<tr>
+    <td><b>${esc(nomes[m.usuario_id]||"—")}</b>${
+      m.usuario_id===t.capitao?' <span class="pill">você</span>':""}</td>
+    <td class="d">${m.usuario_id===t.capitao?"":`
+      <button class="bt calar" data-id="${m.id}" data-v="${m.silenciado?0:1}"
+        style="padding:5px 12px;font-size:12px">${
+        m.silenciado?"dar voz":"silenciar"}</button>
+      <button class="bt fora" data-id="${m.id}"
+        style="padding:5px 12px;font-size:12px;margin-left:5px;
+               border-color:var(--baixa);color:var(--baixa)">remover</button>`}</td>
+  </tr>`).join("")}</tbody></table>
+  <p style="margin:10px 0 0;font-size:11.5px;color:var(--graf)">
+    Entrada e saída valem no ciclo seguinte: o elenco do ciclo em andamento já
+    está congelado e não muda.</p>
+
+  <h2 style="font-size:19px;margin:26px 0 12px">Campeonatos</h2>
+  ${!ciclos.length
+    ? `<div class="card"><p style="margin:0;color:var(--t2);font-size:13px">Nenhum
+        ciclo aberto para inscrição agora.</p></div>`
+    : `<div class="card">${ciclos.map(c=>`
+      <div style="display:flex;justify-content:space-between;align-items:center;
+                  gap:12px;padding:9px 0;border-bottom:1px solid var(--linha)">
+        <div><b>${esc(c.tipo)}</b>
+          <div style="font-size:11.5px;color:var(--graf)">${dataBR(c.inicio)} a ${dataBR(c.fim)}</div></div>
+        ${inscrito(c.id)
+          ? `<span class="pill">inscrito</span>`
+          : `<button class="bt lacre inscrever" data-c="${c.id}"
+               style="padding:5px 12px;font-size:12px">inscrever</button>`}
+      </div>`).join("")}</div>`}
+
+  <h2 style="font-size:19px;margin:26px 0 12px">Desempate da carteira</h2>
+  ${!e
+    ? `<div class="card"><p style="margin:0;color:var(--t2);font-size:13px">Nenhum
+        empate a resolver. Quando dois papéis empatarem na décima vaga, a de maior
+        liquidez entra sozinha e você pode trocar aqui, entre as empatadas, até a
+        abertura do pregão.</p></div>`
+    : `<div class="card">
+        <p style="margin:0 0 10px;font-size:12.5px;color:var(--t2)">
+          Pregão de <b>${dataBR(e.data)}</b> · ${e.vagas}
+          ${e.vagas===1?"vaga":"vagas"} para ${e.candidatos.length} papéis empatados.
+          Sem a sua escolha entra${e.vagas>1?"m":""}
+          <b class="mono">${e.automatico.join(" · ")}</b>, pela liquidez.</p>
+        <div class="chips" id="empChips">${e.candidatos.map(a=>
+          `<button class="chip mono candEmp" data-a="${esc(a)}"${
+            (e.escolha||e.automatico).includes(a)?' data-on="1"':""}>${esc(a)}</button>`).join("")}</div>
+        <button class="bt cheio" id="btEmpate" style="margin-top:12px">Confirmar a escolha</button>
+      </div>`}`;
+
+  document.getElementById("btCopiar").onclick = () => {
+    const i = document.getElementById("linkConvite");
+    i.select(); document.execCommand("copy");
+    document.getElementById("btCopiar").textContent = "copiado";
+  };
+
+  const recarregar = () => telaCapitao(id);
+  document.querySelectorAll(".sim").forEach(b => b.onclick = async () => {
+    const { error } = await sb.from("time_membro").update({ situacao:"ativo",
+      aprovado_em:new Date().toISOString() }).eq("id", b.dataset.id);
+    if(error) return $("#erro").innerHTML = aviso(error.message, true);
+    recarregar();
+  });
+  document.querySelectorAll(".nao").forEach(b => b.onclick = async () => {
+    await sb.from("time_membro").update({ situacao:"recusado" }).eq("id", b.dataset.id);
+    recarregar();
+  });
+  document.querySelectorAll(".fora").forEach(b => b.onclick = async () => {
+    if(!confirm("Remover do time? A saída vale no ciclo seguinte — o ciclo em "
+      + "andamento já está congelado.")) return;
+    await sb.from("time_membro").update({ situacao:"saiu",
+      saiu_em:new Date().toISOString() }).eq("id", b.dataset.id);
+    recarregar();
+  });
+  document.querySelectorAll(".calar").forEach(b => b.onclick = async () => {
+    await sb.from("time_membro").update({ silenciado: b.dataset.v === "1" })
+      .eq("id", b.dataset.id);
+    recarregar();
+  });
+  document.querySelectorAll(".inscrever").forEach(b => b.onclick = async () => {
+    const { error } = await sb.from("time_inscricao")
+      .insert({ time_id:id, ciclo_id:+b.dataset.c });
+    if(error) return $("#erro").innerHTML = aviso(error.message, true);
+    recarregar();
+  });
+
+  document.querySelectorAll(".candEmp").forEach(b => b.onclick = () => {
+    const on = b.dataset.on === "1";
+    const marcadas = [...document.querySelectorAll('.candEmp[data-on="1"]')].length;
+    if(!on && marcadas >= e.vagas)
+      return $("#erro").innerHTML = aviso(`Só ${e.vagas} ${
+        e.vagas===1?"vaga":"vagas"} — desmarque uma antes.`, true);
+    b.dataset.on = on ? "0" : "1";
+    b.classList.toggle("on", !on);
+  });
+  const bE = document.getElementById("btEmpate");
+  if(bE) bE.onclick = async () => {
+    const sel = [...document.querySelectorAll('.candEmp[data-on="1"]')]
+      .map(b => b.dataset.a);
+    if(sel.length !== e.vagas)
+      return $("#erro").innerHTML = aviso(`Escolha ${e.vagas} ${
+        e.vagas===1?"papel":"papéis"}.`, true);
+    const { error } = await sb.from("time_empate").update({ escolha: sel,
+      escolhido_em:new Date().toISOString(), escolhido_por: eu.id })
+      .eq("ciclo_id", e.ciclo_id).eq("time_id", e.time_id).eq("data", e.data);
+    if(error) return $("#erro").innerHTML = aviso(error.message, true);
+    recarregar();
+  };
+}
+
+/* ---------- #/regras-time ----------
+   As regras moram dentro do Como funciona, junto do resto do que a pessoa
+   precisa saber para jogar. A rota antiga continua valendo e leva para lá —
+   quem tiver o link guardado não cai em página morta.                        */
+function telaRegrasTime(){
+  /* trocar o hash dispara o hashchange, que chama o rotear de novo e cai no
+     #/como-funciona. Não há laço: são rotas diferentes.                      */
+  location.hash = "#/como-funciona";
+}
+
+
+
+/* Minha conta: em que time a pessoa está, ou o convite para criar um. */
+async function pintarMeuTime(){
+  const cx = document.getElementById("meuTimeCx");
+  if(!cx) return;
+  const m = await meuTime();
+  if(!m){
+    cx.innerHTML = `<p style="margin:0;color:var(--t2);font-size:13px">Você não
+      está em nenhum time.
+      <a href="#/times" class="bt" style="margin-left:10px;padding:5px 12px;font-size:12px">Ver os times</a>
+      <a href="#/criar-time" class="bt lacre" style="margin-left:6px;padding:5px 12px;font-size:12px">Criar time</a></p>`;
+    return;
+  }
+  const { data:t } = await sb.from("time_").select("id,nome,tema,capitao")
+    .eq("id", m.time_id).maybeSingle();
+  if(!t){ cx.innerHTML = `<p style="margin:0;color:var(--t2);font-size:13px">—</p>`; return; }
+  cx.innerHTML = `<div style="display:flex;align-items:center;gap:12px">
+    ${escudo(t.nome, 38)}
+    <div style="flex:1;min-width:0">
+      <b>${esc(t.nome)}</b>
+      <div style="font-size:11.5px;color:var(--graf)">${esc(TEMAS[t.tema]||t.tema)}${
+        m.situacao === "pedido" ? " · aguardando o capitão aprovar" : ""}${
+        eu && t.capitao === eu.id ? " · você é o capitão" : ""}</div>
+    </div>
+    <a href="#/time/${t.id}" class="bt" style="padding:5px 12px;font-size:12px;flex:none">Abrir</a>
+  </div>`;
+}
+
+
+/* atalho do menu: leva direto ao time da pessoa. Sem time, cai na lista em vez
+   de numa tela vazia — e quem nem entrou vai para o login.                    */
+async function irParaMeuTime(){
+  if(!eu){ location.hash = "#/entrar?de=" + encodeURIComponent("#/meu-time");
+           return rotear(); }
+  app().innerHTML = `<div class="carreg">…</div>`;
+  const m = await meuTime();
+  location.hash = m ? "#/time/" + m.time_id : "#/times";
+  rotear();
+}
+
+
+/* =====================================================================
+   TOTEM — o reconhecimento na tela
+   Sem prêmio em dinheiro, o que se distribui é visibilidade. E visibilidade
+   só funciona se os outros virem: por isso o totem aparece em três lugares
+   diferentes, não num troféu escondido no perfil.
+     · título      — "Campeão de agosto", no perfil e no certificado
+     · selo        — a medalha ao lado do apelido, no ranking
+     · moldura     — o apelido do campeão sai da cor de todo mundo
+   Tudo sai da tabela conquista, preenchida pela fechar_ciclo.
+   ===================================================================== */
+
+const REGUA_NOME = { rentabilidade:"Rentabilidade", sharpe:"Sharpe",
+                     queda:"Menor queda", geral:"Geral" };
+const PAPEL_NOME = { time:"Time", membro:"Integrante", capitao:"Capitão",
+                     individual:"Individual" };
+const POS_NOME   = { 1:"Campeão", 2:"Vice", 3:"Terceiro" };
+
+/* medalha: ouro, prata, bronze. A cor é a única coisa que separa as três,
+   então ela também vai no title, para quem não distingue cor.               */
+function medalha(pos, titulo){
+  const c = { 1:"var(--ouro2)", 2:"#C3CEDE", 3:"#C08457" }[pos] || "var(--graf)";
+  return `<span class="totem" title="${esc(titulo||"")}" style="color:${c};
+    border-color:${c}"><i></i>${pos}º</span>`;
+}
+
+function nomeCiclo(c){
+  if(!c) return "";
+  const m = ["janeiro","fevereiro","março","abril","maio","junho","julho",
+             "agosto","setembro","outubro","novembro","dezembro"];
+  const d = new Date(c.inicio + "T12:00:00");
+  return c.tipo === "mensal"
+    ? m[d.getMonth()] + " de " + d.getFullYear()
+    : `${Math.floor(d.getMonth()/3)+1}º trimestre de ${d.getFullYear()}`;
+}
+
+function tituloConquista(q, ciclo){
+  const pos = POS_NOME[q.posicao] || `${q.posicao}º lugar`;
+  const onde = q.regua === "geral" ? "" : " em " + (REGUA_NOME[q.regua]||q.regua);
+  return `${pos}${onde}${ciclo ? " · " + nomeCiclo(ciclo) : ""}`;
+}
+
+/* conquistas de um conjunto de pessoas, já com o ciclo junto. Uma consulta
+   para a tela toda, não uma por linha.                                      */
+async function conquistasDe(usuarios){
+  const u = [...new Set((usuarios||[]).filter(Boolean))];
+  if(!u.length) return {};
+  const { data } = await sb.from("conquista")
+    .select("usuario_id,time_id,ciclo_id,papel,regua,posicao")
+    .in("usuario_id", u).lte("posicao", 3);
+  if(!data || !data.length) return {};
+  const ids = [...new Set(data.map(q => q.ciclo_id).filter(Boolean))];
+  const { data:cs } = await sb.from("ciclo").select("id,tipo,inicio,fim").in("id", ids);
+  const ciclo = {}; (cs||[]).forEach(c => ciclo[c.id] = c);
+  const por = {};
+  data.forEach(q => { q.ciclo = ciclo[q.ciclo_id];
+    (por[q.usuario_id] = por[q.usuario_id] || []).push(q); });
+  /* a melhor primeiro: o geral vale mais que a régua isolada, e dentro disso
+     a posição manda. É essa que vira o selo ao lado do apelido.             */
+  Object.values(por).forEach(l => l.sort((a,b) =>
+    (a.regua === "geral" ? 0 : 1) - (b.regua === "geral" ? 0 : 1)
+    || a.posicao - b.posicao));
+  return por;
+}
+
+async function conquistasDoTime(timeIds){
+  const t = [...new Set((timeIds||[]).filter(Boolean))];
+  if(!t.length) return {};
+  const { data } = await sb.from("conquista")
+    .select("time_id,ciclo_id,papel,regua,posicao")
+    .in("time_id", t).eq("papel", "time").lte("posicao", 3);
+  if(!data || !data.length) return {};
+  const ids = [...new Set(data.map(q => q.ciclo_id).filter(Boolean))];
+  const { data:cs } = await sb.from("ciclo").select("id,tipo,inicio,fim").in("id", ids);
+  const ciclo = {}; (cs||[]).forEach(c => ciclo[c.id] = c);
+  const por = {};
+  data.forEach(q => { q.ciclo = ciclo[q.ciclo_id];
+    (por[q.time_id] = por[q.time_id] || []).push(q); });
+  Object.values(por).forEach(l => l.sort((a,b) =>
+    (a.regua === "geral" ? 0 : 1) - (b.regua === "geral" ? 0 : 1)
+    || a.posicao - b.posicao));
+  return por;
+}
+
+/* o apelido com a moldura do campeão. Sem conquista, devolve o apelido puro —
+   nenhuma tela precisa saber se a pessoa tem totem ou não.                   */
+function apelidoComTotem(apelido, lista){
+  const nome = esc(apelido || "—");
+  if(!lista || !lista.length) return nome;
+  const q = lista[0];
+  const t = tituloConquista(q, q.ciclo);
+  const cor = { 1:"var(--ouro2)", 2:"#C3CEDE", 3:"#C08457" }[q.posicao] || "";
+  return `<span class="comTotem" style="color:${cor}">${nome}</span>`
+       + medalha(q.posicao, t);
+}
+
+
+/* Minha conta: os títulos que a pessoa já ganhou. Sem prêmio em dinheiro, é
+   aqui que mora o que ela leva — e cada título abre o certificado.          */
+async function pintarMeusTotens(){
+  const cx = document.getElementById("meusTotens");
+  if(!cx || !eu) return;
+  const por = await conquistasDe([eu.id]);
+  const lista = por[eu.id] || [];
+  if(!lista.length){
+    cx.innerHTML = `<p style="margin:0;color:var(--t2);font-size:13px">Você ainda
+      não tem títulos. Eles saem no fim de cada ciclo, para os três primeiros de
+      cada régua — e valem para o time, para cada integrante e para o capitão.</p>`;
+    return;
+  }
+  cx.innerHTML = `<div class="totens">${lista.map(q =>
+    `<a class="totemCard" href="#/certificado?conq=${q.ciclo_id}-${q.regua}-${q.papel}">
+      <span class="tt">${esc(POS_NOME[q.posicao] || q.posicao+"º")}
+        <span class="ts">${esc(REGUA_NOME[q.regua]||q.regua)} ·
+          ${esc(PAPEL_NOME[q.papel]||q.papel)} · ${esc(nomeCiclo(q.ciclo))}</span>
+      </span></a>`).join("")}</div>`;
+}
+
+
+/* ---------- certificado de ciclo ----------
+   A chave é ciclo-regua-papel, montada pela tela de títulos. Não carrega o
+   resultado dentro dela: tudo é relido do banco, então ninguém emite
+   certificado editando a barra de endereço.                                  */
+async function certificadoDeCiclo(chave){
+  if(!eu) { location.hash = "#/entrar"; return rotear(); }
+  const [cicloId, regua, papel] = String(chave).split("-");
+  if(!cicloId || !regua || !papel) return certAviso("Endereço de certificado incompleto.");
+
+  app().innerHTML = `<div class="carreg">emitindo…</div>`;
+  const { data:q } = await sb.from("conquista").select("*")
+    .eq("ciclo_id", cicloId).eq("regua", regua).eq("papel", papel)
+    .eq("usuario_id", eu.id).maybeSingle();
+  if(!q) return certAviso("Não achei este título no seu nome.");
+
+  const [{ data:ciclo }, { data:time }, { data:res }] = await Promise.all([
+    sb.from("ciclo").select("*").eq("id", cicloId).maybeSingle(),
+    q.time_id ? sb.from("time_").select("nome,tema").eq("id", q.time_id).maybeSingle()
+              : Promise.resolve({ data:null }),
+    q.time_id ? sb.from("time_ciclo_resultado").select("*")
+                  .eq("ciclo_id", cicloId).eq("time_id", q.time_id).maybeSingle()
+              : Promise.resolve({ data:null })
+  ]);
+
+  const pos   = POS_NOME[q.posicao] || `${q.posicao}º colocado`;
+  const rNome = REGUA_NOME[q.regua] || q.regua;
+  const comoP = { capitao:"como capitão", membro:"como integrante",
+                  time:"", individual:"" }[q.papel] || "";
+
+  app().innerHTML = `
+  <div class="certTopo naoImprime">
+    <a href="#/conta" style="color:var(--t2);font-size:13px">&larr; Minha conta</a>
+    <span>
+      ${q.time_id ? `<a href="#/time/${q.time_id}" class="bt"
+        style="padding:6px 13px;font-size:12.5px">Ver o time</a>` : ""}
+      <button class="bt cheio" id="btImprimir"
+        style="padding:6px 14px;font-size:12.5px;margin-left:6px">Imprimir</button>
+    </span>
+  </div>
+
+  <div class="folha">
+    <p class="fMarca">Saldo Positivo</p>
+    <h1 class="fTit">${esc(pos)}</h1>
+    <p class="fSub">${esc(q.regua === "geral" ? "Classificação geral" : rNome)}
+      · ciclo ${esc(nomeCiclo(ciclo))}</p>
+
+    <p class="fLead">Certificamos que</p>
+    <p class="fNome">${esc(eu.apelido || "—")}</p>
+    ${time ? `<p class="fCart">${esc(comoP)} do time <b>${esc(time.nome)}</b></p>` : ""}
+
+    <p class="fPos">${q.posicao}ª</p>
+    <p class="fPosL">colocação no ciclo ${esc(ciclo ? ciclo.tipo : "")}</p>
+
+    <p class="fFrase">encerrou o ciclo entre os primeiros na régua de
+      <b>${esc(rNome.toLowerCase())}</b>, apurada todos os dias pelo fechamento
+      real da B3, sob regra fixada antes do começo da temporada e igual para
+      todos os participantes.</p>
+
+    ${res ? `<div class="fNums">
+      <div><span class="v">${pct(res.acumulado)}</span><span class="l">Rentabilidade</span></div>
+      <div><span class="v">${n2(res.sharpe)}</span><span class="l">Sharpe</span></div>
+      <div><span class="v">${pct(res.drawdown)}</span><span class="l">Maior queda</span></div>
+      <div><span class="v">${res.dias || 0}</span><span class="l">Pregões</span></div>
+    </div>` : ""}
+
+    <p class="fPe">
+      Ciclo de <b>${dataBR(ciclo?.inicio)}</b> a <b>${dataBR(ciclo?.fim)}</b> ·
+      emitido em <b>${dataBR(HOJE_BR())}</b><br>
+      Competição de carteiras simuladas. <b>Não há dinheiro real em risco</b>,
+      e nada aqui é recomendação de investimento.
+    </p>
+  </div>`;
+
+  const bi = document.getElementById("btImprimir");
+  if(bi) bi.onclick = () => window.print();
+}
+
 function rotear(){
   clearInterval(window.__timerRank);
   clearInterval(window.__timerVivo);
@@ -10524,6 +11824,13 @@ function rotear(){
   if(h==="#/consenso" || h==="#/mais-escolhidos") return telaConsenso();
   if(h.split("?")[0]==="#/universo") return telaUniverso();
   if(h.split("?")[0]==="#/leads") return telaLeads();
+  if(h.split("?")[0]==="#/certificado") return telaCertificado();
+  if(h.split("?")[0]==="#/times")   return telaTimes();
+  if(h==="#/criar-time")            return telaCriarTime();
+  if(h==="#/regras-time")           return telaRegrasTime();
+  if(h==="#/meu-time")              return irParaMeuTime();
+  if(/^#\/time\/\d+\/capitao$/.test(h)) return telaCapitao(h.split("/")[2]);
+  if(/^#\/time\/\d+$/.test(h))          return telaTime(h.split("/")[2]);
   if(h==="#/minhas")          return telaConta(true);
   if(h==="#/conta")           return telaConta();
   if(h==="#/senha")           return telaSenha();
