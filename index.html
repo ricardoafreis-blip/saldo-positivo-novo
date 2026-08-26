@@ -2821,9 +2821,19 @@ async function telaRanking(){
 
 function telaEntrar(){
   const q = new URLSearchParams(location.hash.split("?")[1]||"");
-  const novo = q.get("novo"), ref = q.get("ref")||"";
+  const novo = q.get("novo");
+  let ref = q.get("ref") || "";
+  /* o ?de= vem de quem clicou dentro do site. Quando não vem, cai no destino
+     guardado na chegada — é o caso do convite do capitão, cujo endereço foi
+     apagado para a abertura aparecer. Sem isso o convidado cria a conta e
+     some no ranking em vez de cair no time que o chamou.                     */
   const de = q.get("de") ? decodeURIComponent(q.get("de")) : "";
-  const paraOnde = de && de.startsWith("#/") ? de : "";
+  const paraOnde = (de && de.startsWith("#/")) ? de : (pegarDestino() || "");
+  /* convite de time: o código vira a indicação, para o capitão aparecer como
+     quem trouxe a pessoa. */
+  if(!ref && paraOnde.includes("cod=")){
+    ref = new URLSearchParams(paraOnde.split("?")[1] || "").get("cod") || "";
+  }
   app().innerHTML = `
   <div style="max-width:360px;margin:34px auto 60px">
     <h1 style="font-size:24px;margin-bottom:3px">${novo?"Criar conta":"Entrar"}</h1>
@@ -2901,7 +2911,15 @@ function telaEntrar(){
       return;
     }
     await carregarEu(); pintarNav();
-    location.hash = paraOnde || (novo ? "#/publicar" : "#/");
+    /* quem veio por convite e acabou de criar conta precisa antes de uma
+       carteira Comprada — sem ela o pedido nem pode ser feito. Então o convite
+       é reguardado e o caminho passa por publicar.                           */
+    if(novo && paraOnde.includes("cod=")){
+      guardarDestino(paraOnde);
+      location.hash = "#/publicar";
+    } else {
+      location.hash = paraOnde || (novo ? "#/publicar" : "#/");
+    }
     rotear();
   };
 }
@@ -3204,7 +3222,13 @@ async function telaPublicar(){
       if(f.get("nota")) await sb.from("nota").insert({ carteira_id:c.id, texto:f.get("nota") });
       CACHE_CLASSE = null;
       fechar();
-      location.hash = "#/carteira/"+c.id; rotear();
+      /* último elo do convite: quem chegou pelo link do capitão precisava de
+         uma carteira antes de poder pedir entrada. Agora tem — então vai para
+         o time em vez de parar na própria carteira.                          */
+      const convite = pegarDestino();
+      location.hash = (convite && convite.includes("cod="))
+        ? convite : "#/carteira/"+c.id;
+      rotear();
     };
   };
 }
@@ -6861,8 +6885,23 @@ function telaAprender(){
 }
 
 function telaAbertura(){
+  /* quem chegou por convite de time vê disso logo no alto. Sem esta faixa, o
+     aluno clica no link do professor, cai num texto que fala de ranking
+     individual e não entende que foi chamado para um time.                   */
+  const dest = (() => { try { return sessionStorage.getItem(CHAVE_DESTINO) || ""; }
+                        catch(e){ return ""; } })();
+  const cod = dest.includes("cod=")
+    ? new URLSearchParams(dest.split("?")[1] || "").get("cod") : null;
+
   app().innerHTML = `
   <div class="abertura">
+    ${cod ? `<div class="card" style="border-color:var(--lacre);margin-bottom:26px">
+      <p style="margin:0;font-size:14px"><b>Você foi convidado para um time.</b>
+        Crie sua conta e uma carteira, e o pedido de entrada segue para o capitão.
+        O convite fica guardado até lá — código
+        <b class="mono">${esc(cod)}</b>.</p>
+      <p style="margin:10px 0 0"><a href="#/entrar?novo=1" class="bt lacre">Criar minha conta</a></p>
+    </div>` : ""}
     <p class="ab1">Quem é o melhor analista do Brasil?</p>
     <h1 class="ab2">Seja você.</h1>
     <p class="ab3" style="font-size:17px;color:var(--tinta);margin-bottom:18px">
@@ -10863,12 +10902,20 @@ async function apelidosDe(ids){
   return m;
 }
 
-async function meuTime(){
-  if(!eu) return null;
+/* a pessoa pode estar em vários times — quem limita é o capitão, que aceita
+   ou recusa. O que não pode é dois times com o MESMO conjunto de carteiras no
+   mesmo ciclo: dariam a mesma carteira e o mesmo resultado.                  */
+async function meusTimes(){
+  if(!eu) return [];
   const { data } = await sb.from("time_membro")
     .select("time_id,situacao,carteira_id").eq("usuario_id", eu.id)
-    .in("situacao", ["pedido","ativo"]).maybeSingle();
-  return data || null;
+    .in("situacao", ["pedido","ativo"]);
+  return data || [];
+}
+
+async function meuTime(){
+  const l = await meusTimes();
+  return l.find(m => m.situacao === "ativo") || l[0] || null;
 }
 
 /* minhas carteiras Compradas — é a única classe que entra em time */
@@ -10887,13 +10934,17 @@ async function telaTimes(){
   const cod = (q.get("cod")||"").trim().toUpperCase();
   app().innerHTML = `<div class="carreg">carregando times…</div>`;
 
-  const [{ data:times }, ciclos, meu] = await Promise.all([
+  const busca = (q.get("q") || "").trim().toLowerCase();
+  const [{ data:times }, ciclos, meus] = await Promise.all([
     sb.from("time_").select("id,nome,tema,codigo,capitao,criado_em")
       .is("encerrado_em", null).order("criado_em"),
-    cicloAberto(), meuTime()
+    cicloAberto(), meusTimes()
   ]);
-  const lista = times || [];
-  const ids = lista.map(t => t.id);
+  const souDe = {}; meus.forEach(m => souDe[m.time_id] = m.situacao);
+  const lista = (times || []).filter(t => !busca
+    || t.nome.toLowerCase().includes(busca)
+    || (TEMAS[t.tema]||"").toLowerCase().includes(busca));
+  const ids = (times || []).map(t => t.id);
 
   let membros = [], dias = [];
   if(ids.length){
@@ -10981,9 +11032,17 @@ async function telaTimes(){
       ${ciclos.length?`<span class="p viva"><span class="pontinho"></span>ciclo
         <span class="n" style="color:var(--ouro2)">${esc(ciclos[0].tipo)}</span></span>`:""}
     </div>
-    ${meu ? `<a href="#/time/${meu.time_id}" class="bt lacre" style="margin-top:20px">
-        Ir para o meu time &rarr;</a>`
-          : `<a href="#/criar-time" class="bt lacre" style="margin-top:20px">Criar meu time &rarr;</a>`}
+    <p style="margin:20px 0 0">
+      ${meus.length ? `<a href="#/meu-time" class="bt">Meus times (${meus.length})</a>` : ""}
+      <a href="#/criar-time" class="bt lacre"${meus.length?' style="margin-left:8px"':""
+        }>Criar um time &rarr;</a>
+    </p>
+  </div>
+
+  <div class="card" style="display:flex;gap:8px;align-items:center">
+    <input id="buscaTime" value="${esc(q.get("q")||"")}" style="flex:1;margin:0"
+      placeholder="procurar time pelo nome — faculdade, empresa, turma…">
+    <button class="bt" id="btBusca" style="flex:none">Procurar</button>
   </div>
 
   ${cod ? `<div class="card" style="border-color:var(--lacre)">
@@ -11002,7 +11061,7 @@ async function telaTimes(){
         `<a href="#/times?r=${k}" class="chip${k===chave?" on":""}">${esc(r.nome)}</a>`).join("")}</div>
       <table><thead><tr><th class="d">#</th><th></th><th>Time</th><th>Capitão</th>
         <th class="d">Gente</th><th class="d">Rent.</th><th class="d">Sharpe</th>
-        <th class="d">Queda</th><th class="d">Geral</th></tr></thead><tbody>
+        <th class="d">Queda</th><th class="d">Geral</th><th></th></tr></thead><tbody>
       ${ord.map((t,i)=>{
         const m = met[t.id], p = posDe[t.id] || {}, n = conta[t.id] || 0;
         const cel = (v, txt, pos) => `<td class="d mono ${v==null?"nulo":""}">${
@@ -11022,6 +11081,11 @@ async function telaTimes(){
           ${cel(m?.sharpe, n2(m?.sharpe), p.sharpe)}
           ${cel(m?.dd,     `<span class="baixa">${pct(m?.dd)}</span>`, p.dd)}
           <td class="d mono ${p.geral==null?"nulo":""}"><b>${p.geral ?? "—"}</b></td>
+          <td class="d" onclick="event.stopPropagation()">${
+            souDe[t.id] === "ativo"  ? '<span class="pill">no time</span>'
+          : souDe[t.id] === "pedido" ? '<span class="pill">pedido enviado</span>'
+          : eu ? `<button class="bt pedirT" data-id="${t.id}"
+                    style="padding:5px 11px;font-size:12px">pedir para entrar</button>` : ""}</td>
         </tr>`; }).join("")}
       </tbody></table>
       <p style="margin:12px 0 0;font-size:11.5px;color:var(--graf)">
@@ -11033,22 +11097,36 @@ async function telaTimes(){
 
   const bc = document.getElementById("btConvite");
   if(bc) bc.onclick = () => pedirEntrada(cod);
+
+  const bb = document.getElementById("btBusca"), bi = document.getElementById("buscaTime");
+  if(bb && bi){
+    const ir = () => { location.hash = "#/times?q=" + encodeURIComponent(bi.value.trim());
+                       rotear(); };
+    bb.onclick = ir;
+    bi.onkeydown = ev => { if(ev.key === "Enter") ir(); };
+  }
+  document.querySelectorAll(".pedirT").forEach(b =>
+    b.onclick = () => pedirEntrada(null, b.dataset.id));
 }
 
 /* ---------- entrar num time ---------- */
 
-async function pedirEntrada(cod){
+async function pedirEntrada(cod, porId){
   if(!eu) return location.hash = "#/entrar";
-  const jaTem = await meuTime();
-  if(jaTem) return alert("Você já está num time. Uma pessoa, um time por ciclo.");
 
   const cart = await minhasCompradas();
   if(!cart.length) return alert("Para entrar num time você precisa de uma carteira "
     + "da classe Comprada publicada. Crie a sua primeiro.");
 
-  const { data:t } = await sb.from("time_").select("id,nome")
-    .eq("codigo", cod).is("encerrado_em", null).maybeSingle();
-  if(!t) return alert("Não achei time com este código.");
+  const busca = sb.from("time_").select("id,nome").is("encerrado_em", null);
+  const { data:t } = await (porId ? busca.eq("id", porId) : busca.eq("codigo", cod))
+    .maybeSingle();
+  if(!t) return alert("Não achei este time.");
+
+  const jaNesse = (await meusTimes()).find(m => String(m.time_id) === String(t.id));
+  if(jaNesse) return alert(jaNesse.situacao === "ativo"
+    ? "Você já está neste time."
+    : "Seu pedido já foi enviado. O capitão precisa aprovar.");
 
   const qual = cart.length === 1 ? cart[0].id : escolherCarteira(cart);
   if(!qual) return;
@@ -11074,12 +11152,7 @@ async function telaCriarTime(){
   if(!eu) { location.hash = "#/entrar?de=" + encodeURIComponent("#/criar-time");
             return rotear(); }
   app().innerHTML = `<div class="carreg">…</div>`;
-  const [cart, jaTem] = await Promise.all([minhasCompradas(), meuTime()]);
-
-  if(jaTem) return app().innerHTML = `<div class="cabeca"><h1>Criar time</h1></div>
-    ${aviso("Você já está num time. Uma pessoa, um time por ciclo — saia do atual "
-      + "para poder criar outro, e a mudança vale no ciclo seguinte.")}
-    <p style="margin-top:14px"><a href="#/time/${jaTem.time_id}" class="bt">Ver meu time</a></p>`;
+  const cart = await minhasCompradas();
 
   if(!cart.length) return app().innerHTML = `<div class="cabeca"><h1>Criar time</h1></div>
     ${aviso("Para ter time você precisa antes de uma carteira da classe Comprada — "
@@ -11192,6 +11265,16 @@ async function telaTime(id){
   ${!souMembro && !souCap && eu ? `<p style="margin:0 0 18px">
     <button class="bt" id="btEntrarTime">Pedir para entrar</button></p>` : ""}
 
+  ${souMembro ? `<p style="margin:0 0 18px;font-size:12.5px;color:var(--t2)">
+    Sua carteira neste time é
+    <b>${esc((ativos.find(m => m.usuario_id === eu.id)||{}).carteira_id
+      ? "a de nº " + ativos.find(m => m.usuario_id === eu.id).carteira_id : "—")}</b>.
+    <button class="bt" id="btTrocarCart"
+      style="margin-left:8px;padding:4px 11px;font-size:12px">Trocar</button>
+    <span style="display:block;margin-top:4px;color:var(--graf);font-size:11.5px">
+      A troca vale a partir do pregão seguinte. Sair do time é decisão do
+      capitão.</span></p>` : ""}
+
   <h2 style="font-size:19px;margin:26px 0 12px">A carteira do time</h2>
   ${!hoje || !hoje.ativos || !hoje.ativos.length
     ? `<div class="card"><p style="margin:0;color:var(--t2);font-size:13px">
@@ -11236,7 +11319,21 @@ async function telaTime(id){
   </div>` : ""}`;
 
   const be = document.getElementById("btEntrarTime");
-  if(be) be.onclick = () => pedirEntrada(t.codigo);
+  if(be) be.onclick = () => pedirEntrada(t.codigo, t.id);
+
+  const bt = document.getElementById("btTrocarCart");
+  if(bt) bt.onclick = async () => {
+    const cart = await minhasCompradas();
+    if(cart.length < 2) return alert("Você só tem uma carteira Comprada. "
+      + "Publique outra para poder escolher.");
+    const qual = escolherCarteira(cart);
+    if(!qual) return;
+    const { error } = await sb.from("time_membro").update({ carteira_id: qual })
+      .eq("time_id", t.id).eq("usuario_id", eu.id);
+    if(error) return alert("Não consegui trocar: " + error.message);
+    telaTime(id);
+  };
+
   if(souMembro || souCap) ligarMural(t.id, t.capitao, nomes);
 }
 
@@ -11499,7 +11596,8 @@ function telaRegrasTime(){
 async function pintarMeuTime(){
   const cx = document.getElementById("meuTimeCx");
   if(!cx) return;
-  const m = await meuTime();
+  const meus = await meusTimes();
+  const m = meus[0];
   if(!m){
     cx.innerHTML = `<p style="margin:0;color:var(--t2);font-size:13px">Você não
       está em nenhum time.
@@ -11518,7 +11616,9 @@ async function pintarMeuTime(){
         m.situacao === "pedido" ? " · aguardando o capitão aprovar" : ""}${
         eu && t.capitao === eu.id ? " · você é o capitão" : ""}</div>
     </div>
-    <a href="#/time/${t.id}" class="bt" style="padding:5px 12px;font-size:12px;flex:none">Abrir</a>
+    <a href="#/${meus.length>1?"meu-time":"time/"+t.id}" class="bt"
+       style="padding:5px 12px;font-size:12px;flex:none">${
+       meus.length>1 ? `Ver os ${meus.length}` : "Abrir"}</a>
   </div>`;
 }
 
@@ -11529,9 +11629,34 @@ async function irParaMeuTime(){
   if(!eu){ location.hash = "#/entrar?de=" + encodeURIComponent("#/meu-time");
            return rotear(); }
   app().innerHTML = `<div class="carreg">…</div>`;
-  const m = await meuTime();
-  location.hash = m ? "#/time/" + m.time_id : "#/times";
-  rotear();
+  const meus = await meusTimes();
+
+  /* com um time só, não faz sentido pôr uma tela no meio do caminho.        */
+  if(meus.length === 1){ location.hash = "#/time/" + meus[0].time_id; return rotear(); }
+  if(!meus.length){ location.hash = "#/times"; return rotear(); }
+
+  const { data:ts } = await sb.from("time_").select("id,nome,tema,capitao")
+    .in("id", meus.map(m => m.time_id));
+  const sit = {}; meus.forEach(m => sit[m.time_id] = m.situacao);
+  const totens = await conquistasDoTime(meus.map(m => m.time_id));
+
+  app().innerHTML = `
+  <div class="cabeca"><h1>Meus times</h1>
+    <p>Você pode estar em quantos times o capitão de cada um aceitar. O que não
+      pode é dois times levarem exatamente as mesmas carteiras num mesmo ciclo —
+      dariam a mesma carteira e o mesmo resultado.</p></div>
+  ${(ts||[]).map(t => `
+    <div class="card" style="display:flex;align-items:center;gap:12px">
+      ${escudo(t.nome, 40)}
+      <div style="flex:1;min-width:0">
+        <b>${esc(t.nome)}</b>${(totens[t.id]||[]).slice(0,1).map(q =>
+          medalha(q.posicao, tituloConquista(q, q.ciclo))).join("")}
+        <div style="font-size:11.5px;color:var(--graf)">${esc(TEMAS[t.tema]||t.tema)}${
+          sit[t.id] === "pedido" ? " · aguardando o capitão aprovar" : ""}${
+          eu && t.capitao === eu.id ? " · você é o capitão" : ""}</div>
+      </div>
+      <a href="#/time/${t.id}" class="bt" style="flex:none;padding:5px 12px;font-size:12px">Abrir</a>
+    </div>`).join("")}`;
 }
 
 
@@ -11730,6 +11855,30 @@ async function certificadoDeCiclo(chave){
   if(bi) bi.onclick = () => window.print();
 }
 
+
+/* ---------- o destino sobrevive ao cadastro ----------
+   O convite do capitão é #/times?cod=XXXX. Quem chega sem conta vê a abertura,
+   e o endereço é apagado para a mensagem aparecer inteira. Sem guardar isso,
+   o código do convite morre ali — que é justamente onde entra gente nova.
+   Fica no sessionStorage: dura o que a aba durar, some sozinho depois, e não
+   atravessa para outra pessoa no mesmo computador.                          */
+const CHAVE_DESTINO = "sp_destino";
+
+function guardarDestino(h){
+  if(!h || h === "#/" || h === "") return;
+  if(h.startsWith("#/entrar") || h.startsWith("#/senha")
+     || h.startsWith("#/nova-senha")) return;
+  try { sessionStorage.setItem(CHAVE_DESTINO, h); } catch(e){}
+}
+
+function pegarDestino(){
+  try {
+    const d = sessionStorage.getItem(CHAVE_DESTINO);
+    if(d) sessionStorage.removeItem(CHAVE_DESTINO);
+    return d;
+  } catch(e){ return null; }
+}
+
 function rotear(){
   clearInterval(window.__timerRank);
   clearInterval(window.__timerVivo);
@@ -11764,6 +11913,11 @@ function rotear(){
       // guardado. Só a recuperação de senha passa direto, senão o link do
       // e-mail não funciona.
       if(h !== "#/nova-senha"){
+        // ...mas o destino não pode ser jogado fora. Quem chega pelo convite
+        // do capitão ou por um link de time vê a abertura, cria a conta, e
+        // PRECISA cair onde foi convidado — senão o professor manda o link
+        // para trinta alunos e os trinta acabam em lugar nenhum.
+        guardarDestino(h);
         if(h !== "#/" && h !== "") history.replaceState(null,"","#/");
         return telaAbertura();
       }
