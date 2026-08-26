@@ -1584,10 +1584,9 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
         <div class="filete"></div>
         <div class="trio">
           <div><span class="rams">Intraday</span>
-            <span class="falta">Valendo agora<em>a fazer</em></span>
-            <a href="#/tiro-curto">Tiro curto</a>
-            <span class="falta">Duelo e torneio<em>a fazer</em></span>
+            <a href="#/tiro-curto">Valendo agora</a>
             <a href="#/placar">Placar</a>
+            <span class="falta">Duelo e torneio<em>a fazer</em></span>
           </div>
           <div><span class="rams">Carteira individual</span>
             <a href="#/ranking">Ranking</a>
@@ -4497,324 +4496,6 @@ function telaNovaSenha(){
     app().innerHTML = aviso("Senha trocada. Você já está dentro.") +
       '<p style="text-align:center"><a href="#/" class="bt cheio">Ir para o ranking</a></p>';
   };
-}
-
-async function telaTiroCurto(){
-  if(!eu){ location.hash="#/entrar"; return rotear(); }
-  app().innerHTML = `<div class="carreg">carregando…</div>`;
-
-  const { data:prox } = await sb.rpc("proximo_pregao");
-  const [uni, mins, hj] = await Promise.all([
-    universo(),
-    sb.from("aposta").select("id,ativo,direcao").eq("data", prox).order("id"),
-    sb.from("aposta").select("id,ativo,direcao").eq("data", HOJE_BR()).order("id"),
-  ]);
-  const pend = mins.data || [];
-  const emJogo = hj.data || [];
-
-  let viva = {};
-  if(emJogo.length){
-    const { data:cv } = await sb.from("cotacao_viva")
-      .select("ativo,valor,preco,atualizado_em")
-      .in("ativo", [...new Set(emJogo.map(x=>x.ativo))]);
-    (cv||[]).forEach(x => { viva[x.ativo] = x; });
-  }
-  const aoVivo = emJogo.map(t => {
-    const c = viva[t.ativo];
-    const deHoje = c?.atualizado_em && new Date(c.atualizado_em)
-      .toLocaleDateString("sv-SE", { timeZone:"America/Sao_Paulo" }) === HOJE_BR();
-    const r = (c && deHoje && c.valor != null)
-      ? c.valor * (t.direcao==="V" ? -1 : 1) : null;
-    return { ...t, r, quando: deHoje ? c.atualizado_em : null };
-  }).sort((a,b) => (b.r ?? -9) - (a.r ?? -9));
-  const lim = {};
-  await Promise.all(pend.map(async p => {
-    const { data } = await sb.rpc("limites_sugeridos", { p_ativo: p.ativo });
-    if(data && data[0]) lim[p.ativo] = data[0];
-  }));
-
-  app().innerHTML = `
-  <div class="cabeca" style="margin-bottom:20px">
-    <h1>Tiro curto</h1>
-    <p>Sobe ou cai no pregão de <b>${dataBR(prox)}</b>? Entrada na abertura,
-      saída no stop, no alvo ou no fechamento — o que vier primeiro.</p>
-    <div class="apoio">Até 10 papéis por pregão. Ninguém vê o seu tiro antes
-      de o prazo fechar.</div>
-  </div>
-
-  ${aoVivo.length ? `<div class="card" style="margin-bottom:18px;border-color:var(--linha2)">
-    <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:4px">
-      <h3 style="font-size:16px;margin:0">Valendo agora</h3>
-      <span style="font-size:11.5px;color:var(--graf)">${aoVivo.length}
-        ${aoVivo.length===1?"tiro":"tiros"} no pregão de hoje</span>
-      <span id="tcHora" style="margin-left:auto;font-size:11.5px;color:var(--graf)"></span>
-    </div>
-    <p style="font-size:11.5px;color:var(--graf);margin:0 0 10px">
-      Variação do papel no pregão de hoje, na direção do seu tiro. O número
-      muda enquanto o pregão corre e só vira ponto no fechamento.</p>
-    <table><tbody>${aoVivo.map(t=>`<tr>
-      <td class="mono" style="font-weight:500">${esc(t.ativo)}${t.r==null
-        ? `<div style="font-size:10.5px;color:var(--graf);margin-top:2px;
-             text-transform:none;letter-spacing:0">sem cotação agora</div>` : ""}</td>
-      <td class="${t.direcao==="V"?"baixa":"alta"}" style="font-size:12.5px">
-        ${t.direcao==="V"?"venda":"compra"}</td>
-      <td class="d mono ${t.r==null?"nulo":cor(t.r)}" style="font-size:15px">
-        ${t.r==null?"—":pct(t.r)}</td></tr>`).join("")}
-    </tbody></table>
-    ${aoVivo.some(t=>t.r==null)?`<p style="font-size:11.5px;color:var(--graf);margin:9px 0 0">
-      Sem cotação ao vivo de ${aoVivo.filter(t=>t.r==null).map(t=>esc(t.ativo)).join(", ")}
-      no momento. <b>Isso não afeta a apuração</b>: o resultado é calculado no
-      fechamento, pelo pregão do dia.</p>`:""}
-  </div>` : ""}
-
-  <div class="grid2">
-    <div>
-      <div class="card">
-        <h3 style="font-size:15px;margin-bottom:3px">Novo tiro</h3>
-        <p style="font-size:11.5px;color:var(--graf);margin:0 0 14px">
-          Para o pregão de ${prox}. Restam ${10-pend.length} de 10.</p>
-        <div id="erro"></div>
-
-        <div style="display:flex;gap:10px;align-items:flex-end">
-          <div style="flex:1;min-width:0">
-            <label>Papel</label>
-            <input id="apAtivo" list="uni" maxlength="8" placeholder="PETR4"
-                   style="text-transform:uppercase;margin-bottom:0">
-          </div>
-          <div style="flex:1;min-width:0">
-            <label>Lado</label>
-            <select id="apDir" style="margin-bottom:0">
-              <option value="C">compra</option>
-              <option value="V">venda</option>
-            </select>
-          </div>
-        </div>
-        <datalist id="uni">${uni.map(a=>`<option value="${a}">`).join("")}</datalist>
-
-        <div id="apLimites" style="font-size:12px;color:var(--t2);margin:11px 0 14px;
-          min-height:17px;line-height:1.5"></div>
-
-        <button class="bt cheio" id="apBt" style="width:100%" ${pend.length>=10?"disabled":""}>
-          ${pend.length>=10?"limite de 10 atingido":"Registrar tiro"}</button>
-      </div>
-
-      <details class="card" style="margin-top:14px">
-        <summary style="cursor:pointer;font-size:14px;font-weight:500;list-style:none">
-          <span style="color:var(--lacre);font-family:'IBM Plex Mono';margin-right:8px">?</span>Como é apurado</summary>
-        <p style="font-size:12.5px;color:var(--t2);margin:13px 0 8px">
-          Stop e alvo saem da <b>amplitude média do próprio papel</b>, não de uma
-          porcentagem fixa. Sem isso, papel agitado bateria alvo por ruído e papel
-          parado não bateria nem quando você acertasse a direção.</p>
-        <p style="font-size:12.5px;color:var(--t2);margin:0 0 8px">
-          <b>alvo +2 · fechamento a favor +1 · fechamento contra −1 · stop −2.</b>
-          Se stop e alvo forem tocados no mesmo dia, o candle não diz qual veio
-          primeiro: conta o fechamento, e vale ±1.</p>
-        <p style="font-size:12.5px;color:var(--t2);margin:0">
-          Se o papel abrir além do seu stop, você sai na abertura. Stop não é
-          promessa de preço.</p>
-      </details>
-    </div>
-
-    <div>
-      <div class="card">
-        <h3 style="font-size:15px;margin-bottom:4px">Seus tiros para ${prox}
-          <span style="color:var(--graf);font-weight:400">· ${pend.length}/10</span></h3>
-        <p style="font-size:11.5px;color:var(--graf);margin:0 0 12px">
-          Dá para desistir enquanto o pregão não chegar.</p>
-        ${pend.length ? `<table><tbody>${pend.map(p=>`<tr>
-          <td>
-            <span class="mono" style="font-weight:500">${esc(p.ativo)}</span>
-            <span class="${p.direcao==="V"?"baixa":"alta"}" style="font-size:12.5px;margin-left:7px">
-              ${p.direcao==="V"?"venda":"compra"}</span>
-            <div style="font-size:11px;color:var(--graf);margin-top:2px">${lim[p.ativo]
-              ? `stop e alvo a ${n2(lim[p.ativo].stop_pct*100)}% da abertura`
-              : "sem histórico deste papel — apura só pelo fechamento"}</div>
-          </td>
-          <td class="d"><button class="bt ap-del" data-id="${p.id}"
-            style="padding:3px 9px;font-size:11.5px;border-color:var(--baixa);color:var(--baixa)">
-            desistir</button></td></tr>`).join("")}</tbody></table>`
-        : `<p style="font-size:12.5px;color:var(--graf);margin:0">
-            Nenhum ainda. Escolha um papel ao lado.</p>`}
-      </div>
-      <div style="margin-top:14px"><a href="#/placar" class="bt" style="width:100%">Ver o placar &rarr;</a></div>
-    </div>
-  </div>`;
-
-  if(aoVivo.length){
-    const carimbo = () => {
-      const el = $("#tcHora");
-      if(!el) return false;
-      const q = aoVivo.find(t=>t.quando)?.quando;
-      el.textContent = q ? "cotação de " + new Date(q).toLocaleTimeString("pt-BR",
-        {hour:"2-digit",minute:"2-digit",timeZone:"America/Sao_Paulo"}) : "";
-      return true;
-    };
-    carimbo();
-    clearInterval(window.__timerTC);
-    window.__timerTC = setInterval(() => {
-      if(!$("#tcHora")) { clearInterval(window.__timerTC); return; }
-      if(document.hidden) return;
-      telaTiroCurto();
-    }, 60000);
-  }
-
-  const mostrarLimites = async () => {
-    const a = $("#apAtivo").value.trim().toUpperCase();
-    const cx = $("#apLimites");
-    if(!a || !UNISET.has(a)){ cx.innerHTML = ""; return; }
-    const { data:l } = await sb.rpc("limites_sugeridos", { p_ativo: a });
-    const r = l && l[0];
-    if(!r){ cx.innerHTML = `<span style="color:var(--graf)">sem histórico deste papel ainda</span>`; return; }
-    const dir = $("#apDir").value;
-    cx.innerHTML = `Amplitude média de <b>${esc(a)}</b>: ${n2(r.amplitude*100)}% ao dia.
-      Stop e alvo a <b>${n2(r.stop_pct*100)}%</b> da abertura, para
-      ${dir==="V"?"cima e para baixo":"baixo e para cima"}.`;
-  };
-  $("#apAtivo").oninput = mostrarLimites;
-  $("#apDir").onchange  = mostrarLimites;
-
-  $("#apBt").onclick = async () => {
-    const a = $("#apAtivo").value.trim().toUpperCase();
-    const bt = $("#apBt");
-    if(!a) return $("#erro").innerHTML = aviso("Escolha um papel.", true);
-    if(!UNISET.has(a)) return $("#erro").innerHTML = aviso(`${a} não está no universo.`, true);
-
-    bt.disabled = true; bt.textContent = "registrando…";
-    const { error } = await sb.from("aposta")
-      .insert({ data: prox, ativo: a, direcao: $("#apDir").value });
-    if(error){ bt.disabled=false; bt.textContent="Registrar tiro";
-      return $("#erro").innerHTML = aviso(error.message, true); }
-
-    bt.textContent = "conferindo no robô…";
-    let estado = "pendente";
-    for(let i = 0; i < 8 && estado === "pendente"; i++){
-      await new Promise(r => setTimeout(r, 1000));
-      const { data } = await sb.rpc("estado_papel", { p_ativo: a });
-      estado = data || "pendente";
-    }
-
-    if(estado === "nao_existe"){
-      await sb.from("aposta").delete()
-        .eq("data", prox).eq("ativo", a).eq("direcao", $("#apDir").value);
-      bt.disabled=false; bt.textContent="Registrar tiro";
-      return $("#erro").innerHTML = aviso(
-        `Não conseguimos cotar ${a} — o código pode estar errado ou o papel pode `
-        + `não estar mais em negociação. O tiro foi desfeito.`, true);
-    }
-    if(estado === "pendente"){
-      $("#erro").innerHTML = aviso(
-        `${a} foi registrado. A cotação dele ainda não chegou — confira esta `
-        + `tela em alguns minutos.`);
-    }
-    telaTiroCurto();
-  };
-
-  document.querySelectorAll(".ap-del").forEach(b => b.onclick = async () => {
-    await sb.from("aposta").delete().eq("id", Number(b.dataset.id));
-    telaTiroCurto();
-  });
-}
-
-async function telaPlacar(){
-  app().innerHTML = `<div class="carreg">carregando…</div>`;
-  const [rk, meu] = await Promise.all([
-    sb.from("ranking_dt").select("*").limit(100),
-    eu ? sb.from("aposta_apurada").select("*").eq("usuario_id", eu.id)
-           .order("data",{ascending:false}).limit(40)
-       : Promise.resolve({ data: [] }),
-  ]);
-  const lista = rk.data || [], minhas = meu.data || [];
-  const rotulo = { alvo:"alvo", stop:"stop", fechamento:"fechamento",
-                   ambiguo:"tocou os dois", gap_favor:"abriu no alvo",
-                   gap_contra:"abriu no stop" };
-
-  const porDia = {};
-  minhas.forEach(t => { (porDia[t.data] ||= []).push(t); });
-  const dias = Object.keys(porDia).sort().reverse();
-  const notaDia = d => porDia[d].reduce((a,t)=>a+t.pts,0) / porDia[d].length;
-  const lugar = ["primeiro","segundo","terceiro"];
-
-  app().innerHTML = `
-  <div class="cabeca">
-    <h1>Placar</h1>
-    <p>Quem acerta a direção com mais frequência. Conta o <b>dia</b>, não o
-      tiro: entrar com dez papéis reduz a sorte, não aumenta a nota.</p>
-  </div>
-
-  ${lista.length ? `<div class="podio">
-    ${lista.slice(0,3).map((x,i)=>`<div class="medalha${i===0?" um":""}">
-      <div class="lug">${lugar[i]}</div>
-      <div class="quem">${esc(x.apelido)}</div>
-      <div class="nota ${cor(x.media_dia)}">${x.media_dia>0?"+":""}${n2(x.media_dia)}</div>
-      <div class="sub">pontos por dia · ${x.dias} ${x.dias===1?"dia":"dias"} ·
-        ${x.operacoes} ${x.operacoes===1?"tiro":"tiros"}</div>
-      <div class="sub" style="margin-top:5px">nota de ranking
-        <b class="mono ${cor(x.nota)}">${x.nota>0?"+":""}${n2(x.nota)}</b></div>
-    </div>`).join("")}
-  </div>
-
-  ${lista.length > 3 ? `<table style="margin-bottom:10px">
-    <thead><tr><th></th><th>Quem</th><th class="d">Pontos/dia</th>
-    <th class="d some">Dias</th><th class="d some">Tiros</th><th class="d">Nota</th></tr></thead>
-    <tbody>${lista.slice(3).map((x,i)=>`<tr>
-      <td class="mono pos">${String(i+4).padStart(2,"0")}</td>
-      <td style="font-weight:500">${esc(x.apelido)}</td>
-      <td class="d mono ${cor(x.media_dia)}"><b>${x.media_dia>0?"+":""}${n2(x.media_dia)}</b></td>
-      <td class="d mono some">${x.dias}</td>
-      <td class="d mono nulo some">${x.operacoes}</td>
-      <td class="d mono ${cor(x.nota)}">${x.nota>0?"+":""}${n2(x.nota)}</td></tr>`).join("")}
-    </tbody></table>` : ""}
-
-  <p style="font-size:11.5px;color:var(--graf);margin:0;max-width:76ch">
-    <b>Pontos por dia</b> é a média: some os pontos dos papéis de cada dia,
-    divida pelo número de papéis daquele dia, e tire a média dos dias. Não é
-    soma — senão quem entra com dez papéis ganharia de quem entra com um só
-    por jogar mais.
-    A <b>nota</b> é essa média encolhida por <b>dias/(dias+20)</b>, e é ela que
-    ordena o ranking: com 3 dias você fica com 13% da sua média, com um ano
-    fica com 92%. Três dias bons não passam na frente de um ano de consistência.</p>`
-  : `<div class="card" style="text-align:center;padding:30px">
-      <h3 style="font-size:18px;margin-bottom:6px">O placar ainda está vazio</h3>
-      <p style="color:var(--t2);margin:0 0 14px">Ele aparece depois do primeiro
-        pregão apurado.</p>
-      <a href="#/tiro-curto" class="bt cheio">Dar o primeiro tiro</a></div>`}
-
-  ${eu ? `<h2 style="font-size:19px;margin:30px 0 10px">Seus dias</h2>
-    ${dias.length ? dias.map(d=>`<div class="dia">
-      <div class="topo">
-        <span class="mono" style="font-size:12.5px;color:var(--graf)">${dataBR(d)}</span>
-        <span style="font-size:11.5px;color:var(--graf)">${porDia[d].length}
-          ${porDia[d].length===1?"tiro":"tiros"} ·
-          ${(() => { const t = porDia[d].reduce((a,x)=>a+x.pts,0);
-             return `${t>0?"+":""}${t} ${Math.abs(t)===1?"ponto":"pontos"} no total`; })()}</span>
-        <span class="nota ${cor(notaDia(d))}" title="média: total dividido pelo número de tiros"
-          >${notaDia(d)>0?"+":""}${n2(notaDia(d),2)}</span>
-      </div>
-      <table style="margin-top:6px"><tbody>${porDia[d].map(t=>`<tr>
-        <td class="mono" style="font-weight:500;font-size:12.5px;padding:7px 0">${esc(t.ativo)}</td>
-        <td class="${t.direcao==="V"?"baixa":"alta"}" style="font-size:11.5px">
-          ${t.direcao==="V"?"venda":"compra"}</td>
-        <td class="mono nulo" style="font-size:11.5px">entrou ${n2(t.entrada)}</td>
-        <td class="mono baixa" style="font-size:11.5px">stop ${n2(t.stop)}</td>
-        <td class="mono alta" style="font-size:11.5px">alvo ${n2(t.alvo)}</td>
-        <td style="font-size:11.5px;color:var(--t2)">${rotulo[t.tipo]||t.tipo}
-          <span class="mono">${n2(t.saida)}</span></td>
-        <td class="d mono ${cor(t.retorno)}" style="font-size:12px">${pct(t.retorno)}</td>
-        <td class="d"><span class="pt ${t.pts>0?"b":t.pts<0?"r":""}">${
-          t.pts>0?"+":""}${t.pts}</span></td>
-      </tr>`).join("")}</tbody></table>
-    </div>`).join("")
-    : `<div class="card"><p style="margin:0;color:var(--t2)">
-        Nenhum tiro apurado ainda. <a href="#/tiro-curto">Dê o primeiro</a>.</p></div>`}
-    <p style="font-size:11.5px;color:var(--graf);margin:2px 0 0;max-width:76ch">
-      O número grande de cada dia é a <b>média</b>: o total dividido pelo número
-      de tiros daquele dia. Quatro tiros somando +1 ponto valem +0,25 — jogar
-      mais papéis não aumenta a nota, só reduz a sorte.
-      Os preços são os que o pregão de fato marcou, dá para conferir por onde
-      cada tiro saiu.</p>`
-  : `<div class="card" style="margin-top:22px;text-align:center">
-      <p style="margin:0 0 12px;color:var(--t2)">Entre para dar os seus e aparecer aqui.</p>
-      <a href="#/entrar?novo=1" class="bt cheio">Criar conta grátis</a></div>`}`;
 }
 
 async function telaScreening(){
@@ -11879,6 +11560,300 @@ function pegarDestino(){
   } catch(e){ return null; }
 }
 
+
+/* =====================================================================
+   INTRADAY — a rodada da hora
+   Seis rodadas por pregão, fechando em 11, 12, 13, 14, 15 e 16h. Quatro
+   jogos, um toque cada. O relógio regressivo é o produto: o motivo de voltar
+   deixa de ser "amanhã" e passa a ser "daqui a 23 minutos".
+
+   A apuração mora no banco. A tela só dispara apurar_rodadas_vencidas quando
+   percebe que uma rodada venceu — senão o resultado da rodada das 11h só
+   sairia à noite, quando o robô roda, e um jogo de hora em hora que só conta
+   o placar no fim do dia não é jogo nenhum.
+   ===================================================================== */
+
+const JOGOS = {
+  tiro:   { nome:"Tiro da hora",   dica:"escolha o papel e o lado" },
+  mexe:   { nome:"Quem mexe mais", dica:"maior variação, para cima ou para baixo" },
+  gira:   { nome:"Quem gira mais", dica:"maior volume financeiro na hora" },
+  volume: { nome:"Volume da B3",   dica:"quanto a bolsa inteira gira hoje" },
+};
+
+let RODADA_TIMER = null;
+
+function faltaPara(quando){
+  const s = Math.max(0, Math.round((new Date(quando) - Date.now()) / 1000));
+  const m = Math.floor(s / 60);
+  if(s <= 0)  return "fechou";
+  if(m === 0) return s + "s";
+  if(m < 60)  return m + "min " + String(s % 60).padStart(2,"0") + "s";
+  return Math.floor(m/60) + "h" + String(m % 60).padStart(2,"0");
+}
+
+async function rodadaDeAgora(){
+  const hoje = HOJE_BR();
+  const { data } = await sb.from("rodada").select("*").eq("data", hoje)
+    .order("hora");
+  const todas = data || [];
+  const agora = Date.now();
+  return {
+    todas,
+    atual: todas.find(r => new Date(r.fecha_em) > agora
+                        && new Date(r.abre_em) <= agora) || null,
+    vencidas: todas.filter(r => new Date(r.fecha_em) <= agora
+                             && r.situacao !== "apurada"),
+  };
+}
+
+/* os papéis que dá para escolher: os mais líquidos do universo, porque
+   apostar em papel que não negocia não é leitura de fluxo, é sorteio.        */
+async function papeisDaRodada(){
+  const { data } = await sb.from("universo")
+    .select("ativo,nome,liquidez").eq("tipo","acao")
+    .order("liquidez", { ascending:false }).limit(40);
+  return data || [];
+}
+
+async function telaTiroCurto(){
+  if(!eu){ location.hash = "#/entrar?de=" + encodeURIComponent("#/tiro-curto");
+           return rotear(); }
+  app().innerHTML = `<div class="carreg">carregando a rodada…</div>`;
+
+  const { todas, atual, vencidas } = await rodadaDeAgora();
+
+  /* rodada vencida e não apurada: apura na hora, para o resultado sair agora
+     e não à noite quando o robô passar.                                      */
+  if(vencidas.length){
+    await sb.rpc("apurar_rodadas_vencidas");
+    return telaTiroCurto();
+  }
+
+  if(!todas.length){
+    return app().innerHTML = `<div class="cabeca"><h1>Tiro da hora</h1>
+      <p>Seis rodadas por pregão, fechando de hora em hora, das 11h às 16h.</p></div>
+      ${aviso("Hoje não tem rodada — ou o pregão não abriu, ou as rodadas do dia "
+        + "ainda não foram criadas.")}`;
+  }
+
+  const [papeis, { data:faixas }, { data:meus }] = await Promise.all([
+    papeisDaRodada(),
+    sb.from("faixa_volume").select("*").order("ordem"),
+    atual ? sb.from("voto").select("*").eq("rodada_id", atual.id)
+              .eq("usuario_id", eu.id)
+          : Promise.resolve({ data:[] })
+  ]);
+  const voto = {}; (meus||[]).forEach(v => voto[v.jogo] = v.palpite);
+
+  const { data:seq } = await sb.from("intraday_sequencia").select("*")
+    .eq("usuario_id", eu.id).maybeSingle();
+  const s = seq?.sequencia || 0;
+  const mult = (1 + 0.2 * Math.max(s - 1, 0)).toFixed(1).replace(".", ",");
+
+  app().innerHTML = `
+  <div class="cabeca">
+    <h1>Tiro da hora</h1>
+    <p>Seis rodadas por pregão, fechando na virada de cada hora. Quatro palpites
+      por rodada, um toque cada. <b>Errar não tira ponto</b>, e rodada que você
+      não jogou não conta contra você.</p>
+    <div class="prova">
+      ${atual ? `<span class="p viva"><span class="pontinho"></span>fecha em
+        <span class="n" id="conta" style="color:var(--ouro2)">${faltaPara(atual.fecha_em)}</span></span>`
+              : `<span class="p">pregão encerrado hoje</span>`}
+      <span class="p"><span class="n">${s}</span>de sequência</span>
+      <span class="p"><span class="n" style="color:var(--ouro2)">${mult}×</span>multiplicador</span>
+    </div>
+  </div>
+
+  <div class="chips" style="margin-bottom:20px">
+    ${todas.map(r => {
+      const fim = new Date(r.fecha_em);
+      const cls = r.situacao === "apurada" ? "" : (atual && r.id === atual.id ? "on" : "");
+      return `<a class="chip ${cls}" href="#/rodada/${r.id}">${r.hora}h${
+        r.situacao === "apurada" ? " ✓" : ""}</a>`; }).join("")}
+  </div>
+
+  ${!atual
+    ? `<div class="card"><p style="margin:0;color:var(--t2);font-size:13.5px">
+        Nenhuma rodada aberta agora. As rodadas fecham às 11, 12, 13, 14, 15 e
+        16h — volte na próxima virada de hora.</p></div>`
+    : `<div id="erro"></div>
+      ${jogoTiro(papeis, voto.tiro)}
+      ${jogoPapel("mexe", papeis, voto.mexe)}
+      ${jogoPapel("gira", papeis, voto.gira)}
+      ${jogoFaixa(faixas || [], voto.volume)}
+      <p style="margin:22px 0 0;font-size:12px;color:var(--graf)">
+        Dá para trocar o palpite até a rodada fechar. Ninguém vê o voto de
+        ninguém antes disso — o banco recusa, não é só a tela que esconde.</p>`}`;
+
+  if(atual){
+    ligarJogos(atual, papeis);
+    clearInterval(RODADA_TIMER);
+    RODADA_TIMER = setInterval(() => {
+      const el = document.getElementById("conta");
+      if(!el) return clearInterval(RODADA_TIMER);
+      el.textContent = faltaPara(atual.fecha_em);
+      if(new Date(atual.fecha_em) <= Date.now()){
+        clearInterval(RODADA_TIMER); telaTiroCurto();
+      }
+    }, 1000);
+  }
+}
+
+function cxJogo(chave, dentro, escolhido){
+  const j = JOGOS[chave];
+  return `<div class="card" style="margin-bottom:14px">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;
+                gap:10px;flex-wrap:wrap;margin-bottom:10px">
+      <b style="font-size:15px">${esc(j.nome)}</b>
+      <span style="font-size:11.5px;color:var(--graf)">${esc(j.dica)}</span>
+    </div>
+    ${escolhido ? `<p style="margin:0 0 10px;font-size:12.5px;color:var(--ouro2)">
+      seu palpite: <b class="mono">${esc(escolhido)}</b></p>` : ""}
+    ${dentro}</div>`;
+}
+
+function jogoTiro(papeis, escolhido){
+  return cxJogo("tiro", `<div class="chips">${papeis.slice(0,24).map(p => `
+    <span class="chip mono" style="border:none;padding:0">
+      <button class="bt vJ" data-j="tiro" data-v="${p.ativo}:C"
+        style="padding:3px 9px;font-size:11.5px;border-radius:5px 0 0 5px${
+        escolhido===p.ativo+":C"?";border-color:var(--lacre);color:var(--ouro2)":""}">${p.ativo} ↑</button>
+      <button class="bt vJ" data-j="tiro" data-v="${p.ativo}:V"
+        style="padding:3px 9px;font-size:11.5px;border-radius:0 5px 5px 0;margin-left:-1px${
+        escolhido===p.ativo+":V"?";border-color:var(--lacre);color:var(--ouro2)":""}">↓</button>
+    </span>`).join("")}</div>`, escolhido);
+}
+
+function jogoPapel(chave, papeis, escolhido){
+  return cxJogo(chave, `<div class="chips">${papeis.slice(0,24).map(p =>
+    `<button class="chip mono vJ" data-j="${chave}" data-v="${p.ativo}"${
+      escolhido===p.ativo?' data-on="1"':""}>${p.ativo}</button>`).join("")}</div>`,
+    escolhido);
+}
+
+function jogoFaixa(faixas, escolhido){
+  return cxJogo("volume", `<div class="chips">${faixas.map(f =>
+    `<button class="chip vJ" data-j="volume" data-v="${f.ordem}"${
+      String(escolhido)===String(f.ordem)?' data-on="1"':""}>${esc(f.rotulo)}</button>`).join("")}</div>
+    <p style="margin:10px 0 0;font-size:11.5px;color:var(--graf)">
+      Faixa certa vale 10 pontos; a vizinha vale 5.</p>`,
+    escolhido ? (faixas.find(f => String(f.ordem)===String(escolhido))||{}).rotulo : null);
+}
+
+function ligarJogos(rodada, papeis){
+  document.querySelectorAll(".vJ").forEach(b => b.onclick = async () => {
+    const jogo = b.dataset.j, palpite = b.dataset.v;
+    const { error } = await sb.from("voto")
+      .upsert({ rodada_id: rodada.id, usuario_id: eu.id, jogo, palpite,
+                votado_em: new Date().toISOString() },
+              { onConflict: "rodada_id,usuario_id,jogo" });
+    if(error) return $("#erro").innerHTML = aviso("Não consegui registrar o "
+      + "palpite: " + error.message, true);
+    telaTiroCurto();
+  });
+}
+
+/* ---------- #/rodada/<id> : o que deu numa rodada ---------- */
+
+async function telaRodada(id){
+  app().innerHTML = `<div class="carreg">…</div>`;
+  const { data:r } = await sb.from("rodada").select("*").eq("id", id).maybeSingle();
+  if(!r) return app().innerHTML = aviso("Não achei esta rodada.", true);
+
+  if(r.situacao !== "apurada" && new Date(r.fecha_em) <= Date.now()){
+    await sb.rpc("apurar_rodadas_vencidas");
+    return telaRodada(id);
+  }
+
+  const [{ data:gab }, { data:votos }] = await Promise.all([
+    sb.from("rodada_gabarito").select("*").eq("rodada_id", id),
+    sb.from("voto").select("*").eq("rodada_id", id)
+  ]);
+  const g = {}; (gab||[]).forEach(x => g[x.jogo] = x);
+  const apurada = r.situacao === "apurada";
+  const nomes = await apelidosDe((votos||[]).map(v => v.usuario_id));
+
+  const porJogo = {};
+  (votos||[]).forEach(v => (porJogo[v.jogo] = porJogo[v.jogo] || []).push(v));
+
+  app().innerHTML = `
+  <div class="cabeca">
+    <h1>Rodada das ${r.hora}h</h1>
+    <p>${dataBR(r.data)} · ${apurada ? "apurada" : "ainda não apurada"}${
+      apurada ? "" : " — o resultado sai quando a foto da hora estiver no banco"}</p>
+  </div>
+
+  ${!apurada
+    ? aviso("Esta rodada ainda não foi apurada. Os votos ficam guardados e "
+      + "ninguém vê o dos outros até lá.")
+    : Object.entries(JOGOS).map(([k, j]) => {
+      const resp = k === "tiro"
+        ? [g.tiro, g.tiro_v].filter(Boolean).map(x => x.resposta + " (" + x.detalhe + ")").join("  ·  ")
+        : (g[k] ? g[k].resposta + (g[k].detalhe ? " (" + g[k].detalhe + ")" : "") : "—");
+      const lista = (porJogo[k] || []);
+      const certos = lista.filter(v => v.acertou);
+      return `<div class="card" style="margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">
+          <b style="font-size:15px">${esc(j.nome)}</b>
+          <span class="mono" style="color:var(--ouro2)">${esc(resp)}</span>
+        </div>
+        <p style="margin:9px 0 0;font-size:12.5px;color:var(--t2)">
+          ${lista.length} palpite${lista.length===1?"":"s"} ·
+          <b class="${certos.length?"alta":""}">${certos.length}</b> acerto${
+          certos.length===1?"":"s"}${certos.length
+            ? " — " + certos.slice(0,8).map(v => esc(nomes[v.usuario_id]||"")).join(", ")
+            : ""}</p>
+      </div>`; }).join("")}
+
+  <p style="margin:18px 0 0"><a href="#/tiro-curto" class="bt">Voltar para a rodada de agora</a></p>`;
+}
+
+/* ---------- #/placar : o ranking do intraday ---------- */
+
+async function telaPlacar(){
+  app().innerHTML = `<div class="carreg">…</div>`;
+  const [{ data:lista }, { data:hoje }] = await Promise.all([
+    sb.from("placar_intraday").select("*").order("nota", { ascending:false }).limit(200),
+    sb.from("rodada").select("hora,situacao").eq("data", HOJE_BR()).order("hora")
+  ]);
+  const l = lista || [];
+  const apuradas = (hoje||[]).filter(r => r.situacao === "apurada").length;
+
+  app().innerHTML = `
+  <div class="cabeca">
+    <h1>Placar</h1>
+    <p>A nota é a média de pontos por rodada, encolhida por
+      <span class="mono">rodadas/(rodadas+20)</span> — jogar mais não dá
+      vantagem por si só; o que separa é acertar e emendar sequência.</p>
+    <div class="prova">
+      <span class="p"><span class="n">${l.length}</span>${
+        l.length===1?"jogador":"jogadores"}</span>
+      <span class="p"><span class="n">${apuradas}</span>de 6 rodadas hoje</span>
+    </div>
+  </div>
+
+  ${!l.length
+    ? `<div class="card"><p style="margin:0;color:var(--t2)">Ninguém pontuou
+        ainda. As rodadas fecham de hora em hora, das 11h às 16h.
+        <a href="#/tiro-curto" style="color:var(--ouro2)">Jogar a de agora</a>.</p></div>`
+    : `<table><thead><tr><th class="d">#</th><th>Jogador</th>
+        <th class="d">Nota</th><th class="d">Pontos</th><th class="d">Rodadas</th>
+        <th class="d">Acertos</th><th class="d">Sequência</th></tr></thead><tbody>
+      ${l.map((x,i) => `<tr>
+        <td class="d mono" style="color:var(--graf)">${i+1}</td>
+        <td><b>${esc(x.apelido||"—")}</b></td>
+        <td class="d mono"><b>${n2(x.nota,1)}</b></td>
+        <td class="d mono">${x.pontos}</td>
+        <td class="d mono">${x.rodadas}</td>
+        <td class="d mono">${x.acertos}</td>
+        <td class="d mono">${x.sequencia}${
+          x.maior_sequencia > x.sequencia
+            ? `<div style="font-size:10px;color:var(--graf)">maior ${x.maior_sequencia}</div>` : ""}</td>
+      </tr>`).join("")}
+      </tbody></table>`}`;
+}
+
 function rotear(){
   clearInterval(window.__timerRank);
   clearInterval(window.__timerVivo);
@@ -11983,6 +11958,7 @@ function rotear(){
   if(h==="#/criar-time")            return telaCriarTime();
   if(h==="#/regras-time")           return telaRegrasTime();
   if(h==="#/meu-time")              return irParaMeuTime();
+  if(/^#\/rodada\/\d+$/.test(h))    return telaRodada(h.split("/")[2]);
   if(/^#\/time\/\d+\/capitao$/.test(h)) return telaCapitao(h.split("/")[2]);
   if(/^#\/time\/\d+$/.test(h))          return telaTime(h.split("/")[2]);
   if(h==="#/minhas")          return telaConta(true);
