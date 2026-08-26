@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict c4no48059HHLEgsGZCCaTbCeENHk66lZAvClfuawhiUtqr0CnnjhSMyxAejfNsI
+\restrict 7F2c69McNf3cFeMcWlBLgWk3vIDoA6rNlaYkn8Pmzya933kQaVwfrgX05uxLvDr
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.11 (Ubuntu 17.11-1.pgdg24.04+2)
@@ -31,6 +31,98 @@ CREATE SCHEMA public;
 --
 
 COMMENT ON SCHEMA public IS 'standard public schema';
+
+
+--
+-- Name: abrir_ciclo(bigint); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.abrir_ciclo(p_ciclo bigint) RETURNS text
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+declare
+  r        record;
+  v_hash   text;
+  v_dono   bigint;
+  n_ok     int := 0;
+  n_clone  int := 0;
+  v_clones text := '';
+begin
+  for r in
+    select i.time_id,
+           array_agg(m.carteira_id order by m.carteira_id) as carteiras,
+           count(*) as quantos
+      from time_inscricao i
+      join time_membro m on m.time_id = i.time_id and m.situacao = 'ativo'
+      join carteira ca   on ca.id = m.carteira_id
+                        and ca.ativa and ca.classe = 'diversificada'
+     where i.ciclo_id = p_ciclo
+     group by i.time_id
+     order by i.time_id
+  loop
+    if r.quantos < 5 then
+      continue;                          -- sem elenco mínimo, não entra
+    end if;
+
+    v_hash := md5(array_to_string(r.carteiras, ','));
+
+    select i.time_id into v_dono from time_inscricao i
+     where i.ciclo_id = p_ciclo and i.elenco_hash = v_hash
+       and i.time_id <> r.time_id limit 1;
+
+    if v_dono is not null then
+      n_clone  := n_clone + 1;
+      v_clones := v_clones || format(' · time %s repete o elenco do time %s',
+                                     r.time_id, v_dono);
+      continue;
+    end if;
+
+    update time_inscricao set elenco_hash = v_hash
+     where ciclo_id = p_ciclo and time_id = r.time_id;
+
+    insert into time_ciclo_membro (ciclo_id, time_id, usuario_id, carteira_id)
+    select p_ciclo, m.time_id, m.usuario_id, m.carteira_id
+      from time_membro m
+     where m.time_id = r.time_id and m.situacao = 'ativo'
+       and m.carteira_id is not null
+    on conflict do nothing;
+
+    n_ok := n_ok + 1;
+  end loop;
+
+  update ciclo set situacao = 'aberto' where id = p_ciclo;
+  return format('%s time(s) no ciclo, %s recusado(s) por elenco repetido%s',
+                n_ok, n_clone, v_clones);
+end;
+$$;
+
+
+--
+-- Name: abrir_rodadas(date); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.abrir_rodadas(p_data date DEFAULT NULL::date) RETURNS integer
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+declare
+  d date := coalesce(p_data, (now() at time zone 'America/Sao_Paulo')::date);
+  h int; n int := 0;
+begin
+  if extract(dow from d) in (0, 6) then return 0; end if;
+
+  for h in 11..16 loop
+    insert into rodada (data, hora, abre_em, fecha_em)
+    values (d, h,
+            ((d + make_interval(hours => h - 1)) at time zone 'America/Sao_Paulo'),
+            ((d + make_interval(hours => h))     at time zone 'America/Sao_Paulo'))
+    on conflict (data, hora) do nothing;
+    if found then n := n + 1; end if;
+  end loop;
+  return n;
+end;
+$$;
 
 
 --
@@ -213,7 +305,7 @@ CREATE TABLE public.lead (
     responsavel uuid,
     CONSTRAINT lead_cep_ok CHECK (((cep IS NULL) OR (cep ~ '^\d{8}$'::text))),
     CONSTRAINT lead_cpf_ok CHECK (((cpf IS NULL) OR public.cpf_valido(cpf))),
-    CONSTRAINT lead_origem_ok CHECK ((origem = ANY (ARRAY['cadastro'::text, 'assinatura'::text, 'manual'::text, 'importado'::text]))),
+    CONSTRAINT lead_origem_ok CHECK ((origem = ANY (ARRAY['cadastro'::text, 'servicos'::text, 'clube'::text, 'assinatura'::text, 'manual'::text, 'importado'::text]))),
     CONSTRAINT lead_tel_ok CHECK (((telefone IS NULL) OR (telefone ~ '^\d{10,13}$'::text))),
     CONSTRAINT lead_uf_ok CHECK (((uf IS NULL) OR (uf ~ '^[A-Z]{2}$'::text)))
 );
@@ -494,6 +586,127 @@ begin
 
   return next;
 end $$;
+
+
+--
+-- Name: apurar_rodada(bigint); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.apurar_rodada(p_rodada bigint) RETURNS text
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $_$
+declare
+  r          record;
+  v_tiro     record;
+  v_mexe     record;
+  v_gira     record;
+  v_giro     real;
+  v_faixa    int;
+  n_votos    int := 0;
+  v_hora_med int;
+begin
+  select * into r from rodada where id = p_rodada;
+  if r is null then return 'rodada não existe'; end if;
+  if r.situacao = 'apurada' then return 'já estava apurada'; end if;
+  if now() < r.fecha_em then return 'ainda não fechou'; end if;
+
+  v_hora_med := r.hora - 1;      -- a hora que acabou de correr
+
+  -- ---------- o gabarito ----------
+  -- 1. tiro da hora: o papel que mais subiu e o que mais caiu são as duas
+  --    respostas certas, cada uma no seu lado.
+  select * into v_tiro from movimento_da_hora(r.data, v_hora_med)
+   where giro_hora > 0 order by variacao desc limit 1;
+
+  if v_tiro is null then
+    return 'sem foto da hora ' || v_hora_med || ' — nada a apurar';
+  end if;
+
+  -- 2. quem mexe mais: maior variação em módulo
+  select * into v_mexe from movimento_da_hora(r.data, v_hora_med)
+   where giro_hora > 0 order by modulo desc limit 1;
+
+  -- 3. quem gira mais: maior giro financeiro na hora
+  select * into v_gira from movimento_da_hora(r.data, v_hora_med)
+   order by giro_hora desc limit 1;
+
+  -- 4. faixa do giro da bolsa até agora
+  v_giro := giro_do_dia(r.data);
+  select ordem into v_faixa from faixa_volume
+   where (de is null or v_giro >= de) and (ate is null or v_giro < ate)
+   order by ordem limit 1;
+
+  delete from rodada_gabarito where rodada_id = p_rodada;
+  insert into rodada_gabarito (rodada_id, jogo, resposta, detalhe) values
+    (p_rodada, 'tiro',  v_tiro.ativo || ':C', to_char(v_tiro.variacao*100,'FM990D00') || '%'),
+    (p_rodada, 'mexe',  v_mexe.ativo,  to_char(v_mexe.modulo*100,'FM990D00') || '%'),
+    (p_rodada, 'gira',  v_gira.ativo,  'R$ ' || to_char(v_gira.giro_hora/1e6,'FM999G990D0') || ' mi'),
+    (p_rodada, 'volume', v_faixa::text, 'R$ ' || to_char(v_giro/1e9,'FM990D0') || ' bi');
+
+  -- o lado vendido também acerta, se o papel escolhido foi o que mais caiu
+  insert into rodada_gabarito (rodada_id, jogo, resposta, detalhe)
+  select p_rodada, 'tiro_v', m.ativo || ':V',
+         to_char(m.variacao*100,'FM990D00') || '%'
+    from movimento_da_hora(r.data, v_hora_med) m
+   where m.giro_hora > 0 order by m.variacao asc limit 1
+  on conflict do nothing;
+
+  -- ---------- conferir os votos ----------
+  update voto v set acertou = false, pontos = 0 where v.rodada_id = p_rodada;
+
+  -- tiro: acerta quem pegou o papel E o lado
+  update voto v set acertou = true, pontos = 10
+    from rodada_gabarito g
+   where v.rodada_id = p_rodada and v.jogo = 'tiro'
+     and g.rodada_id = p_rodada and g.jogo in ('tiro','tiro_v')
+     and v.palpite = g.resposta;
+
+  update voto v set acertou = true, pontos = 10
+    from rodada_gabarito g
+   where v.rodada_id = p_rodada and v.jogo in ('mexe','gira')
+     and g.rodada_id = p_rodada and g.jogo = v.jogo
+     and v.palpite = g.resposta;
+
+  -- volume: faixa certa vale cheio, vizinha vale metade
+  update voto v set acertou = true, pontos = 10
+   where v.rodada_id = p_rodada and v.jogo = 'volume'
+     and v.palpite = v_faixa::text;
+
+  update voto v set acertou = false, pontos = 5
+   where v.rodada_id = p_rodada and v.jogo = 'volume'
+     and abs(v.palpite::int - v_faixa) = 1;
+
+  select count(*) into n_votos from voto where rodada_id = p_rodada;
+
+  update rodada set situacao = 'apurada', apurada_em = now() where id = p_rodada;
+
+  perform somar_intraday(p_rodada);
+  return format('rodada das %sh apurada · %s voto(s)', r.hora, n_votos);
+end;
+$_$;
+
+
+--
+-- Name: apurar_rodadas_vencidas(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.apurar_rodadas_vencidas() RETURNS text
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+declare r record; saida text := ''; n int := 0;
+begin
+  for r in select id from rodada
+            where situacao <> 'apurada' and fecha_em < now()
+            order by data, hora loop
+    saida := saida || ' · ' || apurar_rodada(r.id);
+    n := n + 1;
+  end loop;
+  if n = 0 then return 'nenhuma rodada vencida'; end if;
+  return saida;
+end;
+$$;
 
 
 --
@@ -789,6 +1002,77 @@ $$;
 
 
 --
+-- Name: fechar_ciclo(bigint); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.fechar_ciclo(p_ciclo bigint) RETURNS integer
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+declare n int;
+begin
+  delete from time_ciclo_resultado where ciclo_id = p_ciclo;
+
+  insert into time_ciclo_resultado
+    (ciclo_id, time_id, dias, acumulado, sharpe, drawdown)
+  select d.ciclo_id, d.time_id, count(*)::int,
+         (max(d.indice) filter (where d.data = ult.ultima)) / 100.0 - 1,
+         case when count(*) >= 2 and stddev_samp(d.retorno) > 0
+              then ((avg(d.retorno) * 252) - taxa_rf_ano())
+                   / (stddev_samp(d.retorno) * sqrt(252))
+                   * (count(*)::real / (count(*) + 40))
+         end,
+         min(d.indice / greatest(pico.pico, 1) - 1)
+    from time_carteira_dia d
+    join lateral (select max(data) as ultima from time_carteira_dia x
+                   where x.ciclo_id = d.ciclo_id and x.time_id = d.time_id
+                     and x.retorno is not null) ult on true
+    join lateral (select max(y.indice) as pico from time_carteira_dia y
+                   where y.ciclo_id = d.ciclo_id and y.time_id = d.time_id
+                     and y.data <= d.data) pico on true
+   where d.ciclo_id = p_ciclo and d.retorno is not null
+   group by d.ciclo_id, d.time_id, ult.ultima;
+
+  -- posições em cada régua. Quem não tem a régua vai para o fim dela e não
+  -- some da conta: excluir daria vantagem a quem tem menos dado.
+  with p as (
+    select time_id,
+           rank() over (order by acumulado desc nulls last) as pa,
+           rank() over (order by sharpe    desc nulls last) as ps,
+           rank() over (order by drawdown  desc nulls last) as pd,
+           count(*) filter (where sharpe is not null) over () as com_sharpe
+      from time_ciclo_resultado where ciclo_id = p_ciclo)
+  update time_ciclo_resultado r
+     set pos_acum = p.pa, pos_sharpe = p.ps, pos_dd = p.pd,
+         pos_geral = p.pa + p.pd + case when p.com_sharpe > 0 then p.ps else 0 end
+    from p where p.time_id = r.time_id and r.ciclo_id = p_ciclo;
+
+  insert into conquista (time_id, ciclo_id, papel, regua, posicao)
+  select time_id, p_ciclo, 'time', v.regua, v.pos
+    from time_ciclo_resultado r
+    cross join lateral (values
+      ('rentabilidade', r.pos_acum), ('sharpe', r.pos_sharpe),
+      ('queda', r.pos_dd),           ('geral',  r.pos_geral)
+    ) as v(regua, pos)
+   where r.ciclo_id = p_ciclo and v.pos <= 3;
+
+  insert into conquista (usuario_id, time_id, ciclo_id, papel, regua, posicao)
+  select m.usuario_id, c.time_id, p_ciclo,
+         case when t.capitao = m.usuario_id then 'capitao' else 'membro' end,
+         c.regua, c.posicao
+    from conquista c
+    join time_ t on t.id = c.time_id
+    join time_ciclo_membro m on m.ciclo_id = p_ciclo and m.time_id = c.time_id
+   where c.ciclo_id = p_ciclo and c.papel = 'time' and c.usuario_id is null;
+
+  update ciclo set situacao = 'encerrado', encerrado_em = now() where id = p_ciclo;
+  select count(*) into n from time_ciclo_resultado where ciclo_id = p_ciclo;
+  return n;
+end;
+$$;
+
+
+--
 -- Name: fechar_dia(date, boolean); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -969,6 +1253,64 @@ end $$;
 
 
 --
+-- Name: fechar_dia_times(date); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.fechar_dia_times(p_data date DEFAULT NULL::date) RETURNS integer
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+declare
+  v_dia   date := coalesce(p_data, (select max(data) from oscilacao));
+  v_prox  date;
+  r       record;
+  v_ret   real;
+  v_ant   real;
+  n       int := 0;
+begin
+  select min(data) into v_prox from oscilacao where data > v_dia;
+
+  for r in
+    select d.ciclo_id, d.time_id, d.ativos
+      from time_carteira_dia d
+      join ciclo c on c.id = d.ciclo_id
+     where d.data = v_dia and c.situacao <> 'encerrado'
+  loop
+    select avg(o.valor)::real into v_ret
+      from oscilacao o
+     where o.data = v_dia and o.ativo = any(r.ativos);
+
+    if v_ret is null then continue; end if;
+
+    select indice into v_ant from time_carteira_dia
+     where ciclo_id = r.ciclo_id and time_id = r.time_id and data < v_dia
+     order by data desc limit 1;
+
+    update time_carteira_dia
+       set retorno = v_ret,
+           indice  = coalesce(v_ant, 100) * (1 + v_ret)
+     where ciclo_id = r.ciclo_id and time_id = r.time_id and data = v_dia;
+
+    n := n + 1;
+  end loop;
+
+  -- carteira do próximo pregão, com o que os membros têm agora
+  if v_prox is not null then
+    for r in
+      select i.ciclo_id, i.time_id from time_inscricao i
+        join ciclo c on c.id = i.ciclo_id
+       where c.situacao = 'aberto' and v_prox between c.inicio and c.fim
+    loop
+      perform montar_carteira_time(r.ciclo_id, r.time_id, v_prox);
+    end loop;
+  end if;
+
+  return n;
+end;
+$$;
+
+
+--
 -- Name: fitas(text); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1015,6 +1357,57 @@ begin
      where pa.carteira_id = cid and abs(q.dec) > 0
        and abs(abs(pa.peso) - abs(q.dec)) / abs(q.dec) > banda / 100.0);
 end $$;
+
+
+--
+-- Name: fotografar_hora(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.fotografar_hora() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+declare
+  v_agora timestamptz := coalesce(new.atualizado_em, now());
+  v_br    timestamp   := v_agora at time zone 'America/Sao_Paulo';
+  v_hora  int         := extract(hour from v_br);
+begin
+  -- fora do pregão não interessa, e evita encher a tabela de madrugada
+  if v_hora < 10 or v_hora > 17 then return new; end if;
+  if extract(dow from v_br) in (0, 6) then return new; end if;
+  if new.preco is null or new.preco <= 0 then return new; end if;
+
+  insert into cotacao_hora (ativo, data, hora, preco, abertura, fech_ant,
+                            volume, atualizado_em)
+  values (new.ativo, v_br::date, v_hora, new.preco, new.abertura, new.valor,
+          v_agora)
+  on conflict (ativo, data, hora) do update
+    set preco = excluded.preco,
+        abertura = excluded.abertura,
+        fech_ant = excluded.fech_ant,
+        volume = excluded.volume,
+        atualizado_em = excluded.atualizado_em;
+
+  return new;
+end;
+$$;
+
+
+--
+-- Name: giro_do_dia(date); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.giro_do_dia(p_data date DEFAULT NULL::date) RETURNS real
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+  select sum(x.volume)::real from (
+    select distinct on (ativo) ativo, volume
+      from cotacao_hora
+     where data = coalesce(p_data, (select max(data) from cotacao_hora))
+     order by ativo, hora desc
+  ) x;
+$$;
 
 
 --
@@ -1181,6 +1574,121 @@ CREATE FUNCTION public.mercado() RETURNS jsonb
   join ontem o on o.ativo = h.ativo
  where o.m1 > 0 and o.m2 > 0 and o.m3 > 0;
 $_$;
+
+
+--
+-- Name: montar_carteira_time(bigint, bigint, date); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.montar_carteira_time(p_ciclo bigint, p_time bigint, p_data date) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+declare
+  v_ativos    text[];
+  v_corte     bigint;
+  v_faltam    int;
+  v_cands     text[];
+  v_auto      text[];
+  v_escolha   text[];
+  v_min       int := 5;
+  v_membros   int;
+  v_teto      int;
+begin
+  select count(*) into v_membros
+    from time_ciclo_membro m
+   where m.ciclo_id = p_ciclo and m.time_id = p_time
+     and m.carteira_id is not null;
+  if v_membros < v_min then
+    return null;
+  end if;
+
+  create temp table _cont on commit drop as
+    select p.ativo, count(distinct m.usuario_id)::bigint as cabecas,
+           coalesce(u.liquidez, 0) as liq
+      from time_ciclo_membro m
+      join peso_atual p on p.carteira_id = m.carteira_id
+      left join universo u on u.ativo = p.ativo
+     where m.ciclo_id = p_ciclo and m.time_id = p_time
+       and m.carteira_id is not null
+       and p.peso > 0
+     group by p.ativo, u.liquidez;
+
+  select cabecas into v_corte
+    from _cont order by cabecas desc, liq desc offset 9 limit 1;
+
+  if v_corte is null then
+    select array_agg(ativo order by cabecas desc, liq desc) into v_ativos from _cont;
+    insert into time_carteira_dia (ciclo_id, time_id, data, ativos)
+    values (p_ciclo, p_time, p_data, coalesce(v_ativos, '{}'))
+    on conflict (ciclo_id, time_id, data) do update set ativos = excluded.ativos,
+      montada_em = now();
+    return v_ativos;
+  end if;
+
+  select array_agg(ativo order by cabecas desc, liq desc) into v_ativos
+    from _cont where cabecas > v_corte;
+  v_faltam := 10 - coalesce(array_length(v_ativos,1), 0);
+
+  -- só os mais líquidos vão à mesa do capitão: o dobro das vagas, no mínimo
+  -- quatro, para escolher entre dois nunca virar escolha única.
+  v_teto := greatest(v_faltam * 2, 4);
+  select array_agg(ativo order by liq desc, ativo) into v_cands
+    from (select ativo, liq from _cont where cabecas = v_corte
+           order by liq desc, ativo limit v_teto) x;
+
+  if coalesce(array_length(v_cands,1),0) > v_faltam then
+    v_auto := v_cands[1:v_faltam];
+
+    select e.escolha into v_escolha
+      from time_empate e
+     where e.ciclo_id = p_ciclo and e.time_id = p_time and e.data = p_data;
+
+    if v_escolha is not null
+       and array_length(v_escolha,1) = v_faltam
+       and v_escolha <@ v_cands then
+      v_ativos := v_ativos || v_escolha;
+    else
+      v_ativos := v_ativos || v_auto;
+    end if;
+
+    insert into time_empate (ciclo_id, time_id, data, vagas, candidatos, automatico)
+    values (p_ciclo, p_time, p_data, v_faltam, v_cands, v_auto)
+    on conflict (ciclo_id, time_id, data) do update
+      set vagas = excluded.vagas, candidatos = excluded.candidatos,
+          automatico = excluded.automatico;
+  else
+    v_ativos := v_ativos || coalesce(v_cands, '{}');
+  end if;
+
+  insert into time_carteira_dia (ciclo_id, time_id, data, ativos)
+  values (p_ciclo, p_time, p_data, v_ativos)
+  on conflict (ciclo_id, time_id, data) do update
+    set ativos = excluded.ativos, montada_em = now();
+
+  return v_ativos;
+end;
+$$;
+
+
+--
+-- Name: movimento_da_hora(date, integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.movimento_da_hora(p_data date, p_hora integer) RETURNS TABLE(ativo text, preco real, anterior real, variacao real, modulo real, giro_hora real)
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+  select h.ativo, h.preco, a.preco as anterior,
+         (h.preco / nullif(a.preco, 0) - 1)::real            as variacao,
+         abs(h.preco / nullif(a.preco, 0) - 1)::real         as modulo,
+         greatest(coalesce(h.volume,0) - coalesce(a.volume,0), 0)::real as giro_hora
+    from cotacao_hora h
+    join cotacao_hora a on a.ativo = h.ativo and a.data = h.data
+                       and a.hora = h.hora - 1
+   where h.data = p_data and h.hora = p_hora
+     and a.preco > 0;
+$$;
 
 
 --
@@ -1761,15 +2269,43 @@ end $$;
 -- Name: robo_fechar_dia(date); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.robo_fechar_dia(d date DEFAULT NULL::date) RETURNS integer
+CREATE FUNCTION public.robo_fechar_dia(d date DEFAULT NULL::date) RETURNS text
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
+declare
+  v_dia   date := coalesce(d, (select max(data) from oscilacao));
+  v_saida text;
+  v_times int;
+  v_intra text;
 begin
   perform set_config('request.jwt.claims',
-    json_build_object('sub', (select id from perfil where admin order by criado_em limit 1))::text, true);
-  return fechar_dia(coalesce(d, (select max(data) from oscilacao)));
-end $$;
+    json_build_object('sub', (select id from perfil where admin
+                              order by criado_em limit 1))::text, true);
+
+  v_saida := fechar_dia(v_dia);
+
+  begin
+    v_times := fechar_dia_times(v_dia);
+  exception when others then
+    v_times := -1;
+  end;
+
+  -- intraday: abre as rodadas de hoje e apura o que já venceu.
+  -- Engolido do mesmo jeito: o fechamento das carteiras é o que não pode falhar.
+  begin
+    perform abrir_rodadas();
+    v_intra := apurar_rodadas_vencidas();
+  exception when others then
+    v_intra := 'FALHOU';
+  end;
+
+  return v_saida
+       || case when v_times >= 0 then ' · times: ' || v_times
+               else ' · times: FALHOU' end
+       || ' · intraday: ' || coalesce(v_intra, '—');
+end;
+$$;
 
 
 --
@@ -1954,6 +2490,62 @@ end $$;
 
 
 --
+-- Name: somar_intraday(bigint); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.somar_intraday(p_rodada bigint) RETURNS integer
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+declare
+  r     record;
+  p     record;
+  v_seq int;
+  v_mul numeric;
+  n     int := 0;
+begin
+  select * into r from rodada where id = p_rodada;
+
+  for p in
+    select v.usuario_id,
+           count(*) filter (where v.acertou)     as acertos,
+           sum(coalesce(v.pontos,0))::int        as bruto
+      from voto v where v.rodada_id = p_rodada
+     group by v.usuario_id
+  loop
+    -- a sequência sobe com pelo menos um acerto na rodada, e zera sem nenhum
+    select coalesce(sequencia, 0) into v_seq
+      from intraday_sequencia where usuario_id = p.usuario_id;
+    v_seq := coalesce(v_seq, 0);
+    v_seq := case when p.acertos > 0 then least(v_seq + 1, 6) else 0 end;
+
+    -- 1,0 · 1,2 · 1,4 · 1,6 · 1,8 · 2,0 — teto em 2x para o ranking não travar
+    v_mul := 1.0 + 0.2 * greatest(v_seq - 1, 0);
+
+    insert into intraday_sequencia (usuario_id, sequencia, maior, ultima_rodada)
+    values (p.usuario_id, v_seq, v_seq, p_rodada)
+    on conflict (usuario_id) do update
+      set sequencia = v_seq,
+          maior = greatest(intraday_sequencia.maior, v_seq),
+          ultima_rodada = p_rodada;
+
+    insert into intraday_pessoa (usuario_id, data, rodadas, acertos, pontos, sequencia)
+    values (p.usuario_id, r.data, 1, p.acertos,
+            round(p.bruto * v_mul)::int, v_seq)
+    on conflict (usuario_id, data) do update
+      set rodadas = intraday_pessoa.rodadas + 1,
+          acertos = intraday_pessoa.acertos + p.acertos,
+          pontos  = intraday_pessoa.pontos + round(p.bruto * v_mul)::int,
+          sequencia = v_seq;
+
+    n := n + 1;
+  end loop;
+  return n;
+end;
+$$;
+
+
+--
 -- Name: sou_admin(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1962,6 +2554,34 @@ CREATE FUNCTION public.sou_admin() RETURNS boolean
     SET search_path TO 'public'
     AS $$
   select coalesce((select p.admin from perfil p where p.id = auth.uid()), false)
+$$;
+
+
+--
+-- Name: sou_capitao(bigint); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.sou_capitao(p_time bigint) RETURNS boolean
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+  select exists (select 1 from time_ t
+                 where t.id = p_time and t.capitao = auth.uid()
+                   and t.encerrado_em is null);
+$$;
+
+
+--
+-- Name: sou_do_time(bigint); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.sou_do_time(p_time bigint) RETURNS boolean
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+  select exists (select 1 from time_membro m
+                 where m.time_id = p_time and m.usuario_id = auth.uid()
+                   and m.situacao = 'ativo');
 $$;
 
 
@@ -2081,6 +2701,24 @@ begin
   end if;
   return new;
 end $$;
+
+
+--
+-- Name: trava_saida_membro(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.trava_saida_membro() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+begin
+  if new.situacao is distinct from old.situacao
+     and not sou_capitao(old.time_id) and not sou_admin() then
+    raise exception 'Quem inclui e quem remove do time é o capitão.';
+  end if;
+  return new;
+end;
+$$;
 
 
 --
@@ -2454,6 +3092,96 @@ ALTER SEQUENCE public.carteira_id_seq OWNED BY public.carteira.id;
 
 
 --
+-- Name: ciclo; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.ciclo (
+    id bigint NOT NULL,
+    tipo text NOT NULL,
+    inicio date NOT NULL,
+    fim date NOT NULL,
+    situacao text DEFAULT 'aberto'::text NOT NULL,
+    criado_em timestamp with time zone DEFAULT now() NOT NULL,
+    encerrado_em timestamp with time zone,
+    CONSTRAINT ciclo_situacao_check CHECK ((situacao = ANY (ARRAY['inscricoes'::text, 'aberto'::text, 'encerrado'::text]))),
+    CONSTRAINT ciclo_tipo_check CHECK ((tipo = ANY (ARRAY['mensal'::text, 'trimestral'::text])))
+);
+
+
+--
+-- Name: TABLE ciclo; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.ciclo IS 'Temporadas. O mensal vai do 1º ao último dia do mês; o trimestral começa em
+   janeiro, abril, julho e outubro. A regra do ciclo é fixada antes de ele
+   começar e não muda no meio.';
+
+
+--
+-- Name: ciclo_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.ciclo_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: ciclo_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.ciclo_id_seq OWNED BY public.ciclo.id;
+
+
+--
+-- Name: conquista; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.conquista (
+    id bigint NOT NULL,
+    usuario_id uuid,
+    time_id bigint,
+    ciclo_id bigint,
+    papel text NOT NULL,
+    regua text NOT NULL,
+    posicao integer NOT NULL,
+    criada_em timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT conquista_papel_check CHECK ((papel = ANY (ARRAY['time'::text, 'membro'::text, 'capitao'::text, 'individual'::text]))),
+    CONSTRAINT conquista_regua_check CHECK ((regua = ANY (ARRAY['rentabilidade'::text, 'sharpe'::text, 'queda'::text, 'geral'::text])))
+);
+
+
+--
+-- Name: TABLE conquista; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.conquista IS 'O totem. Uma linha por reconhecimento — vira selo no perfil, moldura no
+   apelido do ranking e certificado impresso.';
+
+
+--
+-- Name: conquista_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.conquista_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: conquista_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.conquista_id_seq OWNED BY public.conquista.id;
+
+
+--
 -- Name: conta_arquivada; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -2467,6 +3195,31 @@ CREATE TABLE public.conta_arquivada (
     encerrada_em timestamp with time zone DEFAULT now(),
     motivo text
 );
+
+
+--
+-- Name: cotacao_hora; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.cotacao_hora (
+    ativo text NOT NULL,
+    data date NOT NULL,
+    hora integer NOT NULL,
+    preco real NOT NULL,
+    abertura real,
+    fech_ant real,
+    volume real,
+    atualizado_em timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT cotacao_hora_hora_check CHECK (((hora >= 0) AND (hora <= 23)))
+);
+
+
+--
+-- Name: TABLE cotacao_hora; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.cotacao_hora IS 'Fechamento de cada papel na virada de cada hora do pregão. A linha da hora H
+   guarda o último preço visto dentro de H — ou seja, o preço às H+1:00.';
 
 
 --
@@ -2507,6 +3260,39 @@ CREATE VIEW public.faixa_papel AS
    FROM public.barra
   WHERE (abertura > (0)::double precision)
   GROUP BY ativo;
+
+
+--
+-- Name: faixa_volume; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.faixa_volume (
+    id smallint NOT NULL,
+    ordem integer NOT NULL,
+    rotulo text NOT NULL,
+    de real,
+    ate real
+);
+
+
+--
+-- Name: faixa_volume_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.faixa_volume_id_seq
+    AS smallint
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: faixa_volume_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.faixa_volume_id_seq OWNED BY public.faixa_volume.id;
 
 
 --
@@ -2562,6 +3348,32 @@ CREATE VIEW public.indice_referencia AS
    FROM (public.oscilacao o
      JOIN public.referencia r ON ((r.ativo = o.ativo)))
   WHERE (((1)::double precision + o.valor) > (0)::double precision);
+
+
+--
+-- Name: intraday_pessoa; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.intraday_pessoa (
+    usuario_id uuid NOT NULL,
+    data date NOT NULL,
+    rodadas integer DEFAULT 0 NOT NULL,
+    acertos integer DEFAULT 0 NOT NULL,
+    pontos integer DEFAULT 0 NOT NULL,
+    sequencia integer DEFAULT 0 NOT NULL
+);
+
+
+--
+-- Name: intraday_sequencia; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.intraday_sequencia (
+    usuario_id uuid NOT NULL,
+    sequencia integer DEFAULT 0 NOT NULL,
+    maior integer DEFAULT 0 NOT NULL,
+    ultima_rodada bigint
+);
 
 
 --
@@ -2789,6 +3601,26 @@ CREATE TABLE public.peso_atual_backup (
 
 
 --
+-- Name: placar_intraday; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.placar_intraday AS
+ SELECT p.usuario_id,
+    pf.apelido,
+    (sum(p.rodadas))::integer AS rodadas,
+    (sum(p.acertos))::integer AS acertos,
+    (sum(p.pontos))::integer AS pontos,
+    ((sum(p.pontos))::real / (NULLIF(sum(p.rodadas), 0))::double precision) AS media,
+    (((sum(p.pontos))::real / (NULLIF(sum(p.rodadas), 0))::double precision) * ((sum(p.rodadas))::real / ((sum(p.rodadas) + 20))::double precision)) AS nota,
+    COALESCE(s.sequencia, 0) AS sequencia,
+    COALESCE(s.maior, 0) AS maior_sequencia
+   FROM ((public.intraday_pessoa p
+     JOIN public.perfil_publico pf ON ((pf.id = p.usuario_id)))
+     LEFT JOIN public.intraday_sequencia s ON ((s.usuario_id = p.usuario_id)))
+  GROUP BY p.usuario_id, pf.apelido, s.sequencia, s.maior;
+
+
+--
 -- Name: posicao_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -2950,6 +3782,54 @@ CREATE VIEW public.retorno_parcial AS
 
 
 --
+-- Name: rodada; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.rodada (
+    id bigint NOT NULL,
+    data date NOT NULL,
+    hora integer NOT NULL,
+    abre_em timestamp with time zone NOT NULL,
+    fecha_em timestamp with time zone NOT NULL,
+    situacao text DEFAULT 'aberta'::text NOT NULL,
+    apurada_em timestamp with time zone,
+    CONSTRAINT rodada_hora_check CHECK (((hora >= 11) AND (hora <= 16))),
+    CONSTRAINT rodada_situacao_check CHECK ((situacao = ANY (ARRAY['aberta'::text, 'fechada'::text, 'apurada'::text])))
+);
+
+
+--
+-- Name: rodada_gabarito; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.rodada_gabarito (
+    rodada_id bigint NOT NULL,
+    jogo text NOT NULL,
+    resposta text NOT NULL,
+    detalhe text
+);
+
+
+--
+-- Name: rodada_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.rodada_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: rodada_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.rodada_id_seq OWNED BY public.rodada.id;
+
+
+--
 -- Name: seguidor; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -2971,6 +3851,206 @@ CREATE TABLE public.seguindo (
 
 
 --
+-- Name: time_; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.time_ (
+    id bigint NOT NULL,
+    nome text NOT NULL,
+    tema text DEFAULT 'outros'::text NOT NULL,
+    descricao text,
+    capitao uuid NOT NULL,
+    codigo text NOT NULL,
+    criado_em timestamp with time zone DEFAULT now() NOT NULL,
+    encerrado_em timestamp with time zone,
+    encerrado_por uuid,
+    CONSTRAINT time__tema_check CHECK ((tema = ANY (ARRAY['escola'::text, 'faculdade'::text, 'amigos'::text, 'empresa'::text, 'associacao'::text, 'outros'::text])))
+);
+
+
+--
+-- Name: TABLE time_; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.time_ IS 'O nome tem sublinhado porque "time" é palavra reservada do Postgres.';
+
+
+--
+-- Name: time__id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.time__id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: time__id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.time__id_seq OWNED BY public.time_.id;
+
+
+--
+-- Name: time_carteira_dia; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.time_carteira_dia (
+    ciclo_id bigint NOT NULL,
+    time_id bigint NOT NULL,
+    data date NOT NULL,
+    ativos text[] NOT NULL,
+    montada_em timestamp with time zone DEFAULT now() NOT NULL,
+    retorno real,
+    indice real
+);
+
+
+--
+-- Name: time_ciclo_membro; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.time_ciclo_membro (
+    ciclo_id bigint NOT NULL,
+    time_id bigint NOT NULL,
+    usuario_id uuid NOT NULL,
+    carteira_id bigint
+);
+
+
+--
+-- Name: time_ciclo_resultado; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.time_ciclo_resultado (
+    ciclo_id bigint NOT NULL,
+    time_id bigint NOT NULL,
+    dias integer DEFAULT 0 NOT NULL,
+    acumulado real,
+    sharpe real,
+    drawdown real,
+    pos_acum integer,
+    pos_sharpe integer,
+    pos_dd integer,
+    pos_geral integer,
+    apurado_em timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: time_empate; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.time_empate (
+    ciclo_id bigint NOT NULL,
+    time_id bigint NOT NULL,
+    data date NOT NULL,
+    vagas integer NOT NULL,
+    candidatos text[] NOT NULL,
+    automatico text[] NOT NULL,
+    escolha text[],
+    escolhido_em timestamp with time zone,
+    escolhido_por uuid
+);
+
+
+--
+-- Name: time_inscricao; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.time_inscricao (
+    time_id bigint NOT NULL,
+    ciclo_id bigint NOT NULL,
+    inscrito_em timestamp with time zone DEFAULT now() NOT NULL,
+    elenco_hash text
+);
+
+
+--
+-- Name: COLUMN time_inscricao.elenco_hash; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.time_inscricao.elenco_hash IS 'md5 do conjunto ordenado de carteiras do elenco congelado. Dois times com o
+   mesmo conjunto no mesmo ciclo produziriam a mesma carteira — o segundo não
+   pontua.';
+
+
+--
+-- Name: time_membro; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.time_membro (
+    id bigint NOT NULL,
+    time_id bigint NOT NULL,
+    usuario_id uuid NOT NULL,
+    carteira_id bigint,
+    situacao text DEFAULT 'pedido'::text NOT NULL,
+    pediu_em timestamp with time zone DEFAULT now() NOT NULL,
+    aprovado_em timestamp with time zone,
+    saiu_em timestamp with time zone,
+    silenciado boolean DEFAULT false NOT NULL,
+    CONSTRAINT time_membro_situacao_check CHECK ((situacao = ANY (ARRAY['pedido'::text, 'ativo'::text, 'recusado'::text, 'saiu'::text])))
+);
+
+
+--
+-- Name: time_membro_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.time_membro_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: time_membro_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.time_membro_id_seq OWNED BY public.time_membro.id;
+
+
+--
+-- Name: time_msg; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.time_msg (
+    id bigint NOT NULL,
+    time_id bigint NOT NULL,
+    autor uuid NOT NULL,
+    texto text NOT NULL,
+    criada_em timestamp with time zone DEFAULT now() NOT NULL,
+    apagada_em timestamp with time zone,
+    apagada_por uuid,
+    CONSTRAINT time_msg_texto_check CHECK (((length(btrim(texto)) >= 1) AND (length(btrim(texto)) <= 1200)))
+);
+
+
+--
+-- Name: time_msg_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.time_msg_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: time_msg_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.time_msg_id_seq OWNED BY public.time_msg.id;
+
+
+--
 -- Name: universo_estado; Type: VIEW; Schema: public; Owner: -
 --
 
@@ -2988,6 +4068,42 @@ CREATE VIEW public.universo_estado WITH (security_invoker='true') AS
             max(barra.data) AS ultimo
            FROM public.barra
           GROUP BY barra.ativo) b ON ((b.ativo = u.ativo)));
+
+
+--
+-- Name: voto; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.voto (
+    id bigint NOT NULL,
+    rodada_id bigint NOT NULL,
+    usuario_id uuid NOT NULL,
+    jogo text NOT NULL,
+    palpite text NOT NULL,
+    votado_em timestamp with time zone DEFAULT now() NOT NULL,
+    acertou boolean,
+    pontos integer,
+    CONSTRAINT voto_jogo_check CHECK ((jogo = ANY (ARRAY['tiro'::text, 'mexe'::text, 'gira'::text, 'volume'::text])))
+);
+
+
+--
+-- Name: voto_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.voto_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: voto_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.voto_id_seq OWNED BY public.voto.id;
 
 
 --
@@ -3012,6 +4128,27 @@ ALTER TABLE ONLY public.carteira ALTER COLUMN id SET DEFAULT nextval('public.car
 
 
 --
+-- Name: ciclo id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.ciclo ALTER COLUMN id SET DEFAULT nextval('public.ciclo_id_seq'::regclass);
+
+
+--
+-- Name: conquista id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.conquista ALTER COLUMN id SET DEFAULT nextval('public.conquista_id_seq'::regclass);
+
+
+--
+-- Name: faixa_volume id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.faixa_volume ALTER COLUMN id SET DEFAULT nextval('public.faixa_volume_id_seq'::regclass);
+
+
+--
 -- Name: nota id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -3023,6 +4160,41 @@ ALTER TABLE ONLY public.nota ALTER COLUMN id SET DEFAULT nextval('public.nota_id
 --
 
 ALTER TABLE ONLY public.posicao ALTER COLUMN id SET DEFAULT nextval('public.posicao_id_seq'::regclass);
+
+
+--
+-- Name: rodada id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.rodada ALTER COLUMN id SET DEFAULT nextval('public.rodada_id_seq'::regclass);
+
+
+--
+-- Name: time_ id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.time_ ALTER COLUMN id SET DEFAULT nextval('public.time__id_seq'::regclass);
+
+
+--
+-- Name: time_membro id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.time_membro ALTER COLUMN id SET DEFAULT nextval('public.time_membro_id_seq'::regclass);
+
+
+--
+-- Name: time_msg id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.time_msg ALTER COLUMN id SET DEFAULT nextval('public.time_msg_id_seq'::regclass);
+
+
+--
+-- Name: voto id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.voto ALTER COLUMN id SET DEFAULT nextval('public.voto_id_seq'::regclass);
 
 
 --
@@ -3066,6 +4238,30 @@ ALTER TABLE ONLY public.carteira
 
 
 --
+-- Name: ciclo ciclo_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.ciclo
+    ADD CONSTRAINT ciclo_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: ciclo ciclo_tipo_inicio_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.ciclo
+    ADD CONSTRAINT ciclo_tipo_inicio_key UNIQUE (tipo, inicio);
+
+
+--
+-- Name: conquista conquista_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.conquista
+    ADD CONSTRAINT conquista_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: conta_arquivada conta_arquivada_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3074,11 +4270,27 @@ ALTER TABLE ONLY public.conta_arquivada
 
 
 --
+-- Name: cotacao_hora cotacao_hora_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cotacao_hora
+    ADD CONSTRAINT cotacao_hora_pkey PRIMARY KEY (ativo, data, hora);
+
+
+--
 -- Name: cotacao_viva cotacao_viva_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.cotacao_viva
     ADD CONSTRAINT cotacao_viva_pkey PRIMARY KEY (ativo);
+
+
+--
+-- Name: faixa_volume faixa_volume_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.faixa_volume
+    ADD CONSTRAINT faixa_volume_pkey PRIMARY KEY (id);
 
 
 --
@@ -3095,6 +4307,22 @@ ALTER TABLE ONLY public.fechamento
 
 ALTER TABLE ONLY public.fila_email
     ADD CONSTRAINT fila_email_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: intraday_pessoa intraday_pessoa_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.intraday_pessoa
+    ADD CONSTRAINT intraday_pessoa_pkey PRIMARY KEY (usuario_id, data);
+
+
+--
+-- Name: intraday_sequencia intraday_sequencia_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.intraday_sequencia
+    ADD CONSTRAINT intraday_sequencia_pkey PRIMARY KEY (usuario_id);
 
 
 --
@@ -3242,6 +4470,30 @@ ALTER TABLE ONLY public.retorno_dia
 
 
 --
+-- Name: rodada rodada_data_hora_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.rodada
+    ADD CONSTRAINT rodada_data_hora_key UNIQUE (data, hora);
+
+
+--
+-- Name: rodada_gabarito rodada_gabarito_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.rodada_gabarito
+    ADD CONSTRAINT rodada_gabarito_pkey PRIMARY KEY (rodada_id, jogo);
+
+
+--
+-- Name: rodada rodada_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.rodada
+    ADD CONSTRAINT rodada_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: seguidor seguidor_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3258,11 +4510,107 @@ ALTER TABLE ONLY public.seguindo
 
 
 --
+-- Name: time_ time__codigo_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.time_
+    ADD CONSTRAINT time__codigo_key UNIQUE (codigo);
+
+
+--
+-- Name: time_ time__pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.time_
+    ADD CONSTRAINT time__pkey PRIMARY KEY (id);
+
+
+--
+-- Name: time_carteira_dia time_carteira_dia_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.time_carteira_dia
+    ADD CONSTRAINT time_carteira_dia_pkey PRIMARY KEY (ciclo_id, time_id, data);
+
+
+--
+-- Name: time_ciclo_membro time_ciclo_membro_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.time_ciclo_membro
+    ADD CONSTRAINT time_ciclo_membro_pkey PRIMARY KEY (ciclo_id, time_id, usuario_id);
+
+
+--
+-- Name: time_ciclo_resultado time_ciclo_resultado_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.time_ciclo_resultado
+    ADD CONSTRAINT time_ciclo_resultado_pkey PRIMARY KEY (ciclo_id, time_id);
+
+
+--
+-- Name: time_empate time_empate_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.time_empate
+    ADD CONSTRAINT time_empate_pkey PRIMARY KEY (ciclo_id, time_id, data);
+
+
+--
+-- Name: time_inscricao time_inscricao_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.time_inscricao
+    ADD CONSTRAINT time_inscricao_pkey PRIMARY KEY (time_id, ciclo_id);
+
+
+--
+-- Name: time_membro time_membro_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.time_membro
+    ADD CONSTRAINT time_membro_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: time_membro time_membro_time_id_usuario_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.time_membro
+    ADD CONSTRAINT time_membro_time_id_usuario_id_key UNIQUE (time_id, usuario_id);
+
+
+--
+-- Name: time_msg time_msg_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.time_msg
+    ADD CONSTRAINT time_msg_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: universo universo_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.universo
     ADD CONSTRAINT universo_pkey PRIMARY KEY (ativo);
+
+
+--
+-- Name: voto voto_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.voto
+    ADD CONSTRAINT voto_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: voto voto_rodada_id_usuario_id_jogo_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.voto
+    ADD CONSTRAINT voto_rodada_id_usuario_id_jogo_key UNIQUE (rodada_id, usuario_id, jogo);
 
 
 --
@@ -3294,6 +4642,27 @@ CREATE UNIQUE INDEX carteira_nome_unico ON public.carteira USING btree (usuario_
 
 
 --
+-- Name: ch_por_dia; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX ch_por_dia ON public.cotacao_hora USING btree (data, hora);
+
+
+--
+-- Name: ciclo_janela; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX ciclo_janela ON public.ciclo USING btree (inicio, fim);
+
+
+--
+-- Name: conquista_por_usuario; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX conquista_por_usuario ON public.conquista USING btree (usuario_id);
+
+
+--
 -- Name: fila_email_pendente; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -3301,10 +4670,38 @@ CREATE INDEX fila_email_pendente ON public.fila_email USING btree (criado_em) WH
 
 
 --
+-- Name: inscricao_elenco_unico; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX inscricao_elenco_unico ON public.time_inscricao USING btree (ciclo_id, elenco_hash) WHERE (elenco_hash IS NOT NULL);
+
+
+--
 -- Name: lead_nota_lead; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX lead_nota_lead ON public.lead_nota USING btree (lead_id, criado_em DESC);
+
+
+--
+-- Name: membro_ativo; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX membro_ativo ON public.time_membro USING btree (time_id) WHERE (situacao = 'ativo'::text);
+
+
+--
+-- Name: membro_por_usuario; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX membro_por_usuario ON public.time_membro USING btree (usuario_id);
+
+
+--
+-- Name: msg_do_time; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX msg_do_time ON public.time_msg USING btree (time_id, criada_em DESC);
 
 
 --
@@ -3326,6 +4723,41 @@ CREATE UNIQUE INDEX perfil_apelido_unico ON public.perfil USING btree (lower(ape
 --
 
 CREATE INDEX posicao_carteira_id_idx ON public.posicao USING btree (carteira_id);
+
+
+--
+-- Name: rodada_aberta; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX rodada_aberta ON public.rodada USING btree (data, hora) WHERE (situacao <> 'apurada'::text);
+
+
+--
+-- Name: tcd_por_data; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX tcd_por_data ON public.time_carteira_dia USING btree (ciclo_id, data);
+
+
+--
+-- Name: time_capitao; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX time_capitao ON public.time_ USING btree (capitao);
+
+
+--
+-- Name: time_nome_unico; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX time_nome_unico ON public.time_ USING btree (lower(nome)) WHERE (encerrado_em IS NULL);
+
+
+--
+-- Name: voto_por_pessoa; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX voto_por_pessoa ON public.voto USING btree (usuario_id, rodada_id);
 
 
 --
@@ -3399,6 +4831,20 @@ CREATE TRIGGER tg_fila_posicao AFTER INSERT ON public.posicao FOR EACH ROW EXECU
 
 
 --
+-- Name: cotacao_viva tg_fotografar_hora; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER tg_fotografar_hora AFTER INSERT OR UPDATE ON public.cotacao_viva FOR EACH ROW EXECUTE FUNCTION public.fotografar_hora();
+
+
+--
+-- Name: time_membro tg_trava_saida; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER tg_trava_saida BEFORE UPDATE ON public.time_membro FOR EACH ROW EXECUTE FUNCTION public.trava_saida_membro();
+
+
+--
 -- Name: aposta aposta_usuario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3420,6 +4866,54 @@ ALTER TABLE ONLY public.assinatura
 
 ALTER TABLE ONLY public.carteira
     ADD CONSTRAINT carteira_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.perfil(id) ON DELETE CASCADE;
+
+
+--
+-- Name: conquista conquista_ciclo_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.conquista
+    ADD CONSTRAINT conquista_ciclo_id_fkey FOREIGN KEY (ciclo_id) REFERENCES public.ciclo(id) ON DELETE CASCADE;
+
+
+--
+-- Name: conquista conquista_time_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.conquista
+    ADD CONSTRAINT conquista_time_id_fkey FOREIGN KEY (time_id) REFERENCES public.time_(id) ON DELETE CASCADE;
+
+
+--
+-- Name: conquista conquista_usuario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.conquista
+    ADD CONSTRAINT conquista_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.perfil(id) ON DELETE CASCADE;
+
+
+--
+-- Name: intraday_pessoa intraday_pessoa_usuario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.intraday_pessoa
+    ADD CONSTRAINT intraday_pessoa_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.perfil(id) ON DELETE CASCADE;
+
+
+--
+-- Name: intraday_sequencia intraday_sequencia_ultima_rodada_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.intraday_sequencia
+    ADD CONSTRAINT intraday_sequencia_ultima_rodada_fkey FOREIGN KEY (ultima_rodada) REFERENCES public.rodada(id);
+
+
+--
+-- Name: intraday_sequencia intraday_sequencia_usuario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.intraday_sequencia
+    ADD CONSTRAINT intraday_sequencia_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.perfil(id) ON DELETE CASCADE;
 
 
 --
@@ -3511,6 +5005,14 @@ ALTER TABLE ONLY public.retorno_dia
 
 
 --
+-- Name: rodada_gabarito rodada_gabarito_rodada_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.rodada_gabarito
+    ADD CONSTRAINT rodada_gabarito_rodada_id_fkey FOREIGN KEY (rodada_id) REFERENCES public.rodada(id) ON DELETE CASCADE;
+
+
+--
 -- Name: seguidor seguidor_carteira_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3540,6 +5042,190 @@ ALTER TABLE ONLY public.seguindo
 
 ALTER TABLE ONLY public.seguindo
     ADD CONSTRAINT seguindo_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.perfil(id) ON DELETE CASCADE;
+
+
+--
+-- Name: time_ time__capitao_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.time_
+    ADD CONSTRAINT time__capitao_fkey FOREIGN KEY (capitao) REFERENCES public.perfil(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: time_ time__encerrado_por_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.time_
+    ADD CONSTRAINT time__encerrado_por_fkey FOREIGN KEY (encerrado_por) REFERENCES public.perfil(id);
+
+
+--
+-- Name: time_carteira_dia time_carteira_dia_ciclo_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.time_carteira_dia
+    ADD CONSTRAINT time_carteira_dia_ciclo_id_fkey FOREIGN KEY (ciclo_id) REFERENCES public.ciclo(id) ON DELETE CASCADE;
+
+
+--
+-- Name: time_carteira_dia time_carteira_dia_time_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.time_carteira_dia
+    ADD CONSTRAINT time_carteira_dia_time_id_fkey FOREIGN KEY (time_id) REFERENCES public.time_(id) ON DELETE CASCADE;
+
+
+--
+-- Name: time_ciclo_membro time_ciclo_membro_carteira_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.time_ciclo_membro
+    ADD CONSTRAINT time_ciclo_membro_carteira_id_fkey FOREIGN KEY (carteira_id) REFERENCES public.carteira(id) ON DELETE SET NULL;
+
+
+--
+-- Name: time_ciclo_membro time_ciclo_membro_ciclo_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.time_ciclo_membro
+    ADD CONSTRAINT time_ciclo_membro_ciclo_id_fkey FOREIGN KEY (ciclo_id) REFERENCES public.ciclo(id) ON DELETE CASCADE;
+
+
+--
+-- Name: time_ciclo_membro time_ciclo_membro_time_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.time_ciclo_membro
+    ADD CONSTRAINT time_ciclo_membro_time_id_fkey FOREIGN KEY (time_id) REFERENCES public.time_(id) ON DELETE CASCADE;
+
+
+--
+-- Name: time_ciclo_membro time_ciclo_membro_usuario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.time_ciclo_membro
+    ADD CONSTRAINT time_ciclo_membro_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.perfil(id) ON DELETE CASCADE;
+
+
+--
+-- Name: time_ciclo_resultado time_ciclo_resultado_ciclo_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.time_ciclo_resultado
+    ADD CONSTRAINT time_ciclo_resultado_ciclo_id_fkey FOREIGN KEY (ciclo_id) REFERENCES public.ciclo(id) ON DELETE CASCADE;
+
+
+--
+-- Name: time_ciclo_resultado time_ciclo_resultado_time_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.time_ciclo_resultado
+    ADD CONSTRAINT time_ciclo_resultado_time_id_fkey FOREIGN KEY (time_id) REFERENCES public.time_(id) ON DELETE CASCADE;
+
+
+--
+-- Name: time_empate time_empate_ciclo_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.time_empate
+    ADD CONSTRAINT time_empate_ciclo_id_fkey FOREIGN KEY (ciclo_id) REFERENCES public.ciclo(id) ON DELETE CASCADE;
+
+
+--
+-- Name: time_empate time_empate_escolhido_por_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.time_empate
+    ADD CONSTRAINT time_empate_escolhido_por_fkey FOREIGN KEY (escolhido_por) REFERENCES public.perfil(id);
+
+
+--
+-- Name: time_empate time_empate_time_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.time_empate
+    ADD CONSTRAINT time_empate_time_id_fkey FOREIGN KEY (time_id) REFERENCES public.time_(id) ON DELETE CASCADE;
+
+
+--
+-- Name: time_inscricao time_inscricao_ciclo_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.time_inscricao
+    ADD CONSTRAINT time_inscricao_ciclo_id_fkey FOREIGN KEY (ciclo_id) REFERENCES public.ciclo(id) ON DELETE CASCADE;
+
+
+--
+-- Name: time_inscricao time_inscricao_time_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.time_inscricao
+    ADD CONSTRAINT time_inscricao_time_id_fkey FOREIGN KEY (time_id) REFERENCES public.time_(id) ON DELETE CASCADE;
+
+
+--
+-- Name: time_membro time_membro_carteira_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.time_membro
+    ADD CONSTRAINT time_membro_carteira_id_fkey FOREIGN KEY (carteira_id) REFERENCES public.carteira(id) ON DELETE SET NULL;
+
+
+--
+-- Name: time_membro time_membro_time_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.time_membro
+    ADD CONSTRAINT time_membro_time_id_fkey FOREIGN KEY (time_id) REFERENCES public.time_(id) ON DELETE CASCADE;
+
+
+--
+-- Name: time_membro time_membro_usuario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.time_membro
+    ADD CONSTRAINT time_membro_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.perfil(id) ON DELETE CASCADE;
+
+
+--
+-- Name: time_msg time_msg_apagada_por_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.time_msg
+    ADD CONSTRAINT time_msg_apagada_por_fkey FOREIGN KEY (apagada_por) REFERENCES public.perfil(id);
+
+
+--
+-- Name: time_msg time_msg_autor_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.time_msg
+    ADD CONSTRAINT time_msg_autor_fkey FOREIGN KEY (autor) REFERENCES public.perfil(id) ON DELETE CASCADE;
+
+
+--
+-- Name: time_msg time_msg_time_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.time_msg
+    ADD CONSTRAINT time_msg_time_id_fkey FOREIGN KEY (time_id) REFERENCES public.time_(id) ON DELETE CASCADE;
+
+
+--
+-- Name: voto voto_rodada_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.voto
+    ADD CONSTRAINT voto_rodada_id_fkey FOREIGN KEY (rodada_id) REFERENCES public.rodada(id) ON DELETE CASCADE;
+
+
+--
+-- Name: voto voto_usuario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.voto
+    ADD CONSTRAINT voto_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.perfil(id) ON DELETE CASCADE;
 
 
 --
@@ -3630,10 +5316,49 @@ CREATE POLICY c_le ON public.carteira FOR SELECT USING (true);
 ALTER TABLE public.carteira ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: cotacao_hora ch_ler; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY ch_ler ON public.cotacao_hora FOR SELECT TO authenticated USING (true);
+
+
+--
+-- Name: ciclo; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.ciclo ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: ciclo ciclo_ler; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY ciclo_ler ON public.ciclo FOR SELECT TO authenticated USING (true);
+
+
+--
+-- Name: conquista conq_ler; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY conq_ler ON public.conquista FOR SELECT TO authenticated USING (true);
+
+
+--
+-- Name: conquista; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.conquista ENABLE ROW LEVEL SECURITY;
+
+--
 -- Name: conta_arquivada; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.conta_arquivada ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: cotacao_hora; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.cotacao_hora ENABLE ROW LEVEL SECURITY;
 
 --
 -- Name: cotacao_viva; Type: ROW SECURITY; Schema: public; Owner: -
@@ -3649,6 +5374,12 @@ CREATE POLICY cotacao_viva_le ON public.cotacao_viva FOR SELECT USING (true);
 
 
 --
+-- Name: faixa_volume; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.faixa_volume ENABLE ROW LEVEL SECURITY;
+
+--
 -- Name: fechamento; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -3659,6 +5390,46 @@ ALTER TABLE public.fechamento ENABLE ROW LEVEL SECURITY;
 --
 
 ALTER TABLE public.fila_email ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: faixa_volume fx_ler; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY fx_ler ON public.faixa_volume FOR SELECT TO authenticated USING (true);
+
+
+--
+-- Name: rodada_gabarito gab_ler; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY gab_ler ON public.rodada_gabarito FOR SELECT TO authenticated USING (true);
+
+
+--
+-- Name: intraday_pessoa; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.intraday_pessoa ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: intraday_sequencia; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.intraday_sequencia ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: intraday_pessoa ip_ler; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY ip_ler ON public.intraday_pessoa FOR SELECT TO authenticated USING (true);
+
+
+--
+-- Name: intraday_sequencia is_ler; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY is_ler ON public.intraday_sequencia FOR SELECT TO authenticated USING (true);
+
 
 --
 -- Name: lead; Type: ROW SECURITY; Schema: public; Owner: -
@@ -3703,6 +5474,36 @@ CREATE POLICY lead_marcar ON public.lead FOR UPDATE TO authenticated USING ((EXI
 --
 
 ALTER TABLE public.lead_nota ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: time_msg msg_apagar; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY msg_apagar ON public.time_msg FOR UPDATE TO authenticated USING (((autor = auth.uid()) OR public.sou_capitao(time_id) OR public.sou_admin())) WITH CHECK (((autor = auth.uid()) OR public.sou_capitao(time_id) OR public.sou_admin()));
+
+
+--
+-- Name: time_msg msg_escrever; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY msg_escrever ON public.time_msg FOR INSERT TO authenticated WITH CHECK (((autor = auth.uid()) AND (public.sou_do_time(time_id) OR public.sou_capitao(time_id)) AND (NOT (EXISTS ( SELECT 1
+   FROM public.time_membro m
+  WHERE ((m.time_id = time_msg.time_id) AND (m.usuario_id = auth.uid()) AND m.silenciado))))));
+
+
+--
+-- Name: time_msg msg_ler; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY msg_ler ON public.time_msg FOR SELECT TO authenticated USING ((public.sou_do_time(time_id) OR public.sou_capitao(time_id) OR public.sou_admin()));
+
+
+--
+-- Name: time_msg msg_sumir; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY msg_sumir ON public.time_msg FOR DELETE TO authenticated USING ((public.sou_capitao(time_id) OR public.sou_admin()));
+
 
 --
 -- Name: nota n_ins; Type: POLICY; Schema: public; Owner: -
@@ -3910,6 +5711,25 @@ CREATE POLICY resumo_ler ON public.resumo FOR SELECT TO authenticated, anon USIN
 ALTER TABLE public.retorno_dia ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: rodada rod_ler; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY rod_ler ON public.rodada FOR SELECT TO authenticated USING (true);
+
+
+--
+-- Name: rodada; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.rodada ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: rodada_gabarito; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.rodada_gabarito ENABLE ROW LEVEL SECURITY;
+
+--
 -- Name: seguindo s_del; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -3950,6 +5770,161 @@ CREATE POLICY seguidor_meu ON public.seguidor TO authenticated USING (((usuario_
 ALTER TABLE public.seguindo ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: time_carteira_dia tcd_ler; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY tcd_ler ON public.time_carteira_dia FOR SELECT TO authenticated USING (true);
+
+
+--
+-- Name: time_ciclo_membro tcm_ler; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY tcm_ler ON public.time_ciclo_membro FOR SELECT TO authenticated USING (true);
+
+
+--
+-- Name: time_ciclo_resultado tcr_ler; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY tcr_ler ON public.time_ciclo_resultado FOR SELECT TO authenticated USING (true);
+
+
+--
+-- Name: time_empate temp_escolher; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY temp_escolher ON public.time_empate FOR UPDATE TO authenticated USING ((public.sou_capitao(time_id) OR public.sou_admin())) WITH CHECK ((public.sou_capitao(time_id) OR public.sou_admin()));
+
+
+--
+-- Name: time_empate temp_ler; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY temp_ler ON public.time_empate FOR SELECT TO authenticated USING (true);
+
+
+--
+-- Name: time_; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.time_ ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: time_carteira_dia; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.time_carteira_dia ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: time_ciclo_membro; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.time_ciclo_membro ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: time_ciclo_resultado; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.time_ciclo_resultado ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: time_ time_criar; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY time_criar ON public.time_ FOR INSERT TO authenticated WITH CHECK (((capitao = auth.uid()) AND (NOT (EXISTS ( SELECT 1
+   FROM public.perfil p
+  WHERE ((p.id = auth.uid()) AND p.bloqueado))))));
+
+
+--
+-- Name: time_empate; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.time_empate ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: time_inscricao; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.time_inscricao ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: time_ time_ler; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY time_ler ON public.time_ FOR SELECT TO authenticated USING (true);
+
+
+--
+-- Name: time_membro; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.time_membro ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: time_ time_mexer; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY time_mexer ON public.time_ FOR UPDATE TO authenticated USING (((capitao = auth.uid()) OR public.sou_admin())) WITH CHECK (((capitao = auth.uid()) OR public.sou_admin()));
+
+
+--
+-- Name: time_msg; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.time_msg ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: time_inscricao tins_apagar; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY tins_apagar ON public.time_inscricao FOR DELETE TO authenticated USING ((public.sou_capitao(time_id) OR public.sou_admin()));
+
+
+--
+-- Name: time_inscricao tins_criar; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY tins_criar ON public.time_inscricao FOR INSERT TO authenticated WITH CHECK (public.sou_capitao(time_id));
+
+
+--
+-- Name: time_inscricao tins_ler; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY tins_ler ON public.time_inscricao FOR SELECT TO authenticated USING (true);
+
+
+--
+-- Name: time_membro tm_apagar; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY tm_apagar ON public.time_membro FOR DELETE TO authenticated USING ((public.sou_capitao(time_id) OR public.sou_admin()));
+
+
+--
+-- Name: time_membro tm_ler; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY tm_ler ON public.time_membro FOR SELECT TO authenticated USING (true);
+
+
+--
+-- Name: time_membro tm_mexer; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY tm_mexer ON public.time_membro FOR UPDATE TO authenticated USING (((usuario_id = auth.uid()) OR public.sou_capitao(time_id) OR public.sou_admin())) WITH CHECK (((usuario_id = auth.uid()) OR public.sou_capitao(time_id) OR public.sou_admin()));
+
+
+--
+-- Name: time_membro tm_pedir; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY tm_pedir ON public.time_membro FOR INSERT TO authenticated WITH CHECK (((usuario_id = auth.uid()) AND (situacao = 'pedido'::text)));
+
+
+--
 -- Name: universo u_le; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -3974,8 +5949,41 @@ CREATE POLICY universo_mexer ON public.universo TO authenticated USING ((EXISTS 
 
 
 --
+-- Name: voto; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.voto ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: voto voto_ler; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY voto_ler ON public.voto FOR SELECT TO authenticated USING (((usuario_id = auth.uid()) OR (EXISTS ( SELECT 1
+   FROM public.rodada r
+  WHERE ((r.id = voto.rodada_id) AND (r.situacao = 'apurada'::text))))));
+
+
+--
+-- Name: voto voto_mudar; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY voto_mudar ON public.voto FOR UPDATE TO authenticated USING (((usuario_id = auth.uid()) AND (EXISTS ( SELECT 1
+   FROM public.rodada r
+  WHERE ((r.id = voto.rodada_id) AND (r.situacao = 'aberta'::text) AND (now() < r.fecha_em)))))) WITH CHECK ((usuario_id = auth.uid()));
+
+
+--
+-- Name: voto voto_por; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY voto_por ON public.voto FOR INSERT TO authenticated WITH CHECK (((usuario_id = auth.uid()) AND (EXISTS ( SELECT 1
+   FROM public.rodada r
+  WHERE ((r.id = voto.rodada_id) AND (r.situacao = 'aberta'::text) AND (now() < r.fecha_em))))));
+
+
+--
 -- PostgreSQL database dump complete
 --
 
-\unrestrict c4no48059HHLEgsGZCCaTbCeENHk66lZAvClfuawhiUtqr0CnnjhSMyxAejfNsI
+\unrestrict 7F2c69McNf3cFeMcWlBLgWk3vIDoA6rNlaYkn8Pmzya933kQaVwfrgX05uxLvDr
 
