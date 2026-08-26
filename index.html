@@ -1584,7 +1584,7 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
         <div class="filete"></div>
         <div class="trio">
           <div><span class="rams">Intraday</span>
-            <a href="#/tiro-curto">Valendo agora</a>
+            <a href="#/tiro-curto">Tiro curto</a>
             <a href="#/placar">Placar</a>
             <a href="#/copa">Copa do pregão</a>
           </div>
@@ -4407,7 +4407,7 @@ async function telaScreening(){
   if(QM && Date.now() - QM_EM < QM_VALE){
     data = QM;
   } else {
-    app().innerHTML = `<div class="carreg">calculando as médias…</div>`;
+    app().innerHTML = `<div class="carreg">calculando…</div>`;
     const r = await sb.rpc("quant_medias", { p_janela: JANELA_GRAFICO });
     if(r.error) return app().innerHTML = aviso("Erro ao calcular: "+r.error.message, true);
     data = QM = r.data; QM_EM = Date.now();
@@ -4419,6 +4419,9 @@ async function telaScreening(){
   const emP = emPregao();
   const mk = await mercadoCache();
   const AOVIVO = mk.p || {};
+  const { data:oscDia } = await sb.from("oscilacao").select("ativo,valor")
+    .eq("data", HOJE_BR());
+  const OSC = {}; (oscDia||[]).forEach(o => { OSC[o.ativo] = o.valor; });
 
   const q = new URLSearchParams(location.hash.split("?")[1]||"");
   const filtro = q.get("t") || "todos";
@@ -4499,6 +4502,12 @@ async function telaScreening(){
     y.liqMedia = x.liquidez;
     if(v && v[5] > 0){ y.liquidez = Number(v[5]); y.giroHoje = true; }
     y.avat = (y.giroHoje && y.liqMedia > 0) ? y.liquidez / y.liqMedia : null;
+    /* A variação do dia sai da coluna oscilacao, gravada pelo mt5_gravar a
+       partir da mesma barra de onde vêm o preço e as três forças. Não se
+       calcula nada aqui: o número é o do banco. Antes vinha só da cotacao_viva,
+       que é outro circuito e para quando o ao vivo para — daí o traço na
+       coluna com o preço andando ao lado.                                     */
+    if(y.osc == null && OSC[x.ativo] != null) y.osc = Number(OSC[x.ativo]);
     y.e = estadoDe(y);
     return y;
   });
@@ -11541,7 +11550,7 @@ async function telaTiroCurto(){
   }
 
   if(!todas.length){
-    return app().innerHTML = `<div class="cabeca"><h1>Tiro da hora</h1>
+    return app().innerHTML = `<div class="cabeca"><h1>Tiro curto</h1>
       <p>Seis rodadas por pregão, fechando de hora em hora, das 11h às 16h.</p></div>
       ${aviso("Hoje não tem rodada — ou o pregão não abriu, ou as rodadas do dia "
         + "ainda não foram criadas.")}`;
@@ -11563,7 +11572,7 @@ async function telaTiroCurto(){
 
   app().innerHTML = `
   <div class="cabeca">
-    <h1>Tiro da hora</h1>
+    <h1>Tiro curto</h1>
     <p>Seis rodadas por pregão, fechando na virada de cada hora. Quatro palpites
       por rodada, um toque cada. <b>Errar não tira ponto</b>, e rodada que você
       não jogou não conta contra você.</p>
