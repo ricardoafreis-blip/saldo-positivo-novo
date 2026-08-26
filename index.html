@@ -4438,26 +4438,6 @@ async function telaScreening(){
     "^UTIL":"Utilidade pública", "^SMLL":"Small caps", "^IDIV":"Dividendos" };
   const ehIndice = a => IND_AMPLO.includes(a) || IND_SET[a] != null;
 
-  const estadoDe = x => {
-    const a = x.ema17, b = x.ema34, c = x.ema72, p = x.fech;
-    if(c == null) return a >= b ? "alta_sem" : "baixa_sem";
-    if(a >= b && b >= c){
-      if(p >= a) return "alta_max";
-      if(p >= c) return "alta_realiza";
-      return "saida_alta";
-    }
-    if(a <  b && b <  c){
-      if(p <= a) return "baixa_max";
-      if(p <= c) return "baixa_realiza";
-      return "saida_baixa";
-    }
-    if(a <  b && a >= c && b >= c) return p >= c ? "saida_alta"  : "saida_alta_ind";
-    if(a >= b && a <  c && b <  c) return p <= c ? "saida_baixa" : "saida_baixa_ind";
-    const teto = Math.max(a,b,c), piso = Math.min(a,b,c);
-    if(p >= teto) return "virando_alta";
-    if(p <= piso) return "virando_baixa";
-    return a >= c ? "indef_alta" : "indef_baixa";
-  };
 
   const GRAU = { alta_max:0, alta_realiza:1, virando_alta:2, saida_alta:3,
                  saida_alta_ind:4, alta_sem:4.4,
@@ -4465,21 +4445,7 @@ async function telaScreening(){
                  baixa_sem:5.6, saida_baixa_ind:6, saida_baixa:7,
                  virando_baixa:8, baixa_realiza:9, baixa_max:10 };
 
-  const ROT = {
-    alta_max:"fortíssima alta",         alta_realiza:"realizando na alta",
-    indef_alta:"sem tendência",         indef_baixa:"sem tendência",
-    virando_alta:"virando para alta",   virando_baixa:"virando para baixa",
-    saida_alta:"possível saída da alta",
-    saida_alta_ind:"saindo da alta · indefinido",
-    saida_baixa:"possível saída da baixa",
-    saida_baixa_ind:"saindo da baixa · indefinido",
-    baixa_realiza:"realizando na baixa", baixa_max:"fortíssima baixa",
-    alta_sem:"alta · sem o institucional", baixa_sem:"baixa · sem o institucional" };
 
-  const TOM = { alta_max:"alta", alta_realiza:"alta", alta_sem:"alta",
-                virando_alta:"alta", virando_baixa:"baixa",
-                baixa_max:"baixa", baixa_realiza:"baixa", baixa_sem:"baixa" };
-  const tomDe = e => TOM[e] || "nulo";
 
   const GRUPO = { alta_max:"alta", alta_realiza:"alta", alta_sem:"alta",
                   saida_alta:"saindo_alta", saida_alta_ind:"saindo_alta",
@@ -4572,39 +4538,6 @@ async function telaScreening(){
       ema17:md(17)[u], ema34:md(34)[u], ema72:md(72)[u], e:"alta_max" });
   };
 
-  const risco = x => {
-    const v = x.serie || [], mF = x.serie72 || [];
-    if(v.length < 5) return "";
-    const W = 180, H = 36, P = 2, FAIXA = 26;
-    const fim = W - P - FAIXA;
-    const iF = mF.findIndex(n => n != null);
-    const temF = iF >= 0 && mF.length === v.length;
-    const valF = temF ? mF.slice(iF).filter(n => n != null) : [];
-    const alvos = [x.ema17, x.ema34, x.ema72].filter(m => m != null);
-    const lo = Math.min(...v, ...valF, ...alvos), hi = Math.max(...v, ...valF, ...alvos);
-    const f = (hi - lo) || 1;
-    const px = i => P + (fim - P) * i / (v.length - 1);
-    const py = n => P + (H - 2*P) * (1 - (n - lo) / f);
-    const cam = a => a.map((n,i) => `${i?"L":"M"}${px(i).toFixed(1)},${py(n).toFixed(1)}`).join("");
-    const cCor = tomDe(x.e) === "alta" ? "var(--alta)"
-               : tomDe(x.e) === "baixa" ? "var(--baixa)" : "var(--t2)";
-    const L = 9, g = 2, x0 = fim + 5;
-    const tracos = [[x.ema34,"var(--graf)"],[x.ema17,"var(--tinta)"]]
-      .map(([m,c],k) => m == null ? "" : (()=>{ const xa = x0 + k*(L+g);
-        return `<line x1="${xa}" x2="${xa+L}" y1="${py(m).toFixed(1)}" y2="${py(m).toFixed(1)}"
-          stroke="${c}" stroke-width="1.8" stroke-linecap="round"/>`; })()).join("");
-    return `<svg viewBox="0 0 ${W} ${H}" style="width:${W}px;height:${H}px;display:block"
-      role="img" aria-label="${esc(x.ativo)}: preço e ponto do institucional">
-      <line x1="${fim+2}" x2="${fim+2}" y1="1" y2="${H-1}" stroke="var(--linha)" stroke-width="1"/>
-      ${temF ? `<path d="${mF.map((n,i) => n == null ? ""
-          : `${i === iF ? "M" : "L"}${px(i).toFixed(1)},${py(n).toFixed(1)}`).join("")}"
-        fill="none" stroke="var(--lacre)" stroke-width="1.1" opacity=".9"/>` : ""}
-      <path d="${cam(v)}" fill="none" stroke="${cCor}" stroke-width="1.5"
-        stroke-linejoin="round" stroke-linecap="round"/>
-      <circle cx="${px(v.length-1).toFixed(1)}" cy="${py(v[v.length-1]).toFixed(1)}"
-        r="2" fill="${cCor}"/>
-      ${tracos}</svg>`;
-  };
 
   app().innerHTML = `
   <div class="cabeca">
@@ -11485,11 +11418,88 @@ function pegarDestino(){
    o placar no fim do dia não é jogo nenhum.
    ===================================================================== */
 
+
+/* ---------- leitura de tendência: nasceram dentro da telaScreening e
+   subiram para cá quando o Tiro curto passou a mostrar a mesma ficha
+   dos papéis. Nada mudou dentro delas. ---------- */
+
+const estadoDe = x => {
+  const a = x.ema17, b = x.ema34, c = x.ema72, p = x.fech;
+  if(c == null) return a >= b ? "alta_sem" : "baixa_sem";
+  if(a >= b && b >= c){
+    if(p >= a) return "alta_max";
+    if(p >= c) return "alta_realiza";
+    return "saida_alta";
+  }
+  if(a <  b && b <  c){
+    if(p <= a) return "baixa_max";
+    if(p <= c) return "baixa_realiza";
+    return "saida_baixa";
+  }
+  if(a <  b && a >= c && b >= c) return p >= c ? "saida_alta"  : "saida_alta_ind";
+  if(a >= b && a <  c && b <  c) return p <= c ? "saida_baixa" : "saida_baixa_ind";
+  const teto = Math.max(a,b,c), piso = Math.min(a,b,c);
+  if(p >= teto) return "virando_alta";
+  if(p <= piso) return "virando_baixa";
+  return a >= c ? "indef_alta" : "indef_baixa";
+};
+
+const ROT = {
+  alta_max:"fortíssima alta",         alta_realiza:"realizando na alta",
+  indef_alta:"sem tendência",         indef_baixa:"sem tendência",
+  virando_alta:"virando para alta",   virando_baixa:"virando para baixa",
+  saida_alta:"possível saída da alta",
+  saida_alta_ind:"saindo da alta · indefinido",
+  saida_baixa:"possível saída da baixa",
+  saida_baixa_ind:"saindo da baixa · indefinido",
+  baixa_realiza:"realizando na baixa", baixa_max:"fortíssima baixa",
+  alta_sem:"alta · sem o institucional", baixa_sem:"baixa · sem o institucional" };
+
+const TOM = { alta_max:"alta", alta_realiza:"alta", alta_sem:"alta",
+              virando_alta:"alta", virando_baixa:"baixa",
+              baixa_max:"baixa", baixa_realiza:"baixa", baixa_sem:"baixa" };
+const tomDe = e => TOM[e] || "nulo";
+
+const risco = x => {
+  const v = x.serie || [], mF = x.serie72 || [];
+  if(v.length < 5) return "";
+  const W = 180, H = 36, P = 2, FAIXA = 26;
+  const fim = W - P - FAIXA;
+  const iF = mF.findIndex(n => n != null);
+  const temF = iF >= 0 && mF.length === v.length;
+  const valF = temF ? mF.slice(iF).filter(n => n != null) : [];
+  const alvos = [x.ema17, x.ema34, x.ema72].filter(m => m != null);
+  const lo = Math.min(...v, ...valF, ...alvos), hi = Math.max(...v, ...valF, ...alvos);
+  const f = (hi - lo) || 1;
+  const px = i => P + (fim - P) * i / (v.length - 1);
+  const py = n => P + (H - 2*P) * (1 - (n - lo) / f);
+  const cam = a => a.map((n,i) => `${i?"L":"M"}${px(i).toFixed(1)},${py(n).toFixed(1)}`).join("");
+  const cCor = tomDe(x.e) === "alta" ? "var(--alta)"
+             : tomDe(x.e) === "baixa" ? "var(--baixa)" : "var(--t2)";
+  const L = 9, g = 2, x0 = fim + 5;
+  const tracos = [[x.ema34,"var(--graf)"],[x.ema17,"var(--tinta)"]]
+    .map(([m,c],k) => m == null ? "" : (()=>{ const xa = x0 + k*(L+g);
+      return `<line x1="${xa}" x2="${xa+L}" y1="${py(m).toFixed(1)}" y2="${py(m).toFixed(1)}"
+        stroke="${c}" stroke-width="1.8" stroke-linecap="round"/>`; })()).join("");
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:${W}px;height:${H}px;display:block"
+    role="img" aria-label="${esc(x.ativo)}: preço e ponto do institucional">
+    <line x1="${fim+2}" x2="${fim+2}" y1="1" y2="${H-1}" stroke="var(--linha)" stroke-width="1"/>
+    ${temF ? `<path d="${mF.map((n,i) => n == null ? ""
+        : `${i === iF ? "M" : "L"}${px(i).toFixed(1)},${py(n).toFixed(1)}`).join("")}"
+      fill="none" stroke="var(--lacre)" stroke-width="1.1" opacity=".9"/>` : ""}
+    <path d="${cam(v)}" fill="none" stroke="${cCor}" stroke-width="1.5"
+      stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="${px(v.length-1).toFixed(1)}" cy="${py(v[v.length-1]).toFixed(1)}"
+      r="2" fill="${cCor}"/>
+    ${tracos}</svg>`;
+};
+
+
 const JOGOS = {
-  tiro:   { nome:"Tiro da hora",   dica:"escolha o papel e o lado" },
-  mexe:   { nome:"Quem mexe mais", dica:"maior variação, para cima ou para baixo" },
-  gira:   { nome:"Quem gira mais", dica:"maior volume financeiro na hora" },
-  volume: { nome:"Volume da B3",   dica:"quanto a bolsa inteira gira hoje" },
+  sobe:   { nome:"Quem sobe mais",  dica:"na hora que vem" },
+  cai:    { nome:"Quem cai mais",   dica:"na hora que vem" },
+  volume: { nome:"Quem gira mais",  dica:"maior volume financeiro na hora" },
+  petr:   { nome:"O giro da PETR4", dica:"acima ou abaixo do corte" },
 };
 
 let RODADA_TIMER = null;
@@ -11503,28 +11513,29 @@ function faltaPara(quando){
   return Math.floor(m/60) + "h" + String(m % 60).padStart(2,"0");
 }
 
-async function rodadaDeAgora(){
+/* Todas as rodadas de hoje em diante — o voto de cada uma fecha em abre_em,
+   uma hora antes de a hora começar a correr. Quem quiser joga o dia inteiro
+   de uma vez; quem preferir vai palpitando de hora em hora.               */
+async function rodadasAbertas(){
   const hoje = HOJE_BR();
-  const { data } = await sb.from("rodada").select("*").eq("data", hoje)
-    .order("hora");
+  const { data } = await sb.from("rodada").select("*")
+    .gte("data", hoje).order("data").order("hora");
   const todas = data || [];
   const agora = Date.now();
   return {
     todas,
-    atual: todas.find(r => new Date(r.fecha_em) > agora
-                        && new Date(r.abre_em) <= agora) || null,
-    vencidas: todas.filter(r => new Date(r.fecha_em) <= agora
-                             && r.situacao !== "apurada"),
+    vencidas: todas.filter(r => r.situacao !== "apurada"
+                             && new Date(r.fecha_em) <= agora),
+    votaveis: todas.filter(r => new Date(r.abre_em) > agora)
   };
 }
 
-/* os papéis que dá para escolher: os mais líquidos do universo, porque
-   apostar em papel que não negocia não é leitura de fluxo, é sorteio.        */
-async function papeisDaRodada(){
-  const { data } = await sb.from("universo")
-    .select("ativo,nome,liquidez").eq("tipo","acao")
-    .order("liquidez", { ascending:false }).limit(40);
-  return data || [];
+async function papeisSorteados(rodadaId){
+  const { data } = await sb.from("rodada_papel").select("jogo,ativo")
+    .eq("rodada_id", rodadaId);
+  const m = { sobe:[], cai:[], volume:[] };
+  (data||[]).forEach(p => { if(m[p.jogo]) m[p.jogo].push(p.ativo); });
+  return m;
 }
 
 async function telaTiroCurto(){
@@ -11532,94 +11543,136 @@ async function telaTiroCurto(){
            return rotear(); }
   app().innerHTML = `<div class="carreg">carregando a rodada…</div>`;
 
-  let { todas, atual, vencidas } = await rodadaDeAgora();
+  const { todas, vencidas, votaveis } = await rodadasAbertas();
 
   /* rodada vencida e não apurada: apura na hora, para o resultado sair agora
      e não à noite quando o robô passar.                                      */
   if(vencidas.length){
     await sb.rpc("apurar_rodadas_vencidas");
-    /* a copa anda junto: é a rodada apurada que decide quem avança na chave. */
     await sb.rpc("tocar_copa");
-    const depois = await rodadaDeAgora();
+    const depois = await rodadasAbertas();
     /* Só repinta se a apuração andou de verdade. Quando ela não consegue
        apurar — falta a foto da hora, por exemplo — a lista de vencidas volta
        idêntica, e rechamar refazia a mesma pergunta para sempre: a tela ficava
        eternamente em "carregando a rodada", martelando o banco.              */
     if(depois.vencidas.length < vencidas.length) return telaTiroCurto();
-    todas = depois.todas; atual = depois.atual;
   }
 
-  if(!todas.length){
-    return app().innerHTML = `<div class="cabeca"><h1>Tiro curto</h1>
-      <p>Seis rodadas por pregão, fechando de hora em hora, das 11h às 16h.</p></div>
-      ${aviso("Hoje não tem rodada — ou o pregão não abriu, ou as rodadas do dia "
-        + "ainda não foram criadas.")}`;
-  }
-
-  const [papeis, { data:faixas }, { data:meus }] = await Promise.all([
-    papeisDaRodada(),
-    sb.from("faixa_volume").select("*").order("ordem"),
-    atual ? sb.from("voto").select("*").eq("rodada_id", atual.id)
-              .eq("usuario_id", eu.id)
-          : Promise.resolve({ data:[] })
-  ]);
-  const voto = {}; (meus||[]).forEach(v => voto[v.jogo] = v.palpite);
+  /* qual rodada está na tela: a escolhida na barra de horários, ou a
+     primeira ainda aberta para voto.                                        */
+  const q = new URLSearchParams(location.hash.split("?")[1] || "");
+  const pedida = q.get("r");
+  const sel = todas.find(r => String(r.id) === String(pedida))
+            || votaveis[0] || todas[todas.length - 1] || null;
 
   const { data:seq } = await sb.from("intraday_sequencia").select("*")
     .eq("usuario_id", eu.id).maybeSingle();
-  const s = seq?.sequencia || 0;
-  const mult = (1 + 0.2 * Math.max(s - 1, 0)).toFixed(1).replace(".", ",");
+  const s = seq ? seq.sequencia : 0;
+  const mult = (1 + 0.2 * Math.max(s - 1, 0)).toFixed(1);
+
+  if(!sel){
+    return app().innerHTML = `<div class="cabeca"><h1>Tiro curto</h1></div>
+      <div class="card"><p style="margin:0;color:var(--t2);font-size:13.5px">
+      Nenhuma rodada no calendário. Elas nascem quando o robô fecha o pregão.
+      </p></div>`;
+  }
+
+  const [sorteio, { data:meus }] = await Promise.all([
+    papeisSorteados(sel.id),
+    sb.from("voto").select("jogo,palpite").eq("rodada_id", sel.id)
+      .eq("usuario_id", eu.id)
+  ]);
+  const voto = {}; (meus||[]).forEach(v => voto[v.jogo] = v.palpite);
+
+  /* preço, variação e as três forças vêm de onde o Screening tira: a
+     quant_medias para a série e as forças, o ao vivo para o preço de agora. */
+  if(!QM || Date.now() - QM_EM >= QM_VALE){
+    const r = await sb.rpc("quant_medias", { p_janela: 90 });
+    if(!r.error){ QM = r.data; QM_EM = Date.now(); }
+  }
+  const mk = await mercadoCache();
+  const AV = mk.p || {};
+  const FICHA = {};
+  (QM || []).forEach(x => {
+    const v = AV[x.ativo];
+    const y = (v && v[0] > 0 && v[2] > 0)
+      ? { ...x, fech:v[0], osc:v[1], ema17:v[2], ema34:v[3], ema72:v[4] }
+      : { ...x };
+    y.e = estadoDe(y);
+    FICHA[x.ativo] = y;
+  });
+
+  const aberta = new Date(sel.abre_em) > Date.now();
+  const porDia = {};
+  todas.forEach(r => { (porDia[r.data] = porDia[r.data] || []).push(r); });
 
   app().innerHTML = `
   <div class="cabeca">
     <h1>Tiro curto</h1>
-    <p>Seis rodadas por pregão, fechando na virada de cada hora. Quatro palpites
-      por rodada, um toque cada. <b>Errar não tira ponto</b>, e rodada que você
-      não jogou não conta contra você.</p>
+    <p>Seis rodadas por pregão. Cada uma vale pelo que acontecer <b>na hora que
+      ela cobre</b> — a das 11h mede das 10h às 11h. O palpite fecha uma hora
+      antes, quando essa hora começa a correr. <b>Errar não tira ponto</b>, e
+      rodada que você não jogou não conta contra você.</p>
     <div class="prova">
-      ${atual ? `<span class="p viva"><span class="pontinho"></span>fecha em
-        <span class="n" id="conta" style="color:var(--ouro2)">${faltaPara(atual.fecha_em)}</span></span>`
-              : `<span class="p">pregão encerrado hoje</span>`}
+      ${aberta ? `<span class="p viva"><span class="pontinho"></span>fecha em
+        <span class="n" id="conta" style="color:var(--ouro2)">${faltaPara(sel.abre_em)}</span></span>`
+              : `<span class="p">palpite encerrado</span>`}
       <span class="p"><span class="n">${s}</span>de sequência</span>
       <span class="p"><span class="n" style="color:var(--ouro2)">${mult}×</span>multiplicador</span>
     </div>
-    <p style="margin:18px 0 0"><a href="#/copa" class="bt">Copa do pregão &rarr;</a></p>
   </div>
 
-  <div class="chips" style="margin-bottom:20px">
-    ${todas.map(r => {
-      const fim = new Date(r.fecha_em);
-      const cls = r.situacao === "apurada" ? "" : (atual && r.id === atual.id ? "on" : "");
-      return `<a class="chip ${cls}" href="#/rodada/${r.id}">${r.hora}h${
-        r.situacao === "apurada" ? " ✓" : ""}</a>`; }).join("")}
+  ${Object.keys(porDia).sort().map(d => `
+    <div style="margin-bottom:10px">
+      <div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+                  color:var(--graf);margin-bottom:6px">${
+        d === HOJE_BR() ? "hoje" : diaBR(d)}</div>
+      <div class="chips">${porDia[d].map(r => {
+        const on = r.id === sel.id ? " on" : "";
+        const marca = r.situacao === "apurada" ? " ✓"
+                    : (new Date(r.abre_em) > Date.now() ? "" : " ·");
+        return `<a class="chip${on}" href="#/tiro-curto?r=${r.id}">${r.hora}h${marca}</a>`;
+      }).join("")}</div>
+    </div>`).join("")}
+
+  <div id="erro"></div>
+
+  <div class="card" style="margin:14px 0 18px;padding:12px 14px">
+    <p style="margin:0;font-size:13px;color:var(--t2)">
+      <b>Rodada das ${sel.hora}h</b> — vale pelo movimento das ${sel.hora - 1}h
+      às ${sel.hora}h${sel.data === HOJE_BR() ? "" : " de " + diaBR(sel.data)}.
+      ${aberta ? `O palpite fecha às ${String(sel.hora - 1).padStart(2,"0")}:00.`
+               : `O palpite já fechou.${sel.situacao === "apurada"
+                  ? ` <a href="#/rodada/${sel.id}">Ver o resultado →</a>` : ""}`}
+    </p>
   </div>
 
-  ${!atual
-    ? `<div class="card"><p style="margin:0;color:var(--t2);font-size:13.5px">
-        Nenhuma rodada aberta agora. As rodadas fecham às 11, 12, 13, 14, 15 e
-        16h — volte na próxima virada de hora.</p></div>`
-    : `<div id="erro"></div>
-      ${jogoTiro(papeis, voto.tiro)}
-      ${jogoPapel("mexe", papeis, voto.mexe)}
-      ${jogoPapel("gira", papeis, voto.gira)}
-      ${jogoFaixa(faixas || [], voto.volume)}
-      <p style="margin:22px 0 0;font-size:12px;color:var(--graf)">
-        Dá para trocar o palpite até a rodada fechar. Ninguém vê o voto de
-        ninguém antes disso — o banco recusa, não é só a tela que esconde.</p>`}`;
+  ${["sobe","cai","volume"].map(j =>
+      jogoPapeis(j, sorteio[j] || [], voto[j], FICHA, aberta)).join("")}
+  ${jogoPetr(sel, voto.petr, aberta)}
 
-  if(atual){
-    ligarJogos(atual, papeis);
+  <p style="margin:22px 0 0;font-size:12px;color:var(--graf)">
+    Dá para trocar o palpite até a hora começar. Ninguém vê o voto de ninguém
+    antes disso — o banco recusa, não é só a tela que esconde.</p>`;
+
+  if(aberta){
+    ligarJogos(sel);
     clearInterval(RODADA_TIMER);
     RODADA_TIMER = setInterval(() => {
       const el = document.getElementById("conta");
       if(!el) return clearInterval(RODADA_TIMER);
-      el.textContent = faltaPara(atual.fecha_em);
-      if(new Date(atual.fecha_em) <= Date.now()){
+      el.textContent = faltaPara(sel.abre_em);
+      if(new Date(sel.abre_em) <= Date.now()){
         clearInterval(RODADA_TIMER); telaTiroCurto();
       }
     }, 1000);
   }
 }
+
+const diaBR = d => {
+  const [a,m,x] = String(d).split("-");
+  return `${x}/${m}`;
+};
 
 function cxJogo(chave, dentro, escolhido){
   const j = JOGOS[chave];
@@ -11634,35 +11687,63 @@ function cxJogo(chave, dentro, escolhido){
     ${dentro}</div>`;
 }
 
-function jogoTiro(papeis, escolhido){
-  return cxJogo("tiro", `<div class="chips">${papeis.slice(0,24).map(p => `
-    <span class="chip mono" style="border:none;padding:0">
-      <button class="bt vJ" data-j="tiro" data-v="${p.ativo}:C"
-        style="padding:3px 9px;font-size:11.5px;border-radius:5px 0 0 5px${
-        escolhido===p.ativo+":C"?";border-color:var(--lacre);color:var(--ouro2)":""}">${p.ativo} ↑</button>
-      <button class="bt vJ" data-j="tiro" data-v="${p.ativo}:V"
-        style="padding:3px 9px;font-size:11.5px;border-radius:0 5px 5px 0;margin-left:-1px${
-        escolhido===p.ativo+":V"?";border-color:var(--lacre);color:var(--ouro2)":""}">↓</button>
-    </span>`).join("")}</div>`, escolhido);
+/* Os papéis do jogo, cada um com o que o Screening mostra: preço, variação do
+   dia, as três forças e o traçado de 90 pregões. Clicar escolhe.           */
+function jogoPapeis(chave, ativos, escolhido, FICHA, aberta){
+  if(!ativos.length) return cxJogo(chave,
+    `<p style="margin:0;font-size:12.5px;color:var(--graf)">
+      Os papéis desta rodada ainda não foram sorteados.</p>`, escolhido);
+
+  const linhas = ativos.map(a => {
+    const x = FICHA[a];
+    const on = escolhido === a;
+    const osc = x && x.osc != null
+      ? `<span class="mono ${cor(x.osc)}" style="font-size:12px">${pct(x.osc)}</span>`
+      : `<span class="mono nulo" style="font-size:12px">—</span>`;
+    return `<button class="bt vJ" data-j="${chave}" data-v="${esc(a)}"
+      ${aberta ? "" : "disabled"}
+      style="display:block;width:100%;text-align:left;margin-bottom:8px;
+             padding:10px 12px;border-radius:8px${
+        on ? ";border-color:var(--lacre);background:rgba(212,175,55,.07)" : ""}">
+      <div style="display:flex;justify-content:space-between;align-items:center;
+                  gap:12px;flex-wrap:wrap">
+        <div>
+          <b class="mono" style="font-size:13.5px${on?";color:var(--ouro2)":""}">${esc(a)}</b>
+          <span style="font-size:11.5px;color:var(--t2);margin-left:8px">${
+            x ? esc(ROT[x.e] || "") : "sem histórico"}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px">
+          ${x && x.fech != null
+            ? `<span class="mono" style="font-size:12.5px">${n2(x.fech)}</span>` : ""}
+          ${osc}
+          ${x ? `<span style="width:180px;display:inline-block">${risco(x)}</span>` : ""}
+        </div>
+      </div>
+      ${x ? `<div style="display:flex;gap:16px;margin-top:6px;font-size:11px;
+                         color:var(--graf)">
+        <span>trader <b class="mono">${n2(x.ema17)}</b></span>
+        <span>investidor <b class="mono">${n2(x.ema34)}</b></span>
+        <span>institucional <b class="mono">${n2(x.ema72)}</b></span></div>` : ""}
+    </button>`;
+  }).join("");
+  return cxJogo(chave, linhas, escolhido);
 }
 
-function jogoPapel(chave, papeis, escolhido){
-  return cxJogo(chave, `<div class="chips">${papeis.slice(0,24).map(p =>
-    `<button class="chip mono vJ" data-j="${chave}" data-v="${p.ativo}"${
-      escolhido===p.ativo?' data-on="1"':""}>${p.ativo}</button>`).join("")}</div>`,
-    escolhido);
+function jogoPetr(rodada, escolhido, aberta){
+  const alvo = rodada.corte_petr;
+  const rot = alvo ? "R$ " + (alvo/1e6).toFixed(0) + " milhões" : "o corte do dia";
+  return cxJogo("petr", `
+    <p style="margin:0 0 10px;font-size:12.5px;color:var(--t2)">
+      A PETR4 vai girar acima ou abaixo de <b>${esc(rot)}</b> nesta hora?</p>
+    <div class="chips">
+      ${["acima","abaixo"].map(v =>
+        `<button class="chip vJ" data-j="petr" data-v="${v}"${
+          escolhido === v ? ' data-on="1"' : ""}${aberta ? "" : " disabled"}
+          >${v}</button>`).join("")}
+    </div>`, escolhido);
 }
 
-function jogoFaixa(faixas, escolhido){
-  return cxJogo("volume", `<div class="chips">${faixas.map(f =>
-    `<button class="chip vJ" data-j="volume" data-v="${f.ordem}"${
-      String(escolhido)===String(f.ordem)?' data-on="1"':""}>${esc(f.rotulo)}</button>`).join("")}</div>
-    <p style="margin:10px 0 0;font-size:11.5px;color:var(--graf)">
-      Faixa certa vale 10 pontos; a vizinha vale 5.</p>`,
-    escolhido ? (faixas.find(f => String(f.ordem)===String(escolhido))||{}).rotulo : null);
-}
-
-function ligarJogos(rodada, papeis){
+function ligarJogos(rodada){
   document.querySelectorAll(".vJ").forEach(b => b.onclick = async () => {
     const jogo = b.dataset.j, palpite = b.dataset.v;
     const { error } = await sb.from("voto")
