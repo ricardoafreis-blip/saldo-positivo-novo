@@ -1586,7 +1586,7 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
           <div><span class="rams">Intraday</span>
             <a href="#/tiro-curto">Valendo agora</a>
             <a href="#/placar">Placar</a>
-            <span class="falta">Duelo e torneio<em>a fazer</em></span>
+            <a href="#/copa">Copa do pregão</a>
           </div>
           <div><span class="rams">Carteira individual</span>
             <a href="#/ranking">Ranking</a>
@@ -3584,103 +3584,6 @@ async function telaCarteira(id){
       if(document.hidden) return;
       const y = window.scrollY;
       telaCarteira(id).then(() => window.scrollTo(0, y));
-    }, 60000);
-  }
-}
-
-async function telaDuelo(){
-  app().innerHTML = `<div class="carreg">carregando…</div>`;
-  const { data:cs } = await sb.from("ranking").select("*");
-  const ids = (cs||[]).map(c=>c.id);
-  let series={};
-  if(ids.length){
-    const { data:rs } = await sb.from("retorno_dia").select("carteira_id,data,retorno,indice")
-                                .in("carteira_id", ids).order("data");
-    (rs||[]).forEach(r=>{ (series[r.carteira_id] ||= []).push(r); });
-  }
-  const { data:parc } = await sb.from("retorno_parcial")
-    .select("carteira_id,retorno,atualizado_em,com_cotacao,papeis");
-  const vivo = {}; let quando = null;
-  (parc||[]).forEach(p=>{
-    vivo[p.carteira_id] = p;
-    if(p.atualizado_em && (!quando || p.atualizado_em > quando)) quando = p.atualizado_em;
-  });
-
-  await colarClasse(cs);
-
-  const todas = (cs||[]).map(c=>{
-    const s = series[c.id] || [];
-    return { c, m: aplicarParcial(metricas(s), vivo[c.id], s) };
-  });
-
-  const blocos = Object.entries(CLASSE).map(([k,v])=>{
-    const l = todas.filter(x => x.c.classe === k).sort((a,b)=> b.m.hoje - a.m.hoje);
-    const pares = [];
-    for(let a=0,b=l.length-1; a<b; a++,b--) pares.push([l[a],l[b]]);
-    return { k, nome:v.nome, l, pares, sobra: l.length%2 ? l[Math.floor(l.length/2)] : null };
-  }).filter(b => b.l.length);
-
-  const lado = (x,venceu) => `
-    <div style="flex:1;min-width:0;padding:16px 18px;border-radius:3px;
-      background:${venceu?"rgba(201,162,39,.09)":"transparent"};
-      border:1px solid ${venceu?"var(--lacre)":"var(--linha)"}">
-      <a href="#/carteira/${x.c.id}" style="font-family:Newsreader,serif;font-size:17px">${esc(x.c.nome)}</a>
-      <div style="font-size:11px;color:var(--graf);margin:3px 0 9px">${esc(x.c.apelido)}</div>
-      <div class="mono ${cor(x.m.hoje)}" style="font-size:25px;font-weight:500;${x.m.parcial?"opacity:.88":""}">
-        ${pct(x.m.hoje)}${x.m.parcial?'<span style="font-size:12px;vertical-align:super;opacity:.7">•</span>':""}</div>
-      <div style="margin-top:8px">${tags(x.c)}</div>
-    </div>`;
-
-  const temDuelo = blocos.some(b => b.pares.length);
-
-  app().innerHTML = `
-  <div class="cabeca" style="margin-bottom:20px">
-    <h1>Duelo do dia</h1>
-    <p>Dentro de cada classe: primeiro contra último, segundo contra
-      penúltimo. Vale o retorno de hoje, e os pares mudam todo dia.</p>
-    <div class="apoio">Classe contra classe não vale — num dia de alta a
-      Comprada ganharia da Vendida por definição, não por mérito.${
-      quando?` Cotação de <b>${new Date(quando).toLocaleTimeString("pt-BR",
-        {hour:"2-digit",minute:"2-digit",timeZone:"America/Sao_Paulo"})}</b>;
-        o número com • é parcial.`:""}</div>
-  </div>
-
-  ${!temDuelo ? `<div class="card" style="text-align:center;padding:34px">
-      Precisa de pelo menos duas carteiras na mesma classe para haver duelo.</div>`
-  : blocos.filter(b=>b.pares.length || b.sobra).map(b=>`
-    <div style="margin-bottom:26px">
-      <div style="font-size:10px;letter-spacing:.13em;text-transform:uppercase;
-        color:var(--ouro2);margin-bottom:10px">${b.nome}
-        <span style="color:var(--graf);margin-left:6px">${b.l.length}
-          ${b.l.length===1?"carteira":"carteiras"}</span></div>
-      ${b.pares.map((p,i)=>{
-        const [a,d]=p, ea=a.m.hoje, ed=d.m.hoje;
-        const emp = Math.abs(ea-ed) < 1e-9;
-        return `<div style="margin-bottom:14px">
-          <div style="font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
-            color:var(--graf);margin-bottom:7px">Duelo ${i+1}${
-            emp?" \u00b7 empate":` \u00b7 ${(Math.abs(ea-ed)*100).toFixed(2).replace(".",",")} pontos de diferen\u00e7a`}</div>
-          <div style="display:flex;gap:12px;align-items:stretch;flex-wrap:wrap">
-            ${lado(a, !emp && ea>ed)}
-            <div style="display:grid;place-items:center;color:var(--lacre);
-              font-family:Newsreader,serif;font-size:15px;padding:0 4px">contra</div>
-            ${lado(d, !emp && ed>ea)}
-          </div></div>`;
-      }).join("")}
-      ${b.sobra?`<p style="color:var(--graf);font-size:12.5px;margin:0">
-        <b>${esc(b.sobra.c.nome)}</b> ficou sem par — número ímpar de carteiras nesta classe.</p>`:""}
-      ${!b.pares.length&&b.sobra?`<p style="color:var(--graf);font-size:12.5px;margin:4px 0 0">
-        Falta outra carteira nesta classe para haver duelo.</p>`:""}
-    </div>`).join("")}`;
-
-  clearInterval(window.__timerDuelo);
-  if(emPregao()){
-    window.__timerDuelo = setInterval(() => {
-      if((location.hash||"").split("?")[0] !== "#/duelo"){
-        clearInterval(window.__timerDuelo); return; }
-      if(document.hidden) return;
-      const y = window.scrollY;
-      telaDuelo().then(() => window.scrollTo(0, y));
     }, 60000);
   }
 }
@@ -11626,6 +11529,8 @@ async function telaTiroCurto(){
      e não à noite quando o robô passar.                                      */
   if(vencidas.length){
     await sb.rpc("apurar_rodadas_vencidas");
+    /* a copa anda junto: é a rodada apurada que decide quem avança na chave. */
+    await sb.rpc("tocar_copa");
     return telaTiroCurto();
   }
 
@@ -11663,6 +11568,7 @@ async function telaTiroCurto(){
       <span class="p"><span class="n">${s}</span>de sequência</span>
       <span class="p"><span class="n" style="color:var(--ouro2)">${mult}×</span>multiplicador</span>
     </div>
+    <p style="margin:18px 0 0"><a href="#/copa" class="bt">Copa do pregão &rarr;</a></p>
   </div>
 
   <div class="chips" style="margin-bottom:20px">
@@ -11854,6 +11760,310 @@ async function telaPlacar(){
       </tbody></table>`}`;
 }
 
+
+/* =====================================================================
+   DUELO DE CARTEIRAS — um contra um
+   O antigo lia o ranking e pareava primeiro com último: ninguém escolhia
+   nada e o resultado já estava na tela de Ranking. Agora é desafio: você
+   escolhe quem, qual carteira sua, e o prazo. A pessoa aceita com a dela.
+   Quem perde, perde para alguém com nome — é isso que gera revanche.
+   ===================================================================== */
+
+const DUELO_MIN = 5;   // pregões
+
+function diasBR(n){ return n + (n === 1 ? " dia" : " dias"); }
+
+async function telaDuelo(){
+  if(!eu){ location.hash = "#/entrar?de=" + encodeURIComponent("#/duelo");
+           return rotear(); }
+  app().innerHTML = `<div class="carreg">…</div>`;
+
+  const { data:todos } = await sb.from("duelo").select("*")
+    .order("criado_em", { ascending:false }).limit(200);
+  const l = todos || [];
+
+  const meus     = l.filter(d => d.desafiante === eu.id || d.desafiado === eu.id);
+  const chamados = meus.filter(d => d.desafiado === eu.id && d.situacao === "convidado");
+  const abertos  = meus.filter(d => d.situacao === "aceito");
+  const feitos   = l.filter(d => d.situacao === "encerrado");
+
+  const ids = [...new Set(l.flatMap(d => [d.desafiante, d.desafiado]))];
+  const nomes = await apelidosDe(ids);
+
+  const cIds = [...new Set(l.flatMap(d => [d.carteira_a, d.carteira_b]).filter(Boolean))];
+  let carts = {};
+  if(cIds.length){
+    const { data:cs } = await sb.from("carteira").select("id,nome").in("id", cIds);
+    (cs||[]).forEach(c => carts[c.id] = c.nome);
+  }
+
+  const linha = d => {
+    const souA = d.desafiante === eu.id;
+    const eu_r = souA ? d.ret_a : d.ret_b;
+    const ele_r = souA ? d.ret_b : d.ret_a;
+    const adv = souA ? d.desafiado : d.desafiante;
+    const venci = d.vencedor && d.vencedor === eu.id;
+    return `<tr>
+      <td><b>${esc(nomes[d.desafiante]||"—")}</b>
+        <div style="font-size:11px;color:var(--graf)">${esc(carts[d.carteira_a]||"—")}</div></td>
+      <td class="d mono" style="color:var(--graf)">×</td>
+      <td><b>${esc(nomes[d.desafiado]||"—")}</b>
+        <div style="font-size:11px;color:var(--graf)">${esc(carts[d.carteira_b]||"—")}</div></td>
+      <td class="d" style="font-size:11.5px;color:var(--t2)">${dataBR(d.inicio)}<br>${dataBR(d.fim)}</td>
+      <td class="d mono">${d.ret_a==null?"—":`<span class="${cor(d.ret_a)}">${pct(d.ret_a)}</span>`}</td>
+      <td class="d mono">${d.ret_b==null?"—":`<span class="${cor(d.ret_b)}">${pct(d.ret_b)}</span>`}</td>
+      <td class="d">${d.situacao === "encerrado"
+        ? (d.vencedor ? `<span class="pill">${esc(nomes[d.vencedor]||"")}</span>`
+                      : '<span class="pill">empate</span>')
+        : `<span class="pill">${esc(d.situacao)}</span>`}</td>
+    </tr>`;
+  };
+
+  app().innerHTML = `
+  <div class="cabeca">
+    <h1>Duelo de carteiras</h1>
+    <p>Um contra um, com prazo combinado. Você desafia, escolhe a sua carteira
+      e as datas; a pessoa aceita com a dela. No fim, ganha quem rendeu mais no
+      período. Mesma classe contra mesma classe, no mínimo ${DUELO_MIN} pregões,
+      e <b>a carteira não congela</b> — mexa nela quando quiser, valendo do
+      pregão seguinte.</p>
+    <div class="prova">
+      <span class="p"><span class="n">${abertos.length}</span>em andamento</span>
+      ${chamados.length?`<span class="p viva"><span class="pontinho"></span>
+        <span class="n" style="color:var(--ouro2)">${chamados.length}</span>te chamaram</span>`:""}
+    </div>
+    <p style="margin:20px 0 0"><button class="bt lacre" id="btDesafiar">Desafiar alguém</button></p>
+  </div>
+  <div id="erro"></div>
+
+  ${chamados.length ? `
+  <h2 style="font-size:19px;margin:26px 0 12px">Te desafiaram</h2>
+  ${chamados.map(d => `<div class="card" style="border-color:var(--lacre)">
+    <p style="margin:0 0 6px;font-size:14px"><b>${esc(nomes[d.desafiante]||"—")}</b>
+      te chamou para um duelo de ${esc(CLASSE[d.classe]?.nome || d.classe)},
+      de ${dataBR(d.inicio)} a ${dataBR(d.fim)}.</p>
+    ${d.recado?`<p style="margin:0 0 10px;font-size:12.5px;color:var(--t2)">
+      "${esc(d.recado)}"</p>`:""}
+    <button class="bt lacre aceitaD" data-id="${d.id}"
+      style="padding:5px 13px;font-size:12.5px">Aceitar</button>
+    <button class="bt recusaD" data-id="${d.id}"
+      style="padding:5px 13px;font-size:12.5px;margin-left:6px;
+             border-color:var(--baixa);color:var(--baixa)">Recusar</button>
+  </div>`).join("")}` : ""}
+
+  ${abertos.length ? `
+  <h2 style="font-size:19px;margin:26px 0 12px">Em andamento</h2>
+  <table><thead><tr><th>Desafiante</th><th></th><th>Desafiado</th>
+    <th class="d">Período</th><th class="d">A</th><th class="d">B</th>
+    <th class="d">Situação</th></tr></thead>
+  <tbody>${abertos.map(linha).join("")}</tbody></table>` : ""}
+
+  <h2 style="font-size:19px;margin:26px 0 12px">Duelos encerrados</h2>
+  ${!feitos.length
+    ? `<div class="card"><p style="margin:0;color:var(--t2);font-size:13px">
+        Nenhum duelo terminou ainda.</p></div>`
+    : `<table><thead><tr><th>Desafiante</th><th></th><th>Desafiado</th>
+        <th class="d">Período</th><th class="d">A</th><th class="d">B</th>
+        <th class="d">Venceu</th></tr></thead>
+      <tbody>${feitos.slice(0,40).map(linha).join("")}</tbody></table>`}`;
+
+  document.getElementById("btDesafiar").onclick = () => location.hash = "#/desafiar";
+
+  document.querySelectorAll(".aceitaD").forEach(b => b.onclick = () => aceitarDuelo(b.dataset.id));
+  document.querySelectorAll(".recusaD").forEach(b => b.onclick = async () => {
+    await sb.from("duelo").update({ situacao:"recusado",
+      respondido_em:new Date().toISOString() }).eq("id", b.dataset.id);
+    telaDuelo();
+  });
+}
+
+async function aceitarDuelo(id){
+  const { data:d } = await sb.from("duelo").select("*").eq("id", id).maybeSingle();
+  if(!d) return;
+  const { data:cs } = await sb.from("carteira")
+    .select("id,nome").eq("usuario_id", eu.id).eq("ativa", true)
+    .eq("classe", d.classe).order("criada_em");
+  if(!cs || !cs.length) return $("#erro").innerHTML = aviso("Para aceitar você "
+    + "precisa de uma carteira da classe " + (CLASSE[d.classe]?.nome || d.classe)
+    + ". Publique uma e volte aqui.", true);
+
+  const qual = cs.length === 1 ? cs[0].id : escolherCarteira(cs);
+  if(!qual) return;
+
+  const { error } = await sb.from("duelo").update({ situacao:"aceito",
+    carteira_b: qual, respondido_em:new Date().toISOString() }).eq("id", id);
+  if(error) return $("#erro").innerHTML = aviso(error.message, true);
+  telaDuelo();
+}
+
+/* ---------- #/desafiar ---------- */
+
+async function telaDesafiar(){
+  if(!eu){ location.hash = "#/entrar"; return rotear(); }
+  app().innerHTML = `<div class="carreg">…</div>`;
+
+  const { data:cs } = await sb.from("carteira").select("id,nome,classe")
+    .eq("usuario_id", eu.id).eq("ativa", true).order("criada_em");
+  if(!cs || !cs.length) return app().innerHTML =
+    `<div class="cabeca"><h1>Desafiar</h1></div>`
+    + aviso("Você precisa de uma carteira publicada para desafiar alguém.")
+    + `<p style="margin-top:14px"><a href="#/publicar" class="bt lacre">Criar carteira</a></p>`;
+
+  const { data:gente } = await sb.from("perfil_publico").select("id,apelido")
+    .neq("id", eu.id).order("apelido").limit(300);
+
+  const hoje = HOJE_BR();
+  const daqui = n => { const d = new Date(hoje + "T12:00:00");
+    d.setDate(d.getDate() + n); return d.toISOString().slice(0,10); };
+
+  app().innerHTML = `
+  <div class="cabeca"><h1>Desafiar alguém</h1>
+    <p>Escolha a pessoa, a sua carteira e o prazo. Ela aceita com uma carteira
+      da mesma classe. Mínimo de ${DUELO_MIN} pregões.</p></div>
+  <div id="erro"></div>
+  <div class="card" style="max-width:560px">
+    <label>Quem</label>
+    <select id="dQuem">${(gente||[]).map(p =>
+      `<option value="${p.id}">${esc(p.apelido||"—")}</option>`).join("")}</select>
+
+    <label>Sua carteira</label>
+    <select id="dCart">${cs.map(c =>
+      `<option value="${c.id}" data-cl="${c.classe}">${esc(c.nome)} · ${
+        esc(CLASSE[c.classe]?.nome || c.classe)}</option>`).join("")}</select>
+    <p style="font-size:11.5px;color:var(--graf);margin:8px 0 13px">
+      O duelo é entre carteiras da mesma classe — comparar uma Vendida com uma
+      Comprada seria apostar na direção do índice, não em quem escolhe melhor.</p>
+
+    <label>Começa em</label>
+    <input id="dIni" type="date" value="${daqui(1)}" min="${daqui(1)}">
+    <label>Termina em</label>
+    <input id="dFim" type="date" value="${daqui(30)}" min="${daqui(6)}">
+
+    <label>Um recado <span style="color:var(--graf);font-weight:400">— opcional</span></label>
+    <input id="dRec" maxlength="140" placeholder="vamos ver quem leva">
+
+    <button class="bt cheio" id="btEnviarD" style="margin-top:6px">Enviar o desafio</button>
+  </div>`;
+
+  document.getElementById("btEnviarD").onclick = async () => {
+    const sel = document.getElementById("dCart");
+    const classe = sel.options[sel.selectedIndex].dataset.cl;
+    const ini = document.getElementById("dIni").value;
+    const fim = document.getElementById("dFim").value;
+    if(!ini || !fim) return $("#erro").innerHTML = aviso("Faltam as datas.", true);
+
+    const dif = Math.round((new Date(fim) - new Date(ini)) / 86400000);
+    if(dif < DUELO_MIN) return $("#erro").innerHTML = aviso(
+      `O duelo precisa de pelo menos ${DUELO_MIN} pregões — você marcou ${diasBR(dif)}.`, true);
+
+    const { error } = await sb.from("duelo").insert({
+      desafiante: eu.id, desafiado: document.getElementById("dQuem").value,
+      carteira_a: +sel.value, classe, inicio: ini, fim,
+      recado: document.getElementById("dRec").value.trim() || null,
+      situacao: "convidado" });
+    if(error) return $("#erro").innerHTML = aviso("Não consegui enviar: "
+      + error.message, true);
+    location.hash = "#/duelo"; rotear();
+  };
+}
+
+
+/* =====================================================================
+   COPA DO PREGÃO — mata-mata dentro do dia
+   Oito vagas, inscrição até as 11h. Quartas na rodada das 12h, semi na das
+   14h, final na das 16h. Vence o confronto quem fez mais pontos naquela
+   rodada — a copa não inventa jogo novo, aproveita o intraday que já existe.
+   Quem perde sai na mesma tarde: é o que faz a tarde inteira ter tensão.
+   ===================================================================== */
+
+const FASES = { quartas:"Quartas · 12h", semi:"Semifinal · 14h", final:"Final · 16h" };
+
+async function telaCopa(){
+  if(!eu){ location.hash = "#/entrar?de=" + encodeURIComponent("#/copa");
+           return rotear(); }
+  app().innerHTML = `<div class="carreg">…</div>`;
+
+  await sb.rpc("tocar_copa");        // abre, chaveia ou apura, conforme a hora
+
+  const hoje = HOJE_BR();
+  const { data:c } = await sb.from("copa").select("*").eq("data", hoje).maybeSingle();
+  if(!c) return app().innerHTML = `<div class="cabeca"><h1>Copa do pregão</h1></div>`
+    + aviso("Hoje não tem copa — fim de semana ou pregão fechado.");
+
+  const [{ data:vagas }, { data:jogos }] = await Promise.all([
+    sb.from("copa_vaga").select("*").eq("copa_id", c.id).order("ordem"),
+    sb.from("copa_jogo").select("*").eq("copa_id", c.id).order("posicao")
+  ]);
+  const vg = vagas || [], jg = jogos || [];
+  const nomes = await apelidosDe(
+    vg.map(v => v.usuario_id).concat(jg.flatMap(j => [j.jogador_a, j.jogador_b]))
+      .concat([c.campeao]));
+
+  const naChave = vg.some(v => v.usuario_id === eu.id);
+  const porFase = {}; jg.forEach(j => (porFase[j.fase] = porFase[j.fase] || []).push(j));
+
+  const confronto = j => {
+    const a = nomes[j.jogador_a] || "—";
+    const b = j.jogador_b ? (nomes[j.jogador_b] || "—") : "passa direto";
+    const venceuA = j.vencedor && j.vencedor === j.jogador_a;
+    const venceuB = j.vencedor && j.vencedor === j.jogador_b;
+    const marca = q => q ? 'style="color:var(--ouro2);font-weight:600"' : "";
+    return `<div style="padding:9px 0;border-bottom:1px solid var(--linha)">
+      <div style="display:flex;justify-content:space-between;gap:10px">
+        <span ${marca(venceuA)}>${esc(a)}</span>
+        <span class="mono" style="color:var(--graf)">${
+          j.pontos_a==null?"":j.pontos_a} × ${j.pontos_b==null?"":j.pontos_b}</span>
+        <span ${marca(venceuB)}>${esc(b)}</span>
+      </div></div>`;
+  };
+
+  app().innerHTML = `
+  <div class="cabeca">
+    <h1>Copa do pregão</h1>
+    <p>Mata-mata em um dia só. Oito vagas, inscrição até as 11h. Quartas na
+      rodada das 12h, semifinal na das 14h, final na das 16h. <b>Vence quem faz
+      mais pontos naquela rodada</b> — você joga o Tiro da hora de sempre, e os
+      pontos daquela hora decidem quem avança. Quem perde sai na mesma tarde.</p>
+    <div class="prova">
+      <span class="p"><span class="n">${vg.length}</span>de 8 na chave</span>
+      <span class="p">${esc(c.situacao)}</span>
+      ${c.campeao?`<span class="p"><span class="n" style="color:var(--ouro2)">${
+        esc(nomes[c.campeao]||"—")}</span>campeão de hoje</span>`:""}
+    </div>
+    ${c.situacao === "inscricoes"
+      ? (naChave
+          ? `<p style="margin:20px 0 0;color:var(--ouro2);font-size:13.5px">
+             Você está na chave. A partir das 12h, os pontos da rodada valem
+             pelo confronto.</p>`
+          : `<p style="margin:20px 0 0">
+             <button class="bt lacre" id="btCopa">Entrar na chave</button></p>`)
+      : ""}
+  </div>
+  <div id="erro"></div>
+
+  ${!jg.length
+    ? `<div class="card"><p style="margin:0;color:var(--t2);font-size:13.5px">
+        ${vg.length
+          ? "A chave é sorteada quando a rodada das 11h fechar."
+          : "Ninguém se inscreveu ainda. As oito vagas vão por ordem de chegada."}
+        </p>${vg.length?`<div class="chips" style="margin-top:12px">${vg.map(v =>
+          `<span class="chip">${v.ordem}. ${esc(nomes[v.usuario_id]||"—")}</span>`).join("")}</div>`:""}
+      </div>`
+    : Object.entries(FASES).filter(([f]) => porFase[f]).map(([f, rot]) =>
+      `<h2 style="font-size:19px;margin:26px 0 10px">${esc(rot)}</h2>
+       <div class="card">${porFase[f].map(confronto).join("")}</div>`).join("")}
+
+  <p style="margin:18px 0 0"><a href="#/tiro-curto" class="bt">Ir para a rodada de agora</a></p>`;
+
+  const b = document.getElementById("btCopa");
+  if(b) b.onclick = async () => {
+    const { data, error } = await sb.rpc("entrar_na_copa");
+    if(error) return $("#erro").innerHTML = aviso(error.message, true);
+    $("#erro").innerHTML = aviso(data || "pronto");
+    telaCopa();
+  };
+}
+
 function rotear(){
   clearInterval(window.__timerRank);
   clearInterval(window.__timerVivo);
@@ -11959,6 +12169,8 @@ function rotear(){
   if(h==="#/regras-time")           return telaRegrasTime();
   if(h==="#/meu-time")              return irParaMeuTime();
   if(/^#\/rodada\/\d+$/.test(h))    return telaRodada(h.split("/")[2]);
+  if(h==="#/desafiar")              return telaDesafiar();
+  if(h==="#/copa")                  return telaCopa();
   if(/^#\/time\/\d+\/capitao$/.test(h)) return telaCapitao(h.split("/")[2]);
   if(/^#\/time\/\d+$/.test(h))          return telaTime(h.split("/")[2]);
   if(h==="#/minhas")          return telaConta(true);
