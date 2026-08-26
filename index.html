@@ -11523,7 +11523,7 @@ async function telaTiroCurto(){
            return rotear(); }
   app().innerHTML = `<div class="carreg">carregando a rodada…</div>`;
 
-  const { todas, atual, vencidas } = await rodadaDeAgora();
+  let { todas, atual, vencidas } = await rodadaDeAgora();
 
   /* rodada vencida e não apurada: apura na hora, para o resultado sair agora
      e não à noite quando o robô passar.                                      */
@@ -11531,7 +11531,13 @@ async function telaTiroCurto(){
     await sb.rpc("apurar_rodadas_vencidas");
     /* a copa anda junto: é a rodada apurada que decide quem avança na chave. */
     await sb.rpc("tocar_copa");
-    return telaTiroCurto();
+    const depois = await rodadaDeAgora();
+    /* Só repinta se a apuração andou de verdade. Quando ela não consegue
+       apurar — falta a foto da hora, por exemplo — a lista de vencidas volta
+       idêntica, e rechamar refazia a mesma pergunta para sempre: a tela ficava
+       eternamente em "carregando a rodada", martelando o banco.              */
+    if(depois.vencidas.length < vencidas.length) return telaTiroCurto();
+    todas = depois.todas; atual = depois.atual;
   }
 
   if(!todas.length){
@@ -11669,7 +11675,10 @@ async function telaRodada(id){
 
   if(r.situacao !== "apurada" && new Date(r.fecha_em) <= Date.now()){
     await sb.rpc("apurar_rodadas_vencidas");
-    return telaRodada(id);
+    const { data:r2 } = await sb.from("rodada").select("situacao").eq("id", id).maybeSingle();
+    /* mesma trava da tela do tiro: só repinta se a rodada realmente virou
+       apurada. Senão a tela se rechamava sem fim.                            */
+    if(r2 && r2.situacao === "apurada") return telaRodada(id);
   }
 
   const [{ data:gab }, { data:votos }] = await Promise.all([
