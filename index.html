@@ -1593,6 +1593,7 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
             <a href="#/mais-escolhidos">Mais escolhidos</a>
             <a href="#/publicar">Crie sua carteira</a>
             <a href="#/screening">Screening</a>
+            <a href="#/screening-bdr">Screening BDR</a>
             <a href="#/duelo">Duelo de carteiras</a>
           </div>
           <div><span class="rams">Em time</span>
@@ -4401,7 +4402,12 @@ function telaNovaSenha(){
   };
 }
 
-async function telaScreening(){
+async function telaScreening(classe){
+  /* Duas listas com a mesma tela: 'acao' e 'bdr'. O tipo mora no universo,
+     nao na quant_medias — por isso o mapa abaixo. Os indices ficam de fora
+     do filtro: eles sao a regua das duas listas.                            */
+  classe = classe || "acao";
+  const ROTA = classe === "bdr" ? "#/screening-bdr" : "#/screening";
   const JANELA_GRAFICO = 90;
   let data;
   if(QM && Date.now() - QM_EM < QM_VALE){
@@ -4419,9 +4425,12 @@ async function telaScreening(){
   const emP = emPregao();
   const mk = await mercadoCache();
   const AOVIVO = mk.p || {};
-  const { data:oscDia } = await sb.from("oscilacao").select("ativo,valor")
-    .eq("data", HOJE_BR());
+  const [{ data:oscDia }, { data:univ }] = await Promise.all([
+    sb.from("oscilacao").select("ativo,valor").eq("data", HOJE_BR()),
+    sb.from("universo").select("ativo,tipo")
+  ]);
   const OSC = {}; (oscDia||[]).forEach(o => { OSC[o.ativo] = o.valor; });
+  const TIPO = {}; (univ||[]).forEach(u => { TIPO[u.ativo] = u.tipo; });
 
   const q = new URLSearchParams(location.hash.split("?")[1]||"");
   const filtro = q.get("t") || "todos";
@@ -4482,7 +4491,8 @@ async function telaScreening(){
   const setoriais = todosCalc.filter(x => IND_SET[x.ativo] != null)
     .sort((a,b) => Object.keys(IND_SET).indexOf(a.ativo) - Object.keys(IND_SET).indexOf(b.ativo));
 
-  let l = todosCalc.filter(x => !ehIndice(x.ativo));
+  const daClasse = a => ehIndice(a) ? false : (TIPO[a] || "acao") === classe;
+  let l = todosCalc.filter(x => daClasse(x.ativo));
   todosCalc.forEach(x => { x.forca = (x.ema72 && x.ema72 > 0) ? x.fech/x.ema72 - 1 : null; });
 
   const LIQ_MIN = corteMi * 1e6;
@@ -4491,7 +4501,7 @@ async function telaScreening(){
   // 21 pregões fora dele. De manhã cedo quase ninguém passou do corte ainda —
   // é justamente isso que mostra onde o dinheiro está entrando primeiro.
   const liqBase = x => x.liquidez;
-  const foraDoCorte = todosCalc.filter(x => !ehIndice(x.ativo)
+  const foraDoCorte = todosCalc.filter(x => daClasse(x.ativo)
     && liqBase(x) != null && liqBase(x) < LIQ_MIN).length;
   if(soLiq) l = l.filter(x => liqBase(x) == null || liqBase(x) >= LIQ_MIN);
 
@@ -4518,7 +4528,7 @@ async function telaScreening(){
                 mm:corteMi===5?"":String(corteMi), ...o };
     const p = Object.entries(a).filter(([,v]) => v && v !== "todos")
       .map(([k,v]) => `${k}=${encodeURIComponent(v)}`);
-    return "#/screening" + (p.length ? "?" + p.join("&") : "?t=todos");
+    return ROTA + (p.length ? "?" + p.join("&") : "?t=todos");
   };
   // distância do preço até cada um dos três pontos, para ir sob o valor
   const dp = (fech, ponto) => (ponto > 0 && fech > 0)
@@ -4541,10 +4551,10 @@ async function telaScreening(){
 
   app().innerHTML = `
   <div class="cabeca">
-    <h1>Screening</h1>
-    <p>Em que fase da tendência cada papel está, pela ordem de <b>três pontos de
-      força</b> — o do trader, o do investidor e o do institucional — e pela posição do
-      preço entre eles.</p>
+    <h1>Screening${classe === "bdr" ? " BDR" : ""}</h1>
+    <p>Em que fase da tendência cada ${classe === "bdr" ? "BDR" : "papel"} está,
+      pela ordem de <b>três pontos de força</b> — o do trader, o do investidor e
+      o do institucional — e pela posição do preço entre eles.</p>
   </div>
 
   ${(()=>{
@@ -4734,7 +4744,7 @@ async function telaScreening(){
   clearInterval(window.__timerScr);
   if(emPregao()){
     window.__timerScr = setInterval(async () => {
-      if((location.hash||"#/").split("?")[0] !== "#/screening"){
+      if((location.hash||"#/").split("?")[0] !== ROTA){
         clearInterval(window.__timerScr); return; }
       if(document.hidden) return;
       if(document.activeElement && document.activeElement.tagName === "INPUT") return;
@@ -12250,7 +12260,8 @@ function rotear(){
   if(h==="#/aplicado")        return telaAplicado();
   if(h==="#/como-funciona")   return telaComo();
   if(h==="#/termos")          return telaTermos();
-  if(h==="#/screening")       return telaScreening();
+  if(h==="#/screening")       return telaScreening("acao");
+  if(h==="#/screening-bdr")   return telaScreening("bdr");
   if(h==="#/tiro-curto" || h==="#/apostar") return telaTiroCurto();
   if(h==="#/placar")          return telaPlacar();
   if(h==="#/indicar")         return telaIndicar();
