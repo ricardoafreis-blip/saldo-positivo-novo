@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict 7F2c69McNf3cFeMcWlBLgWk3vIDoA6rNlaYkn8Pmzya933kQaVwfrgX05uxLvDr
+\restrict 2kGg6Y5tsexANWEPYc7dWlSZ3kc1QXlCfnzUBautbsa22vI1T8MgctlmyUQmoU0
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.11 (Ubuntu 17.11-1.pgdg24.04+2)
@@ -99,6 +99,27 @@ $$;
 
 
 --
+-- Name: abrir_copa(date); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.abrir_copa(p_data date DEFAULT NULL::date) RETURNS bigint
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+declare
+  d date := coalesce(p_data, (now() at time zone 'America/Sao_Paulo')::date);
+  v_id bigint;
+begin
+  if extract(dow from d) in (0, 6) then return null; end if;
+  insert into copa (data) values (d)
+  on conflict (data) do nothing returning id into v_id;
+  if v_id is null then select id into v_id from copa where data = d; end if;
+  return v_id;
+end;
+$$;
+
+
+--
 -- Name: abrir_rodadas(date); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -107,19 +128,75 @@ CREATE FUNCTION public.abrir_rodadas(p_data date DEFAULT NULL::date) RETURNS int
     SET search_path TO 'public'
     AS $$
 declare
-  d date := coalesce(p_data, (now() at time zone 'America/Sao_Paulo')::date);
-  h int; n int := 0;
+  d      date := coalesce(p_data, (now() at time zone 'America/Sao_Paulo')::date);
+  d2     date;
+  n      int := 0;
 begin
-  if extract(dow from d) in (0, 6) then return 0; end if;
+  -- alem de hoje, o proximo pregao: assim da para votar hoje as rodadas de
+  -- amanha. O voto de cada uma so fecha uma hora antes dela, entao todas
+  -- ficam abertas desde ja.
+  if extract(dow from d) not in (0, 6) then
+    n := n + abrir_um_dia(d);
+  end if;
+  d2 := d + 1;
+  while extract(dow from d2) in (0, 6) loop d2 := d2 + 1; end loop;
+  n := n + abrir_um_dia(d2);
+  return n;
+end;
+$$;
+
+
+--
+-- Name: abrir_um_dia(date); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.abrir_um_dia(d date) RETURNS integer
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+declare
+  h      int;
+  n      int := 0;
+  v_id   bigint;
+  v_corte real;
+  j      text;
+begin
+
+  -- O alvo da PETR4 é o giro médio por hora dela no último pregão que
+  -- tem foto. Fica sabido antes de o jogador votar, e acompanha o
+  -- mercado sem eu precisar arbitrar um número fixo.
+  select round(avg(m.giro_hora)::numeric / 1e6) * 1e6 into v_corte
+    from (select max(data) as d0 from cotacao_hora where data < d) u
+    cross join lateral (
+      select (movimento_da_hora(u.d0, hh)).* from generate_series(11,17) hh
+    ) m
+   where m.ativo = 'PETR4' and m.giro_hora > 0;
 
   for h in 11..16 loop
-    insert into rodada (data, hora, abre_em, fecha_em)
+    insert into rodada (data, hora, abre_em, fecha_em, corte_petr)
     values (d, h,
             ((d + make_interval(hours => h - 1)) at time zone 'America/Sao_Paulo'),
-            ((d + make_interval(hours => h))     at time zone 'America/Sao_Paulo'))
-    on conflict (data, hora) do nothing;
-    if found then n := n + 1; end if;
+            ((d + make_interval(hours => h))     at time zone 'America/Sao_Paulo'),
+            v_corte)
+    on conflict (data, hora) do nothing
+    returning id into v_id;
+
+    if v_id is not null then
+      n := n + 1;
+      -- três sorteios independentes, três papéis cada. Mico e blue chip
+      -- concorrem igual; a única exigência é ter cotação recente, senão
+      -- o papel não teria foto na hora e a rodada ficaria sem gabarito.
+      foreach j in array array['sobe','cai','volume'] loop
+        insert into rodada_papel (rodada_id, jogo, ativo)
+        select v_id, j, u.ativo
+          from (select ativo from universo
+                 where tipo = 'acao' and liquidez > 0
+                 order by random() limit 3) u;
+      end loop;
+    end if;
+    v_id := null;
   end loop;
+
   return n;
 end;
 $$;
@@ -500,6 +577,107 @@ end $$;
 
 
 --
+-- Name: apurar_copa(bigint); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.apurar_copa(p_copa bigint) RETURNS text
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+declare
+  j        record;
+  pa       int; pb int;
+  sa       int; sb int;
+  ta       timestamptz; tb timestamptz;
+  d        date;
+  v_rod    bigint;
+  vencs    uuid[];
+  i        int;
+  saida    text := '';
+begin
+  select data into d from copa where id = p_copa;
+
+  -- confrontos de fases já rodadas e ainda sem vencedor
+  for j in select * from copa_jogo cj
+            join rodada r on r.id = cj.rodada_id
+           where cj.copa_id = p_copa and cj.vencedor is null
+             and r.situacao = 'apurada'
+           order by cj.fase, cj.posicao loop
+
+    if j.jogador_b is null then           -- passou direto
+      update copa_jogo set vencedor = j.jogador_a where id = j.id;
+      continue;
+    end if;
+
+    select coalesce(sum(pontos),0), min(votado_em) into pa, ta
+      from voto where rodada_id = j.rodada_id and usuario_id = j.jogador_a;
+    select coalesce(sum(pontos),0), min(votado_em) into pb, tb
+      from voto where rodada_id = j.rodada_id and usuario_id = j.jogador_b;
+
+    select coalesce(sequencia,0) into sa from intraday_sequencia where usuario_id = j.jogador_a;
+    select coalesce(sequencia,0) into sb from intraday_sequencia where usuario_id = j.jogador_b;
+
+    update copa_jogo set pontos_a = pa, pontos_b = pb,
+      vencedor = case
+        when pa > pb then j.jogador_a
+        when pb > pa then j.jogador_b
+        when coalesce(sa,0) > coalesce(sb,0) then j.jogador_a
+        when coalesce(sb,0) > coalesce(sa,0) then j.jogador_b
+        when ta is not null and (tb is null or ta < tb) then j.jogador_a
+        else j.jogador_b end
+     where id = j.id;
+  end loop;
+
+  -- fase seguinte, quando a anterior estiver completa
+  if not exists (select 1 from copa_jogo where copa_id = p_copa
+                  and fase = 'quartas' and vencedor is null)
+     and not exists (select 1 from copa_jogo where copa_id = p_copa and fase = 'semi')
+     and exists (select 1 from copa_jogo where copa_id = p_copa and fase = 'quartas') then
+    select array_agg(vencedor order by posicao) into vencs
+      from copa_jogo where copa_id = p_copa and fase = 'quartas' and vencedor is not null;
+    select id into v_rod from rodada where data = d and hora = 14;
+    for i in 1..2 loop
+      insert into copa_jogo (copa_id, fase, posicao, rodada_id, jogador_a, jogador_b)
+      values (p_copa, 'semi', i, v_rod, vencs[i*2-1], vencs[i*2])
+      on conflict do nothing;
+    end loop;
+    saida := saida || ' · semifinal montada';
+  end if;
+
+  if not exists (select 1 from copa_jogo where copa_id = p_copa
+                  and fase = 'semi' and vencedor is null)
+     and not exists (select 1 from copa_jogo where copa_id = p_copa and fase = 'final')
+     and exists (select 1 from copa_jogo where copa_id = p_copa and fase = 'semi') then
+    select array_agg(vencedor order by posicao) into vencs
+      from copa_jogo where copa_id = p_copa and fase = 'semi' and vencedor is not null;
+    select id into v_rod from rodada where data = d and hora = 16;
+    insert into copa_jogo (copa_id, fase, posicao, rodada_id, jogador_a, jogador_b)
+    values (p_copa, 'final', 1, v_rod, vencs[1], vencs[2])
+    on conflict do nothing;
+    saida := saida || ' · final montada';
+  end if;
+
+  -- campeão
+  update copa c set situacao = 'encerrada',
+         campeao = (select vencedor from copa_jogo
+                     where copa_id = p_copa and fase = 'final')
+   where c.id = p_copa
+     and exists (select 1 from copa_jogo where copa_id = p_copa
+                  and fase = 'final' and vencedor is not null);
+
+  if exists (select 1 from copa where id = p_copa and campeao is not null) then
+    insert into conquista (usuario_id, ciclo_id, papel, regua, posicao)
+    select campeao, null, 'individual', 'geral', 1 from copa where id = p_copa
+    on conflict do nothing;
+    saida := saida || ' · temos campeão';
+  end if;
+
+  return coalesce(nullif(saida,''), 'nada a apurar na copa');
+end;
+$$;
+
+
+--
 -- Name: apurar_dia_apostas(date); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -597,90 +775,86 @@ CREATE FUNCTION public.apurar_rodada(p_rodada bigint) RETURNS text
     SET search_path TO 'public'
     AS $_$
 declare
-  r          record;
-  v_tiro     record;
-  v_mexe     record;
-  v_gira     record;
-  v_giro     real;
-  v_faixa    int;
-  n_votos    int := 0;
-  v_hora_med int;
+  r        record;
+  v_sobe   record;
+  v_cai    record;
+  v_vol    record;
+  v_petr   real;
+  v_lado   text;
+  v_med    int;
+  n_votos  int := 0;
 begin
   select * into r from rodada where id = p_rodada;
-  if r is null then return 'rodada não existe'; end if;
-  if r.situacao = 'apurada' then return 'já estava apurada'; end if;
-  if now() < r.fecha_em then return 'ainda não fechou'; end if;
+  if r is null                then return 'rodada não existe'; end if;
+  if r.situacao = 'apurada'   then return 'já estava apurada';  end if;
+  if now() < r.fecha_em       then return 'ainda não fechou';   end if;
 
-  v_hora_med := r.hora - 1;      -- a hora que acabou de correr
-
-  -- ---------- o gabarito ----------
-  -- 1. tiro da hora: o papel que mais subiu e o que mais caiu são as duas
-  --    respostas certas, cada uma no seu lado.
-  select * into v_tiro from movimento_da_hora(r.data, v_hora_med)
-   where giro_hora > 0 order by variacao desc limit 1;
-
-  if v_tiro is null then
-    return 'sem foto da hora ' || v_hora_med || ' — nada a apurar';
+  -- A cotacao_hora guarda em `hora = h` o ultimo preco da faixa h:00–h:59.
+  -- Entao movimento_da_hora(data, h-1) mede o andar das h-1 as h — que e
+  -- exatamente a janela desta rodada. A rodada das 11h cobre 10h→11h e le
+  -- a hora 10. E as 11h essa hora ja fechou: o dado esta completo.
+  v_med := r.hora - 1;
+  if not exists (select 1 from movimento_da_hora(r.data, v_med)) then
+    return 'sem foto da hora ' || v_med || ' — nada a apurar';
   end if;
 
-  -- 2. quem mexe mais: maior variação em módulo
-  select * into v_mexe from movimento_da_hora(r.data, v_hora_med)
-   where giro_hora > 0 order by modulo desc limit 1;
+  -- quem subiu mais, entre os três sorteados para 'sobe'
+  select m.* into v_sobe
+    from movimento_da_hora(r.data, v_med) m
+    join rodada_papel p on p.rodada_id = p_rodada and p.jogo = 'sobe'
+                       and p.ativo = m.ativo
+   order by m.variacao desc limit 1;
 
-  -- 3. quem gira mais: maior giro financeiro na hora
-  select * into v_gira from movimento_da_hora(r.data, v_hora_med)
-   order by giro_hora desc limit 1;
+  -- quem caiu mais, entre os três sorteados para 'cai'
+  select m.* into v_cai
+    from movimento_da_hora(r.data, v_med) m
+    join rodada_papel p on p.rodada_id = p_rodada and p.jogo = 'cai'
+                       and p.ativo = m.ativo
+   order by m.variacao asc limit 1;
 
-  -- 4. faixa do giro da bolsa até agora
-  v_giro := giro_do_dia(r.data);
-  select ordem into v_faixa from faixa_volume
-   where (de is null or v_giro >= de) and (ate is null or v_giro < ate)
-   order by ordem limit 1;
+  -- quem girou mais, entre os três sorteados para 'volume'
+  select m.* into v_vol
+    from movimento_da_hora(r.data, v_med) m
+    join rodada_papel p on p.rodada_id = p_rodada and p.jogo = 'volume'
+                       and p.ativo = m.ativo
+   order by m.giro_hora desc limit 1;
+
+  -- a PETR4 girou acima ou abaixo do corte combinado?
+  select m.giro_hora into v_petr
+    from movimento_da_hora(r.data, v_med) m where m.ativo = 'PETR4';
+  v_lado := case when v_petr is null then null
+                 when v_petr >= coalesce(r.corte_petr, 0) then 'acima'
+                 else 'abaixo' end;
 
   delete from rodada_gabarito where rodada_id = p_rodada;
-  insert into rodada_gabarito (rodada_id, jogo, resposta, detalhe) values
-    (p_rodada, 'tiro',  v_tiro.ativo || ':C', to_char(v_tiro.variacao*100,'FM990D00') || '%'),
-    (p_rodada, 'mexe',  v_mexe.ativo,  to_char(v_mexe.modulo*100,'FM990D00') || '%'),
-    (p_rodada, 'gira',  v_gira.ativo,  'R$ ' || to_char(v_gira.giro_hora/1e6,'FM999G990D0') || ' mi'),
-    (p_rodada, 'volume', v_faixa::text, 'R$ ' || to_char(v_giro/1e9,'FM990D0') || ' bi');
 
-  -- o lado vendido também acerta, se o papel escolhido foi o que mais caiu
-  insert into rodada_gabarito (rodada_id, jogo, resposta, detalhe)
-  select p_rodada, 'tiro_v', m.ativo || ':V',
-         to_char(m.variacao*100,'FM990D00') || '%'
-    from movimento_da_hora(r.data, v_hora_med) m
-   where m.giro_hora > 0 order by m.variacao asc limit 1
-  on conflict do nothing;
+  if v_sobe.ativo is not null then
+    insert into rodada_gabarito values (p_rodada, 'sobe', v_sobe.ativo,
+      to_char(v_sobe.variacao*100,'FM990D00') || '%');
+  end if;
+  if v_cai.ativo is not null then
+    insert into rodada_gabarito values (p_rodada, 'cai', v_cai.ativo,
+      to_char(v_cai.variacao*100,'FM990D00') || '%');
+  end if;
+  if v_vol.ativo is not null then
+    insert into rodada_gabarito values (p_rodada, 'volume', v_vol.ativo,
+      'R$ ' || to_char(v_vol.giro_hora/1e6,'FM999G990D0') || ' mi');
+  end if;
+  if v_lado is not null then
+    insert into rodada_gabarito values (p_rodada, 'petr', v_lado,
+      'R$ ' || to_char(v_petr/1e6,'FM999G990D0') || ' mi de R$ '
+            || to_char(r.corte_petr/1e6,'FM999G990D0') || ' mi');
+  end if;
 
-  -- ---------- conferir os votos ----------
+  -- conferência dos votos: 10 pontos por acerto, errar não tira ponto
   update voto v set acertou = false, pontos = 0 where v.rodada_id = p_rodada;
-
-  -- tiro: acerta quem pegou o papel E o lado
   update voto v set acertou = true, pontos = 10
     from rodada_gabarito g
-   where v.rodada_id = p_rodada and v.jogo = 'tiro'
-     and g.rodada_id = p_rodada and g.jogo in ('tiro','tiro_v')
-     and v.palpite = g.resposta;
-
-  update voto v set acertou = true, pontos = 10
-    from rodada_gabarito g
-   where v.rodada_id = p_rodada and v.jogo in ('mexe','gira')
-     and g.rodada_id = p_rodada and g.jogo = v.jogo
-     and v.palpite = g.resposta;
-
-  -- volume: faixa certa vale cheio, vizinha vale metade
-  update voto v set acertou = true, pontos = 10
-   where v.rodada_id = p_rodada and v.jogo = 'volume'
-     and v.palpite = v_faixa::text;
-
-  update voto v set acertou = false, pontos = 5
-   where v.rodada_id = p_rodada and v.jogo = 'volume'
-     and abs(v.palpite::int - v_faixa) = 1;
+   where v.rodada_id = p_rodada and g.rodada_id = p_rodada
+     and g.jogo = v.jogo and v.palpite = g.resposta;
 
   select count(*) into n_votos from voto where rodada_id = p_rodada;
-
   update rodada set situacao = 'apurada', apurada_em = now() where id = p_rodada;
-
   perform somar_intraday(p_rodada);
   return format('rodada das %sh apurada · %s voto(s)', r.hora, n_votos);
 end;
@@ -789,6 +963,46 @@ begin
      and new.data > coalesce(u.cotacao_em, date '1900-01-01');
   return new;
 end $$;
+
+
+--
+-- Name: chavear_copa(bigint); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.chavear_copa(p_copa bigint) RETURNS text
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+declare
+  r      record;
+  v      uuid[];
+  n      int;
+  i      int;
+  v_rod  bigint;
+  d      date;
+begin
+  select data into d from copa where id = p_copa;
+  select array_agg(usuario_id order by ordem) into v
+    from copa_vaga where copa_id = p_copa;
+  n := coalesce(array_length(v,1), 0);
+  if n < 2 then
+    update copa set situacao = 'encerrada' where id = p_copa;
+    return 'menos de duas pessoas na chave — copa de hoje não acontece';
+  end if;
+
+  select id into v_rod from rodada where data = d and hora = 12;
+
+  for i in 1..4 loop
+    insert into copa_jogo (copa_id, fase, posicao, rodada_id, jogador_a, jogador_b)
+    values (p_copa, 'quartas', i, v_rod,
+            v[i], case when 9 - i <= n then v[9 - i] end)
+    on conflict (copa_id, fase, posicao) do nothing;
+  end loop;
+
+  update copa set situacao = 'andamento' where id = p_copa;
+  return format('chave montada com %s participante(s)', n);
+end;
+$$;
 
 
 --
@@ -913,6 +1127,37 @@ $$;
 
 
 --
+-- Name: encerrar_duelos(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.encerrar_duelos() RETURNS integer
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+declare d record; ra real; rb real; venc uuid; n int := 0;
+begin
+  for d in select * from duelo
+            where situacao = 'aceito'
+              and fim < (now() at time zone 'America/Sao_Paulo')::date loop
+    ra := retorno_periodo(d.carteira_a, d.inicio, d.fim);
+    rb := retorno_periodo(d.carteira_b, d.inicio, d.fim);
+
+    venc := case when ra is null or rb is null then null
+                 when ra > rb then d.desafiante
+                 when rb > ra then d.desafiado
+                 else null end;   -- empate exato: sem vencedor
+
+    update duelo set situacao = 'encerrado', ret_a = ra, ret_b = rb,
+                     vencedor = venc, encerrado_em = now()
+     where id = d.id;
+    n := n + 1;
+  end loop;
+  return n;
+end;
+$$;
+
+
+--
 -- Name: encerrar_minha_conta(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -983,6 +1228,37 @@ begin
   on conflict (ativo) do nothing;
   return new;
 end $$;
+
+
+--
+-- Name: entrar_na_copa(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.entrar_na_copa() RETURNS text
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+declare
+  d      date := (now() at time zone 'America/Sao_Paulo')::date;
+  v_copa bigint;
+  n      int;
+begin
+  select id into v_copa from copa where data = d and situacao = 'inscricoes';
+  if v_copa is null then return 'as inscrições da copa de hoje já fecharam'; end if;
+
+  if exists (select 1 from copa_vaga where copa_id = v_copa
+              and usuario_id = auth.uid()) then
+    return 'você já está na chave';
+  end if;
+
+  select count(*) into n from copa_vaga where copa_id = v_copa;
+  if n >= 8 then return 'as oito vagas de hoje já foram preenchidas'; end if;
+
+  insert into copa_vaga (copa_id, usuario_id, ordem)
+  values (v_copa, auth.uid(), n + 1);
+  return 'você entrou na chave, na vaga ' || (n + 1);
+end;
+$$;
 
 
 --
@@ -1376,18 +1652,16 @@ begin
   if v_hora < 10 or v_hora > 17 then return new; end if;
   if extract(dow from v_br) in (0, 6) then return new; end if;
   if new.preco is null or new.preco <= 0 then return new; end if;
-
   insert into cotacao_hora (ativo, data, hora, preco, abertura, fech_ant,
                             volume, atualizado_em)
   values (new.ativo, v_br::date, v_hora, new.preco, new.abertura, new.valor,
-          v_agora)
+          new.volume, v_agora)
   on conflict (ativo, data, hora) do update
     set preco = excluded.preco,
         abertura = excluded.abertura,
         fech_ant = excluded.fech_ant,
         volume = excluded.volume,
         atualizado_em = excluded.atualizado_em;
-
   return new;
 end;
 $$;
@@ -1400,14 +1674,15 @@ $$;
 CREATE FUNCTION public.giro_do_dia(p_data date DEFAULT NULL::date) RETURNS real
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public'
-    AS $$
-  select sum(x.volume)::real from (
-    select distinct on (ativo) ativo, volume
+    AS $_$
+  select sum(x.volume * x.preco)::real from (
+    select distinct on (ativo) ativo, volume, preco
       from cotacao_hora
      where data = coalesce(p_data, (select max(data) from cotacao_hora))
+       and ativo ~ '[0-9]$'
      order by ativo, hora desc
   ) x;
-$$;
+$_$;
 
 
 --
@@ -1679,15 +1954,19 @@ CREATE FUNCTION public.movimento_da_hora(p_data date, p_hora integer) RETURNS TA
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
-  select h.ativo, h.preco, a.preco as anterior,
-         (h.preco / nullif(a.preco, 0) - 1)::real            as variacao,
-         abs(h.preco / nullif(a.preco, 0) - 1)::real         as modulo,
-         greatest(coalesce(h.volume,0) - coalesce(a.volume,0), 0)::real as giro_hora
+  select h.ativo, h.preco,
+         coalesce(a.preco, case when p_hora = 10 then h.abertura end) as anterior,
+         (h.preco / nullif(coalesce(a.preco,
+             case when p_hora = 10 then h.abertura end), 0) - 1)::real  as variacao,
+         abs(h.preco / nullif(coalesce(a.preco,
+             case when p_hora = 10 then h.abertura end), 0) - 1)::real  as modulo,
+         (greatest(coalesce(h.volume,0) - coalesce(a.volume,0), 0) * h.preco)::real
+                                                                       as giro_hora
     from cotacao_hora h
-    join cotacao_hora a on a.ativo = h.ativo and a.data = h.data
-                       and a.hora = h.hora - 1
+    left join cotacao_hora a on a.ativo = h.ativo and a.data = h.data
+                            and a.hora = h.hora - 1
    where h.data = p_data and h.hora = p_hora
-     and a.preco > 0;
+     and coalesce(a.preco, case when p_hora = 10 then h.abertura end) > 0;
 $$;
 
 
@@ -2266,6 +2545,32 @@ end $$;
 
 
 --
+-- Name: retorno_periodo(bigint, date, date); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.retorno_periodo(p_carteira bigint, p_de date, p_ate date) RETURNS real
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+  with base as (
+    select indice from retorno_dia
+     where carteira_id = p_carteira and data < p_de
+     order by data desc limit 1),
+  fim as (
+    select indice from retorno_dia
+     where carteira_id = p_carteira and data between p_de and p_ate
+     order by data desc limit 1),
+  ini as (
+    select indice from retorno_dia
+     where carteira_id = p_carteira and data between p_de and p_ate
+     order by data asc limit 1)
+  select ((select indice from fim)
+        / nullif(coalesce((select indice from base), (select indice from ini)), 0)
+        - 1)::real;
+$$;
+
+
+--
 -- Name: robo_fechar_dia(date); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -2275,9 +2580,7 @@ CREATE FUNCTION public.robo_fechar_dia(d date DEFAULT NULL::date) RETURNS text
     AS $$
 declare
   v_dia   date := coalesce(d, (select max(data) from oscilacao));
-  v_saida text;
-  v_times int;
-  v_intra text;
+  v_saida text; v_times int; v_intra text; v_duelo int; v_copa text;
 begin
   perform set_config('request.jwt.claims',
     json_build_object('sub', (select id from perfil where admin
@@ -2285,25 +2588,25 @@ begin
 
   v_saida := fechar_dia(v_dia);
 
-  begin
-    v_times := fechar_dia_times(v_dia);
-  exception when others then
-    v_times := -1;
-  end;
+  begin v_times := fechar_dia_times(v_dia);
+  exception when others then v_times := -1; end;
 
-  -- intraday: abre as rodadas de hoje e apura o que já venceu.
-  -- Engolido do mesmo jeito: o fechamento das carteiras é o que não pode falhar.
   begin
     perform abrir_rodadas();
     v_intra := apurar_rodadas_vencidas();
-  exception when others then
-    v_intra := 'FALHOU';
-  end;
+  exception when others then v_intra := 'FALHOU'; end;
+
+  begin v_copa := tocar_copa();
+  exception when others then v_copa := 'FALHOU'; end;
+
+  begin v_duelo := encerrar_duelos();
+  exception when others then v_duelo := -1; end;
 
   return v_saida
-       || case when v_times >= 0 then ' · times: ' || v_times
-               else ' · times: FALHOU' end
-       || ' · intraday: ' || coalesce(v_intra, '—');
+       || case when v_times >= 0 then ' · times: ' || v_times else ' · times: FALHOU' end
+       || ' · intraday: ' || coalesce(v_intra, '—')
+       || ' · copa: ' || coalesce(v_copa, '—')
+       || case when v_duelo >= 0 then ' · duelos: ' || v_duelo else ' · duelos: FALHOU' end;
 end;
 $$;
 
@@ -2636,6 +2939,34 @@ end $$;
 
 
 --
+-- Name: tocar_copa(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.tocar_copa() RETURNS text
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+declare
+  d      date := (now() at time zone 'America/Sao_Paulo')::date;
+  v_copa bigint;
+  v_11   record;
+begin
+  v_copa := abrir_copa(d);
+  if v_copa is null then return 'fim de semana'; end if;
+
+  -- a rodada das 11h fechou: as inscrições acabam e a chave é sorteada
+  select * into v_11 from rodada where data = d and hora = 11;
+  if v_11.id is not null and v_11.situacao = 'apurada'
+     and exists (select 1 from copa where id = v_copa and situacao = 'inscricoes') then
+    return chavear_copa(v_copa);
+  end if;
+
+  return apurar_copa(v_copa);
+end;
+$$;
+
+
+--
 -- Name: trava_aposta(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -2715,6 +3046,42 @@ begin
   if new.situacao is distinct from old.situacao
      and not sou_capitao(old.time_id) and not sou_admin() then
     raise exception 'Quem inclui e quem remove do time é o capitão.';
+  end if;
+  return new;
+end;
+$$;
+
+
+--
+-- Name: trava_voto(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.trava_voto() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+declare r record;
+begin
+  select * into r from rodada where id = new.rodada_id;
+  if r is null then raise exception 'rodada não existe'; end if;
+  -- o voto fecha quando a hora começa a correr, nao quando ela termina:
+  -- a rodada das 11h cobre 10h→11h, entao o palpite tem de estar dado
+  -- as 10h. abre_em e esse instante, e e tambem quando os votos dos
+  -- outros ficam visiveis.
+  if now() >= r.abre_em then
+    raise exception 'o voto da rodada das %h fechou às %',
+      r.hora, to_char(r.abre_em at time zone 'America/Sao_Paulo', 'HH24:MI');
+  end if;
+  if new.jogo not in ('sobe','cai','volume','petr') then
+    raise exception 'jogo desconhecido: %', new.jogo;
+  end if;
+  if new.jogo <> 'petr' and not exists (
+       select 1 from rodada_papel p
+        where p.rodada_id = new.rodada_id and p.jogo = new.jogo
+          and p.ativo = new.palpite) then
+    raise exception '% não está entre os papéis sorteados deste jogo', new.palpite;
+  end if;
+  if new.jogo = 'petr' and new.palpite not in ('acima','abaixo') then
+    raise exception 'o palpite da PETR4 é acima ou abaixo';
   end if;
   return new;
 end;
@@ -3198,6 +3565,88 @@ CREATE TABLE public.conta_arquivada (
 
 
 --
+-- Name: copa; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.copa (
+    id bigint NOT NULL,
+    data date NOT NULL,
+    situacao text DEFAULT 'inscricoes'::text NOT NULL,
+    campeao uuid,
+    criada_em timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT copa_situacao_check CHECK ((situacao = ANY (ARRAY['inscricoes'::text, 'andamento'::text, 'encerrada'::text])))
+);
+
+
+--
+-- Name: copa_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.copa_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: copa_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.copa_id_seq OWNED BY public.copa.id;
+
+
+--
+-- Name: copa_jogo; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.copa_jogo (
+    id bigint NOT NULL,
+    copa_id bigint NOT NULL,
+    fase text NOT NULL,
+    posicao integer NOT NULL,
+    rodada_id bigint,
+    jogador_a uuid,
+    jogador_b uuid,
+    pontos_a integer,
+    pontos_b integer,
+    vencedor uuid,
+    CONSTRAINT copa_jogo_fase_check CHECK ((fase = ANY (ARRAY['quartas'::text, 'semi'::text, 'final'::text])))
+);
+
+
+--
+-- Name: copa_jogo_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.copa_jogo_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: copa_jogo_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.copa_jogo_id_seq OWNED BY public.copa_jogo.id;
+
+
+--
+-- Name: copa_vaga; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.copa_vaga (
+    copa_id bigint NOT NULL,
+    usuario_id uuid NOT NULL,
+    ordem integer NOT NULL
+);
+
+
+--
 -- Name: cotacao_hora; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -3247,6 +3696,60 @@ CREATE VIEW public.dt_dia AS
     (avg(pts))::real AS nota_dia
    FROM public.aposta_apurada
   GROUP BY usuario_id, data;
+
+
+--
+-- Name: duelo; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.duelo (
+    id bigint NOT NULL,
+    desafiante uuid NOT NULL,
+    desafiado uuid NOT NULL,
+    carteira_a bigint NOT NULL,
+    carteira_b bigint,
+    classe text NOT NULL,
+    inicio date NOT NULL,
+    fim date NOT NULL,
+    recado text,
+    situacao text DEFAULT 'convidado'::text NOT NULL,
+    criado_em timestamp with time zone DEFAULT now() NOT NULL,
+    respondido_em timestamp with time zone,
+    ret_a real,
+    ret_b real,
+    vencedor uuid,
+    encerrado_em timestamp with time zone,
+    CONSTRAINT duelo_check CHECK ((desafiante <> desafiado)),
+    CONSTRAINT duelo_check1 CHECK ((fim > inicio)),
+    CONSTRAINT duelo_situacao_check CHECK ((situacao = ANY (ARRAY['convidado'::text, 'aceito'::text, 'recusado'::text, 'cancelado'::text, 'encerrado'::text])))
+);
+
+
+--
+-- Name: TABLE duelo; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.duelo IS 'Desafio direto entre duas pessoas, com prazo combinado. Vence quem rendeu
+   mais no período. Sem dinheiro: o que está em jogo é o nome.';
+
+
+--
+-- Name: duelo_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.duelo_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: duelo_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.duelo_id_seq OWNED BY public.duelo.id;
 
 
 --
@@ -3793,6 +4296,7 @@ CREATE TABLE public.rodada (
     fecha_em timestamp with time zone NOT NULL,
     situacao text DEFAULT 'aberta'::text NOT NULL,
     apurada_em timestamp with time zone,
+    corte_petr real,
     CONSTRAINT rodada_hora_check CHECK (((hora >= 11) AND (hora <= 16))),
     CONSTRAINT rodada_situacao_check CHECK ((situacao = ANY (ARRAY['aberta'::text, 'fechada'::text, 'apurada'::text])))
 );
@@ -3827,6 +4331,18 @@ CREATE SEQUENCE public.rodada_id_seq
 --
 
 ALTER SEQUENCE public.rodada_id_seq OWNED BY public.rodada.id;
+
+
+--
+-- Name: rodada_papel; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.rodada_papel (
+    rodada_id bigint NOT NULL,
+    jogo text NOT NULL,
+    ativo text NOT NULL,
+    CONSTRAINT rodada_papel_jogo_check CHECK ((jogo = ANY (ARRAY['sobe'::text, 'cai'::text, 'volume'::text])))
+);
 
 
 --
@@ -4083,7 +4599,7 @@ CREATE TABLE public.voto (
     votado_em timestamp with time zone DEFAULT now() NOT NULL,
     acertou boolean,
     pontos integer,
-    CONSTRAINT voto_jogo_check CHECK ((jogo = ANY (ARRAY['tiro'::text, 'mexe'::text, 'gira'::text, 'volume'::text])))
+    CONSTRAINT voto_jogo_check CHECK ((jogo = ANY (ARRAY['sobe'::text, 'cai'::text, 'volume'::text, 'petr'::text, 'tiro'::text, 'mexe'::text, 'gira'::text])))
 );
 
 
@@ -4139,6 +4655,27 @@ ALTER TABLE ONLY public.ciclo ALTER COLUMN id SET DEFAULT nextval('public.ciclo_
 --
 
 ALTER TABLE ONLY public.conquista ALTER COLUMN id SET DEFAULT nextval('public.conquista_id_seq'::regclass);
+
+
+--
+-- Name: copa id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.copa ALTER COLUMN id SET DEFAULT nextval('public.copa_id_seq'::regclass);
+
+
+--
+-- Name: copa_jogo id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.copa_jogo ALTER COLUMN id SET DEFAULT nextval('public.copa_jogo_id_seq'::regclass);
+
+
+--
+-- Name: duelo id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.duelo ALTER COLUMN id SET DEFAULT nextval('public.duelo_id_seq'::regclass);
 
 
 --
@@ -4270,6 +4807,54 @@ ALTER TABLE ONLY public.conta_arquivada
 
 
 --
+-- Name: copa copa_data_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.copa
+    ADD CONSTRAINT copa_data_key UNIQUE (data);
+
+
+--
+-- Name: copa_jogo copa_jogo_copa_id_fase_posicao_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.copa_jogo
+    ADD CONSTRAINT copa_jogo_copa_id_fase_posicao_key UNIQUE (copa_id, fase, posicao);
+
+
+--
+-- Name: copa_jogo copa_jogo_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.copa_jogo
+    ADD CONSTRAINT copa_jogo_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: copa copa_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.copa
+    ADD CONSTRAINT copa_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: copa_vaga copa_vaga_copa_id_ordem_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.copa_vaga
+    ADD CONSTRAINT copa_vaga_copa_id_ordem_key UNIQUE (copa_id, ordem);
+
+
+--
+-- Name: copa_vaga copa_vaga_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.copa_vaga
+    ADD CONSTRAINT copa_vaga_pkey PRIMARY KEY (copa_id, usuario_id);
+
+
+--
 -- Name: cotacao_hora cotacao_hora_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4283,6 +4868,14 @@ ALTER TABLE ONLY public.cotacao_hora
 
 ALTER TABLE ONLY public.cotacao_viva
     ADD CONSTRAINT cotacao_viva_pkey PRIMARY KEY (ativo);
+
+
+--
+-- Name: duelo duelo_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.duelo
+    ADD CONSTRAINT duelo_pkey PRIMARY KEY (id);
 
 
 --
@@ -4486,6 +5079,14 @@ ALTER TABLE ONLY public.rodada_gabarito
 
 
 --
+-- Name: rodada_papel rodada_papel_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.rodada_papel
+    ADD CONSTRAINT rodada_papel_pkey PRIMARY KEY (rodada_id, jogo, ativo);
+
+
+--
 -- Name: rodada rodada_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4663,6 +5264,34 @@ CREATE INDEX conquista_por_usuario ON public.conquista USING btree (usuario_id);
 
 
 --
+-- Name: copa_jogo_rodada; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX copa_jogo_rodada ON public.copa_jogo USING btree (rodada_id) WHERE (vencedor IS NULL);
+
+
+--
+-- Name: duelo_aberto; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX duelo_aberto ON public.duelo USING btree (fim) WHERE (situacao = 'aceito'::text);
+
+
+--
+-- Name: duelo_de; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX duelo_de ON public.duelo USING btree (desafiante, situacao);
+
+
+--
+-- Name: duelo_para; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX duelo_para ON public.duelo USING btree (desafiado, situacao);
+
+
+--
 -- Name: fila_email_pendente; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4730,6 +5359,13 @@ CREATE INDEX posicao_carteira_id_idx ON public.posicao USING btree (carteira_id)
 --
 
 CREATE INDEX rodada_aberta ON public.rodada USING btree (data, hora) WHERE (situacao <> 'apurada'::text);
+
+
+--
+-- Name: rp_por_rodada; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX rp_por_rodada ON public.rodada_papel USING btree (rodada_id);
 
 
 --
@@ -4845,6 +5481,13 @@ CREATE TRIGGER tg_trava_saida BEFORE UPDATE ON public.time_membro FOR EACH ROW E
 
 
 --
+-- Name: voto tg_trava_voto; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER tg_trava_voto BEFORE INSERT OR UPDATE OF rodada_id, usuario_id, jogo, palpite ON public.voto FOR EACH ROW EXECUTE FUNCTION public.trava_voto();
+
+
+--
 -- Name: aposta aposta_usuario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4890,6 +5533,102 @@ ALTER TABLE ONLY public.conquista
 
 ALTER TABLE ONLY public.conquista
     ADD CONSTRAINT conquista_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.perfil(id) ON DELETE CASCADE;
+
+
+--
+-- Name: copa copa_campeao_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.copa
+    ADD CONSTRAINT copa_campeao_fkey FOREIGN KEY (campeao) REFERENCES public.perfil(id);
+
+
+--
+-- Name: copa_jogo copa_jogo_copa_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.copa_jogo
+    ADD CONSTRAINT copa_jogo_copa_id_fkey FOREIGN KEY (copa_id) REFERENCES public.copa(id) ON DELETE CASCADE;
+
+
+--
+-- Name: copa_jogo copa_jogo_jogador_a_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.copa_jogo
+    ADD CONSTRAINT copa_jogo_jogador_a_fkey FOREIGN KEY (jogador_a) REFERENCES public.perfil(id);
+
+
+--
+-- Name: copa_jogo copa_jogo_jogador_b_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.copa_jogo
+    ADD CONSTRAINT copa_jogo_jogador_b_fkey FOREIGN KEY (jogador_b) REFERENCES public.perfil(id);
+
+
+--
+-- Name: copa_jogo copa_jogo_rodada_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.copa_jogo
+    ADD CONSTRAINT copa_jogo_rodada_id_fkey FOREIGN KEY (rodada_id) REFERENCES public.rodada(id);
+
+
+--
+-- Name: copa_jogo copa_jogo_vencedor_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.copa_jogo
+    ADD CONSTRAINT copa_jogo_vencedor_fkey FOREIGN KEY (vencedor) REFERENCES public.perfil(id);
+
+
+--
+-- Name: copa_vaga copa_vaga_copa_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.copa_vaga
+    ADD CONSTRAINT copa_vaga_copa_id_fkey FOREIGN KEY (copa_id) REFERENCES public.copa(id) ON DELETE CASCADE;
+
+
+--
+-- Name: copa_vaga copa_vaga_usuario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.copa_vaga
+    ADD CONSTRAINT copa_vaga_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES public.perfil(id) ON DELETE CASCADE;
+
+
+--
+-- Name: duelo duelo_carteira_a_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.duelo
+    ADD CONSTRAINT duelo_carteira_a_fkey FOREIGN KEY (carteira_a) REFERENCES public.carteira(id) ON DELETE CASCADE;
+
+
+--
+-- Name: duelo duelo_carteira_b_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.duelo
+    ADD CONSTRAINT duelo_carteira_b_fkey FOREIGN KEY (carteira_b) REFERENCES public.carteira(id) ON DELETE SET NULL;
+
+
+--
+-- Name: duelo duelo_desafiado_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.duelo
+    ADD CONSTRAINT duelo_desafiado_fkey FOREIGN KEY (desafiado) REFERENCES public.perfil(id) ON DELETE CASCADE;
+
+
+--
+-- Name: duelo duelo_desafiante_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.duelo
+    ADD CONSTRAINT duelo_desafiante_fkey FOREIGN KEY (desafiante) REFERENCES public.perfil(id) ON DELETE CASCADE;
 
 
 --
@@ -5010,6 +5749,14 @@ ALTER TABLE ONLY public.retorno_dia
 
 ALTER TABLE ONLY public.rodada_gabarito
     ADD CONSTRAINT rodada_gabarito_rodada_id_fkey FOREIGN KEY (rodada_id) REFERENCES public.rodada(id) ON DELETE CASCADE;
+
+
+--
+-- Name: rodada_papel rodada_papel_rodada_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.rodada_papel
+    ADD CONSTRAINT rodada_papel_rodada_id_fkey FOREIGN KEY (rodada_id) REFERENCES public.rodada(id) ON DELETE CASCADE;
 
 
 --
@@ -5336,6 +6083,13 @@ CREATE POLICY ciclo_ler ON public.ciclo FOR SELECT TO authenticated USING (true)
 
 
 --
+-- Name: copa_jogo cj_ler; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY cj_ler ON public.copa_jogo FOR SELECT TO authenticated USING (true);
+
+
+--
 -- Name: conquista conq_ler; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -5355,6 +6109,31 @@ ALTER TABLE public.conquista ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.conta_arquivada ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: copa; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.copa ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: copa_jogo; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.copa_jogo ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: copa copa_ler; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY copa_ler ON public.copa FOR SELECT TO authenticated USING (true);
+
+
+--
+-- Name: copa_vaga; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.copa_vaga ENABLE ROW LEVEL SECURITY;
+
+--
 -- Name: cotacao_hora; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -5371,6 +6150,51 @@ ALTER TABLE public.cotacao_viva ENABLE ROW LEVEL SECURITY;
 --
 
 CREATE POLICY cotacao_viva_le ON public.cotacao_viva FOR SELECT USING (true);
+
+
+--
+-- Name: copa_vaga cv_entrar; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY cv_entrar ON public.copa_vaga FOR INSERT TO authenticated WITH CHECK (((usuario_id = auth.uid()) AND (EXISTS ( SELECT 1
+   FROM public.copa c
+  WHERE ((c.id = copa_vaga.copa_id) AND (c.situacao = 'inscricoes'::text))))));
+
+
+--
+-- Name: copa_vaga cv_ler; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY cv_ler ON public.copa_vaga FOR SELECT TO authenticated USING (true);
+
+
+--
+-- Name: duelo; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.duelo ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: duelo duelo_criar; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY duelo_criar ON public.duelo FOR INSERT TO authenticated WITH CHECK (((desafiante = auth.uid()) AND (situacao = 'convidado'::text) AND (EXISTS ( SELECT 1
+   FROM public.carteira c
+  WHERE ((c.id = duelo.carteira_a) AND (c.usuario_id = auth.uid()) AND c.ativa AND (c.classe = duelo.classe)))) AND (fim >= (inicio + 5))));
+
+
+--
+-- Name: duelo duelo_ler; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY duelo_ler ON public.duelo FOR SELECT TO authenticated USING (true);
+
+
+--
+-- Name: duelo duelo_mudar; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY duelo_mudar ON public.duelo FOR UPDATE TO authenticated USING ((((desafiado = auth.uid()) AND (situacao = 'convidado'::text)) OR ((desafiante = auth.uid()) AND (situacao = 'convidado'::text)) OR public.sou_admin())) WITH CHECK ((((desafiado = auth.uid()) AND (situacao = ANY (ARRAY['aceito'::text, 'recusado'::text]))) OR ((desafiante = auth.uid()) AND (situacao = 'cancelado'::text)) OR public.sou_admin()));
 
 
 --
@@ -5730,6 +6554,19 @@ ALTER TABLE public.rodada ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.rodada_gabarito ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: rodada_papel; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.rodada_papel ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: rodada_papel rp_ler; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY rp_ler ON public.rodada_papel FOR SELECT TO authenticated USING (true);
+
+
+--
 -- Name: seguindo s_del; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -5985,5 +6822,5 @@ CREATE POLICY voto_por ON public.voto FOR INSERT TO authenticated WITH CHECK (((
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 7F2c69McNf3cFeMcWlBLgWk3vIDoA6rNlaYkn8Pmzya933kQaVwfrgX05uxLvDr
+\unrestrict 2kGg6Y5tsexANWEPYc7dWlSZ3kc1QXlCfnzUBautbsa22vI1T8MgctlmyUQmoU0
 
