@@ -2610,6 +2610,13 @@ async function telaRanking(){
   });
   if(filtro) lista = lista.filter(x=> (x.c.classe||"sem") === filtro);
 
+  /* procura pelo nome da carteira ou pelo apelido de quem publicou — os dois
+     já vêm na RPC painel, não precisa de consulta nova.                    */
+  const buscaR = (q.get("q") || "").trim().toLowerCase();
+  if(buscaR) lista = lista.filter(x =>
+    (x.c.nome    || "").toLowerCase().includes(buscaR) ||
+    (x.c.apelido || "").toLowerCase().includes(buscaR));
+
   const naFila = MINP ? lista.filter(x => (x.m.dias||0) <  MINP) : [];
   if(MINP)     lista = lista.filter(x => (x.m.dias||0) >= MINP);
 
@@ -2681,6 +2688,10 @@ async function telaRanking(){
       class="aba${filtro==="sem"?" on":""}">Sem classe<span class="n">${conta.sem}</span></a>`:""}
   </div>
   <div class="ordena">
+    <input id="buscaCart" value="${esc(q.get("q")||"")}"
+      style="margin:0;min-width:190px;flex:1"
+      placeholder="procurar por carteira ou por quem publicou…">
+    <button class="bt" id="btBuscaCart" style="flex:none;padding:6px 13px">Procurar</button>
     <span class="rot">no pódio, a partir de</span>
     <select id="selMin" class="selOrdem" style="min-width:150px">
       ${[0,10,21,30,63].map(v=>`<option value="${v}"${MINP===v?" selected":""}>${
@@ -2767,11 +2778,21 @@ async function telaRanking(){
     </tbody></table></div>`)}`;
 
   const cauda = (o, mi) => `#/?ordem=${o}${mi ? "&min="+mi : ""}${
-    filtro ? "&classe="+filtro : ""}`;
+    filtro ? "&classe="+filtro : ""}${
+    buscaR ? "&q="+encodeURIComponent(buscaR) : ""}`;
   const so = $("#selOrdem");
   if(so) so.onchange = e => location.hash = cauda(e.target.value, MINP);
   const sm = $("#selMin");
   if(sm) sm.onchange = e => location.hash = cauda(ordem, +e.target.value);
+
+  const bc = $("#buscaCart"), bb = $("#btBuscaCart");
+  const irBusca = () => {
+    const t = (bc.value || "").trim();
+    location.hash = `#/?ordem=${ordem}${MINP ? "&min="+MINP : ""}${
+      filtro ? "&classe="+filtro : ""}${t ? "&q="+encodeURIComponent(t) : ""}`;
+  };
+  if(bb) bb.onclick = irBusca;
+  if(bc) bc.onkeydown = e => { if(e.key === "Enter") irBusca(); };
 
   clearInterval(window.__timerRank);
   clearInterval(window.__timerVivo);
@@ -3642,8 +3663,17 @@ async function telaAdmin(){
   const { data:dias } = await sb.from("oscilacao").select("data").order("data",{ascending:false}).limit(1);
   const { data:ultFech } = await sb.from("retorno_dia").select("data")
     .order("data",{ascending:false}).limit(1);
-  const { data:rets } = await sb.from("retorno_dia").select("carteira_id,indice,data").order("data");
-  const acum = {}; (rets||[]).forEach(r=> acum[r.carteira_id] = r.indice/100 - 1);
+  /* Só o último pregão apurado, não a série inteira: a retorno_dia já passou
+     de duas mil linhas e o PostgREST corta em mil. Vinham as datas mais
+     antigas, e carteira criada depois disso ficava sem acumulado — o traço na
+     coluna. O índice do último dia já é o acumulado desde a publicação.     */
+  const diaFech = ultFech && ultFech.length ? ultFech[0].data : null;
+  const acum = {};
+  if(diaFech){
+    const { data:rets } = await sb.from("retorno_dia")
+      .select("carteira_id,indice").eq("data", diaFech);
+    (rets||[]).forEach(r => acum[r.carteira_id] = r.indice/100 - 1);
+  }
   let fila = [];
   try{ const { data:fq } = await sb.rpc("admin_fila", { so_pendente:true }); fila = fq||[]; }catch(e){}
   let assin = {};
