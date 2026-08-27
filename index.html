@@ -10507,6 +10507,14 @@ async function telaTimes(){
     cicloAberto(), meusTimes()
   ]);
   const souDe = {}; meus.forEach(m => souDe[m.time_id] = m.situacao);
+
+  /* Dois campeonatos correm ao mesmo tempo — o mensal e o trimestral — e o
+     time se inscreve num ou noutro. A aba decide qual está na tela; o padrão
+     é o que já começou, não o mais distante.                                */
+  const emCurso = ciclos.filter(c => c.situacao === "aberto");
+  const cicloSel = ciclos.find(c => String(c.id) === q.get("c"))
+                || emCurso[emCurso.length - 1] || ciclos[ciclos.length - 1]
+                || { id:-1, tipo:"—", inicio:null, fim:null, situacao:"—" };
   const lista = (times || []).filter(t => !busca
     || t.nome.toLowerCase().includes(busca)
     || (TEMAS[t.tema]||"").toLowerCase().includes(busca));
@@ -10517,8 +10525,11 @@ async function telaTimes(){
     const a = await sb.from("time_membro").select("time_id,usuario_id,situacao")
       .in("time_id", ids).eq("situacao","ativo");
     membros = a.data || [];
+    /* filtra pelo ciclo da aba: com dois campeonatos correndo ao mesmo tempo,
+       misturar as séries daria número que não é de nenhum dos dois.        */
     const b = await sb.from("time_carteira_dia")
-      .select("time_id,data,indice,retorno,ativos").in("time_id", ids)
+      .select("time_id,data,indice,retorno,ativos,ciclo_id").in("time_id", ids)
+      .eq("ciclo_id", cicloSel.id)
       .order("data", { ascending:false }).limit(600);
     dias = b.data || [];
   }
@@ -10595,20 +10606,28 @@ async function telaTimes(){
         lista.length===1?"time":"times"}</span>
       <span class="p"><span class="n">${membros.length}</span>${
         membros.length===1?"integrante":"integrantes"}</span>
-      ${ciclos.length?`<span class="p viva"><span class="pontinho"></span>ciclo
-        <span class="n" style="color:var(--ouro2)">${esc(ciclos[0].tipo)}</span></span>`:""}
+      ${cicloSel.inicio?`<span class="p viva"><span class="pontinho"></span>ciclo
+        <span class="n" style="color:var(--ouro2)">${esc(cicloSel.tipo)}</span></span>`:""}
     </div>
-    <p style="margin:20px 0 0">
-      ${meus.length ? `<a href="#/meu-time" class="bt">Meus times (${meus.length})</a>` : ""}
-      <a href="#/criar-time" class="bt lacre"${meus.length?' style="margin-left:8px"':""
-        }>Criar um time &rarr;</a>
-    </p>
   </div>
 
-  <div class="card" style="display:flex;gap:8px;align-items:center">
-    <input id="buscaTime" value="${esc(q.get("q")||"")}" style="flex:1;margin:0"
+  ${ciclos.length > 1 ? `<div class="chips" style="margin-bottom:14px">${ciclos.map(c => `
+    <a class="chip${c.id === cicloSel.id ? " on" : ""}"
+       href="#/times?c=${c.id}${q.get("r")?"&r="+esc(q.get("r")):""}">${esc(c.tipo)}
+       <span style="color:var(--graf);font-size:10.5px">${dataBR(c.inicio)} a ${dataBR(c.fim)}</span>
+    </a>`).join("")}</div>
+  <p style="margin:-6px 0 16px;font-size:12px;color:var(--graf)">
+    Cada time se inscreve num campeonato ou no outro. Vence quem somar as
+    <b>menores posições</b> nas três réguas — rentabilidade, Sharpe e menor
+    queda —, que é a aba <b>Geral</b>.</p>` : ""}
+
+  <div class="card" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <input id="buscaTime" value="${esc(q.get("q")||"")}" style="flex:1;min-width:200px;margin:0"
       placeholder="procurar time pelo nome — faculdade, empresa, turma…">
     <button class="bt" id="btBusca" style="flex:none">Procurar</button>
+    <span style="flex:none;width:1px;height:26px;background:var(--linha)"></span>
+    ${meus.length ? `<a href="#/meu-time" class="bt" style="flex:none">Meus times (${meus.length})</a>` : ""}
+    <a href="#/criar-time" class="bt lacre" style="flex:none">Criar um time &rarr;</a>
   </div>
 
   ${cod ? `<div class="card" style="border-color:var(--lacre)">
@@ -10624,10 +10643,10 @@ async function telaTimes(){
     ? `<div class="card"><p style="margin:0;color:var(--t2)">Nenhum time ainda.
         O primeiro pode ser o seu.</p></div>`
     : `<div class="chips">${Object.entries(REGUAS_TIME).map(([k,r])=>
-        `<a href="#/times?r=${k}" class="chip${k===chave?" on":""}">${esc(r.nome)}</a>`).join("")}</div>
+        `<a href="#/times?r=${k}&c=${cicloSel.id}" class="chip${k===chave?" on":""}">${esc(r.nome)}</a>`).join("")}</div>
       <table><thead><tr><th class="d">#</th><th></th><th>Time</th><th>Capitão</th>
         <th class="d">Gente</th><th class="d">Rent.</th><th class="d">Sharpe</th>
-        <th class="d">Queda</th><th class="d">Geral</th><th></th></tr></thead><tbody>
+        <th class="d">Queda</th><th></th></tr></thead><tbody>
       ${ord.map((t,i)=>{
         const m = met[t.id], p = posDe[t.id] || {}, n = conta[t.id] || 0;
         const cel = (v, txt, pos) => `<td class="d mono ${v==null?"nulo":""}">${
@@ -10646,7 +10665,6 @@ async function telaTimes(){
           ${cel(m?.acum,   `<span class="${m?cor(m.acum):""}">${pct(m?.acum)}</span>`, p.acum)}
           ${cel(m?.sharpe, n2(m?.sharpe), p.sharpe)}
           ${cel(m?.dd,     `<span class="baixa">${pct(m?.dd)}</span>`, p.dd)}
-          <td class="d mono ${p.geral==null?"nulo":""}"><b>${p.geral ?? "—"}</b></td>
           <td class="d" onclick="event.stopPropagation()">${
             souDe[t.id] === "ativo"  ? '<span class="pill">no time</span>'
           : souDe[t.id] === "pedido" ? '<span class="pill">pedido enviado</span>'
@@ -10657,9 +10675,7 @@ async function telaTimes(){
       <p style="margin:12px 0 0;font-size:11.5px;color:var(--graf)">
         Rentabilidade e queda contam desde o primeiro pregão. O Sharpe entra no
         segundo — com um retorno só não há dispersão para medir — e vai ganhando
-        corpo a cada dia. O <b>Geral</b> soma as posições das réguas que já
-        existem no dia; quem soma menos está na frente, e é a mesma conta que
-        fecha o ciclo.</p>`}`;
+        corpo a cada dia. A aba <b>Geral</b> ordena pela soma das posições nas três réguas: quem soma menos está na frente, e é a mesma conta que fecha o ciclo.</p>`}`;
 
   const bc = document.getElementById("btConvite");
   if(bc) bc.onclick = () => pedirEntrada(cod);
