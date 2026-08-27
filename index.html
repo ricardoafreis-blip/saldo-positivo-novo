@@ -4402,12 +4402,30 @@ function telaNovaSenha(){
   };
 }
 
+/* O universo passou de mil linhas com os BDRs, e o PostgREST corta a resposta
+   em mil. Buscar de uma vez trazia a lista truncada: quem ficasse de fora caía
+   no `|| "acao"` e aparecia na tela de ações. Aqui vem em páginas, e só o que
+   não é ação — o resto é ação por omissão.                                   */
+async function tiposDoUniverso(){
+  const mapa = {}; const passo = 900;
+  for(let de = 0; ; de += passo){
+    const { data, error } = await sb.from("universo").select("ativo,tipo")
+      .order("ativo").range(de, de + passo - 1);
+    if(error || !data || !data.length) break;
+    data.forEach(u => { mapa[u.ativo] = u.tipo; });
+    if(data.length < passo) break;
+  }
+  return mapa;
+}
+
 async function telaScreening(classe){
   /* Duas listas com a mesma tela: 'acao' e 'bdr'. O tipo mora no universo,
      nao na quant_medias — por isso o mapa abaixo. Os indices ficam de fora
      do filtro: eles sao a regua das duas listas.                            */
   classe = classe || "acao";
   const ROTA = classe === "bdr" ? "#/screening-bdr" : "#/screening";
+  const UM   = classe === "bdr" ? "BDR"  : "papel";
+  const MUI  = classe === "bdr" ? "BDRs" : "papéis";
   const JANELA_GRAFICO = 90;
   let data;
   if(QM && Date.now() - QM_EM < QM_VALE){
@@ -4425,12 +4443,16 @@ async function telaScreening(classe){
   const emP = emPregao();
   const mk = await mercadoCache();
   const AOVIVO = mk.p || {};
-  const [{ data:oscDia }, { data:univ }] = await Promise.all([
+  /* Só o que NÃO é ação: o universo já passou de mil linhas com os BDRs, e o
+     PostgREST corta em mil por resposta. Buscar tudo trazia a lista truncada,
+     e quem ficasse de fora caía no `|| "acao"` do TIPO — BDR aparecendo na
+     tela de ações. Pedindo só o resto, a resposta é pequena e não trunca.   */
+  const [{ data:oscDia }, univ] = await Promise.all([
     sb.from("oscilacao").select("ativo,valor").eq("data", HOJE_BR()),
-    sb.from("universo").select("ativo,tipo")
+    tiposDoUniverso()
   ]);
   const OSC = {}; (oscDia||[]).forEach(o => { OSC[o.ativo] = o.valor; });
-  const TIPO = {}; (univ||[]).forEach(u => { TIPO[u.ativo] = u.tipo; });
+  const TIPO = univ;
 
   const q = new URLSearchParams(location.hash.split("?")[1]||"");
   const filtro = q.get("t") || "todos";
@@ -4488,10 +4510,21 @@ async function telaScreening(classe){
   });
 
   const amplo = todosCalc.find(x => IND_AMPLO.includes(x.ativo)) || null;
+  /* BDR é cotado em real mas segue bolsa americana: o IBOVESPA sozinho é régua
+     errada para eles. Na tela de BDR entra o IVVB11 logo abaixo, para dar de
+     ver contra qual dos dois mercados o papel está andando.                  */
+  const regua2 = classe === "bdr"
+    ? (todosCalc.find(x => x.ativo === "IVVB11") || null) : null;
+  const reguas = [...(amplo ? [amplo] : []), ...(regua2 ? [regua2] : [])];
   const setoriais = todosCalc.filter(x => IND_SET[x.ativo] != null)
     .sort((a,b) => Object.keys(IND_SET).indexOf(a.ativo) - Object.keys(IND_SET).indexOf(b.ativo));
 
-  const daClasse = a => ehIndice(a) ? false : (TIPO[a] || "acao") === classe;
+  /* Só entra quem está no universo com a classe da tela. Papel fora do
+     universo — retirado de propósito, mas que ainda tem barra no banco —
+     não aparece em lista nenhuma. Antes o `|| "acao"` fazia todo papel sem
+     tipo cair na tela de ações: bastou apagar os BDRs do universo para os
+     674 reaparecerem lá.                                                    */
+  const daClasse = a => !ehIndice(a) && TIPO[a] === classe;
   let l = todosCalc.filter(x => daClasse(x.ativo));
   todosCalc.forEach(x => { x.forca = (x.ema72 && x.ema72 > 0) ? x.fech/x.ema72 - 1 : null; });
 
@@ -4552,7 +4585,7 @@ async function telaScreening(classe){
   app().innerHTML = `
   <div class="cabeca">
     <h1>Screening${classe === "bdr" ? " BDR" : ""}</h1>
-    <p>Em que fase da tendência cada ${classe === "bdr" ? "BDR" : "papel"} está,
+    <p>Em que fase da tendência cada ${UM} está,
       pela ordem de <b>três pontos de força</b> — o do trader, o do investidor e
       o do institucional — e pela posição do preço entre eles.</p>
   </div>
@@ -4565,9 +4598,9 @@ async function telaScreening(classe){
     const dec = A + B, p = dec ? A/dec : .5;
     const [frase, tom] =
       p >= .70 ? ["A maior parte da bolsa está em alta.", "alta"] :
-      p >= .56 ? ["Há mais papel subindo do que caindo.", "alta"] :
+      p >= .56 ? [`Há mais ${UM} subindo do que caindo.`, "alta"] :
       p >= .44 ? ["Bolsa dividida: sobe e cai em partes parecidas.", ""] :
-      p >= .30 ? ["Há mais papel caindo do que subindo.", "baixa"] :
+      p >= .30 ? [`Há mais ${UM} caindo do que subindo.`, "baixa"] :
                  ["A maior parte da bolsa está em baixa.", "baixa"];
     const fatia = (n,cls) => n ? `<i class="${cls}" style="flex:${n}"></i>` : "";
     return `
@@ -4581,7 +4614,7 @@ async function telaScreening(classe){
     </div>
     <a href="${link({t:"baixa"})}" class="lado baixa"><b>${B}</b><span>em baixa</span></a>
   </div>
-  <p class="tpe">De ${tot} papéis acompanhados${soLiq?`, acima de ${LIQ_ROT} de giro`:""}.
+  <p class="tpe">De ${tot} ${MUI} acompanhados${soLiq?`, acima de ${LIQ_ROT} de giro`:""}.
     Não é previsão nem recomendação: é a contagem de hoje, e ela muda todo pregão.</p>`;
   })()}
 
@@ -4619,18 +4652,18 @@ async function telaScreening(classe){
   </div>
 
   ${!l.length ? `<div class="card"><p style="margin:0;color:var(--t2)">
-      Nenhum papel neste filtro.${!(data||[]).length
+      Nenhum ${UM} neste filtro.${!(data||[]).length
         ? " O cálculo precisa de alguns meses de histórico e o robô ainda não juntou tanto."
         : ""}</p></div>`
-  : `<div class="rolagem"><table class="tabScr"><thead><tr><th>Papel</th><th class="estica">Estado</th>
+  : `<div class="rolagem"><table class="tabScr"><thead><tr><th>${classe === "bdr" ? "BDR" : "Papel"}</th><th class="estica">Estado</th>
       <th class="d">Preço</th><th class="d">No dia</th>
       <th class="d mA m1 some">Trader</th><th class="d mA m2 some">Investidor</th><th class="d mA m3 some">Institucional</th>
       <th class="d some graf" style="min-width:196px;padding-left:18px">${JANELA_GRAFICO} pregões</th>
       <th class="d some" title="volume financeiro negociado hoje">Volume</th>
       <th class="d some" title="volume de hoje sobre a média móvel dos últimos 21 pregões — 1,0 é o normal do papel"
         >%MMVol</th></tr></thead><tbody>
-    ${[...(amplo?[amplo]:[]), ...(verSet?setoriais:[])].map(x=>`<tr class="ref${
-        x===amplo?"":" set"}">
+    ${[...reguas, ...(verSet?setoriais:[])].map(x=>`<tr class="ref${
+        reguas.includes(x)?"":" set"}">
       <td class="mono cod">${esc(x.ativo==="IBOV"||x.ativo==="^BVSP"?"IBOVESPA":x.ativo.replace("^",""))}${
         IND_SET[x.ativo]?`<span class="nm">${IND_SET[x.ativo]}</span>`:""}</td>
       <td class="estica ${tomDe(x.e)}" style="font-size:12.5px">${ROT[x.e]}${x.vivo?'<sup style="font-size:10px;opacity:.7;margin-left:2px" title="parcial — a fase pode mudar até o fechamento">•</sup>':""}</td>
