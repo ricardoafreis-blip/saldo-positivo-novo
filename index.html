@@ -4567,11 +4567,6 @@ async function telaScreening(classe){
   const dp = (fech, ponto) => (ponto > 0 && fech > 0)
     ? `<span class="sub ${cor(fech/ponto - 1)}">${pct(fech/ponto - 1)}</span>` : "";
 
-  const grana = v => v == null ? "—"
-    : v >= 1e9 ? "R$ " + n2(v/1e9,1) + " bi"
-    : v >= 1e6 ? "R$ " + n2(v/1e6,0) + " mi"
-    : "R$ " + n2(v/1e3,0) + " mil";
-
   const exemploRisco = () => {
     const v = []; let p = 100;
     for(let i=0;i<60;i++){ p *= 1 + (i<26?-.004:.007) + Math.sin(i*.9)*.004; v.push(p); }
@@ -4783,7 +4778,9 @@ async function telaScreening(classe){
       if(document.activeElement && document.activeElement.tagName === "INPUT") return;
       await mercadoCache(true);
       const y = window.scrollY;
-      telaScreening().then(() => window.scrollTo(0, y));
+      /* com a classe: sem ela a repintura de 30s caía no padrão 'acao' e
+         trocava o Screening BDR pela lista de ações por baixo do pano.    */
+      telaScreening(classe).then(() => window.scrollTo(0, y));
     }, 30000);
   }
 }
@@ -11462,6 +11459,11 @@ function pegarDestino(){
    ===================================================================== */
 
 
+const grana = v => v == null ? "—"
+  : v >= 1e9 ? "R$ " + n2(v/1e9,1) + " bi"
+  : v >= 1e6 ? "R$ " + n2(v/1e6,0) + " mi"
+  : "R$ " + n2(v/1e3,0) + " mil";
+
 /* ---------- leitura de tendência: nasceram dentro da telaScreening e
    subiram para cá quando o Tiro curto passou a mostrar a mesma ficha
    dos papéis. Nada mudou dentro delas. ---------- */
@@ -11641,6 +11643,11 @@ async function telaTiroCurto(){
     const y = (v && v[0] > 0 && v[2] > 0)
       ? { ...x, fech:v[0], osc:v[1], ema17:v[2], ema34:v[3], ema72:v[4] }
       : { ...x };
+    /* giro do dia e a média de 21 pregões, do mesmo jeito que o Screening
+       monta: a liquidez da quant_medias é a média; o v[5] do ao vivo é o
+       giro de hoje, quando existe.                                        */
+    y.liqMedia = x.liquidez;
+    if(v && v[5] > 0){ y.liquidez = Number(v[5]); y.giroHoje = true; }
     y.e = estadoDe(y);
     FICHA[x.ativo] = y;
   });
@@ -11692,7 +11699,7 @@ async function telaTiroCurto(){
 
   ${["sobe","cai","volume"].map(j =>
       jogoPapeis(j, sorteio[j] || [], voto[j], FICHA, aberta)).join("")}
-  ${jogoPetr(sel, voto.petr, aberta)}
+  ${jogoPetr(sel, voto.petr, aberta, FICHA)}
 
   <p style="margin:22px 0 0;font-size:12px;color:var(--graf)">
     Dá para trocar o palpite até a hora começar. Ninguém vê o voto de ninguém
@@ -11763,21 +11770,30 @@ function jogoPapeis(chave, ativos, escolhido, FICHA, aberta){
         </div>
       </div>
       ${x ? `<div style="display:flex;gap:16px;margin-top:6px;font-size:11px;
-                         color:var(--graf)">
+                         color:var(--graf);flex-wrap:wrap">
         <span>trader <b class="mono">${n2(x.ema17)}</b></span>
         <span>investidor <b class="mono">${n2(x.ema34)}</b></span>
-        <span>institucional <b class="mono">${n2(x.ema72)}</b></span></div>` : ""}
+        <span>institucional <b class="mono">${n2(x.ema72)}</b></span>
+        ${chave === "volume" ? `<span>gira hoje <b class="mono">${
+            x.giroHoje ? grana(x.liquidez) : "—"}</b></span>
+          <span>média de 21 <b class="mono">${grana(x.liqMedia)}</b></span>` : ""}
+        </div>` : ""}
     </button>`;
   }).join("");
   return cxJogo(chave, linhas, escolhido);
 }
 
-function jogoPetr(rodada, escolhido, aberta){
+function jogoPetr(rodada, escolhido, aberta, ficha){
   const alvo = rodada.corte_petr;
   const rot = alvo ? "R$ " + (alvo/1e6).toFixed(0) + " milhões" : "o corte do dia";
+  const p = ficha && ficha.PETR4;
   return cxJogo("petr", `
     <p style="margin:0 0 10px;font-size:12.5px;color:var(--t2)">
       A PETR4 vai girar acima ou abaixo de <b>${esc(rot)}</b> nesta hora?</p>
+    ${p ? `<p style="margin:0 0 10px;font-size:11px;color:var(--graf)">
+      no dia ela girou <b class="mono">${p.giroHoje ? grana(p.liquidez) : "—"}</b>,
+      contra uma média de 21 pregões de
+      <b class="mono">${grana(p.liqMedia)}</b></p>` : ""}
     <div class="chips">
       ${["acima","abaixo"].map(v =>
         `<button class="chip vJ" data-j="petr" data-v="${v}"${
@@ -11969,14 +11985,45 @@ async function telaDuelo(){
       período. Mesma classe contra mesma classe, no mínimo ${DUELO_MIN} pregões,
       e <b>a carteira não congela</b> — mexa nela quando quiser, valendo do
       pregão seguinte.</p>
-    <div class="prova">
-      <span class="p"><span class="n">${abertos.length}</span>em andamento</span>
+    ${(abertos.length || chamados.length) ? `<div class="prova">
+      ${abertos.length?`<span class="p"><span class="n">${abertos.length}</span>em andamento</span>`:""}
       ${chamados.length?`<span class="p viva"><span class="pontinho"></span>
         <span class="n" style="color:var(--ouro2)">${chamados.length}</span>te chamaram</span>`:""}
-    </div>
-    <p style="margin:20px 0 0"><button class="bt lacre" id="btDesafiar">Desafiar alguém</button></p>
+    </div>` : ""}
   </div>
   <div id="erro"></div>
+
+  ${(meus.length || feitos.length) ? "" : `
+  <div class="card" style="max-width:620px;margin-bottom:20px">
+    <div style="display:flex;gap:22px;align-items:flex-start;margin-bottom:16px">
+      <div style="font-size:13px;color:var(--ouro2);font-weight:600;
+                  min-width:16px;text-align:center">1</div>
+      <div><b style="font-size:14px">Escolha o adversário e o prazo</b>
+        <p style="margin:3px 0 0;font-size:12.5px;color:var(--t2)">Você diz quem
+          quer enfrentar, com qual carteira sua, e de quando até quando. O prazo
+          mínimo é de ${DUELO_MIN} pregões.</p></div>
+    </div>
+    <div style="display:flex;gap:22px;align-items:flex-start;margin-bottom:16px">
+      <div style="font-size:13px;color:var(--ouro2);font-weight:600;
+                  min-width:16px;text-align:center">2</div>
+      <div><b style="font-size:14px">A pessoa aceita com a carteira dela</b>
+        <p style="margin:3px 0 0;font-size:12.5px;color:var(--t2)">Tem de ser da
+          mesma classe que a sua — comprada contra comprada, vendida contra
+          vendida. Enquanto ela não aceitar, o duelo não começa.</p></div>
+    </div>
+    <div style="display:flex;gap:22px;align-items:flex-start">
+      <div style="font-size:13px;color:var(--ouro2);font-weight:600;
+                  min-width:16px;text-align:center">3</div>
+      <div><b style="font-size:14px">Ganha quem rendeu mais</b>
+        <p style="margin:3px 0 0;font-size:12.5px;color:var(--t2)">No fim do
+          prazo, o placar sai sozinho. A carteira não congela: mexa nela quando
+          quiser durante o duelo, valendo do pregão seguinte.</p></div>
+    </div>
+    <p style="margin:18px 0 0"><button class="bt lacre" id="btDesafiar">Desafiar alguém</button></p>
+  </div>` }
+
+  ${(meus.length || feitos.length) ? `<p style="margin:0 0 20px">
+    <button class="bt lacre" id="btDesafiar">Desafiar alguém</button></p>` : ""}
 
   ${chamados.length ? `
   <h2 style="font-size:19px;margin:26px 0 12px">Te desafiaram</h2>
@@ -12000,11 +12047,9 @@ async function telaDuelo(){
     <th class="d">Situação</th></tr></thead>
   <tbody>${abertos.map(linha).join("")}</tbody></table>` : ""}
 
+  ${!feitos.length ? "" : `
   <h2 style="font-size:19px;margin:26px 0 12px">Duelos encerrados</h2>
-  ${!feitos.length
-    ? `<div class="card"><p style="margin:0;color:var(--t2);font-size:13px">
-        Nenhum duelo terminou ainda.</p></div>`
-    : `<table><thead><tr><th>Desafiante</th><th></th><th>Desafiado</th>
+    <table><thead><tr><th>Desafiante</th><th></th><th>Desafiado</th>
         <th class="d">Período</th><th class="d">A</th><th class="d">B</th>
         <th class="d">Venceu</th></tr></thead>
       <tbody>${feitos.slice(0,40).map(linha).join("")}</tbody></table>`}`;
@@ -12187,7 +12232,11 @@ async function telaCopa(){
     ? `<div class="card"><p style="margin:0;color:var(--t2);font-size:13.5px">
         ${vg.length
           ? "A chave é sorteada quando a rodada das 11h fechar."
-          : "Ninguém se inscreveu ainda. As oito vagas vão por ordem de chegada."}
+          : c.situacao === "inscricoes"
+            ? "Ninguém se inscreveu ainda. As oito vagas vão por ordem de chegada."
+            : "A copa de hoje não aconteceu: menos de duas pessoas na chave quando "
+              + "as inscrições fecharam. A de amanhã abre inscrição assim que o "
+              + "pregão de hoje for apurado."}
         </p>${vg.length?`<div class="chips" style="margin-top:12px">${vg.map(v =>
           `<span class="chip">${v.ordem}. ${esc(nomes[v.usuario_id]||"—")}</span>`).join("")}</div>`:""}
       </div>`
