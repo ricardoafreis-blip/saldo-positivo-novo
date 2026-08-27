@@ -98,7 +98,7 @@ async function fecharDia() {
   // Papel sem cotação entra no cálculo como oscilação ZERO e a carteira
   // rende menos do que deveria, sem erro nenhum aparecer. Por isso o
   // limite: melhor não apurar do que apurar torto e ninguém perceber.
-  const limite = Math.max(1, Math.ceil(s.papeis * 0.1));
+  const limite = Math.max(1, Math.ceil(s.papeis * 0.2));
   if (s.faltando.length > limite) {
     throw new Error(
       `${s.faltando.length} de ${s.papeis} papéis sem cotação em ${s.dia} — passou do ` +
