@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict 2kGg6Y5tsexANWEPYc7dWlSZ3kc1QXlCfnzUBautbsa22vI1T8MgctlmyUQmoU0
+\restrict CfV1T8MLTRypUDgeoyvIzoU4I8difuEZAw6sVczGaZ6ZlqZyxfBgJ8TNRD30uDT
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.11 (Ubuntu 17.11-1.pgdg24.04+2)
@@ -107,13 +107,21 @@ CREATE FUNCTION public.abrir_copa(p_data date DEFAULT NULL::date) RETURNS bigint
     SET search_path TO 'public'
     AS $$
 declare
-  d date := coalesce(p_data, (now() at time zone 'America/Sao_Paulo')::date);
+  d    date := coalesce(p_data, (now() at time zone 'America/Sao_Paulo')::date);
+  d2   date;
   v_id bigint;
 begin
   if extract(dow from d) in (0, 6) then return null; end if;
+
   insert into copa (data) values (d)
   on conflict (data) do nothing returning id into v_id;
   if v_id is null then select id into v_id from copa where data = d; end if;
+
+  -- a do próximo pregão, para a inscrição já estar aberta na véspera
+  d2 := d + 1;
+  while extract(dow from d2) in (0, 6) loop d2 := d2 + 1; end loop;
+  insert into copa (data) values (d2) on conflict (data) do nothing;
+
   return v_id;
 end;
 $$;
@@ -1239,24 +1247,36 @@ CREATE FUNCTION public.entrar_na_copa() RETURNS text
     SET search_path TO 'public'
     AS $$
 declare
-  d      date := (now() at time zone 'America/Sao_Paulo')::date;
+  agora  timestamp := (now() at time zone 'America/Sao_Paulo');
+  hoje   date := agora::date;
   v_copa bigint;
+  v_data date;
   n      int;
 begin
-  select id into v_copa from copa where data = d and situacao = 'inscricoes';
-  if v_copa is null then return 'as inscrições da copa de hoje já fecharam'; end if;
+  -- A de hoje só aceita antes das 10h, que é quando a chave é sorteada.
+  -- Depois disso a inscrição vale para o próximo pregão.
+  select id, data into v_copa, v_data
+    from copa
+   where situacao = 'inscricoes'
+     and (data > hoje or (data = hoje and extract(hour from agora) < 10))
+   order by data limit 1;
+
+  if v_copa is null then return 'não há copa com inscrição aberta agora'; end if;
 
   if exists (select 1 from copa_vaga where copa_id = v_copa
               and usuario_id = auth.uid()) then
-    return 'você já está na chave';
+    return 'você já está na chave de ' || to_char(v_data, 'DD/MM');
   end if;
 
   select count(*) into n from copa_vaga where copa_id = v_copa;
-  if n >= 8 then return 'as oito vagas de hoje já foram preenchidas'; end if;
+  if n >= 8 then
+    return 'as oito vagas de ' || to_char(v_data, 'DD/MM') || ' já foram preenchidas';
+  end if;
 
   insert into copa_vaga (copa_id, usuario_id, ordem)
   values (v_copa, auth.uid(), n + 1);
-  return 'você entrou na chave, na vaga ' || (n + 1);
+  return 'você entrou na chave de ' || to_char(v_data, 'DD/MM')
+       || ', na vaga ' || (n + 1);
 end;
 $$;
 
@@ -2947,17 +2967,18 @@ CREATE FUNCTION public.tocar_copa() RETURNS text
     SET search_path TO 'public'
     AS $$
 declare
-  d      date := (now() at time zone 'America/Sao_Paulo')::date;
+  agora  timestamp := (now() at time zone 'America/Sao_Paulo');
+  d      date := agora::date;
   v_copa bigint;
-  v_11   record;
 begin
   v_copa := abrir_copa(d);
   if v_copa is null then return 'fim de semana'; end if;
 
-  -- a rodada das 11h fechou: as inscrições acabam e a chave é sorteada
-  select * into v_11 from rodada where data = d and hora = 11;
-  if v_11.id is not null and v_11.situacao = 'apurada'
-     and exists (select 1 from copa where id = v_copa and situacao = 'inscricoes') then
+  -- às 10h a inscrição fecha e a chave é sorteada, uma hora antes das
+  -- quartas. Antes disso não há o que fazer: a copa está recebendo gente.
+  if extract(hour from agora) >= 10
+     and exists (select 1 from copa where id = v_copa and situacao = 'inscricoes')
+  then
     return chavear_copa(v_copa);
   end if;
 
@@ -6386,7 +6407,7 @@ CREATE POLICY p_alt ON public.perfil FOR UPDATE USING ((auth.uid() = id));
 -- Name: perfil p_le; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY p_le ON public.perfil FOR SELECT USING (true);
+CREATE POLICY p_le ON public.perfil FOR SELECT TO authenticated USING (((id = auth.uid()) OR (indicado_por = auth.uid()) OR public.sou_admin()));
 
 
 --
@@ -6822,5 +6843,5 @@ CREATE POLICY voto_por ON public.voto FOR INSERT TO authenticated WITH CHECK (((
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 2kGg6Y5tsexANWEPYc7dWlSZ3kc1QXlCfnzUBautbsa22vI1T8MgctlmyUQmoU0
+\unrestrict CfV1T8MLTRypUDgeoyvIzoU4I8difuEZAw6sVczGaZ6ZlqZyxfBgJ8TNRD30uDT
 
