@@ -1,4 +1,4 @@
-// Saldo Positivo — robô diário
+
 //
 //   node robo/robo.mjs dia        apura o pregão e manda os e-mails
 //   node robo/robo.mjs conferir    só olha e relata, não muda nada
@@ -106,13 +106,27 @@ async function fecharDia() {
       `de Mercado. Não vou apurar com dado furado.`);
   }
 
-  if (s.jaFechado) {
-    console.log(`${s.dia} já estava apurado — nada a fazer`);
-    return;
-  }
-
+  // ⚠️ CHAMAR SEMPRE, mesmo com o pregão já apurado.
+  //
+  // Antes havia um `return` aqui quando s.jaFechado era true, e ele saía
+  // sem chamar nada. Só que o robo_fechar_dia não faz apenas o fechamento
+  // das carteiras — ele também roda:
+  //
+  //   fechar_dia_times      · a carteira do time e a apuração dela
+  //   apurar_rodadas_vencidas · as rodadas do intraday que já fecharam
+  //   tocar_copa            · abre, chaveia ou apura a copa
+  //   abrir_rodadas         · CRIA as rodadas de hoje e do próximo pregão
+  //   encerrar_duelos       · fecha os duelos no prazo
+  //
+  // Em 27/08 o fechamento foi disparado à mão no meio do pregão. À noite
+  // o robô viu "já apurado" e saiu: as rodadas das 15h e 16h ficaram sem
+  // apuração, o placar sem resultado, e as rodadas do dia seguinte nunca
+  // nasceram. Repetir o fechar_dia é inofensivo — ele próprio devolve
+  // "pregão já fechado" e não recalcula nada sem o `refazer`.
   const n = await rpc("robo_fechar_dia");
-  console.log(`${n} carteiras apuradas em ${s.dia}`);
+  console.log(s.jaFechado
+    ? `${s.dia} já estava apurado — rodei o resto: ${n}`
+    : `${n} carteiras apuradas em ${s.dia}`);
 }
 
 // ─── esvaziar a fila de e-mail ─────────────────────────────────────
