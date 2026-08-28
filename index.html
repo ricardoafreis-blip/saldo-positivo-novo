@@ -153,6 +153,55 @@ header .dir a:hover{color:var(--ouro2)}
 
 .atalho{display:none}
 
+
+/* ═══ celular: o menu inteiro recolhe num botão ═══
+   Antes o cabeçalho ocupava quase duas telas antes de qualquer conteúdo — os
+   três grupos empilhavam um embaixo do outro. Agora ele fica guardado e abre
+   no toque. Vale só até 820px: no desktop nada muda.                        */
+.hamb{display:none;background:none;border:1px solid var(--linha2);border-radius:8px;
+  width:42px;height:38px;align-items:center;justify-content:center;gap:3.5px;
+  flex-direction:column;cursor:pointer;flex:none;margin-left:10px;padding:0}
+.hamb span{display:block;width:17px;height:1.5px;background:var(--tinta);
+  border-radius:2px;transition:transform .18s,opacity .18s}
+.hamb[aria-expanded="true"] span:nth-child(1){transform:translateY(5px) rotate(45deg)}
+.hamb[aria-expanded="true"] span:nth-child(2){opacity:0}
+.hamb[aria-expanded="true"] span:nth-child(3){transform:translateY(-5px) rotate(-45deg)}
+
+@media(max-width:820px){
+  .hamb{display:flex}
+  header .alto{align-items:center}
+  /* guardado por padrão; a classe .aberto libera */
+  .momentos nav{display:none}
+  .momentos.aberto nav{display:block}
+  /* a faixa dos momentos cortava na direita em tela estreita: o rótulo do
+     meio sai e sobram as duas pontas com o fio entre elas */
+  .viagem .rotm{display:none}
+  .viagem{display:flex;align-items:center;gap:10px;padding:0 2px}
+  .viagem .li{flex:1}
+}
+
+
+/* ═══ celular: abertura curta ═══
+   O texto longo da abertura é bom no desktop, mas no celular empurra o botão
+   de criar conta para a terceira tela. Abaixo de 820px entra a versão curta,
+   com a jornada em três passos, e o texto longo fica guardado.             */
+.sofone{display:none}
+@media(max-width:820px){
+  .sofone{display:block;padding:6px 0 4px}
+  .sotela{display:none}
+  .trilhaF{margin-top:24px}
+  .passoF{display:flex;gap:13px;align-items:flex-start;padding:13px 0;
+    border-top:1px solid var(--linha)}
+  .passoF:first-child{border-top:none}
+  .passoF .nF{width:26px;height:26px;border-radius:99px;flex:none;
+    border:1px solid var(--lacre);color:var(--ouro2);font-size:12px;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'IBM Plex Mono',monospace}
+  .passoF b{font-family:Newsreader,serif;font-size:17px;font-weight:500;display:block}
+  .passoF span{font-size:12.5px;color:var(--t2);display:block;margin-top:2px}
+  .abertura .ab2{font-size:27px}
+}
+
 @media(max-width:1040px){
   header .marca{font-size:22px}
   nav{grid-template-columns:158px 1fr 158px}
@@ -1532,6 +1581,8 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
   <div class="alto">
     <a href="#/" class="marca">Saldo Positivo</a>
     <span class="dir" id="navDir"></span>
+    <button type="button" class="hamb" id="btMenu" aria-label="menu"
+      aria-expanded="false"><span></span><span></span><span></span></button>
   </div>
   <div class="momentos">
     <div class="viagem">
@@ -1659,6 +1710,22 @@ const CDI_ANO = 0.15;
 
 let eu = null;
 const $ = s => document.querySelector(s);
+/* o botão do menu no celular: guarda o estado no próprio aria-expanded, que é
+   o que o leitor de tela também usa. Fecha ao navegar, senão o menu ficaria
+   aberto por cima da tela nova.                                             */
+function ligarMenuCelular(){
+  const b = document.getElementById("btMenu");
+  const m = document.querySelector(".momentos");
+  if(!b || !m) return;
+  b.onclick = () => {
+    const abriu = m.classList.toggle("aberto");
+    b.setAttribute("aria-expanded", abriu ? "true" : "false");
+  };
+  m.querySelectorAll("nav a").forEach(a => a.addEventListener("click", () => {
+    m.classList.remove("aberto");
+    b.setAttribute("aria-expanded", "false");
+  }));
+}
 const $$ = s => [...document.querySelectorAll(s)];
 const app = () => $("#app");
 
@@ -6498,6 +6565,39 @@ function telaAbertura(){
         <b class="mono">${esc(cod)}</b>.</p>
       <p style="margin:10px 0 0"><a href="#/entrar?novo=1" class="bt lacre">Criar minha conta</a></p>
     </div>` : ""}
+    <!-- No celular o texto longo empurra o botão de criar conta para a
+         terceira tela. Esta versão curta aparece só até 820px; o bloco de
+         baixo, que continua igual, é escondido na mesma faixa.            -->
+    <div class="sofone">
+      <h1 class="ab2" style="margin-bottom:13px">Aprenda, dispute,<br>depois invista.</h1>
+      <p style="color:var(--t2);font-size:14.5px;margin:0 0 22px">
+        Monte sua carteira de ações, dispute com todo mundo pela mesma régua e
+        descubra do que você é capaz — antes de pôr dinheiro nisso.</p>
+      <a href="#/entrar?novo=1" class="bt lacre" style="display:block;width:100%;
+        padding:13px;text-align:center">Criar conta</a>
+      <p style="font-size:12.5px;color:var(--graf);margin:13px 0 0;text-align:center">
+        já tem conta? <a href="#/entrar" style="color:var(--ouro2)">entrar</a></p>
+
+      <div class="trilhaF">
+        <div class="passoF"><span class="nF">1</span><div>
+          <b>Aprenda</b><span>O que é uma ação, como se mede risco, por que uma
+          carteira ganha da outra. Sem pressa e sem custo.</span></div></div>
+        <div class="passoF"><span class="nF">2</span><div>
+          <b>Dispute</b><span>Publique sua carteira e entre no ranking.
+          Competições diárias, sozinho ou em equipe, com preço real da B3.</span></div></div>
+        <div class="passoF"><span class="nF">3</span><div>
+          <b>Invista</b><span>Quando quiser sair do simulado, converse com
+          profissionais registrados — e aí o dinheiro é seu de verdade.</span></div></div>
+      </div>
+
+      <a href="#/como-funciona" class="bt" style="display:block;width:100%;
+        padding:12px;text-align:center;margin-top:16px">Ver como funciona &rarr;</a>
+      <p style="font-size:11.5px;color:var(--graf);margin:16px 0 4px;
+        text-align:center;padding-top:13px;border-top:1px solid var(--linha)">
+        preço real da B3 · nada aqui é recomendação</p>
+    </div>
+
+    <div class="sotela">
     <p class="ab1">Quem é o melhor analista do Brasil?</p>
     <h1 class="ab2">Seja você.</h1>
     <p class="ab3" style="font-size:17px;color:var(--tinta);margin-bottom:18px">
@@ -6560,7 +6660,9 @@ function telaAbertura(){
         Por isso o site não termina no ranking: ele começa ali.</p>
     </div>
 
-    <div class="promessa">
+    </div><!-- /sotela -->
+
+    <div class="promessa sotela">
       <p class="pTit">E quando o simulado acabar, o mundo real está do outro lado</p>
       <p class="pSub">Corretoras, bancos e profissionais regulamentados</p>
       <p class="teseP" style="max-width:64ch;margin:0 auto 18px;text-align:center">
@@ -12435,7 +12537,7 @@ addEventListener("hashchange", rotear);
   // desfazendo o scrollTo do rotear. Quem manda na rolagem aqui é o rotear.
   if("scrollRestoration" in history) history.scrollRestoration = "manual";
   if(location.hash.includes("type=recovery")) location.hash = "#/nova-senha";
-  await carregarEu(); pintarNav(); rotear();
+  await carregarEu(); pintarNav(); ligarMenuCelular(); rotear();
   sb.auth.onAuthStateChange(async()=>{
     const tinha = !!eu;
     await carregarEu(); pintarNav();
