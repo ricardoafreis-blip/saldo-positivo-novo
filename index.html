@@ -1655,16 +1655,22 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
      .alto é flex com gap de 20px e nada podia encolher: marca + apelido +
      ADMIN + risquinhos somavam mais que a tela, e o último saía pela direita.
      Agora o bloco do meio encolhe e o menu fica sempre visível.           */
-  header .alto{gap:9px;flex-wrap:nowrap}
-  header .alto > *{min-width:0}
-  header .marca{font-size:20px;flex:none}
-  header .hamb{flex:none}
-  header .alto .eu,header .alto details{min-width:0;overflow:hidden}
+  header .alto{gap:8px;flex-wrap:nowrap}
+  header .marca{font-size:20px;flex:0 0 auto}
+  .hamb{flex:0 0 auto;margin-left:0;order:9}
+  header .alto .dir,header .alto #navDir{
+    flex:1 1 auto;min-width:0;overflow:hidden;justify-content:flex-end}
+  header .alto #navDir *{min-width:0;max-width:100%}
+  header .alto #navDir a,header .alto #navDir span,header .alto #navDir summary{
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
   /* ── 2. o cartão do screening saía pela direita ──────────────────────────
      A coluna do meio era 1fr, que não encolhe abaixo do conteúdo. Com
      minmax(0,1fr) e min-width:0 nas células, a linha nunca passa da tela. */
-  .tbScr tr{grid-template-columns:auto auto minmax(0,1fr) 132px !important}
+  .tbScr tr{grid-template-columns:1fr 1fr 1fr 132px !important}
+  .tbScr td:nth-child(5),.tbScr td:nth-child(6),.tbScr td:nth-child(7){
+    text-align:left;overflow:visible}
+  .tbScr td:nth-child(9){white-space:nowrap}
   .tbCard td{min-width:0;overflow:hidden}
   .tbScr td:nth-child(8) svg{max-width:100%}
   table{display:block;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
