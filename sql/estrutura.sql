@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict CfV1T8MLTRypUDgeoyvIzoU4I8difuEZAw6sVczGaZ6ZlqZyxfBgJ8TNRD30uDT
+\restrict uXdS7fAsNuqyeFt19uvvJHbmqRcgFyqhQOF131W2Ik3mgsyAxjFgMXauKusuoLr
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.11 (Ubuntu 17.11-1.pgdg24.04+2)
@@ -2971,9 +2971,14 @@ declare
   d      date := agora::date;
   v_copa bigint;
 begin
+  -- Sempre deixa a próxima aberta, antes de qualquer outra coisa: quem chega
+  -- depois das 10h se inscreve para o pregão seguinte em vez de ficar sem
+  -- lugar nenhum. Vem antes do 'fim de semana' de propósito, senão sábado e
+  -- domingo ninguém consegue entrar na de segunda.
+  perform abrir_copa(d + 1);
+
   v_copa := abrir_copa(d);
   if v_copa is null then return 'fim de semana'; end if;
-
   -- às 10h a inscrição fecha e a chave é sorteada, uma hora antes das
   -- quartas. Antes disso não há o que fazer: a copa está recebendo gente.
   if extract(hour from agora) >= 10
@@ -2981,7 +2986,6 @@ begin
   then
     return chavear_copa(v_copa);
   end if;
-
   return apurar_copa(v_copa);
 end;
 $$;
@@ -6843,5 +6847,5 @@ CREATE POLICY voto_por ON public.voto FOR INSERT TO authenticated WITH CHECK (((
 -- PostgreSQL database dump complete
 --
 
-\unrestrict CfV1T8MLTRypUDgeoyvIzoU4I8difuEZAw6sVczGaZ6ZlqZyxfBgJ8TNRD30uDT
+\unrestrict uXdS7fAsNuqyeFt19uvvJHbmqRcgFyqhQOF131W2Ik3mgsyAxjFgMXauKusuoLr
 
