@@ -1597,6 +1597,13 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
 .hubEsc .d{font-size:11.5px;color:var(--graf);display:block;margin-top:1px}
 .hubEsc .seta{margin-left:auto;color:var(--graf);flex:none}
 .hubEsc:hover{border-color:var(--linha2)}
+.voltarCx{display:none;margin:0 0 12px}
+.voltarBt{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--linha2);
+  border-radius:99px;padding:7px 14px 7px 11px;font-size:12.5px;color:var(--t2);
+  background:var(--p2);cursor:pointer;font-family:inherit}
+.voltarBt:hover{border-color:var(--ouro2);color:var(--ouro2)}
+.voltarBt i{font-style:normal;font-size:15px;line-height:1}
+@media(max-width:820px){ .voltarCx{display:block} }
 .hubPonte{margin-top:20px;padding-top:13px;border-top:1px solid var(--linha)}
 .hubPonte .rt2{font-size:10px;letter-spacing:.13em;text-transform:uppercase;
   color:var(--graf);display:block;margin-bottom:9px}
@@ -1671,6 +1678,7 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
   .tbScr td:nth-child(8)::before{content:none}
   .tbScr td:nth-child(9)::before{content:"volume"}
   .tbScr td:nth-child(10)::before{content:"%MMVol"}
+  .tbScr td:nth-child(11)::before{content:"comprada × vendida"}
 
   /* ── placar: 7 colunas ── */
   .tbPlacar td:nth-child(1){justify-content:flex-start;font-weight:600}
@@ -1815,6 +1823,7 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
   </div>
 </div></header>
 
+<div class="w voltarCx" id="voltarCx"></div>
 <main class="w" id="app"><div class="carreg">carregando…</div></main>
 
 <footer class="w"><b style="color:var(--t2);font-weight:500">Caderno de estudo.</b>
@@ -4646,6 +4655,21 @@ async function tiposDoUniverso(){
   return mapa;
 }
 
+/* Placar comprado × vendido de um papel nas carteiras publicadas.
+   A cor diz o lado que manda, e os DOIS números recebem a mesma cor de
+   propósito: o que se está lendo é o resultado do confronto, não cada lado
+   isolado. Empate com gente dos dois lados fica dourado; sem ninguém, traço. */
+function placarCV(c, v){
+  c = c || 0; v = v || 0;
+  if(!c && !v) return `<span style="opacity:.45">—</span>`;
+  const cor = c > v ? "var(--alta)" : v > c ? "var(--baixa)" : "var(--ouro2)";
+  const titulo = c > v ? "mais carteiras compradas"
+               : v > c ? "mais carteiras vendidas"
+               : "empatado dos dois lados";
+  return `<span title="${titulo}" style="color:${cor};white-space:nowrap">${
+    c}<span style="opacity:.5;margin:0 3px">×</span>${v}</span>`;
+}
+
 async function telaScreening(classe){
   /* Duas listas com a mesma tela: 'acao' e 'bdr'. O tipo mora no universo,
      nao na quant_medias — por isso o mapa abaixo. Os indices ficam de fora
@@ -4684,6 +4708,15 @@ async function telaScreening(classe){
 
   const q = new URLSearchParams(location.hash.split("?")[1]||"");
   const filtro = q.get("t") || "todos";
+  /* Placar comprado × vendido: quantas carteiras publicadas estão de cada lado
+     do papel. Vem da mesma RPC "consenso" que alimenta o Mais escolhidos, para
+     os dois números nunca discordarem. Se a RPC falhar, o placar some e o resto
+     da tela continua igual — não vale derrubar o screening por causa dele.   */
+  const CONSENSO = {};
+  try{
+    const { data:cns } = await sb.rpc("consenso", { min_carteiras: 1 });
+    for(const x of (cns || [])) CONSENSO[x.ativo] = x;
+  }catch(e){ /* sem placar, e paciência */ }
   const busca  = (q.get("q") || "").toUpperCase();
   const verSet = q.get("set") === "1";
 
@@ -4727,6 +4760,9 @@ async function telaScreening(classe){
     y.liqMedia = x.liquidez;
     if(v && v[5] > 0){ y.liquidez = Number(v[5]); y.giroHoje = true; }
     y.avat = (y.giroHoje && y.liqMedia > 0) ? y.liquidez / y.liqMedia : null;
+    const cv = CONSENSO[y.ativo];
+    y.comprada = cv ? cv.comprada : 0;
+    y.vendida  = cv ? cv.vendida  : 0;
     /* A variação do dia sai da coluna oscilacao, gravada pelo mt5_gravar a
        partir da mesma barra de onde vêm o preço e as três forças. Não se
        calcula nada aqui: o número é o do banco. Antes vinha só da cotacao_viva,
@@ -4884,7 +4920,9 @@ async function telaScreening(classe){
       <th class="d some graf" style="min-width:196px;padding-left:18px">${JANELA_GRAFICO} pregões</th>
       <th class="d some" title="volume financeiro negociado hoje">Volume</th>
       <th class="d some" title="volume de hoje sobre a média móvel dos últimos 21 pregões — 1,0 é o normal do papel"
-        >%MMVol</th></tr></thead><tbody>
+        >%MMVol</th>
+      <th class="d" title="quantas carteiras publicadas estão compradas e quantas estão vendidas neste papel"
+        >C × V</th></tr></thead><tbody>
     ${[...reguas, ...(verSet?setoriais:[])].map(x=>`<tr class="ref${
         reguas.includes(x)?"":" set"}">
       <td class="mono cod">${esc(x.ativo==="IBOV"||x.ativo==="^BVSP"?"IBOVESPA":x.ativo.replace("^",""))}${
@@ -4917,7 +4955,8 @@ async function telaScreening(classe){
       <td class="d mono some" style="font-size:12px;white-space:nowrap;${
         x.avat==null?"opacity:.45" : x.avat>=2?"color:var(--ouro2)"
         : x.avat>=1.3?"color:var(--alta)" : ""}">${
-        x.avat==null?"—":n2(x.avat,1)+"×"}</td></tr>`).join("")}
+        x.avat==null?"—":n2(x.avat,1)+"×"}</td>
+      <td class="d cv">${placarCV(x.comprada, x.vendida)}</td></tr>`).join("")}
     </tbody></table></div>`}
 
   <div class="comoler">
@@ -6722,7 +6761,7 @@ function telaAbertura(){
         padding:12px;text-align:center;margin-top:9px">Ver como funciona &rarr;</a>
       <p style="font-size:11.5px;color:var(--graf);margin:16px 0 4px;
         text-align:center;padding-top:13px;border-top:1px solid var(--linha)">
-        preço real da B3 · nada aqui é recomendação</p>
+        Aqui nada é recomendação.</p>
     </div>
 
     <div class="sotela">
@@ -6809,15 +6848,20 @@ function telaAbertura(){
         vender o que não serve: dá dinheiro uma vez e custa o cliente.</p>
     </div>
 
-    <p class="ab4">O passado não se apaga aqui — nem o seu. É o que separa isto
-      de um print de lucro no Telegram.</p>
+    <!-- Este fecho pertence à versão longa, mas estava FORA da .sotela: no
+         celular ele vazava e repetia criar conta / entrar pela terceira vez,
+         depois dos dois do cabeçalho e dos três da abertura curta. -->
+    <div class="sotela">
+      <p class="ab4">O passado não se apaga aqui — nem o seu. É o que separa isto
+        de um print de lucro no Telegram.</p>
 
-    <div class="botoesAb">
-      <button type="button" class="bt cheio lacre" id="abConta">Criar conta grátis &rarr;</button>
-      <button type="button" class="bt" id="abEntrar">Já tenho conta</button>
+      <div class="botoesAb">
+        <button type="button" class="bt cheio lacre" id="abConta">Criar conta grátis &rarr;</button>
+        <button type="button" class="bt" id="abEntrar">Já tenho conta</button>
+      </div>
+      <p class="ab4" style="margin-bottom:40px">Não se cobra nada para entrar, e o
+        apelido é o que aparece — o e-mail não.</p>
     </div>
-    <p class="ab4" style="margin-bottom:40px">Não se cobra nada para entrar, e o
-      apelido é o que aparece — o e-mail não.</p>
   </div>`;
 
   $("#abConta").onclick  = () => { location.hash = "#/entrar?novo=1"; };
@@ -12751,6 +12795,75 @@ function telaHub(id){
   </div>`;
 }
 
+
+/* ══ o voltar ══════════════════════════════════════════════════════════════
+   Com as páginas pequenas, a pessoa desce três ou quatro níveis a partir da
+   home e não tinha como subir — só o voltar do navegador, que no celular fica
+   escondido. Este mapa diz o pai de cada rota; quando não há pai declarado, o
+   voltar usa o histórico, e se nem histórico houver ele some.
+   O PAI É A TELA DE CIMA NA ÁRVORE, não a última visitada.                 */
+const PAI = {
+  "educacional":"inicio", "competicoes":"inicio", "indicacoes":"inicio",
+  "eu":"inicio", "menu":"inicio",
+  "edu-oque":"educacional", "edu-artigos":"educacional",
+  "edu-simulacoes":"educacional",
+  "edu-comecar":"edu-artigos", "edu-carteira":"edu-artigos",
+  "edu-patrimonio":"edu-artigos",
+  "intraday":"competicoes", "individual":"competicoes", "em-time":"competicoes",
+  "tiro-curto":"intraday", "placar":"intraday", "copa":"intraday",
+  "ranking":"individual", "publicar":"individual", "mais-escolhidos":"individual",
+  "duelo":"individual", "desafiar":"duelo",
+  "escolher-lista":"individual", "escolher-lista-bdr":"individual",
+  "screening":"escolher-lista", "screening-bdr":"escolher-lista-bdr",
+  "times":"em-time", "criar-time":"em-time", "meu-time":"em-time",
+  "regras-time":"em-time",
+  "ind-quem":"indicacoes", "ind-produtos":"indicacoes", "ind-proteger":"indicacoes",
+  "servicos":"indicacoes", "sucessao":"ind-proteger", "clube":"ind-produtos",
+  "minhas":"eu", "conta":"eu", "senha":"eu", "certificado":"eu",
+  "indicar":"eu", "assinar":"eu",
+  "aprender":"edu-comecar", "dividas":"edu-comecar", "crescer":"edu-comecar",
+  "corrigir":"edu-comecar",
+  "porque":"edu-carteira", "carteira-como":"edu-carteira",
+  "sessenta":"edu-carteira", "grandes":"edu-carteira",
+  "credito":"edu-patrimonio", "casa":"edu-patrimonio", "comprar":"edu-patrimonio",
+  "escada":"edu-patrimonio", "aplicado":"edu-patrimonio",
+  "nao-perder":"edu-patrimonio",
+  "renda-fixa":"edu-oque", "renda-variavel":"edu-oque", "fundos":"edu-oque",
+  "previdencia":"edu-oque", "clubes":"edu-oque", "consorcio":"edu-oque",
+  "seguro-vida":"edu-oque", "alternativos":"edu-oque", "internacional":"edu-oque",
+  "simulador":"edu-simulacoes", "sim-credito":"edu-simulacoes",
+  "sim-comprar":"edu-simulacoes",
+  "carteira":"ranking", "editar":"minhas", "rodada":"placar",
+  "time":"times", "universo":"admin", "leads":"admin",
+};
+const ROTULO = {
+  "inicio":"Início", "educacional":"Educacional", "competicoes":"Competições",
+  "indicacoes":"Indicações", "eu":"Sua conta", "intraday":"Intraday",
+  "individual":"Carteira individual", "em-time":"Em time",
+  "edu-oque":"O que é", "edu-artigos":"Artigos", "edu-comecar":"Comece por aqui",
+  "edu-carteira":"Montar a carteira", "edu-patrimonio":"Já há patrimônio",
+  "edu-simulacoes":"Simulações", "escolher-lista":"Screening",
+  "escolher-lista-bdr":"Screening BDR", "ind-quem":"Quem acompanha você",
+  "ind-produtos":"Os produtos", "ind-proteger":"Proteger o que já existe",
+  "ranking":"Ranking", "placar":"Placar", "times":"Ranking de equipes",
+  "minhas":"Minhas carteiras", "duelo":"Duelo", "admin":"Admin",
+};
+function pintarVoltar(){
+  const cx = document.getElementById("voltarCx");
+  if(!cx) return;
+  const nome = (location.hash || "#/").split("?")[0].slice(2).split("/")[0];
+  const pai  = Object.hasOwn(PAI, nome) ? PAI[nome] : null;
+  if(pai){
+    cx.innerHTML = `<button type="button" class="voltarBt"><i>&lsaquo;</i>${
+      ROTULO[pai] || "Voltar"}</button>`;
+    cx.firstChild.onclick = () => { location.hash = "#/" + pai; };
+  } else if(history.length > 1 && nome && nome !== "inicio"){
+    cx.innerHTML = `<button type="button" class="voltarBt"><i>&lsaquo;</i>Voltar</button>`;
+    cx.firstChild.onclick = () => history.back();
+  } else {
+    cx.innerHTML = "";
+  }
+}
 function rotear(){
   clearInterval(window.__timerRank);
   clearInterval(window.__timerVivo);
@@ -12805,6 +12918,7 @@ function rotear(){
   if(m)                       return telaCarteira(m[1]);
   // No celular a home é a escolha de caminho, não o ranking: quem chega numa
   // tabela de dez colunas não sabe o que fazer com ela. No desktop nada muda.
+  pintarVoltar();
   if(h==="#/"||h===""){
     return NO_CELULAR() ? telaHub("inicio") : telaRanking();
   }
