@@ -12460,6 +12460,23 @@ async function telaCopa(){
       .concat([c.campeao]));
 
   const naChave = vg.some(v => v.usuario_id === eu.id);
+
+  /* A inscrição não é só a de hoje. O entrar_na_copa aceita a próxima copa com
+     situacao='inscricoes' — inclusive de outro dia. Sem ler essa linha aqui, o
+     botão sumia depois das 10h e quem chegava à tarde não tinha onde se
+     inscrever, mesmo havendo vaga aberta para o pregão seguinte.            */
+  const { data:insc } = await sb.from("copa").select("id,data")
+    .eq("situacao", "inscricoes").order("data").limit(1).maybeSingle();
+  let naInsc = false;
+  if(insc){
+    if(insc.id === c.id) naInsc = naChave;
+    else {
+      const { data:jaTem } = await sb.from("copa_vaga").select("usuario_id")
+        .eq("copa_id", insc.id).eq("usuario_id", eu.id).maybeSingle();
+      naInsc = !!jaTem;
+    }
+  }
+  const ehHoje = insc && insc.id === c.id;
   const porFase = {}; jg.forEach(j => (porFase[j.fase] = porFase[j.fase] || []).push(j));
 
   const confronto = j => {
@@ -12480,7 +12497,8 @@ async function telaCopa(){
   app().innerHTML = `
   <div class="cabeca">
     <h1>Copa do pregão</h1>
-    <p>Mata-mata em um dia só. Oito vagas, inscrição até as 11h. Quartas na
+    <p>Mata-mata em um dia só. Oito vagas, <b>inscrição até as 10h</b>, que é
+      quando a chave é sorteada. Quartas na
       rodada das 12h, semifinal na das 14h, final na das 16h. <b>Vence quem faz
       mais pontos naquela rodada</b> — você joga o Tiro da hora de sempre, e os
       pontos daquela hora decidem quem avança. Quem perde sai na mesma tarde.</p>
@@ -12490,14 +12508,19 @@ async function telaCopa(){
       ${c.campeao?`<span class="p"><span class="n" style="color:var(--ouro2)">${
         esc(nomes[c.campeao]||"—")}</span>campeão de hoje</span>`:""}
     </div>
-    ${c.situacao === "inscricoes"
-      ? (naChave
+    ${insc
+      ? (naInsc
           ? `<p style="margin:20px 0 0;color:var(--ouro2);font-size:13.5px">
-             Você está na chave. A partir das 12h, os pontos da rodada valem
-             pelo confronto.</p>`
+             Você está na chave${ehHoje?"":" de "+dataBR(insc.data)}. A partir
+             das 12h, os pontos da rodada valem pelo confronto.</p>`
           : `<p style="margin:20px 0 0">
-             <button class="bt lacre" id="btCopa">Entrar na chave</button></p>`)
-      : ""}
+             <button class="bt lacre" id="btCopa">Entrar na chave${
+               ehHoje?"":" de "+dataBR(insc.data)}</button>
+             ${ehHoje?"":`<span style="display:block;margin-top:8px;
+               font-size:12.5px;color:var(--graf)">A de hoje já foi chaveada.
+               Esta inscrição vale para o próximo pregão.</span>`}</p>`)
+      : `<p style="margin:20px 0 0;font-size:13px;color:var(--graf)">
+         Nenhuma copa com inscrição aberta no momento.</p>`}
   </div>
   <div id="erro"></div>
 
