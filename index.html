@@ -1663,22 +1663,38 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
   .tbRank td:nth-child(11){display:block;padding-top:8px}
   .tbRank td:nth-child(11)::before{content:none}
 
-  /* ── screening: 10 colunas ── */
-  .tbScr td:nth-child(1){display:block;text-align:left;font-size:15px;font-weight:600}
-  .tbScr td:nth-child(1)::before{content:none}
-  .tbScr td:nth-child(2){display:block;text-align:left;
-    padding-bottom:8px;margin-bottom:4px;border-bottom:1px solid var(--linha)}
-  .tbScr td:nth-child(2)::before{content:none}
-  .tbScr td:nth-child(3)::before{content:"preço"}
-  .tbScr td:nth-child(4)::before{content:"no dia"}
-  .tbScr td:nth-child(5)::before{content:"trader"}
-  .tbScr td:nth-child(6)::before{content:"investidor"}
-  .tbScr td:nth-child(7)::before{content:"institucional"}
-  .tbScr td:nth-child(8){display:block;padding:8px 0 2px}
-  .tbScr td:nth-child(8)::before{content:none}
-  .tbScr td:nth-child(9)::before{content:"volume"}
-  .tbScr td:nth-child(10)::before{content:"%MMVol"}
-  .tbScr td:nth-child(11)::before{content:"comprada × vendida"}
+  /* ── screening: o cartão é PETR4 41,90 +2,30% / médias / gráfico ──────
+     Nada de rótulo: quem abre o screening já sabe o que é preço e o que é
+     oscilação. A grade coloca as três primeiras na linha 1, as três médias
+     na linha 2 e o gráfico ocupando a linha 3 inteira. Estado, volume,
+     %MMVol e C × V ficam escondidos aqui — não cabiam sem virar legenda. */
+  .tbScr tr{display:grid;grid-template-columns:auto 1fr auto;
+    column-gap:9px;row-gap:2px;align-items:baseline;padding:12px 13px}
+  .tbScr td{display:block;padding:0;text-align:left;border:none}
+  .tbScr td::before{content:none}
+  .tbScr td:nth-child(2),
+  .tbScr td:nth-child(9),
+  .tbScr td:nth-child(10),
+  .tbScr td:nth-child(11){display:none}
+  .tbScr td:nth-child(1){grid-row:1;grid-column:1;font-size:16px;font-weight:600}
+  .tbScr td:nth-child(3){grid-row:1;grid-column:2;font-size:16px;text-align:right}
+  .tbScr td:nth-child(4){grid-row:1;grid-column:3;font-size:16px;text-align:right}
+  .tbScr td:nth-child(5){grid-row:2;grid-column:1}
+  .tbScr td:nth-child(6){grid-row:2;grid-column:2;text-align:center}
+  .tbScr td:nth-child(7){grid-row:2;grid-column:3;text-align:right}
+  .tbScr td:nth-child(5),.tbScr td:nth-child(6),.tbScr td:nth-child(7){
+    display:block;font-size:12.5px;color:var(--graf);white-space:nowrap}
+  /* a barrinha entre as médias, como você escreveu: 42,00/43,00/44,00 */
+  .tbScr td:nth-child(5)::after,.tbScr td:nth-child(6)::after{
+    content:"/";opacity:.35;margin-left:7px}
+  /* a variação de cada média vira ruído neste tamanho */
+  .tbScr td:nth-child(5) .sub,
+  .tbScr td:nth-child(6) .sub,
+  .tbScr td:nth-child(7) .sub{display:none}
+  .tbScr td:nth-child(8){grid-row:3;grid-column:1/-1;padding:6px 0 0 !important}
+  .tbScr td:nth-child(8) div{width:100% !important;margin:0 !important}
+  /* as linhas de índice têm menos células: some com a grade nelas */
+  .tbScr tr.ref td:nth-child(2){display:block;grid-row:2;grid-column:1/-1}
 
   /* ── placar: 7 colunas ── */
   .tbPlacar td:nth-child(1){justify-content:flex-start;font-weight:600}
@@ -1826,11 +1842,11 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
 <div class="w voltarCx" id="voltarCx"></div>
 <main class="w" id="app"><div class="carreg">carregando…</div></main>
 
-<footer class="w"><b style="color:var(--t2);font-weight:500">Caderno de estudo.</b>
+<footer class="w">
 Nada aqui é recomendação de investimento — cada carteira é anotação pessoal de quem a
-publica, sem dinheiro real. A rentabilidade começa no dia da publicação: não há
-histórico retroativo.
-<a href="#/como-funciona" style="color:var(--t2);border-bottom:1px solid var(--linha2)">Como funciona</a>
+publica, sem dinheiro real.
+<a href="#/servicos" style="color:var(--t2);border-bottom:1px solid var(--linha2)">Fale conosco</a>
+ · <a href="#/como-funciona" style="color:var(--t2);border-bottom:1px solid var(--linha2)">Como funciona</a>
  · <a href="#/termos" style="color:var(--t2);border-bottom:1px solid var(--linha2)">Termos e privacidade</a></footer>
 
 <script type="module">
@@ -12613,7 +12629,7 @@ const HUBS = {
       ["Competições","mostre do que você é capaz","#/competicoes"],
       ["Indicações","venha pro mundo real","#/indicacoes"]],
     itens:[["Sua conta","carteiras, time, senha","#/eu"]],
-    aviso:"preço real da B3 · nada aqui é recomendação" },
+    aviso:"" },
 
   "educacional": { olho:"educacional", tit:"Antes de<br>arriscar",
     sub:"Do começo, sem pular etapa.",
@@ -12692,9 +12708,9 @@ const HUBS = {
 
   "escolher-lista": { olho:"screening · ações", tit:"O que você<br>quer olhar?",
     itens:[["Em alta","","#/screening?t=alta"],["Em baixa","","#/screening?t=baixa"],
-      ["Maiores volumes","quem mais girou hoje","#/screening?o=liq"],
-      ["Volume destacado","girou muito acima da própria média","#/screening?o=avat"],
-      ["Índices","o Ibovespa e os setoriais","#/screening?set=1"],
+      ["Maiores volumes","","#/screening?o=liq"],
+      ["Volume destacado","","#/screening?o=avat"],
+      ["Índices","","#/screening?set=1"],
       ["Todos","","#/screening?t=todos"]],
     aviso:"Os outros estados — saindo da alta, virando, sem tendência, saindo da baixa — continuam nas abas de dentro da lista.",
     ponte:["ou","",[["o mesmo em BDR","#/escolher-lista-bdr"]]] },
@@ -12713,7 +12729,7 @@ const HUBS = {
     itens:[["Quem acompanha você","planejamento, assessoria, consultoria, gestão","#/ind-quem"],
       ["Os produtos","renda fixa, variável, previdência, fundos…","#/ind-produtos"],
       ["Proteger o que já existe","seguro, sucessão, blindagem, offshore","#/ind-proteger"]],
-    aviso:"Nada nesta página é recomendação de investimento." },
+    aviso:"" },
 
   "ind-quem": { olho:"indicações", tit:"Quem acompanha<br>você",
     itens:[["Planejamento financeiro","","#/servicos?s=planejamento"],
@@ -12721,7 +12737,7 @@ const HUBS = {
       ["Consultoria de investimentos","","#/servicos?s=consultoria"],
       ["Gestão de recursos","","#/servicos?s=gestao"],
       ["Gestão de grandes fortunas","","#/servicos?s=fortunas"]],
-    aviso:"Nada nesta página é recomendação de investimento." },
+    aviso:"" },
 
   "ind-produtos": { olho:"indicações", tit:"Os produtos",
     itens:[["Renda fixa","","#/servicos?s=rendafixa"],
@@ -12732,7 +12748,7 @@ const HUBS = {
       ["Estratégias com consórcio","","#/servicos?s=consorcio"],
       ["Conta internacional","","#/servicos?s=internacional"],
       ["Ouro, dólar e bitcoin","","#/servicos?s=alternativos"]],
-    aviso:"Nada nesta página é recomendação de investimento." },
+    aviso:"" },
 
   "ind-proteger": { olho:"indicações", tit:"Proteger o que<br>já existe",
     itens:[["Seguro e sucessão","","#/sucessao"],
@@ -12741,7 +12757,7 @@ const HUBS = {
       ["Estruturação empresarial","","#/servicos?s=empresarial"],
       ["Abertura de offshore","","#/servicos?s=offshore"],
       ["Conta no exterior","","#/servicos?s=exterior"]],
-    aviso:"Nada nesta página é recomendação de investimento." },
+    aviso:"" },
 
   "eu": { olho:"sua conta", tit:"Sua conta",
     itens:[["Minhas carteiras","as que você publicou","#/minhas"],
@@ -12914,11 +12930,11 @@ function rotear(){
     }
   }
 
+  pintarVoltar();
   const m = h.match(/^#\/carteira\/(\d+)$/);
   if(m)                       return telaCarteira(m[1]);
   // No celular a home é a escolha de caminho, não o ranking: quem chega numa
   // tabela de dez colunas não sabe o que fazer com ela. No desktop nada muda.
-  pintarVoltar();
   if(h==="#/"||h===""){
     return NO_CELULAR() ? telaHub("inicio") : telaRanking();
   }
