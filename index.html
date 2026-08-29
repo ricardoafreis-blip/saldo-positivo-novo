@@ -1617,7 +1617,7 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
 .hubPlacar .barraP i{display:block;height:100%}
 .hubPlacar .tot{font-size:10.5px;color:var(--graf);margin:8px 0 0}
 .hubEsc .qtd{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--graf);
-  margin-left:auto;flex:none}
+  margin-left:auto;flex:none;min-width:54px;text-align:right}
 .hubPonte{margin-top:20px;padding-top:13px;border-top:1px solid var(--linha)}
 .hubPonte .rt2{font-size:10px;letter-spacing:.13em;text-transform:uppercase;
   color:var(--graf);display:block;margin-bottom:9px}
@@ -1753,16 +1753,20 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
     display:block;font-size:12px;white-space:nowrap}
   .tbScr td:nth-child(5) .sub,.tbScr td:nth-child(6) .sub,
   .tbScr td:nth-child(7) .sub{display:none}
-  .tbScr td:nth-child(9){grid-row:3;grid-column:1;font-size:11px;color:var(--graf)}
-  .tbScr td:nth-child(10){grid-row:3;grid-column:2;font-size:11px}
+  /* "R$ 518 mi" não cabe num terço da linha: ocupa duas colunas, e o %MMVol
+     vai para a terceira. Sem isto o volume aparecia cortado no meio.      */
+  .tbScr td:nth-child(9){grid-row:3;grid-column:1/3;font-size:11px;
+    color:var(--graf);white-space:nowrap;overflow:visible}
+  .tbScr td:nth-child(10){grid-row:3;grid-column:3;font-size:11px;text-align:left}
   .tbScr td:nth-child(8){grid-row:1;grid-column:4;padding:0 !important}
   .tbScr td:nth-child(8) div{width:132px !important;margin:0 0 0 auto !important}
   .tbScr td:nth-child(8) svg{width:132px !important;height:32px !important}
   .tbScr td:nth-child(3){grid-row:2;grid-column:4;text-align:right;font-size:16px}
   .tbScr td:nth-child(4){grid-row:3;grid-column:4;text-align:right;font-size:14px}
-  /* as linhas de índice não têm as três últimas células */
-  .tbScr tr.ref td:nth-child(2){display:block;grid-row:4;grid-column:1/-1;
-    font-family:Inter,sans-serif;font-size:12px}
+  /* A linha de índice tem 9 células, não 11. O estado estava indo para uma
+     quarta fileira e as duas células que faltam deixavam o cartão enorme e
+     vazio. Aqui ela se comporta como as outras: três fileiras, estado fora. */
+  .tbScr tr.ref td:nth-child(2){display:none}
 
   /* ── placar: 7 colunas ── */
   .tbPlacar td:nth-child(1){justify-content:flex-start;font-weight:600}
