@@ -1619,14 +1619,6 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
 .hubEsc > span:first-child{flex:1 1 auto;min-width:0}
 .hubEsc .qtd{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--graf);
   flex:0 0 54px;width:54px;text-align:right;margin:0}
-.hubGr{border-top:1px solid var(--linha);padding:13px 0}
-.hubGr:first-of-type{border-top:none}
-.hubGr .rot{font-family:Newsreader,Georgia,serif;font-size:18px;font-weight:500;display:block}
-.hubGr .df{font-size:11px;color:var(--graf);display:block;margin-bottom:9px}
-.hubGr .pil{display:flex;flex-wrap:wrap;gap:7px}
-.hubGr .pil a{border:1px solid var(--linha2);border-radius:99px;padding:7px 13px;
-  font-size:12.5px;color:var(--t2)}
-.hubGr .pil a:hover{border-color:var(--ouro2);color:var(--ouro2)}
 .hubPonte{margin-top:20px;padding-top:13px;border-top:1px solid var(--linha)}
 .hubPonte .rt2{font-size:10px;letter-spacing:.13em;text-transform:uppercase;
   color:var(--graf);display:block;margin-bottom:9px}
@@ -1890,7 +1882,7 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
         <span class="def">venha pro mundo real</span>
         <div class="painel">
           <a class="topo" href="#/servicos">Falar com um especialista</a>
-          <a href="#/simulador">Fazer a minha conta</a>
+          <a href="#/simulador">Simule o seu planejamento</a>
           <span class="sub">Quem acompanha você</span>
           <a href="#/servicos?s=planejamento">Planejamento financeiro</a>
           <a href="#/servicos?s=assessoria">Assessoria de investimentos</a>
@@ -5334,23 +5326,13 @@ function telaComo(){
       Junto vem o <b>conteúdo</b>: aulas e cursos, uns abertos, outros pagos —
       como em qualquer escola. Quem quiser só a competição fica na competição.</p>
     <p style="color:var(--t2);font-size:13.5px;line-height:1.6;margin:0 0 4px">
-      <b style="color:var(--ouro2)">Ainda não está no ar.</b> Estamos montando
-      com as primeiras turmas. Se você dá aula — em colégio, faculdade, curso
-      livre ou por conta própria — e quer entrar nessa primeira leva,
+      <b style="color:var(--ouro2)">A competição em time já está no ar.</b> Você
+      cria o time, indica qual das suas carteiras concorre, e o capitão aprova
+      quem entra — é em <a href="#/criar-time" style="color:var(--ouro2)">Crie
+      seu time</a>. O que ainda estamos montando é o conteúdo: as aulas e os
+      cursos. Se você dá aula — em colégio, faculdade, curso livre ou por conta
+      própria — e quer entrar nessa primeira leva,
       <a href="#/servicos" style="color:var(--ouro2)">fale com a gente</a>.</p>
-  </div>
-
-  <h2 style="font-size:20px;margin:38px 0 6px">Como o site se paga</h2>
-  <div style="max-width:74ch">
-    <p style="color:var(--t2);font-size:14px;line-height:1.6;margin:0 0 10px">
-      Cotação custa, servidor custa, e quem faz isso trabalha. O Saldo Positivo
-      se sustenta de quatro formas: os <a href="#/servicos">serviços</a> de quem
-      quiser trabalhar com profissional, os <a href="#/clube">clubes</a>, os
-      cursos pagos da área de ensino e, eventualmente, patrocínio.</p>
-    <p style="color:var(--t2);font-size:14px;line-height:1.6;margin:0">
-      Nada disso muda uma linha do ranking. Ninguém compra posição, ninguém
-      compra destaque, e nenhuma carteira publicada aqui é recomendação de
-      investimento — o que decide é o resultado, apurado sozinho, todo pregão.</p>
   </div>
 
   <div class="chamada" style="margin-top:30px">
@@ -5835,7 +5817,7 @@ function telaSucessao(){
   ${blocoSucessao()}
 
   <div class="pontes">
-    <a href="#/simulador" class="bt">Fazer a minha conta</a>
+    <a href="#/simulador" class="bt">Simule o seu planejamento</a>
     <a href="#/servicos" class="bt cheio lacre">Falar com quem faz &rarr;</a>
   </div>`;
 
@@ -5914,6 +5896,12 @@ function blocoSucessao(){
 }
 
 async function telaServicos(){
+  /* Quem chega pelo Educacional pedindo curso ou palestra usa o mesmo
+     formulário, mas o lead é gravado com outra origem — senão pedido de aula
+     e pedido de assessoria caem no mesmo balde do #/leads. */
+  const ORIGEM_LEAD = new URLSearchParams(
+    (location.hash.split("?")[1] || "")).get("origem") === "aulas"
+    ? "aulas" : "servicos";
   const pintar = (recado="", ruim=false) => {
     app().innerHTML = `
     <div class="cabeca" style="text-align:left;max-width:70ch">
@@ -6010,7 +5998,7 @@ async function telaServicos(){
       const bt = document.getElementById("sEnv");
       bt.disabled = true; bt.textContent = "enviando…";
       const { error } = await sb.from("lead").insert({
-        origem: "servicos", nome, whatsapp: tel,
+        origem: ORIGEM_LEAD, nome, whatsapp: tel,
         email:   document.getElementById("sMail").value.trim() || null,
         horario: document.getElementById("sHora").value,
         recado:  document.getElementById("sRec").value.trim() || null,
@@ -12568,8 +12556,43 @@ async function telaCopa(){
 
   const hoje = HOJE_BR();
   const { data:c } = await sb.from("copa").select("*").eq("data", hoje).maybeSingle();
-  if(!c) return app().innerHTML = `<div class="cabeca"><h1>Copa do pregão</h1></div>`
-    + aviso("Hoje não tem copa — fim de semana ou pregão fechado.");
+  if(!c){
+    /* Fim de semana ou pregão fechado: não há copa hoje, mas quase sempre já
+       existe a do próximo pregão com inscrição aberta. Mostrar só o aviso
+       deixava a pessoa sem nada para fazer. */
+    const { data:prox } = await sb.from("copa").select("id,data")
+      .eq("situacao", "inscricoes").order("data").limit(1).maybeSingle();
+    let jaTem = false;
+    if(prox){
+      const { data:v } = await sb.from("copa_vaga").select("usuario_id")
+        .eq("copa_id", prox.id).eq("usuario_id", eu.id).maybeSingle();
+      jaTem = !!v;
+      const { data:vgs } = await sb.from("copa_vaga").select("usuario_id")
+        .eq("copa_id", prox.id);
+      prox.n = (vgs || []).length;
+    }
+    app().innerHTML = `<div class="cabeca"><h1>Copa do pregão</h1></div>`
+      + aviso("Hoje não tem copa — fim de semana ou pregão fechado.")
+      + (prox ? `<div style="max-width:560px;margin:18px auto 0;text-align:center">
+          <p style="color:var(--t2);font-size:13.5px;margin:0 0 12px">
+            A próxima é em <b>${dataBR(prox.data)}</b> — ${prox.n} de 8 na chave.
+            A inscrição já está aberta.</p>
+          ${jaTem
+            ? `<p style="color:var(--ouro2);font-size:13.5px">Você já está na
+               chave de ${dataBR(prox.data)}.</p>`
+            : `<button class="bt lacre" id="btCopa">Inscreva-se para a próxima</button>`}
+          <div id="erro" style="margin-top:12px"></div>
+        </div>` : "");
+    const bt = document.getElementById("btCopa");
+    if(bt) bt.onclick = async () => {
+      bt.disabled = true;
+      const { data, error } = await sb.rpc("entrar_na_copa");
+      if(error) return $("#erro").innerHTML = aviso(error.message, true);
+      $("#erro").innerHTML = aviso(data || "pronto");
+      telaCopa();
+    };
+    return;
+  }
 
   const [{ data:vagas }, { data:jogos }] = await Promise.all([
     sb.from("copa_vaga").select("*").eq("copa_id", c.id).order("ordem"),
@@ -12702,7 +12725,10 @@ const HUBS = {
     itens:[
       ["O que é","nove tipos de investimento, um por um","#/edu-oque"],
       ["Artigos","do começo até quando já há patrimônio","#/edu-artigos"],
-      ["Simulações","faça a conta com os seus números","#/edu-simulacoes"]],
+      ["Simulações","faça a conta com os seus números","#/edu-simulacoes"],
+      ["Peça um curso ou uma palestra",
+       "para a sua turma, empresa ou grupo — online ou presencial",
+       "#/servicos?origem=aulas"]],
     ponte:["daqui você vai para",[["como funciona o site","#/como-funciona"],
       ["as competições","#/competicoes"]]] },
 
@@ -12789,7 +12815,7 @@ const HUBS = {
   "indicacoes": { olho:"indicações", tit:"Venha pro<br>mundo real",
     sub:"Aqui o dinheiro é seu de verdade.",
     acoes:[["Falar com um especialista","#/servicos",true],
-           ["Fazer a minha conta","#/simulador",false]],
+           ["Simule o seu planejamento","#/simulador",false]],
     itens:[["Quem acompanha você","planejamento, assessoria, consultoria, gestão","#/ind-quem"],
       ["Os produtos","renda fixa, variável, previdência, fundos…","#/ind-produtos"],
       ["Proteger o que já existe","seguro, sucessão, blindagem, offshore","#/ind-proteger"]],
@@ -12832,45 +12858,15 @@ const HUBS = {
       ["Assinar","","#/assinar"]] },
 
   "menu": { olho:"menu", tit:"Tudo, de<br>uma vez",
-    sub:"Toda página do site, de uma olhada.",
-    arvore:[
-      ["Educacional","antes de arriscar",[
-        ["Comece por aqui","#/aprender"],["Antes de poupar, saia das dívidas","#/dividas"],
-        ["Como o dinheiro cresce","#/crescer"],["Corrigir não é crescer","#/corrigir"],
-        ["Renda fixa","#/renda-fixa"],["Renda variável","#/renda-variavel"],
-        ["Fundos","#/fundos"],["Previdência","#/previdencia"],["Clubes","#/clubes"],
-        ["Consórcio","#/consorcio"],["Seguro de vida","#/seguro-vida"],
-        ["Ouro, dólar e bitcoin","#/alternativos"],["Investir no exterior","#/internacional"],
-        ["Uma conta que ninguém faz","#/porque"],["Como se monta uma carteira","#/carteira-como"],
-        ["A carteira 60/40","#/sessenta"],["Os grandes acumuladores","#/grandes"],
-        ["Quanto custa o dinheiro","#/credito"],["Sair do aluguel","#/casa"],
-        ["Comprar um bem","#/comprar"],["A escada do consórcio","#/escada"],
-        ["Pôr o patrimônio para trabalhar","#/aplicado"],["Não perder na saída","#/nao-perder"],
-        ["Simulador","#/simulador"],["Simular crédito","#/sim-credito"],
-        ["Simular compra de bem","#/sim-comprar"],["Como funciona o site","#/como-funciona"]]],
-      ["Competições","mostre do que você é capaz",[
-        ["Tiro curto","#/tiro-curto"],["Placar","#/placar"],["Copa do pregão","#/copa"],
-        ["Ranking","#/ranking"],["Crie sua carteira","#/publicar"],
-        ["Mais escolhidos","#/mais-escolhidos"],["Screening","#/escolher-lista"],
-        ["Screening BDR","#/escolher-lista-bdr"],["Duelo de carteiras","#/duelo"],
-        ["Desafiar alguém","#/desafiar"],["Ranking de equipes","#/times"],
-        ["Crie seu time","#/criar-time"],["Meu time","#/meu-time"],
-        ["Regras do time","#/regras-time"]]],
-      ["Indicações","venha pro mundo real",[
-        ["Falar com um especialista","#/servicos"],["Fazer a minha conta","#/simulador"],
-        ["Planejamento financeiro","#/servicos?s=planejamento"],
-        ["Assessoria","#/servicos?s=assessoria"],["Consultoria","#/servicos?s=consultoria"],
-        ["Gestão de recursos","#/servicos?s=gestao"],
-        ["Grandes fortunas","#/servicos?s=fortunas"],
-        ["Clube de investimentos","#/clube"],["Seguro e sucessão","#/sucessao"],
-        ["Blindagem patrimonial","#/servicos?s=blindagem"],
-        ["Offshore","#/servicos?s=offshore"],["Conta no exterior","#/servicos?s=exterior"]]],
-      ["Sua conta","",[
-        ["Minhas carteiras","#/minhas"],["Dados da conta","#/conta"],
-        ["Trocar a senha","#/senha"],["Meu certificado","#/certificado"],
-        ["Indicar o site","#/indicar"],["Assinar","#/assinar"],
-        ["Termos e privacidade","#/termos"]]]
-    ] }
+    sub:"Para quem já sabe onde quer chegar.",
+    itens:[["Educacional","antes de arriscar","#/educacional"],
+      ["Competições","mostre do que você é capaz","#/competicoes"],
+      ["Indicações","venha pro mundo real","#/indicacoes"],
+      ["Sua conta","","#/eu"]],
+    ponte:["ir direto",[["Ranking","#/ranking"],["Tiro curto","#/tiro-curto"],
+      ["Placar","#/placar"],["Screening","#/escolher-lista"],
+      ["Ranking de equipe","#/times"],["Meu time","#/meu-time"],
+      ["Falar com especialista","#/servicos"],["Como funciona","#/como-funciona"]]] }
 };
 
 function telaHub(id){
@@ -12885,11 +12881,6 @@ function telaHub(id){
   const acoes = (h.acoes||[]).map(([t,r,forte]) =>
     `<a href="${r}" class="bt${forte?" lacre":""}" style="display:block;width:100%;
       padding:13px;text-align:center;margin-bottom:9px">${t}</a>`).join("");
-  const arvore = (h.arvore||[]).map(([g,d,ls]) =>
-    `<div class="hubGr"><span class="rot">${g}</span>${
-      d ? `<span class="df">${d}</span>` : ""}
-      <div class="pil">${ls.map(([t,r]) =>
-        `<a href="${r}">${t}</a>`).join("")}</div></div>`).join("");
   const itens = (h.itens||[]).map(([t,d,r]) =>
     `<a class="hubEsc" href="${r}"><span><b>${t}</b>${
       d ? `<span class="d">${d}</span>` : ""}</span>
@@ -12906,7 +12897,7 @@ function telaHub(id){
     ${h.conta ? `<div class="hubPlacar" id="hubPlacar"></div>` : ""}
     <h1>${h.tit}</h1>
     ${h.sub ? `<span class="sub">${h.sub}</span>` : `<span class="sub"></span>`}
-    ${acoes}${frentes}${itens}${arvore}${ponte}
+    ${acoes}${frentes}${itens}${ponte}
     ${h.aviso ? `<p class="hubAviso">${h.aviso}</p>` : ""}
   </div>`;
   if(h.conta) pintarContagemScr(h.conta);
