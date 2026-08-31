@@ -2610,13 +2610,6 @@ async function telaRanking(){
   });
   if(filtro) lista = lista.filter(x=> (x.c.classe||"sem") === filtro);
 
-  /* procura pelo nome da carteira ou pelo apelido de quem publicou — os dois
-     já vêm na RPC painel, não precisa de consulta nova.                    */
-  const buscaR = (q.get("q") || "").trim().toLowerCase();
-  if(buscaR) lista = lista.filter(x =>
-    (x.c.nome    || "").toLowerCase().includes(buscaR) ||
-    (x.c.apelido || "").toLowerCase().includes(buscaR));
-
   const naFila = MINP ? lista.filter(x => (x.m.dias||0) <  MINP) : [];
   if(MINP)     lista = lista.filter(x => (x.m.dias||0) >= MINP);
 
@@ -2688,10 +2681,6 @@ async function telaRanking(){
       class="aba${filtro==="sem"?" on":""}">Sem classe<span class="n">${conta.sem}</span></a>`:""}
   </div>
   <div class="ordena">
-    <input id="buscaCart" value="${esc(q.get("q")||"")}"
-      style="margin:0;min-width:190px;flex:1"
-      placeholder="procurar por carteira ou por quem publicou…">
-    <button class="bt" id="btBuscaCart" style="flex:none;padding:6px 13px">Procurar</button>
     <span class="rot">no pódio, a partir de</span>
     <select id="selMin" class="selOrdem" style="min-width:150px">
       ${[0,10,21,30,63].map(v=>`<option value="${v}"${MINP===v?" selected":""}>${
@@ -2778,21 +2767,11 @@ async function telaRanking(){
     </tbody></table></div>`)}`;
 
   const cauda = (o, mi) => `#/?ordem=${o}${mi ? "&min="+mi : ""}${
-    filtro ? "&classe="+filtro : ""}${
-    buscaR ? "&q="+encodeURIComponent(buscaR) : ""}`;
+    filtro ? "&classe="+filtro : ""}`;
   const so = $("#selOrdem");
   if(so) so.onchange = e => location.hash = cauda(e.target.value, MINP);
   const sm = $("#selMin");
   if(sm) sm.onchange = e => location.hash = cauda(ordem, +e.target.value);
-
-  const bc = $("#buscaCart"), bb = $("#btBuscaCart");
-  const irBusca = () => {
-    const t = (bc.value || "").trim();
-    location.hash = `#/?ordem=${ordem}${MINP ? "&min="+MINP : ""}${
-      filtro ? "&classe="+filtro : ""}${t ? "&q="+encodeURIComponent(t) : ""}`;
-  };
-  if(bb) bb.onclick = irBusca;
-  if(bc) bc.onkeydown = e => { if(e.key === "Enter") irBusca(); };
 
   clearInterval(window.__timerRank);
   clearInterval(window.__timerVivo);
@@ -3663,17 +3642,8 @@ async function telaAdmin(){
   const { data:dias } = await sb.from("oscilacao").select("data").order("data",{ascending:false}).limit(1);
   const { data:ultFech } = await sb.from("retorno_dia").select("data")
     .order("data",{ascending:false}).limit(1);
-  /* Só o último pregão apurado, não a série inteira: a retorno_dia já passou
-     de duas mil linhas e o PostgREST corta em mil. Vinham as datas mais
-     antigas, e carteira criada depois disso ficava sem acumulado — o traço na
-     coluna. O índice do último dia já é o acumulado desde a publicação.     */
-  const diaFech = ultFech && ultFech.length ? ultFech[0].data : null;
-  const acum = {};
-  if(diaFech){
-    const { data:rets } = await sb.from("retorno_dia")
-      .select("carteira_id,indice").eq("data", diaFech);
-    (rets||[]).forEach(r => acum[r.carteira_id] = r.indice/100 - 1);
-  }
+  const { data:rets } = await sb.from("retorno_dia").select("carteira_id,indice,data").order("data");
+  const acum = {}; (rets||[]).forEach(r=> acum[r.carteira_id] = r.indice/100 - 1);
   let fila = [];
   try{ const { data:fq } = await sb.rpc("admin_fila", { so_pendente:true }); fila = fq||[]; }catch(e){}
   let assin = {};
@@ -4432,30 +4402,12 @@ function telaNovaSenha(){
   };
 }
 
-/* O universo passou de mil linhas com os BDRs, e o PostgREST corta a resposta
-   em mil. Buscar de uma vez trazia a lista truncada: quem ficasse de fora caía
-   no `|| "acao"` e aparecia na tela de ações. Aqui vem em páginas, e só o que
-   não é ação — o resto é ação por omissão.                                   */
-async function tiposDoUniverso(){
-  const mapa = {}; const passo = 900;
-  for(let de = 0; ; de += passo){
-    const { data, error } = await sb.from("universo").select("ativo,tipo")
-      .order("ativo").range(de, de + passo - 1);
-    if(error || !data || !data.length) break;
-    data.forEach(u => { mapa[u.ativo] = u.tipo; });
-    if(data.length < passo) break;
-  }
-  return mapa;
-}
-
 async function telaScreening(classe){
   /* Duas listas com a mesma tela: 'acao' e 'bdr'. O tipo mora no universo,
      nao na quant_medias — por isso o mapa abaixo. Os indices ficam de fora
      do filtro: eles sao a regua das duas listas.                            */
   classe = classe || "acao";
   const ROTA = classe === "bdr" ? "#/screening-bdr" : "#/screening";
-  const UM   = classe === "bdr" ? "BDR"  : "papel";
-  const MUI  = classe === "bdr" ? "BDRs" : "papéis";
   const JANELA_GRAFICO = 90;
   let data;
   if(QM && Date.now() - QM_EM < QM_VALE){
@@ -4473,16 +4425,12 @@ async function telaScreening(classe){
   const emP = emPregao();
   const mk = await mercadoCache();
   const AOVIVO = mk.p || {};
-  /* Só o que NÃO é ação: o universo já passou de mil linhas com os BDRs, e o
-     PostgREST corta em mil por resposta. Buscar tudo trazia a lista truncada,
-     e quem ficasse de fora caía no `|| "acao"` do TIPO — BDR aparecendo na
-     tela de ações. Pedindo só o resto, a resposta é pequena e não trunca.   */
-  const [{ data:oscDia }, univ] = await Promise.all([
+  const [{ data:oscDia }, { data:univ }] = await Promise.all([
     sb.from("oscilacao").select("ativo,valor").eq("data", HOJE_BR()),
-    tiposDoUniverso()
+    sb.from("universo").select("ativo,tipo")
   ]);
   const OSC = {}; (oscDia||[]).forEach(o => { OSC[o.ativo] = o.valor; });
-  const TIPO = univ;
+  const TIPO = {}; (univ||[]).forEach(u => { TIPO[u.ativo] = u.tipo; });
 
   const q = new URLSearchParams(location.hash.split("?")[1]||"");
   const filtro = q.get("t") || "todos";
@@ -4540,21 +4488,10 @@ async function telaScreening(classe){
   });
 
   const amplo = todosCalc.find(x => IND_AMPLO.includes(x.ativo)) || null;
-  /* BDR é cotado em real mas segue bolsa americana: o IBOVESPA sozinho é régua
-     errada para eles. Na tela de BDR entra o IVVB11 logo abaixo, para dar de
-     ver contra qual dos dois mercados o papel está andando.                  */
-  const regua2 = classe === "bdr"
-    ? (todosCalc.find(x => x.ativo === "IVVB11") || null) : null;
-  const reguas = [...(amplo ? [amplo] : []), ...(regua2 ? [regua2] : [])];
   const setoriais = todosCalc.filter(x => IND_SET[x.ativo] != null)
     .sort((a,b) => Object.keys(IND_SET).indexOf(a.ativo) - Object.keys(IND_SET).indexOf(b.ativo));
 
-  /* Só entra quem está no universo com a classe da tela. Papel fora do
-     universo — retirado de propósito, mas que ainda tem barra no banco —
-     não aparece em lista nenhuma. Antes o `|| "acao"` fazia todo papel sem
-     tipo cair na tela de ações: bastou apagar os BDRs do universo para os
-     674 reaparecerem lá.                                                    */
-  const daClasse = a => !ehIndice(a) && TIPO[a] === classe;
+  const daClasse = a => ehIndice(a) ? false : (TIPO[a] || "acao") === classe;
   let l = todosCalc.filter(x => daClasse(x.ativo));
   todosCalc.forEach(x => { x.forca = (x.ema72 && x.ema72 > 0) ? x.fech/x.ema72 - 1 : null; });
 
@@ -4597,6 +4534,11 @@ async function telaScreening(classe){
   const dp = (fech, ponto) => (ponto > 0 && fech > 0)
     ? `<span class="sub ${cor(fech/ponto - 1)}">${pct(fech/ponto - 1)}</span>` : "";
 
+  const grana = v => v == null ? "—"
+    : v >= 1e9 ? "R$ " + n2(v/1e9,1) + " bi"
+    : v >= 1e6 ? "R$ " + n2(v/1e6,0) + " mi"
+    : "R$ " + n2(v/1e3,0) + " mil";
+
   const exemploRisco = () => {
     const v = []; let p = 100;
     for(let i=0;i<60;i++){ p *= 1 + (i<26?-.004:.007) + Math.sin(i*.9)*.004; v.push(p); }
@@ -4610,7 +4552,7 @@ async function telaScreening(classe){
   app().innerHTML = `
   <div class="cabeca">
     <h1>Screening${classe === "bdr" ? " BDR" : ""}</h1>
-    <p>Em que fase da tendência cada ${UM} está,
+    <p>Em que fase da tendência cada ${classe === "bdr" ? "BDR" : "papel"} está,
       pela ordem de <b>três pontos de força</b> — o do trader, o do investidor e
       o do institucional — e pela posição do preço entre eles.</p>
   </div>
@@ -4623,9 +4565,9 @@ async function telaScreening(classe){
     const dec = A + B, p = dec ? A/dec : .5;
     const [frase, tom] =
       p >= .70 ? ["A maior parte da bolsa está em alta.", "alta"] :
-      p >= .56 ? [`Há mais ${UM} subindo do que caindo.`, "alta"] :
+      p >= .56 ? ["Há mais papel subindo do que caindo.", "alta"] :
       p >= .44 ? ["Bolsa dividida: sobe e cai em partes parecidas.", ""] :
-      p >= .30 ? [`Há mais ${UM} caindo do que subindo.`, "baixa"] :
+      p >= .30 ? ["Há mais papel caindo do que subindo.", "baixa"] :
                  ["A maior parte da bolsa está em baixa.", "baixa"];
     const fatia = (n,cls) => n ? `<i class="${cls}" style="flex:${n}"></i>` : "";
     return `
@@ -4639,7 +4581,7 @@ async function telaScreening(classe){
     </div>
     <a href="${link({t:"baixa"})}" class="lado baixa"><b>${B}</b><span>em baixa</span></a>
   </div>
-  <p class="tpe">De ${tot} ${MUI} acompanhados${soLiq?`, acima de ${LIQ_ROT} de giro`:""}.
+  <p class="tpe">De ${tot} papéis acompanhados${soLiq?`, acima de ${LIQ_ROT} de giro`:""}.
     Não é previsão nem recomendação: é a contagem de hoje, e ela muda todo pregão.</p>`;
   })()}
 
@@ -4677,18 +4619,18 @@ async function telaScreening(classe){
   </div>
 
   ${!l.length ? `<div class="card"><p style="margin:0;color:var(--t2)">
-      Nenhum ${UM} neste filtro.${!(data||[]).length
+      Nenhum papel neste filtro.${!(data||[]).length
         ? " O cálculo precisa de alguns meses de histórico e o robô ainda não juntou tanto."
         : ""}</p></div>`
-  : `<div class="rolagem"><table class="tabScr"><thead><tr><th>${classe === "bdr" ? "BDR" : "Papel"}</th><th class="estica">Estado</th>
+  : `<div class="rolagem"><table class="tabScr"><thead><tr><th>Papel</th><th class="estica">Estado</th>
       <th class="d">Preço</th><th class="d">No dia</th>
       <th class="d mA m1 some">Trader</th><th class="d mA m2 some">Investidor</th><th class="d mA m3 some">Institucional</th>
       <th class="d some graf" style="min-width:196px;padding-left:18px">${JANELA_GRAFICO} pregões</th>
       <th class="d some" title="volume financeiro negociado hoje">Volume</th>
       <th class="d some" title="volume de hoje sobre a média móvel dos últimos 21 pregões — 1,0 é o normal do papel"
         >%MMVol</th></tr></thead><tbody>
-    ${[...reguas, ...(verSet?setoriais:[])].map(x=>`<tr class="ref${
-        reguas.includes(x)?"":" set"}">
+    ${[...(amplo?[amplo]:[]), ...(verSet?setoriais:[])].map(x=>`<tr class="ref${
+        x===amplo?"":" set"}">
       <td class="mono cod">${esc(x.ativo==="IBOV"||x.ativo==="^BVSP"?"IBOVESPA":x.ativo.replace("^",""))}${
         IND_SET[x.ativo]?`<span class="nm">${IND_SET[x.ativo]}</span>`:""}</td>
       <td class="estica ${tomDe(x.e)}" style="font-size:12.5px">${ROT[x.e]}${x.vivo?'<sup style="font-size:10px;opacity:.7;margin-left:2px" title="parcial — a fase pode mudar até o fechamento">•</sup>':""}</td>
@@ -4808,9 +4750,7 @@ async function telaScreening(classe){
       if(document.activeElement && document.activeElement.tagName === "INPUT") return;
       await mercadoCache(true);
       const y = window.scrollY;
-      /* com a classe: sem ela a repintura de 30s caía no padrão 'acao' e
-         trocava o Screening BDR pela lista de ações por baixo do pano.    */
-      telaScreening(classe).then(() => window.scrollTo(0, y));
+      telaScreening().then(() => window.scrollTo(0, y));
     }, 30000);
   }
 }
@@ -10537,14 +10477,6 @@ async function telaTimes(){
     cicloAberto(), meusTimes()
   ]);
   const souDe = {}; meus.forEach(m => souDe[m.time_id] = m.situacao);
-
-  /* Dois campeonatos correm ao mesmo tempo — o mensal e o trimestral — e o
-     time se inscreve num ou noutro. A aba decide qual está na tela; o padrão
-     é o que já começou, não o mais distante.                                */
-  const emCurso = ciclos.filter(c => c.situacao === "aberto");
-  const cicloSel = ciclos.find(c => String(c.id) === q.get("c"))
-                || emCurso[emCurso.length - 1] || ciclos[ciclos.length - 1]
-                || { id:-1, tipo:"—", inicio:null, fim:null, situacao:"—" };
   const lista = (times || []).filter(t => !busca
     || t.nome.toLowerCase().includes(busca)
     || (TEMAS[t.tema]||"").toLowerCase().includes(busca));
@@ -10555,11 +10487,8 @@ async function telaTimes(){
     const a = await sb.from("time_membro").select("time_id,usuario_id,situacao")
       .in("time_id", ids).eq("situacao","ativo");
     membros = a.data || [];
-    /* filtra pelo ciclo da aba: com dois campeonatos correndo ao mesmo tempo,
-       misturar as séries daria número que não é de nenhum dos dois.        */
     const b = await sb.from("time_carteira_dia")
-      .select("time_id,data,indice,retorno,ativos,ciclo_id").in("time_id", ids)
-      .eq("ciclo_id", cicloSel.id)
+      .select("time_id,data,indice,retorno,ativos").in("time_id", ids)
       .order("data", { ascending:false }).limit(600);
     dias = b.data || [];
   }
@@ -10636,28 +10565,20 @@ async function telaTimes(){
         lista.length===1?"time":"times"}</span>
       <span class="p"><span class="n">${membros.length}</span>${
         membros.length===1?"integrante":"integrantes"}</span>
-      ${cicloSel.inicio?`<span class="p viva"><span class="pontinho"></span>ciclo
-        <span class="n" style="color:var(--ouro2)">${esc(cicloSel.tipo)}</span></span>`:""}
+      ${ciclos.length?`<span class="p viva"><span class="pontinho"></span>ciclo
+        <span class="n" style="color:var(--ouro2)">${esc(ciclos[0].tipo)}</span></span>`:""}
     </div>
+    <p style="margin:20px 0 0">
+      ${meus.length ? `<a href="#/meu-time" class="bt">Meus times (${meus.length})</a>` : ""}
+      <a href="#/criar-time" class="bt lacre"${meus.length?' style="margin-left:8px"':""
+        }>Criar um time &rarr;</a>
+    </p>
   </div>
 
-  ${ciclos.length > 1 ? `<div class="chips" style="margin-bottom:14px">${ciclos.map(c => `
-    <a class="chip${c.id === cicloSel.id ? " on" : ""}"
-       href="#/times?c=${c.id}${q.get("r")?"&r="+esc(q.get("r")):""}">${esc(c.tipo)}
-       <span style="color:var(--graf);font-size:10.5px">${dataBR(c.inicio)} a ${dataBR(c.fim)}</span>
-    </a>`).join("")}</div>
-  <p style="margin:-6px 0 16px;font-size:12px;color:var(--graf)">
-    Cada time se inscreve num campeonato ou no outro. Vence quem somar as
-    <b>menores posições</b> nas três réguas — rentabilidade, Sharpe e menor
-    queda —, que é a aba <b>Geral</b>.</p>` : ""}
-
-  <div class="card" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-    <input id="buscaTime" value="${esc(q.get("q")||"")}" style="flex:1;min-width:200px;margin:0"
+  <div class="card" style="display:flex;gap:8px;align-items:center">
+    <input id="buscaTime" value="${esc(q.get("q")||"")}" style="flex:1;margin:0"
       placeholder="procurar time pelo nome — faculdade, empresa, turma…">
     <button class="bt" id="btBusca" style="flex:none">Procurar</button>
-    <span style="flex:none;width:1px;height:26px;background:var(--linha)"></span>
-    ${meus.length ? `<a href="#/meu-time" class="bt" style="flex:none">Meus times (${meus.length})</a>` : ""}
-    <a href="#/criar-time" class="bt lacre" style="flex:none">Criar um time &rarr;</a>
   </div>
 
   ${cod ? `<div class="card" style="border-color:var(--lacre)">
@@ -10673,10 +10594,10 @@ async function telaTimes(){
     ? `<div class="card"><p style="margin:0;color:var(--t2)">Nenhum time ainda.
         O primeiro pode ser o seu.</p></div>`
     : `<div class="chips">${Object.entries(REGUAS_TIME).map(([k,r])=>
-        `<a href="#/times?r=${k}&c=${cicloSel.id}" class="chip${k===chave?" on":""}">${esc(r.nome)}</a>`).join("")}</div>
+        `<a href="#/times?r=${k}" class="chip${k===chave?" on":""}">${esc(r.nome)}</a>`).join("")}</div>
       <table><thead><tr><th class="d">#</th><th></th><th>Time</th><th>Capitão</th>
         <th class="d">Gente</th><th class="d">Rent.</th><th class="d">Sharpe</th>
-        <th class="d">Queda</th><th></th></tr></thead><tbody>
+        <th class="d">Queda</th><th class="d">Geral</th><th></th></tr></thead><tbody>
       ${ord.map((t,i)=>{
         const m = met[t.id], p = posDe[t.id] || {}, n = conta[t.id] || 0;
         const cel = (v, txt, pos) => `<td class="d mono ${v==null?"nulo":""}">${
@@ -10695,6 +10616,7 @@ async function telaTimes(){
           ${cel(m?.acum,   `<span class="${m?cor(m.acum):""}">${pct(m?.acum)}</span>`, p.acum)}
           ${cel(m?.sharpe, n2(m?.sharpe), p.sharpe)}
           ${cel(m?.dd,     `<span class="baixa">${pct(m?.dd)}</span>`, p.dd)}
+          <td class="d mono ${p.geral==null?"nulo":""}"><b>${p.geral ?? "—"}</b></td>
           <td class="d" onclick="event.stopPropagation()">${
             souDe[t.id] === "ativo"  ? '<span class="pill">no time</span>'
           : souDe[t.id] === "pedido" ? '<span class="pill">pedido enviado</span>'
@@ -10705,7 +10627,9 @@ async function telaTimes(){
       <p style="margin:12px 0 0;font-size:11.5px;color:var(--graf)">
         Rentabilidade e queda contam desde o primeiro pregão. O Sharpe entra no
         segundo — com um retorno só não há dispersão para medir — e vai ganhando
-        corpo a cada dia. A aba <b>Geral</b> ordena pela soma das posições nas três réguas: quem soma menos está na frente, e é a mesma conta que fecha o ciclo.</p>`}`;
+        corpo a cada dia. O <b>Geral</b> soma as posições das réguas que já
+        existem no dia; quem soma menos está na frente, e é a mesma conta que
+        fecha o ciclo.</p>`}`;
 
   const bc = document.getElementById("btConvite");
   if(bc) bc.onclick = () => pedirEntrada(cod);
@@ -11505,11 +11429,6 @@ function pegarDestino(){
    ===================================================================== */
 
 
-const grana = v => v == null ? "—"
-  : v >= 1e9 ? "R$ " + n2(v/1e9,1) + " bi"
-  : v >= 1e6 ? "R$ " + n2(v/1e6,0) + " mi"
-  : "R$ " + n2(v/1e3,0) + " mil";
-
 /* ---------- leitura de tendência: nasceram dentro da telaScreening e
    subiram para cá quando o Tiro curto passou a mostrar a mesma ficha
    dos papéis. Nada mudou dentro delas. ---------- */
@@ -11689,11 +11608,6 @@ async function telaTiroCurto(){
     const y = (v && v[0] > 0 && v[2] > 0)
       ? { ...x, fech:v[0], osc:v[1], ema17:v[2], ema34:v[3], ema72:v[4] }
       : { ...x };
-    /* giro do dia e a média de 21 pregões, do mesmo jeito que o Screening
-       monta: a liquidez da quant_medias é a média; o v[5] do ao vivo é o
-       giro de hoje, quando existe.                                        */
-    y.liqMedia = x.liquidez;
-    if(v && v[5] > 0){ y.liquidez = Number(v[5]); y.giroHoje = true; }
     y.e = estadoDe(y);
     FICHA[x.ativo] = y;
   });
@@ -11745,7 +11659,7 @@ async function telaTiroCurto(){
 
   ${["sobe","cai","volume"].map(j =>
       jogoPapeis(j, sorteio[j] || [], voto[j], FICHA, aberta)).join("")}
-  ${jogoPetr(sel, voto.petr, aberta, FICHA)}
+  ${jogoPetr(sel, voto.petr, aberta)}
 
   <p style="margin:22px 0 0;font-size:12px;color:var(--graf)">
     Dá para trocar o palpite até a hora começar. Ninguém vê o voto de ninguém
@@ -11816,30 +11730,21 @@ function jogoPapeis(chave, ativos, escolhido, FICHA, aberta){
         </div>
       </div>
       ${x ? `<div style="display:flex;gap:16px;margin-top:6px;font-size:11px;
-                         color:var(--graf);flex-wrap:wrap">
+                         color:var(--graf)">
         <span>trader <b class="mono">${n2(x.ema17)}</b></span>
         <span>investidor <b class="mono">${n2(x.ema34)}</b></span>
-        <span>institucional <b class="mono">${n2(x.ema72)}</b></span>
-        ${chave === "volume" ? `<span>gira hoje <b class="mono">${
-            x.giroHoje ? grana(x.liquidez) : "—"}</b></span>
-          <span>média de 21 <b class="mono">${grana(x.liqMedia)}</b></span>` : ""}
-        </div>` : ""}
+        <span>institucional <b class="mono">${n2(x.ema72)}</b></span></div>` : ""}
     </button>`;
   }).join("");
   return cxJogo(chave, linhas, escolhido);
 }
 
-function jogoPetr(rodada, escolhido, aberta, ficha){
+function jogoPetr(rodada, escolhido, aberta){
   const alvo = rodada.corte_petr;
   const rot = alvo ? "R$ " + (alvo/1e6).toFixed(0) + " milhões" : "o corte do dia";
-  const p = ficha && ficha.PETR4;
   return cxJogo("petr", `
     <p style="margin:0 0 10px;font-size:12.5px;color:var(--t2)">
       A PETR4 vai girar acima ou abaixo de <b>${esc(rot)}</b> nesta hora?</p>
-    ${p ? `<p style="margin:0 0 10px;font-size:11px;color:var(--graf)">
-      no dia ela girou <b class="mono">${p.giroHoje ? grana(p.liquidez) : "—"}</b>,
-      contra uma média de 21 pregões de
-      <b class="mono">${grana(p.liqMedia)}</b></p>` : ""}
     <div class="chips">
       ${["acima","abaixo"].map(v =>
         `<button class="chip vJ" data-j="petr" data-v="${v}"${
@@ -12031,45 +11936,14 @@ async function telaDuelo(){
       período. Mesma classe contra mesma classe, no mínimo ${DUELO_MIN} pregões,
       e <b>a carteira não congela</b> — mexa nela quando quiser, valendo do
       pregão seguinte.</p>
-    ${(abertos.length || chamados.length) ? `<div class="prova">
-      ${abertos.length?`<span class="p"><span class="n">${abertos.length}</span>em andamento</span>`:""}
+    <div class="prova">
+      <span class="p"><span class="n">${abertos.length}</span>em andamento</span>
       ${chamados.length?`<span class="p viva"><span class="pontinho"></span>
         <span class="n" style="color:var(--ouro2)">${chamados.length}</span>te chamaram</span>`:""}
-    </div>` : ""}
+    </div>
+    <p style="margin:20px 0 0"><button class="bt lacre" id="btDesafiar">Desafiar alguém</button></p>
   </div>
   <div id="erro"></div>
-
-  ${(meus.length || feitos.length) ? "" : `
-  <div class="card" style="max-width:620px;margin-bottom:20px">
-    <div style="display:flex;gap:22px;align-items:flex-start;margin-bottom:16px">
-      <div style="font-size:13px;color:var(--ouro2);font-weight:600;
-                  min-width:16px;text-align:center">1</div>
-      <div><b style="font-size:14px">Escolha o adversário e o prazo</b>
-        <p style="margin:3px 0 0;font-size:12.5px;color:var(--t2)">Você diz quem
-          quer enfrentar, com qual carteira sua, e de quando até quando. O prazo
-          mínimo é de ${DUELO_MIN} pregões.</p></div>
-    </div>
-    <div style="display:flex;gap:22px;align-items:flex-start;margin-bottom:16px">
-      <div style="font-size:13px;color:var(--ouro2);font-weight:600;
-                  min-width:16px;text-align:center">2</div>
-      <div><b style="font-size:14px">A pessoa aceita com a carteira dela</b>
-        <p style="margin:3px 0 0;font-size:12.5px;color:var(--t2)">Tem de ser da
-          mesma classe que a sua — comprada contra comprada, vendida contra
-          vendida. Enquanto ela não aceitar, o duelo não começa.</p></div>
-    </div>
-    <div style="display:flex;gap:22px;align-items:flex-start">
-      <div style="font-size:13px;color:var(--ouro2);font-weight:600;
-                  min-width:16px;text-align:center">3</div>
-      <div><b style="font-size:14px">Ganha quem rendeu mais</b>
-        <p style="margin:3px 0 0;font-size:12.5px;color:var(--t2)">No fim do
-          prazo, o placar sai sozinho. A carteira não congela: mexa nela quando
-          quiser durante o duelo, valendo do pregão seguinte.</p></div>
-    </div>
-    <p style="margin:18px 0 0"><button class="bt lacre" id="btDesafiar">Desafiar alguém</button></p>
-  </div>` }
-
-  ${(meus.length || feitos.length) ? `<p style="margin:0 0 20px">
-    <button class="bt lacre" id="btDesafiar">Desafiar alguém</button></p>` : ""}
 
   ${chamados.length ? `
   <h2 style="font-size:19px;margin:26px 0 12px">Te desafiaram</h2>
@@ -12093,9 +11967,11 @@ async function telaDuelo(){
     <th class="d">Situação</th></tr></thead>
   <tbody>${abertos.map(linha).join("")}</tbody></table>` : ""}
 
-  ${!feitos.length ? "" : `
   <h2 style="font-size:19px;margin:26px 0 12px">Duelos encerrados</h2>
-    <table><thead><tr><th>Desafiante</th><th></th><th>Desafiado</th>
+  ${!feitos.length
+    ? `<div class="card"><p style="margin:0;color:var(--t2);font-size:13px">
+        Nenhum duelo terminou ainda.</p></div>`
+    : `<table><thead><tr><th>Desafiante</th><th></th><th>Desafiado</th>
         <th class="d">Período</th><th class="d">A</th><th class="d">B</th>
         <th class="d">Venceu</th></tr></thead>
       <tbody>${feitos.slice(0,40).map(linha).join("")}</tbody></table>`}`;
@@ -12278,11 +12154,7 @@ async function telaCopa(){
     ? `<div class="card"><p style="margin:0;color:var(--t2);font-size:13.5px">
         ${vg.length
           ? "A chave é sorteada quando a rodada das 11h fechar."
-          : c.situacao === "inscricoes"
-            ? "Ninguém se inscreveu ainda. As oito vagas vão por ordem de chegada."
-            : "A copa de hoje não aconteceu: menos de duas pessoas na chave quando "
-              + "as inscrições fecharam. A de amanhã abre inscrição assim que o "
-              + "pregão de hoje for apurado."}
+          : "Ninguém se inscreveu ainda. As oito vagas vão por ordem de chegada."}
         </p>${vg.length?`<div class="chips" style="margin-top:12px">${vg.map(v =>
           `<span class="chip">${v.ordem}. ${esc(nomes[v.usuario_id]||"—")}</span>`).join("")}</div>`:""}
       </div>`
