@@ -4297,13 +4297,10 @@ async function telaConta(soCarteiras){
         voltar, é só escrever.</p></div>`;
   };
 
-  ligarApagarMinhas(cs, soCarteiras);
+  ligarApagarMinhas();
 }
 
-/* cs e soCarteiras são da telaConta, e esta função é irmã dela, não filha:
-   sem receber os dois, "cs is not defined" estourava aqui e as três seções de
-   baixo — certificados, time e títulos — ficavam presas em "apurando…". */
-function ligarApagarMinhas(cs, soCarteiras){
+function ligarApagarMinhas(){
   document.querySelectorAll(".del-minha").forEach(b=> b.onclick = ()=> apagarMinha(b));
 
   /* certificados: precisa do painel para saber a posição de cada carteira no
