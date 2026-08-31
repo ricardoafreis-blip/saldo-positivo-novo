@@ -35,7 +35,7 @@ messages_2026_08_29 | 0
 messages_2026_08_30 | 0
 messages_2026_08_31 | 0
 messages_2026_09_01 | 0
-mfa_amr_claims | 7
+mfa_amr_claims | 8
 mfa_challenges | 0
 mfa_factors | 0
 migrations | 65
@@ -55,7 +55,7 @@ peso_atual_backup | 46
 posicao | 600
 rebalanceamento | 440
 referencia | 11
-refresh_tokens | 18
+refresh_tokens | 20
 regra | 80
 resumo | 84
 retorno_dia | 2492
@@ -71,7 +71,7 @@ schema_migrations | 81
 secrets | 0
 seguidor | 0
 seguindo | 0
-sessions | 7
+sessions | 8
 sso_domains | 0
 sso_providers | 0
 subscription | 0
