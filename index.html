@@ -1597,36 +1597,6 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
 .hubEsc .d{font-size:11.5px;color:var(--graf);display:block;margin-top:1px}
 .hubEsc .seta{margin-left:auto;color:var(--graf);flex:none}
 .hubEsc:hover{border-color:var(--linha2)}
-.voltarCx{display:none;margin:0 0 12px}
-.voltarBt{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--linha2);
-  border-radius:99px;padding:7px 14px 7px 11px;font-size:12.5px;color:var(--t2);
-  background:var(--p2);cursor:pointer;font-family:inherit}
-.voltarBt:hover{border-color:var(--ouro2);color:var(--ouro2)}
-.voltarBt i{font-style:normal;font-size:15px;line-height:1}
-@media(max-width:820px){ .voltarCx{display:block} }
-.hubPlacar{border:1px solid var(--linha2);border-radius:13px;background:var(--p2);
-  padding:13px;text-align:center;margin:0 0 14px;max-width:100%}
-.hubPlacar .n{display:flex;align-items:baseline;justify-content:center;gap:11px}
-.hubPlacar .n b{font-family:'IBM Plex Mono',monospace;font-size:30px;font-weight:600;line-height:1}
-.hubPlacar .n .x{color:var(--graf);font-size:15px}
-.hubPlacar .r{display:flex;justify-content:center;gap:11px;margin-top:4px;
-  font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--graf)}
-.hubPlacar .r span{width:86px}
-.hubPlacar .barraP{display:flex;height:5px;border-radius:99px;overflow:hidden;
-  margin:10px 0 0;background:var(--p3)}
-.hubPlacar .barraP i{display:block;height:100%}
-.hubPlacar .tot{font-size:10.5px;color:var(--graf);margin:8px 0 0}
-.hubEsc > span:first-child{flex:1 1 auto;min-width:0}
-.hubEsc .qtd{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--graf);
-  flex:0 0 54px;width:54px;text-align:right;margin:0}
-.hubGr{border-top:1px solid var(--linha);padding:13px 0}
-.hubGr:first-of-type{border-top:none}
-.hubGr .rot{font-family:Newsreader,Georgia,serif;font-size:18px;font-weight:500;display:block}
-.hubGr .df{font-size:11px;color:var(--graf);display:block;margin-bottom:9px}
-.hubGr .pil{display:flex;flex-wrap:wrap;gap:7px}
-.hubGr .pil a{border:1px solid var(--linha2);border-radius:99px;padding:7px 13px;
-  font-size:12.5px;color:var(--t2)}
-.hubGr .pil a:hover{border-color:var(--ouro2);color:var(--ouro2)}
 .hubPonte{margin-top:20px;padding-top:13px;border-top:1px solid var(--linha)}
 .hubPonte .rt2{font-size:10px;letter-spacing:.13em;text-transform:uppercase;
   color:var(--graf);display:block;margin-bottom:9px}
@@ -1639,55 +1609,9 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
    Só 2 das 23 tabelas do site estavam dentro de um .rolagem. As outras 21
    empurravam a página inteira para o lado no celular. Aqui cada tabela vira
    seu próprio quadro de rolagem, sem precisar mexer em nenhuma delas.      */
-/* ══ NADA ESTOURA A TELA, TAMBÉM DEITADO ═════════════════════════════════
-   O celular deitado reporta de 915 a 1170px, acima dos 820 — por isso a rede
-   de baixo não o alcançava e a barra lateral disparava. Aqui só entram travas
-   de largura: nada muda de layout, só se impede de passar da tela.        */
-@media(max-width:1180px){
-  html,body{max-width:100%;overflow-x:hidden}
-  #app table,#app .comp,#app svg,#app img,#app canvas,#app iframe{max-width:100%}
-  .rolagem,.rolaX{max-width:100%}
-  header .alto{gap:10px}
-  header .alto > *{min-width:0}
-}
-
 @media(max-width:820px){
-  /* ══ NADA ESTOURA A TELA ════════════════════════════════════════════════
-     Vale de pé e deitado: 820px cobre o retrato (360–430) e a paisagem
-     (740–930) de qualquer celular. A página nunca rola para o lado; quando
-     uma tabela não cabe, quem rola é ela, dentro do próprio quadro.
-     As larguras mínimas fixas que existiam — .rolagem table e .rolaX .comp —
-     são zeradas por nome, e o resto é preso pelo max-width.               */
-  html,body{max-width:100%;overflow-x:hidden}
-
-  /* ── 1. o cabeçalho estava empurrando o botão de menu para fora ──────────
-     .alto é flex com gap de 20px e nada podia encolher: marca + apelido +
-     ADMIN + risquinhos somavam mais que a tela, e o último saía pela direita.
-     Agora o bloco do meio encolhe e o menu fica sempre visível.           */
-  header .alto{gap:8px;flex-wrap:nowrap}
-  header .marca{font-size:20px;flex:0 0 auto}
-  .hamb{flex:0 0 auto;margin-left:0;order:9}
-  header .alto .dir,header .alto #navDir{
-    flex:1 1 auto;min-width:0;overflow:hidden;justify-content:flex-end}
-  header .alto #navDir *{min-width:0;max-width:100%}
-  header .alto #navDir a,header .alto #navDir span,header .alto #navDir summary{
-    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-
-  /* ── 2. o cartão do screening saía pela direita ──────────────────────────
-     A coluna do meio era 1fr, que não encolhe abaixo do conteúdo. Com
-     minmax(0,1fr) e min-width:0 nas células, a linha nunca passa da tela. */
-  .tbScr tr{grid-template-columns:1fr 1fr 1fr 132px !important}
-  .tbScr td:nth-child(5),.tbScr td:nth-child(6),.tbScr td:nth-child(7){
-    text-align:left;overflow:visible}
-  .tbScr td:nth-child(9){white-space:nowrap}
-  .tbCard td{min-width:0;overflow:hidden}
-  .tbScr td:nth-child(8) svg{max-width:100%}
   table{display:block;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
-  #app table,#app .comp,#app svg,#app img,#app pre,#app canvas,#app iframe{
-    max-width:100%}
-  .rolagem table,.rolaX .comp{min-width:0}
-  .rolagem,.rolaX{max-width:100%}
-  nav,nav .painel,.momentos,footer,.w{max-width:100%}
+  .rolagem{max-width:100%}
   img,svg,pre,iframe{max-width:100%}
 }
 
@@ -1697,12 +1621,7 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
    sem tocar em nenhuma das funções que montam as tabelas.
    SE A ORDEM DAS COLUNAS MUDAR, ESTES RÓTULOS PRECISAM MUDAR JUNTO.        */
 @media(max-width:620px){
-  /* O .rolagem table{min-width:560px} lá de cima obriga a tabela a 560px
-     dentro de uma tela de 360 — foi ele que fez tudo escorregar para o lado.
-     Em modo cartão não há coluna nenhuma para preservar, então cai fora.   */
-  .tbCard{display:block;overflow:visible;border-collapse:separate;
-    min-width:0;width:100%;max-width:100%}
-  .rolagem:has(.tbCard){overflow-x:visible;margin:0;padding:0}
+  .tbCard{display:block;overflow:visible;border-collapse:separate}
   .tbCard thead{display:none}
   .tbCard tbody{display:block}
   .tbCard tr{display:block;border:1px solid var(--linha);border-radius:13px;
@@ -1734,48 +1653,24 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
   .tbRank td:nth-child(8)::before{content:"sharpe"}
   .tbRank td:nth-child(9)::before{content:"drawdown"}
   .tbRank td:nth-child(10)::before{content:"dias"}
-  .tbRank td:nth-child(11){display:block;padding-top:8px;max-width:100%}
-  .tbRank td:nth-child(11) svg{width:100% !important;max-width:100%}
+  .tbRank td:nth-child(11){display:block;padding-top:8px}
   .tbRank td:nth-child(11)::before{content:none}
 
-  /* ── screening · formato C2 ────────────────────────────────────────────
-       código                          ┌──────────────┐
-       42,00  43,00  44,00             │   gráfico    │  41,90
-       R$1,9bi  1,3×  9×2              └──────────────┘  +2,30%
-
-     Os três números das médias são pintados com A COR QUE CADA UM JÁ TEM NO
-     GRÁFICO: o trader é o traço claro, o investidor o azul-acinzentado, o
-     institucional a linha dourada. Sem legenda, sem inventar cor nova.
-     O gráfico não desenha as três como linha porque o banco só guarda a série
-     do preço e a da média longa — das outras duas há só o valor de hoje.  */
-  .tbScr tr{display:grid;grid-template-columns:auto auto 1fr 132px;
-    column-gap:9px;row-gap:3px;align-items:center;padding:11px 13px}
-  .tbScr td{display:block;padding:0;text-align:left;border:none;
-    font-family:'IBM Plex Mono',monospace}
-  .tbScr td::before{content:none}
-  .tbScr td:nth-child(2){display:none}
-  .tbScr td:nth-child(1){grid-row:1;grid-column:1/4;font-size:16px;font-weight:600}
-  .tbScr td:nth-child(5){grid-row:2;grid-column:1;color:var(--tinta)}
-  .tbScr td:nth-child(6){grid-row:2;grid-column:2;color:var(--graf)}
-  .tbScr td:nth-child(7){grid-row:2;grid-column:3;color:var(--lacre)}
-  .tbScr td:nth-child(5),.tbScr td:nth-child(6),.tbScr td:nth-child(7){
-    display:block;font-size:12px;white-space:nowrap}
-  .tbScr td:nth-child(5) .sub,.tbScr td:nth-child(6) .sub,
-  .tbScr td:nth-child(7) .sub{display:none}
-  /* "R$ 518 mi" não cabe num terço da linha: ocupa duas colunas, e o %MMVol
-     vai para a terceira. Sem isto o volume aparecia cortado no meio.      */
-  .tbScr td:nth-child(9){grid-row:3;grid-column:1/3;font-size:11px;
-    color:var(--graf);white-space:nowrap;overflow:visible}
-  .tbScr td:nth-child(10){grid-row:3;grid-column:3;font-size:11px;text-align:left}
-  .tbScr td:nth-child(8){grid-row:1;grid-column:4;padding:0 !important}
-  .tbScr td:nth-child(8) div{width:132px !important;margin:0 0 0 auto !important}
-  .tbScr td:nth-child(8) svg{width:132px !important;height:32px !important}
-  .tbScr td:nth-child(3){grid-row:2;grid-column:4;text-align:right;font-size:16px}
-  .tbScr td:nth-child(4){grid-row:3;grid-column:4;text-align:right;font-size:14px}
-  /* A linha de índice tem 9 células, não 11. O estado estava indo para uma
-     quarta fileira e as duas células que faltam deixavam o cartão enorme e
-     vazio. Aqui ela se comporta como as outras: três fileiras, estado fora. */
-  .tbScr tr.ref td:nth-child(2){display:none}
+  /* ── screening: 10 colunas ── */
+  .tbScr td:nth-child(1){display:block;text-align:left;font-size:15px;font-weight:600}
+  .tbScr td:nth-child(1)::before{content:none}
+  .tbScr td:nth-child(2){display:block;text-align:left;
+    padding-bottom:8px;margin-bottom:4px;border-bottom:1px solid var(--linha)}
+  .tbScr td:nth-child(2)::before{content:none}
+  .tbScr td:nth-child(3)::before{content:"preço"}
+  .tbScr td:nth-child(4)::before{content:"no dia"}
+  .tbScr td:nth-child(5)::before{content:"trader"}
+  .tbScr td:nth-child(6)::before{content:"investidor"}
+  .tbScr td:nth-child(7)::before{content:"institucional"}
+  .tbScr td:nth-child(8){display:block;padding:8px 0 2px}
+  .tbScr td:nth-child(8)::before{content:none}
+  .tbScr td:nth-child(9)::before{content:"volume"}
+  .tbScr td:nth-child(10)::before{content:"%MMVol"}
 
   /* ── placar: 7 colunas ── */
   .tbPlacar td:nth-child(1){justify-content:flex-start;font-weight:600}
@@ -1855,7 +1750,7 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
           <a href="#/aplicado">Pôr o patrimônio para trabalhar</a>
           <a href="#/nao-perder">Não perder na saída</a>
           <span class="risco"></span>
-          <a href="#/como-funciona">Como funciona</a>
+          <a href="#/como-funciona">Como funciona o site</a>
         </div>
       </div>
 
@@ -1920,14 +1815,13 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
   </div>
 </div></header>
 
-<div class="w voltarCx" id="voltarCx"></div>
 <main class="w" id="app"><div class="carreg">carregando…</div></main>
 
-<footer class="w">
+<footer class="w"><b style="color:var(--t2);font-weight:500">Caderno de estudo.</b>
 Nada aqui é recomendação de investimento — cada carteira é anotação pessoal de quem a
-publica, sem dinheiro real.
-<a href="#/servicos" style="color:var(--t2);border-bottom:1px solid var(--linha2)">Fale conosco</a>
- · <a href="#/como-funciona" style="color:var(--t2);border-bottom:1px solid var(--linha2)">Como funciona</a>
+publica, sem dinheiro real. A rentabilidade começa no dia da publicação: não há
+histórico retroativo.
+<a href="#/como-funciona" style="color:var(--t2);border-bottom:1px solid var(--linha2)">Como funciona</a>
  · <a href="#/termos" style="color:var(--t2);border-bottom:1px solid var(--linha2)">Termos e privacidade</a></footer>
 
 <script type="module">
@@ -4752,7 +4646,7 @@ async function tiposDoUniverso(){
   return mapa;
 }
 
-async function telaScreening(classe, soContar){
+async function telaScreening(classe){
   /* Duas listas com a mesma tela: 'acao' e 'bdr'. O tipo mora no universo,
      nao na quant_medias — por isso o mapa abaixo. Os indices ficam de fora
      do filtro: eles sao a regua das duas listas.                            */
@@ -4765,10 +4659,9 @@ async function telaScreening(classe, soContar){
   if(QM && Date.now() - QM_EM < QM_VALE){
     data = QM;
   } else {
-    if(!soContar) app().innerHTML = `<div class="carreg">calculando…</div>`;
+    app().innerHTML = `<div class="carreg">calculando…</div>`;
     const r = await sb.rpc("quant_medias", { p_janela: JANELA_GRAFICO });
-    if(r.error) return soContar ? null
-      : (app().innerHTML = aviso("Erro ao calcular: "+r.error.message, true));
+    if(r.error) return app().innerHTML = aviso("Erro ao calcular: "+r.error.message, true);
     data = QM = r.data; QM_EM = Date.now();
   }
   // A cotacao_viva guarda o último valor que o EA mandou — ele não some quando
@@ -4876,12 +4769,6 @@ async function telaScreening(classe, soContar){
   const conta = { todos: l.length };
   ["alta","saindo_alta","virando","indefinido","saindo_baixa","baixa"].forEach(g =>
     conta[g] = l.filter(x => GRUPO[x.e] === g).length);
-  /* A tela de escolha mostra estes mesmos números. Guardar aqui é o único
-     jeito de não haver duas contas: quem manda é esta, a que a lista usa. */
-  CONTA_SCR[classe] = { ...conta, avat: l.filter(x => x.avat != null && x.avat >= 1.3).length,
-                        set: (typeof setoriais !== "undefined" ? setoriais.length : 0) };
-  // quem pediu só a contagem para aqui: não pinta tela nenhuma
-  if(soContar) return CONTA_SCR[classe];
 
   if(filtro !== "todos") l = l.filter(x => GRUPO[x.e] === filtro);
   if(busca) l = l.filter(x => x.ativo.includes(busca));
@@ -4997,8 +4884,7 @@ async function telaScreening(classe, soContar){
       <th class="d some graf" style="min-width:196px;padding-left:18px">${JANELA_GRAFICO} pregões</th>
       <th class="d some" title="volume financeiro negociado hoje">Volume</th>
       <th class="d some" title="volume de hoje sobre a média móvel dos últimos 21 pregões — 1,0 é o normal do papel"
-        >%MMVol</th>
-</tr></thead><tbody>
+        >%MMVol</th></tr></thead><tbody>
     ${[...reguas, ...(verSet?setoriais:[])].map(x=>`<tr class="ref${
         reguas.includes(x)?"":" set"}">
       <td class="mono cod">${esc(x.ativo==="IBOV"||x.ativo==="^BVSP"?"IBOVESPA":x.ativo.replace("^",""))}${
@@ -5131,7 +5017,7 @@ function telaComo(){
   const P = (q,r) => `<details class="qa"><summary>${q}</summary><p>${r}</p></details>`;
   app().innerHTML = `
   <div style="max-width:74ch;margin:34px 0 0">
-    <div class="trilho">Como funciona</div>
+    <div class="trilho">Como funciona o site</div>
     <h1 style="font-size:31px;line-height:1.18;margin-bottom:10px">
       Aprenda a investir no lugar onde ninguém perde dinheiro.</h1>
     <p style="color:var(--t2);font-size:14.5px;line-height:1.6;margin:0 0 10px">
@@ -5177,15 +5063,12 @@ function telaComo(){
   <h2 style="font-size:20px;margin:36px 0 4px">Não é só carteira</h2>
   <p style="color:var(--t2);font-size:13.5px;line-height:1.6;max-width:74ch;margin:0 0 14px">
     Carteira se mede em meses. Para os dias em que dá vontade de jogar, tem o
-    <a href="#/tiro-curto">Tiro curto</a> — quatro perguntas por rodada, de hora
-    em hora: quem sobe mais, quem cai mais, quem gira mais e se a PETR4 passa do
-    corte de volume. O <a href="#/placar">Placar</a> mostra quem acertou o quê no
-    dia, e a <a href="#/copa">Copa do pregão</a> é o mata-mata de um dia só, com
-    oito vagas e inscrição até as 10h. Tem ainda o
-    <a href="#/duelo">Duelo</a>, que põe duas carteiras frente a frente, o
+    <a href="#/tiro-curto">Tiro curto</a> — palpite de direção para o próximo
+    pregão, com pontuação por dia —, o <a href="#/duelo">Duelo</a>, que põe duas
+    carteiras frente a frente, e o <a href="#/placar">Placar</a>. Tem também o
     <a href="#/screening">Screening</a>, que mostra em que fase cada papel da
-    bolsa está, e o <a href="#/mais-escolhidos">Mais escolhidos</a>, que revela
-    quais papéis aparecem em mais carteiras no momento.</p>
+    bolsa está, e o <a href="#/consenso">consenso</a>, que revela quais papéis
+    aparecem em mais carteiras no momento.</p>
   <p style="color:var(--t2);font-size:13.5px;line-height:1.6;max-width:74ch;margin:0 0 14px">
     E dá para olhar quem está ganhando: abrir a carteira do primeiro colocado,
     ver os papéis, os pesos, e o extrato de cada mudança que ele fez no
@@ -5205,6 +5088,10 @@ function telaComo(){
 
   <h2 style="font-size:20px;margin:34px 0 6px">Perguntas</h2>
   <div style="max-width:74ch">
+  ${P("O que é aberto e o que é fechado?",
+     "Rentabilidade, queda máxima, alavancagem e exposição são públicas para "
+   + "qualquer visitante — é o risco que cada um está correndo. Para ver os "
+   + "papéis, os pesos e as anotações de cada mudança, basta ter conta.")}
   ${P("Por que a minha carteira começa em zero?",
      "Não há histórico retroativo. A rentabilidade conta a partir do dia em que "
    + "a carteira é publicada, porque um resultado montado olhando para trás não "
@@ -5224,12 +5111,9 @@ function telaComo(){
    + "do ano — quem escolhe um dia de partida bom escolhe também um índice fácil, "
    + "e é por isso que o número de pregões fica visível ao lado.")}
   ${P("E o Tiro curto?",
-     "É a parte de palpite de curto prazo, separada das carteiras. A cada hora "
-   + "abre uma rodada com quatro perguntas sobre três papéis sorteados: quem "
-   + "sobe mais, quem cai mais, quem gira mais volume, e se a PETR4 fica acima "
-   + "ou abaixo do corte de volume. O palpite fecha na virada da hora, e a "
-   + "rodada é apurada com a cotação da hora seguinte. Acertar seguido vale "
-   + "multiplicador, e a nota é acertos sobre rodadas respondidas.")}
+     "É a parte de palpite de curto prazo, separada das carteiras. Você escolhe "
+   + "papel e direção para o próximo pregão, e a pontuação é por dia, não por "
+   + "operação: entrar com dez papéis reduz a sorte, não aumenta a nota.")}
   ${P("Isso é recomendação de investimento?",
      "Não. Nada aqui é recomendação, e nenhuma carteira publicada é análise "
    + "profissional — cada uma é anotação pessoal de quem a publicou. O site não "
@@ -6838,7 +6722,7 @@ function telaAbertura(){
         padding:12px;text-align:center;margin-top:9px">Ver como funciona &rarr;</a>
       <p style="font-size:11.5px;color:var(--graf);margin:16px 0 4px;
         text-align:center;padding-top:13px;border-top:1px solid var(--linha)">
-        Aqui nada é recomendação.</p>
+        preço real da B3 · nada aqui é recomendação</p>
     </div>
 
     <div class="sotela">
@@ -6925,20 +6809,15 @@ function telaAbertura(){
         vender o que não serve: dá dinheiro uma vez e custa o cliente.</p>
     </div>
 
-    <!-- Este fecho pertence à versão longa, mas estava FORA da .sotela: no
-         celular ele vazava e repetia criar conta / entrar pela terceira vez,
-         depois dos dois do cabeçalho e dos três da abertura curta. -->
-    <div class="sotela">
-      <p class="ab4">O passado não se apaga aqui — nem o seu. É o que separa isto
-        de um print de lucro no Telegram.</p>
+    <p class="ab4">O passado não se apaga aqui — nem o seu. É o que separa isto
+      de um print de lucro no Telegram.</p>
 
-      <div class="botoesAb">
-        <button type="button" class="bt cheio lacre" id="abConta">Criar conta grátis &rarr;</button>
-        <button type="button" class="bt" id="abEntrar">Já tenho conta</button>
-      </div>
-      <p class="ab4" style="margin-bottom:40px">Não se cobra nada para entrar, e o
-        apelido é o que aparece — o e-mail não.</p>
+    <div class="botoesAb">
+      <button type="button" class="bt cheio lacre" id="abConta">Criar conta grátis &rarr;</button>
+      <button type="button" class="bt" id="abEntrar">Já tenho conta</button>
     </div>
+    <p class="ab4" style="margin-bottom:40px">Não se cobra nada para entrar, e o
+      apelido é o que aparece — o e-mail não.</p>
   </div>`;
 
   $("#abConta").onclick  = () => { location.hash = "#/entrar?novo=1"; };
@@ -12682,11 +12561,6 @@ async function telaCopa(){
    ══════════════════════════════════════════════════════════════════════════ */
 const NO_CELULAR = () => matchMedia("(max-width:820px)").matches;
 
-/* Contagem do screening por classe, gravada pela própria telaScreening no
-   instante em que ela conta. A tela de escolha só lê — nunca recalcula, para
-   os dois números não poderem divergir. Fica vazio até a primeira visita.  */
-const CONTA_SCR = {};
-
 const HUBS = {
   "inicio": { olho:"por onde hoje", tit:"Escolha seu<br>momento",
     sub:"Três caminhos. Um de cada vez.",
@@ -12695,7 +12569,7 @@ const HUBS = {
       ["Competições","mostre do que você é capaz","#/competicoes"],
       ["Indicações","venha pro mundo real","#/indicacoes"]],
     itens:[["Sua conta","carteiras, time, senha","#/eu"]],
-    aviso:"" },
+    aviso:"preço real da B3 · nada aqui é recomendação" },
 
   "educacional": { olho:"educacional", tit:"Antes de<br>arriscar",
     sub:"Do começo, sem pular etapa.",
@@ -12772,19 +12646,21 @@ const HUBS = {
       ["Meu time","integrantes e pedidos de entrada","#/meu-time"],
       ["As regras","como se apura o ciclo","#/regras-time"]] },
 
-  "escolher-lista": { olho:"screening · ações", conta:"acao", tit:"O que você<br>quer olhar?",
+  "escolher-lista": { olho:"screening · ações", tit:"O que você<br>quer olhar?",
     itens:[["Em alta","","#/screening?t=alta"],["Em baixa","","#/screening?t=baixa"],
-      ["Maiores volumes","","#/screening?o=liq"],
-      ["Volume destacado","","#/screening?o=avat"],
-      ["Índices","","#/screening?set=1"],
+      ["Maiores volumes","quem mais girou hoje","#/screening?o=liq"],
+      ["Volume destacado","girou muito acima da própria média","#/screening?o=avat"],
+      ["Índices","o Ibovespa e os setoriais","#/screening?set=1"],
       ["Todos","","#/screening?t=todos"]],
-    aviso:"Os outros estados — saindo da alta, virando, sem tendência, saindo da baixa — continuam nas abas de dentro da lista." },
+    aviso:"Os outros estados — saindo da alta, virando, sem tendência, saindo da baixa — continuam nas abas de dentro da lista.",
+    ponte:["ou","",[["o mesmo em BDR","#/escolher-lista-bdr"]]] },
 
-  "escolher-lista-bdr": { olho:"screening · BDR", conta:"bdr", tit:"O que você<br>quer olhar?",
+  "escolher-lista-bdr": { olho:"screening · BDR", tit:"O que você<br>quer olhar?",
     itens:[["Em alta","","#/screening-bdr?t=alta"],["Em baixa","","#/screening-bdr?t=baixa"],
       ["Maiores volumes","","#/screening-bdr?o=liq"],
       ["Volume destacado","","#/screening-bdr?o=avat"],
-      ["Índices","","#/screening-bdr?set=1"],["Todos","","#/screening-bdr?t=todos"]] },
+      ["Índices","","#/screening-bdr?set=1"],["Todos","","#/screening-bdr?t=todos"]],
+    ponte:["ou",[["o mesmo em ações","#/escolher-lista"]]] },
 
   "indicacoes": { olho:"indicações", tit:"Venha pro<br>mundo real",
     sub:"Aqui o dinheiro é seu de verdade.",
@@ -12793,7 +12669,7 @@ const HUBS = {
     itens:[["Quem acompanha você","planejamento, assessoria, consultoria, gestão","#/ind-quem"],
       ["Os produtos","renda fixa, variável, previdência, fundos…","#/ind-produtos"],
       ["Proteger o que já existe","seguro, sucessão, blindagem, offshore","#/ind-proteger"]],
-    aviso:"" },
+    aviso:"Nada nesta página é recomendação de investimento." },
 
   "ind-quem": { olho:"indicações", tit:"Quem acompanha<br>você",
     itens:[["Planejamento financeiro","","#/servicos?s=planejamento"],
@@ -12801,7 +12677,7 @@ const HUBS = {
       ["Consultoria de investimentos","","#/servicos?s=consultoria"],
       ["Gestão de recursos","","#/servicos?s=gestao"],
       ["Gestão de grandes fortunas","","#/servicos?s=fortunas"]],
-    aviso:"" },
+    aviso:"Nada nesta página é recomendação de investimento." },
 
   "ind-produtos": { olho:"indicações", tit:"Os produtos",
     itens:[["Renda fixa","","#/servicos?s=rendafixa"],
@@ -12812,7 +12688,7 @@ const HUBS = {
       ["Estratégias com consórcio","","#/servicos?s=consorcio"],
       ["Conta internacional","","#/servicos?s=internacional"],
       ["Ouro, dólar e bitcoin","","#/servicos?s=alternativos"]],
-    aviso:"" },
+    aviso:"Nada nesta página é recomendação de investimento." },
 
   "ind-proteger": { olho:"indicações", tit:"Proteger o que<br>já existe",
     itens:[["Seguro e sucessão","","#/sucessao"],
@@ -12821,7 +12697,7 @@ const HUBS = {
       ["Estruturação empresarial","","#/servicos?s=empresarial"],
       ["Abertura de offshore","","#/servicos?s=offshore"],
       ["Conta no exterior","","#/servicos?s=exterior"]],
-    aviso:"" },
+    aviso:"Nada nesta página é recomendação de investimento." },
 
   "eu": { olho:"sua conta", tit:"Sua conta",
     itens:[["Minhas carteiras","as que você publicou","#/minhas"],
@@ -12832,45 +12708,15 @@ const HUBS = {
       ["Assinar","","#/assinar"]] },
 
   "menu": { olho:"menu", tit:"Tudo, de<br>uma vez",
-    sub:"Toda página do site, de uma olhada.",
-    arvore:[
-      ["Educacional","antes de arriscar",[
-        ["Comece por aqui","#/aprender"],["Antes de poupar, saia das dívidas","#/dividas"],
-        ["Como o dinheiro cresce","#/crescer"],["Corrigir não é crescer","#/corrigir"],
-        ["Renda fixa","#/renda-fixa"],["Renda variável","#/renda-variavel"],
-        ["Fundos","#/fundos"],["Previdência","#/previdencia"],["Clubes","#/clubes"],
-        ["Consórcio","#/consorcio"],["Seguro de vida","#/seguro-vida"],
-        ["Ouro, dólar e bitcoin","#/alternativos"],["Investir no exterior","#/internacional"],
-        ["Uma conta que ninguém faz","#/porque"],["Como se monta uma carteira","#/carteira-como"],
-        ["A carteira 60/40","#/sessenta"],["Os grandes acumuladores","#/grandes"],
-        ["Quanto custa o dinheiro","#/credito"],["Sair do aluguel","#/casa"],
-        ["Comprar um bem","#/comprar"],["A escada do consórcio","#/escada"],
-        ["Pôr o patrimônio para trabalhar","#/aplicado"],["Não perder na saída","#/nao-perder"],
-        ["Simulador","#/simulador"],["Simular crédito","#/sim-credito"],
-        ["Simular compra de bem","#/sim-comprar"],["Como funciona o site","#/como-funciona"]]],
-      ["Competições","mostre do que você é capaz",[
-        ["Tiro curto","#/tiro-curto"],["Placar","#/placar"],["Copa do pregão","#/copa"],
-        ["Ranking","#/ranking"],["Crie sua carteira","#/publicar"],
-        ["Mais escolhidos","#/mais-escolhidos"],["Screening","#/escolher-lista"],
-        ["Screening BDR","#/escolher-lista-bdr"],["Duelo de carteiras","#/duelo"],
-        ["Desafiar alguém","#/desafiar"],["Ranking de equipes","#/times"],
-        ["Crie seu time","#/criar-time"],["Meu time","#/meu-time"],
-        ["Regras do time","#/regras-time"]]],
-      ["Indicações","venha pro mundo real",[
-        ["Falar com um especialista","#/servicos"],["Fazer a minha conta","#/simulador"],
-        ["Planejamento financeiro","#/servicos?s=planejamento"],
-        ["Assessoria","#/servicos?s=assessoria"],["Consultoria","#/servicos?s=consultoria"],
-        ["Gestão de recursos","#/servicos?s=gestao"],
-        ["Grandes fortunas","#/servicos?s=fortunas"],
-        ["Clube de investimentos","#/clube"],["Seguro e sucessão","#/sucessao"],
-        ["Blindagem patrimonial","#/servicos?s=blindagem"],
-        ["Offshore","#/servicos?s=offshore"],["Conta no exterior","#/servicos?s=exterior"]]],
-      ["Sua conta","",[
-        ["Minhas carteiras","#/minhas"],["Dados da conta","#/conta"],
-        ["Trocar a senha","#/senha"],["Meu certificado","#/certificado"],
-        ["Indicar o site","#/indicar"],["Assinar","#/assinar"],
-        ["Termos e privacidade","#/termos"]]]
-    ] }
+    sub:"Para quem já sabe onde quer chegar.",
+    itens:[["Educacional","antes de arriscar","#/educacional"],
+      ["Competições","mostre do que você é capaz","#/competicoes"],
+      ["Indicações","venha pro mundo real","#/indicacoes"],
+      ["Sua conta","","#/eu"]],
+    ponte:["ir direto",[["Ranking","#/ranking"],["Tiro curto","#/tiro-curto"],
+      ["Placar","#/placar"],["Screening","#/escolher-lista"],
+      ["Ranking de equipe","#/times"],["Meu time","#/meu-time"],
+      ["Falar com especialista","#/servicos"],["Como funciona","#/como-funciona"]]] }
 };
 
 function telaHub(id){
@@ -12885,11 +12731,6 @@ function telaHub(id){
   const acoes = (h.acoes||[]).map(([t,r,forte]) =>
     `<a href="${r}" class="bt${forte?" lacre":""}" style="display:block;width:100%;
       padding:13px;text-align:center;margin-bottom:9px">${t}</a>`).join("");
-  const arvore = (h.arvore||[]).map(([g,d,ls]) =>
-    `<div class="hubGr"><span class="rot">${g}</span>${
-      d ? `<span class="df">${d}</span>` : ""}
-      <div class="pil">${ls.map(([t,r]) =>
-        `<a href="${r}">${t}</a>`).join("")}</div></div>`).join("");
   const itens = (h.itens||[]).map(([t,d,r]) =>
     `<a class="hubEsc" href="${r}"><span><b>${t}</b>${
       d ? `<span class="d">${d}</span>` : ""}</span>
@@ -12903,129 +12744,13 @@ function telaHub(id){
   })() : "";
   app().innerHTML = `<div class="hubCx">
     <span class="hubOlho">${h.olho}</span>
-    ${h.conta ? `<div class="hubPlacar" id="hubPlacar"></div>` : ""}
     <h1>${h.tit}</h1>
     ${h.sub ? `<span class="sub">${h.sub}</span>` : `<span class="sub"></span>`}
-    ${acoes}${frentes}${itens}${arvore}${ponte}
+    ${acoes}${frentes}${itens}${ponte}
     ${h.aviso ? `<p class="hubAviso">${h.aviso}</p>` : ""}
   </div>`;
-  if(h.conta) pintarContagemScr(h.conta);
 }
 
-/* Lê o que a telaScreening já contou. Não calcula nada: se a pessoa ainda não
-   entrou no screening nesta visita, o balde está vazio e a tela fica só com os
-   botões — melhor sem número do que com número de outra conta.             */
-async function pintarContagemScr(classe){
-  /* Se ninguém entrou no screening ainda, o balde está vazio. Em vez de
-     mostrar a tela sem número, manda a própria telaScreening contar em modo
-     silencioso — é a mesma conta, só que sem pintar. */
-  if(!CONTA_SCR[classe]){
-    const marca = location.hash;
-    try{ await telaScreening(classe, true); }catch(e){ /* fica sem número */ }
-    // se a pessoa saiu da tela enquanto contava, não mexe em mais nada
-    if(location.hash !== marca) return;
-  }
-  const c = CONTA_SCR[classe];
-  const cx = document.getElementById("hubPlacar");
-  if(!c){ if(cx) cx.remove(); return; }
-  const t = (c.alta || 0) + (c.baixa || 0);
-  if(cx && t > 0) cx.innerHTML = `
-    <div class="n"><b class="alta">${c.alta}</b><span class="x">×</span>
-      <b class="baixa">${c.baixa}</b></div>
-    <div class="r"><span>em alta</span><span>em baixa</span></div>
-    <div class="barraP">
-      <i style="width:${(c.alta/t*100).toFixed(1)}%;background:var(--alta)"></i>
-      <i style="width:${(c.baixa/t*100).toFixed(1)}%;background:var(--baixa)"></i></div>
-    <p class="tot">de ${c.todos} papéis acompanhados</p>`;
-  else if(cx) cx.remove();
-  const q = { "Em alta":c.alta, "Em baixa":c.baixa, "Maiores volumes":c.todos,
-              "Volume destacado":c.avat, "Índices":c.set, "Todos":c.todos };
-  document.querySelectorAll(".hubEsc").forEach(a => {
-    const n = q[a.querySelector("b")?.textContent];
-    if(n != null && !a.querySelector(".qtd")){
-      const e = document.createElement("span");
-      e.className = "qtd"; e.textContent = n;
-      a.insertBefore(e, a.querySelector(".seta"));
-    }
-  });
-}
-
-
-
-/* ══ o voltar ══════════════════════════════════════════════════════════════
-   Com as páginas pequenas, a pessoa desce três ou quatro níveis a partir da
-   home e não tinha como subir — só o voltar do navegador, que no celular fica
-   escondido. Este mapa diz o pai de cada rota; quando não há pai declarado, o
-   voltar usa o histórico, e se nem histórico houver ele some.
-   O PAI É A TELA DE CIMA NA ÁRVORE, não a última visitada.                 */
-const PAI = {
-  "educacional":"inicio", "competicoes":"inicio", "indicacoes":"inicio",
-  "eu":"inicio", "menu":"inicio",
-  "edu-oque":"educacional", "edu-artigos":"educacional",
-  "edu-simulacoes":"educacional",
-  "edu-comecar":"edu-artigos", "edu-carteira":"edu-artigos",
-  "edu-patrimonio":"edu-artigos",
-  "intraday":"competicoes", "individual":"competicoes", "em-time":"competicoes",
-  "tiro-curto":"intraday", "placar":"intraday", "copa":"intraday",
-  "ranking":"individual", "publicar":"individual", "mais-escolhidos":"individual",
-  "duelo":"individual", "desafiar":"duelo",
-  "escolher-lista":"individual", "escolher-lista-bdr":"individual",
-  "screening":"escolher-lista", "screening-bdr":"escolher-lista-bdr",
-  "times":"em-time", "criar-time":"em-time", "meu-time":"em-time",
-  "regras-time":"em-time",
-  "ind-quem":"indicacoes", "ind-produtos":"indicacoes", "ind-proteger":"indicacoes",
-  "servicos":"indicacoes", "sucessao":"ind-proteger", "clube":"ind-produtos",
-  "minhas":"eu", "conta":"eu", "senha":"eu", "certificado":"eu",
-  "indicar":"eu", "assinar":"eu",
-  "aprender":"edu-comecar", "dividas":"edu-comecar", "crescer":"edu-comecar",
-  "corrigir":"edu-comecar",
-  "porque":"edu-carteira", "carteira-como":"edu-carteira",
-  "sessenta":"edu-carteira", "grandes":"edu-carteira",
-  "credito":"edu-patrimonio", "casa":"edu-patrimonio", "comprar":"edu-patrimonio",
-  "escada":"edu-patrimonio", "aplicado":"edu-patrimonio",
-  "nao-perder":"edu-patrimonio",
-  "renda-fixa":"edu-oque", "renda-variavel":"edu-oque", "fundos":"edu-oque",
-  "previdencia":"edu-oque", "clubes":"edu-oque", "consorcio":"edu-oque",
-  "seguro-vida":"edu-oque", "alternativos":"edu-oque", "internacional":"edu-oque",
-  "simulador":"edu-simulacoes", "sim-credito":"edu-simulacoes",
-  "sim-comprar":"edu-simulacoes",
-  "carteira":"ranking", "editar":"minhas", "rodada":"placar",
-  "time":"times", "universo":"admin", "leads":"admin",
-};
-const ROTULO = {
-  "inicio":"Início", "educacional":"Educacional", "competicoes":"Competições",
-  "indicacoes":"Indicações", "eu":"Sua conta", "intraday":"Intraday",
-  "individual":"Carteira individual", "em-time":"Em time",
-  "edu-oque":"O que é", "edu-artigos":"Artigos", "edu-comecar":"Comece por aqui",
-  "edu-carteira":"Montar a carteira", "edu-patrimonio":"Já há patrimônio",
-  "edu-simulacoes":"Simulações", "escolher-lista":"Screening",
-  "escolher-lista-bdr":"Screening BDR", "ind-quem":"Quem acompanha você",
-  "ind-produtos":"Os produtos", "ind-proteger":"Proteger o que já existe",
-  "ranking":"Ranking", "placar":"Placar", "times":"Ranking de equipes",
-  "minhas":"Minhas carteiras", "duelo":"Duelo", "admin":"Admin",
-};
-function pintarVoltar(){
-  const cx = document.getElementById("voltarCx");
-  if(!cx) return;
-  const bruto = location.hash || "#/";
-  const nome = bruto.split("?")[0].slice(2).split("/")[0];
-  /* "#/" sem query é a própria home: não tem para onde subir. Com query é o
-     ranking aberto numa classe — o "ver todas as 24" — e daí o pai é a
-     Carteira individual, não a home. */
-  const pai = nome === ""
-    ? (bruto.includes("?") ? "individual" : null)
-    : (Object.hasOwn(PAI, nome) ? PAI[nome] : null);
-  if(pai){
-    cx.innerHTML = `<button type="button" class="voltarBt"><i>&lsaquo;</i>${
-      ROTULO[pai] || "Voltar"}</button>`;
-    cx.firstChild.onclick = () => { location.hash = "#/" + pai; };
-  } else if(history.length > 1 && nome && nome !== "inicio"){
-    cx.innerHTML = `<button type="button" class="voltarBt"><i>&lsaquo;</i>Voltar</button>`;
-    cx.firstChild.onclick = () => history.back();
-  } else {
-    cx.innerHTML = "";
-  }
-}
 function rotear(){
   clearInterval(window.__timerRank);
   clearInterval(window.__timerVivo);
@@ -13076,17 +12801,12 @@ function rotear(){
     }
   }
 
-  pintarVoltar();
   const m = h.match(/^#\/carteira\/(\d+)$/);
   if(m)                       return telaCarteira(m[1]);
   // No celular a home é a escolha de caminho, não o ranking: quem chega numa
   // tabela de dez colunas não sabe o que fazer com ela. No desktop nada muda.
   if(h==="#/"||h===""){
-    // Com query, "#/" NÃO é a home: é o ranking pedindo uma classe ou uma
-    // ordenação — é o que o "ver todas as 24" usa. Desviar para o hub aqui
-    // jogava a pessoa de volta ao Início, que foi o defeito relatado.
-    const temQuery = (location.hash||"").includes("?");
-    return (NO_CELULAR() && !temQuery) ? telaHub("inicio") : telaRanking();
+    return NO_CELULAR() ? telaHub("inicio") : telaRanking();
   }
   if(h==="#/ranking")         return telaRanking();
   if(h==="#/entrar")          return telaEntrar();
