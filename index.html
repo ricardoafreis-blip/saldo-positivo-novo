@@ -153,55 +153,6 @@ header .dir a:hover{color:var(--ouro2)}
 
 .atalho{display:none}
 
-
-/* ═══ celular: o menu inteiro recolhe num botão ═══
-   Antes o cabeçalho ocupava quase duas telas antes de qualquer conteúdo — os
-   três grupos empilhavam um embaixo do outro. Agora ele fica guardado e abre
-   no toque. Vale só até 820px: no desktop nada muda.                        */
-.hamb{display:none;background:none;border:1px solid var(--linha2);border-radius:8px;
-  width:42px;height:38px;align-items:center;justify-content:center;gap:3.5px;
-  flex-direction:column;cursor:pointer;flex:none;margin-left:10px;padding:0}
-.hamb span{display:block;width:17px;height:1.5px;background:var(--tinta);
-  border-radius:2px;transition:transform .18s,opacity .18s}
-.hamb[aria-expanded="true"] span:nth-child(1){transform:translateY(5px) rotate(45deg)}
-.hamb[aria-expanded="true"] span:nth-child(2){opacity:0}
-.hamb[aria-expanded="true"] span:nth-child(3){transform:translateY(-5px) rotate(-45deg)}
-
-@media(max-width:820px){
-  .hamb{display:flex}
-  header .alto{align-items:center}
-  /* guardado por padrão; a classe .aberto libera */
-  .momentos nav{display:none}
-  .momentos.aberto nav{display:block}
-  /* a faixa dos momentos cortava na direita em tela estreita: o rótulo do
-     meio sai e sobram as duas pontas com o fio entre elas */
-  .viagem .rotm{display:none}
-  .viagem{display:flex;align-items:center;gap:10px;padding:0 2px}
-  .viagem .li{flex:1}
-}
-
-
-/* ═══ celular: abertura curta ═══
-   O texto longo da abertura é bom no desktop, mas no celular empurra o botão
-   de criar conta para a terceira tela. Abaixo de 820px entra a versão curta,
-   com a jornada em três passos, e o texto longo fica guardado.             */
-.sofone{display:none}
-@media(max-width:820px){
-  .sofone{display:block;padding:6px 0 4px}
-  .sotela{display:none}
-  .trilhaF{margin-top:24px}
-  .passoF{display:flex;gap:13px;align-items:flex-start;padding:13px 0;
-    border-top:1px solid var(--linha)}
-  .passoF:first-child{border-top:none}
-  .passoF .nF{width:26px;height:26px;border-radius:99px;flex:none;
-    border:1px solid var(--lacre);color:var(--ouro2);font-size:12px;
-    display:flex;align-items:center;justify-content:center;
-    font-family:'IBM Plex Mono',monospace}
-  .passoF b{font-family:Newsreader,serif;font-size:17px;font-weight:500;display:block}
-  .passoF span{font-size:12.5px;color:var(--t2);display:block;margin-top:2px}
-  .abertura .ab2{font-size:27px}
-}
-
 @media(max-width:1040px){
   header .marca{font-size:22px}
   nav{grid-template-columns:158px 1fr 158px}
@@ -1108,7 +1059,7 @@ button.lig:hover{color:var(--tinta);border-bottom-color:var(--tinta)}
 .ab4{font-size:13px;color:var(--graf);line-height:1.6;margin:22px auto 0;max-width:56ch}
 
 /* a trajetória: simulado à esquerda, mundo real à direita */
-.jornada{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;
+.jornada{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;
   text-align:left;margin-top:6px;position:relative}
 .jornada .et{background:var(--p2);border:1px solid var(--linha);border-radius:5px;
   padding:14px 14px 13px;display:flex;flex-direction:column}
@@ -1135,7 +1086,7 @@ button.lig:hover{color:var(--tinta);border-bottom-color:var(--tinta)}
 .teseP{font-size:13.5px;color:var(--t2);line-height:1.7;margin:0 0 10px}
 .teseP:last-child{margin-bottom:0}
 .teseP b{color:var(--ouro2);font-weight:500}
-@media(max-width:860px){.jornada{grid-template-columns:1fr}}
+@media(max-width:860px){.jornada{grid-template-columns:repeat(2,1fr)}}
 
 .promessa{margin:34px 0 0;padding:22px 0 0;border-top:1px solid var(--linha2);text-align:left}
 .pTit{font-family:Newsreader,serif;font-size:23px;color:var(--tinta);
@@ -1573,131 +1524,6 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
   border-radius:7px;padding:8px 12px;background:var(--p2)}
 .totemCard .tt{font-size:13px}
 .totemCard .ts{font-size:11px;color:var(--graf);display:block}
-/* ── telas-hub: uma decisão por tela, para o celular ──────────────────────
-   Aditivo. Nenhuma tela que já existe usa estas classes.                  */
-.hubCx{max-width:560px;margin:0 auto}
-.hubOlho{font-size:10px;letter-spacing:.15em;text-transform:uppercase;
-  color:var(--ouro2);opacity:.85;display:block;margin-bottom:7px}
-.hubCx h1{font-family:Newsreader,Georgia,serif;font-weight:500;font-size:27px;
-  line-height:1.14;margin:0 0 5px}
-.hubCx .sub{color:var(--t2);font-size:13px;margin:0 0 18px;display:block}
-.hubFrente{display:flex;align-items:center;gap:13px;border:1px solid var(--linha2);
-  border-radius:14px;background:var(--p2);padding:16px 14px;text-align:left;
-  width:100%;margin-bottom:11px;cursor:pointer;font:inherit;color:inherit}
-.hubFrente .ic{width:36px;height:36px;border-radius:10px;flex:none;
-  border:1px solid var(--lacre);color:var(--ouro2);font-family:'IBM Plex Mono',monospace;
-  font-size:14px;display:flex;align-items:center;justify-content:center}
-.hubFrente b{font-family:Newsreader,Georgia,serif;font-size:19px;font-weight:500;display:block}
-.hubFrente .d{font-size:12px;color:var(--graf);display:block;margin-top:1px}
-.hubFrente .seta{margin-left:auto;color:var(--graf);font-size:17px;flex:none}
-.hubEsc{display:flex;align-items:center;gap:11px;border:1px solid var(--linha);
-  border-radius:12px;background:var(--p2);padding:13px 14px;text-align:left;
-  width:100%;margin-bottom:9px;color:inherit}
-.hubEsc b{font-size:14.5px;font-weight:500;display:block}
-.hubEsc .d{font-size:11.5px;color:var(--graf);display:block;margin-top:1px}
-.hubEsc .seta{margin-left:auto;color:var(--graf);flex:none}
-.hubEsc:hover{border-color:var(--linha2)}
-.hubPonte{margin-top:20px;padding-top:13px;border-top:1px solid var(--linha)}
-.hubPonte .rt2{font-size:10px;letter-spacing:.13em;text-transform:uppercase;
-  color:var(--graf);display:block;margin-bottom:9px}
-.hubPonte .vias{display:flex;flex-wrap:wrap;gap:7px}
-.hubPonte .vias a{border:1px solid var(--linha2);border-radius:99px;padding:8px 14px;
-  font-size:12.5px;color:var(--t2)}
-.hubPonte .vias a:hover{border-color:var(--ouro2);color:var(--ouro2)}
-.hubAviso{font-size:11.5px;color:var(--graf);margin:14px 0 0}
-/* ══ celular: nenhuma tabela arrasta a página ═════════════════════════════
-   Só 2 das 23 tabelas do site estavam dentro de um .rolagem. As outras 21
-   empurravam a página inteira para o lado no celular. Aqui cada tabela vira
-   seu próprio quadro de rolagem, sem precisar mexer em nenhuma delas.      */
-@media(max-width:820px){
-  table{display:block;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
-  .rolagem{max-width:100%}
-  img,svg,pre,iframe{max-width:100%}
-}
-
-/* ══ as quatro tabelas grandes viram cartões ══════════════════════════════
-   thead some, cada linha vira um cartão e cada célula ganha o nome da coluna
-   à esquerda. Como a ordem das colunas é fixa, o rótulo vem por nth-child —
-   sem tocar em nenhuma das funções que montam as tabelas.
-   SE A ORDEM DAS COLUNAS MUDAR, ESTES RÓTULOS PRECISAM MUDAR JUNTO.        */
-@media(max-width:620px){
-  .tbCard{display:block;overflow:visible;border-collapse:separate}
-  .tbCard thead{display:none}
-  .tbCard tbody{display:block}
-  .tbCard tr{display:block;border:1px solid var(--linha);border-radius:13px;
-    background:var(--p2);padding:11px 13px;margin-bottom:10px}
-  .tbCard td{display:flex;justify-content:space-between;align-items:baseline;
-    gap:12px;padding:4px 0;border:none;text-align:right}
-  .tbCard td:empty{display:none}
-  .tbCard td::before{content:attr(data-r);font-size:10px;letter-spacing:.09em;
-    text-transform:uppercase;color:var(--graf);flex:none;text-align:left;
-    font-family:Inter,system-ui,sans-serif;font-weight:400;letter-spacing:.09em}
-  /* volta o que o modo tabela escondia: no cartão sobra altura */
-  .tbCard th.some,.tbCard td.some{display:flex}
-  /* a linha de título de grupo continua sendo uma faixa, não um cartão */
-  .tbCard td.tituloG{display:block;text-align:left;border:none;padding:2px 0}
-  .tbCard tr:has(td.tituloG){border:none;background:none;padding:14px 0 0;margin:0}
-  .tbCard td.tituloG::before{content:none}
-
-  /* ── ranking: 11 colunas ── */
-  .tbRank td:nth-child(1){justify-content:flex-start;font-weight:600}
-  .tbRank td:nth-child(1)::before{content:none}
-  .tbRank td:nth-child(2){display:block;text-align:left;font-size:15px;
-    padding-bottom:8px;margin-bottom:4px;border-bottom:1px solid var(--linha)}
-  .tbRank td:nth-child(2)::before{content:none}
-  .tbRank td:nth-child(3)::before{content:"no dia"}
-  .tbRank td:nth-child(4)::before{content:"na semana"}
-  .tbRank td:nth-child(5)::before{content:"no mês"}
-  .tbRank td:nth-child(6)::before{content:"desde o início"}
-  .tbRank td:nth-child(7)::before{content:"vs ibovespa"}
-  .tbRank td:nth-child(8)::before{content:"sharpe"}
-  .tbRank td:nth-child(9)::before{content:"drawdown"}
-  .tbRank td:nth-child(10)::before{content:"dias"}
-  .tbRank td:nth-child(11){display:block;padding-top:8px}
-  .tbRank td:nth-child(11)::before{content:none}
-
-  /* ── screening: 10 colunas ── */
-  .tbScr td:nth-child(1){display:block;text-align:left;font-size:15px;font-weight:600}
-  .tbScr td:nth-child(1)::before{content:none}
-  .tbScr td:nth-child(2){display:block;text-align:left;
-    padding-bottom:8px;margin-bottom:4px;border-bottom:1px solid var(--linha)}
-  .tbScr td:nth-child(2)::before{content:none}
-  .tbScr td:nth-child(3)::before{content:"preço"}
-  .tbScr td:nth-child(4)::before{content:"no dia"}
-  .tbScr td:nth-child(5)::before{content:"trader"}
-  .tbScr td:nth-child(6)::before{content:"investidor"}
-  .tbScr td:nth-child(7)::before{content:"institucional"}
-  .tbScr td:nth-child(8){display:block;padding:8px 0 2px}
-  .tbScr td:nth-child(8)::before{content:none}
-  .tbScr td:nth-child(9)::before{content:"volume"}
-  .tbScr td:nth-child(10)::before{content:"%MMVol"}
-
-  /* ── placar: 7 colunas ── */
-  .tbPlacar td:nth-child(1){justify-content:flex-start;font-weight:600}
-  .tbPlacar td:nth-child(1)::before{content:none}
-  .tbPlacar td:nth-child(2){display:block;text-align:left;font-size:15px;
-    padding-bottom:8px;margin-bottom:4px;border-bottom:1px solid var(--linha)}
-  .tbPlacar td:nth-child(2)::before{content:none}
-  .tbPlacar td:nth-child(3)::before{content:"nota"}
-  .tbPlacar td:nth-child(4)::before{content:"pontos"}
-  .tbPlacar td:nth-child(5)::before{content:"rodadas"}
-  .tbPlacar td:nth-child(6)::before{content:"acertos"}
-  .tbPlacar td:nth-child(7)::before{content:"sequência"}
-
-  /* ── ranking de equipes: 9 colunas ── */
-  .tbTimes td:nth-child(1){justify-content:flex-start;font-weight:600}
-  .tbTimes td:nth-child(1)::before{content:none}
-  .tbTimes td:nth-child(3){display:block;text-align:left;font-size:15px}
-  .tbTimes td:nth-child(3)::before{content:none}
-  .tbTimes td:nth-child(4){display:block;text-align:left;font-size:12px;
-    color:var(--graf);padding-bottom:8px;margin-bottom:4px;
-    border-bottom:1px solid var(--linha)}
-  .tbTimes td:nth-child(4)::before{content:none}
-  .tbTimes td:nth-child(5)::before{content:"integrantes"}
-  .tbTimes td:nth-child(6)::before{content:"rentabilidade"}
-  .tbTimes td:nth-child(7)::before{content:"sharpe"}
-  .tbTimes td:nth-child(8)::before{content:"maior queda"}
-}
 </style>
 </head>
 <body>
@@ -1706,8 +1532,6 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
   <div class="alto">
     <a href="#/" class="marca">Saldo Positivo</a>
     <span class="dir" id="navDir"></span>
-    <button type="button" class="hamb" id="btMenu" aria-label="menu"
-      aria-expanded="false"><span></span><span></span><span></span></button>
   </div>
   <div class="momentos">
     <div class="viagem">
@@ -1781,7 +1605,7 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
       </div>
 
       <div class="grupo" data-g="construir">
-        <button type="button" class="rotg abre">Indicações<i class="cv"></i></button>
+        <button type="button" class="rotg abre">Construir<i class="cv"></i></button>
         <span class="def">venha pro mundo real</span>
         <div class="painel">
           <a class="topo" href="#/servicos">Falar com um especialista</a>
@@ -1835,25 +1659,6 @@ const CDI_ANO = 0.15;
 
 let eu = null;
 const $ = s => document.querySelector(s);
-/* o botão do menu no celular: guarda o estado no próprio aria-expanded, que é
-   o que o leitor de tela também usa. Fecha ao navegar, senão o menu ficaria
-   aberto por cima da tela nova.                                             */
-function ligarMenuCelular(){
-  const b = document.getElementById("btMenu");
-  const m = document.querySelector(".momentos");
-  if(!b || !m) return;
-  b.onclick = () => {
-    // Antes ele abria a faixa .momentos por cima da página — e ela empurrava
-    // o conteúdo. Agora leva para uma tela própria, que não desequilibra nada.
-    m.classList.remove("aberto");
-    b.setAttribute("aria-expanded", "false");
-    location.hash = "#/menu";
-  };
-  m.querySelectorAll("nav a").forEach(a => a.addEventListener("click", () => {
-    m.classList.remove("aberto");
-    b.setAttribute("aria-expanded", "false");
-  }));
-}
 const $$ = s => [...document.querySelectorAll(s)];
 const app = () => $("#app");
 
@@ -2939,7 +2744,7 @@ async function telaRanking(){
       <h3 style="margin-bottom:8px">Nenhuma carteira ainda</h3>
       <p style="color:var(--t2)">Publique a primeira — o ranking começa a contar a partir de hoje.</p>
       <a href="#/publicar" class="bt cheio" style="margin-top:12px">Criar carteira</a></div>`
-  : `<div class="rolagem"><table class="tbCard tbRank"><thead><tr><th></th><th class="estica">Carteira</th><th class="d">Dia</th>
+  : `<div class="rolagem"><table><thead><tr><th></th><th class="estica">Carteira</th><th class="d">Dia</th>
       <th class="d some">Semana</th><th class="d some">Mês</th><th class="d">Desde o início</th>
       <th class="d some">vs Ibovespa</th>
       <th class="d some">Sharpe</th><th class="d some">Drawdown</th>
@@ -4875,7 +4680,7 @@ async function telaScreening(classe){
       Nenhum ${UM} neste filtro.${!(data||[]).length
         ? " O cálculo precisa de alguns meses de histórico e o robô ainda não juntou tanto."
         : ""}</p></div>`
-  : `<div class="rolagem"><table class="tabScr tbCard tbScr"><thead><tr><th>${classe === "bdr" ? "BDR" : "Papel"}</th><th class="estica">Estado</th>
+  : `<div class="rolagem"><table class="tabScr"><thead><tr><th>${classe === "bdr" ? "BDR" : "Papel"}</th><th class="estica">Estado</th>
       <th class="d">Preço</th><th class="d">No dia</th>
       <th class="d mA m1 some">Trader</th><th class="d mA m2 some">Investidor</th><th class="d mA m3 some">Institucional</th>
       <th class="d some graf" style="min-width:196px;padding-left:18px">${JANELA_GRAFICO} pregões</th>
@@ -6693,36 +6498,6 @@ function telaAbertura(){
         <b class="mono">${esc(cod)}</b>.</p>
       <p style="margin:10px 0 0"><a href="#/entrar?novo=1" class="bt lacre">Criar minha conta</a></p>
     </div>` : ""}
-    <!-- No celular o texto longo empurra o botão de criar conta para a
-         terceira tela. Esta versão curta aparece só até 820px; o bloco de
-         baixo, que continua igual, é escondido na mesma faixa.            -->
-    <div class="sofone">
-      <h1 class="ab2" style="margin-bottom:18px">Aprenda, dispute,<br>depois invista.</h1>
-
-      <div class="trilhaF" style="margin-top:0">
-        <div class="passoF"><span class="nF">1</span><div>
-          <b>Aprender</b><span>O que é uma ação, como se mede risco, por que uma
-          carteira ganha da outra. Sem pressa e sem custo.</span></div></div>
-        <div class="passoF"><span class="nF">2</span><div>
-          <b>Competir</b><span>Publique sua carteira e entre no ranking.
-          Competições diárias, sozinho ou em equipe, com preço real da B3.</span></div></div>
-        <div class="passoF"><span class="nF">3</span><div>
-          <b>Indicações</b><span>Quando quiser sair do simulado, converse com
-          profissionais registrados — e aí o dinheiro é seu de verdade.</span></div></div>
-      </div>
-
-      <a href="#/entrar?novo=1" class="bt lacre" style="display:block;width:100%;
-        padding:13px;text-align:center;margin-top:20px">Criar conta</a>
-      <a href="#/entrar" class="bt" style="display:block;width:100%;
-        padding:12px;text-align:center;margin-top:9px">Entrar</a>
-      <a href="#/como-funciona" class="bt" style="display:block;width:100%;
-        padding:12px;text-align:center;margin-top:9px">Ver como funciona &rarr;</a>
-      <p style="font-size:11.5px;color:var(--graf);margin:16px 0 4px;
-        text-align:center;padding-top:13px;border-top:1px solid var(--linha)">
-        preço real da B3 · nada aqui é recomendação</p>
-    </div>
-
-    <div class="sotela">
     <p class="ab1">Quem é o melhor analista do Brasil?</p>
     <h1 class="ab2">Seja você.</h1>
     <p class="ab3" style="font-size:17px;color:var(--tinta);margin-bottom:18px">
@@ -6752,11 +6527,14 @@ function telaAbertura(){
     <div class="jornada">
       ${[["Aprender","antes de arriscar qualquer coisa",
           "O que é ação, carteira e risco. Por que a conta de perder não é a mesma de ganhar.",
-          "O que é · Artigos · Simulações", false],
-         ["Competir","mostre do que você é capaz",
-          "Sua carteira publicada, cotação real da B3, apurada sozinha. Palpite do dia, duelo, placar — o erro sai barato quando é simulado, e ensina igual.",
-          "Ranking · Screening · Tiro curto", false],
-         ["Indicações","venha pro mundo real",
+          "Por que é difícil · Como funciona", false],
+         ["Especular","comprar para vender mais caro",
+          "Palpite do dia, duelo, placar. O erro sai barato quando é jogo — e ensina igual.",
+          "Tiro curto · Placar · Duelo", false],
+         ["Investir","comprar para viver de renda",
+          "Sua carteira publicada, cotação real da B3, apurada sozinha. Ninguém muda o passado depois.",
+          "Ranking · Screening · Criar", false],
+         ["Construir","o patrimônio fora da tela",
           "Poupança mensal, compra de bem, sucessão. É aqui que o simulado vira dinheiro de verdade.",
           "Planejamento · Clube · Serviços", true]]
         .map(([t,def,d,onde,real],i)=>`<div class="et${real?" real":""}">
@@ -6782,9 +6560,7 @@ function telaAbertura(){
         Por isso o site não termina no ranking: ele começa ali.</p>
     </div>
 
-    </div><!-- /sotela -->
-
-    <div class="promessa sotela">
+    <div class="promessa">
       <p class="pTit">E quando o simulado acabar, o mundo real está do outro lado</p>
       <p class="pSub">Corretoras, bancos e profissionais regulamentados</p>
       <p class="teseP" style="max-width:64ch;margin:0 auto 18px;text-align:center">
@@ -10898,7 +10674,7 @@ async function telaTimes(){
         O primeiro pode ser o seu.</p></div>`
     : `<div class="chips">${Object.entries(REGUAS_TIME).map(([k,r])=>
         `<a href="#/times?r=${k}&c=${cicloSel.id}" class="chip${k===chave?" on":""}">${esc(r.nome)}</a>`).join("")}</div>
-      <table class="tbCard tbTimes"><thead><tr><th class="d">#</th><th></th><th>Time</th><th>Capitão</th>
+      <table><thead><tr><th class="d">#</th><th></th><th>Time</th><th>Capitão</th>
         <th class="d">Gente</th><th class="d">Rent.</th><th class="d">Sharpe</th>
         <th class="d">Queda</th><th></th></tr></thead><tbody>
       ${ord.map((t,i)=>{
@@ -12171,7 +11947,7 @@ async function telaPlacar(){
     ? `<div class="card"><p style="margin:0;color:var(--t2)">Ninguém pontuou
         ainda. As rodadas fecham de hora em hora, das 11h às 16h.
         <a href="#/tiro-curto" style="color:var(--ouro2)">Jogar a de agora</a>.</p></div>`
-    : `<table class="tbCard tbPlacar"><thead><tr><th class="d">#</th><th>Jogador</th>
+    : `<table><thead><tr><th class="d">#</th><th>Jogador</th>
         <th class="d">Nota</th><th class="d">Pontos</th><th class="d">Rodadas</th>
         <th class="d">Acertos</th><th class="d">Sequência</th></tr></thead><tbody>
       ${l.map((x,i) => `<tr>
@@ -12525,206 +12301,6 @@ async function telaCopa(){
   };
 }
 
-
-/* ══════════════════════════════════════════════════════════════════════════
-   TELAS-HUB — uma decisão por tela, para o celular.
-
-   Nada aqui reescreve tela que já existe: são páginas novas que só apontam
-   para rotas que já existem. No desktop continuam alcançáveis pela URL, mas
-   o menu de lá segue mandando direto para o destino final, como sempre.
-   ══════════════════════════════════════════════════════════════════════════ */
-const NO_CELULAR = () => matchMedia("(max-width:820px)").matches;
-
-const HUBS = {
-  "inicio": { olho:"por onde hoje", tit:"Escolha seu<br>momento",
-    sub:"Três caminhos. Um de cada vez.",
-    frentes:[
-      ["Educacional","antes de arriscar","#/educacional"],
-      ["Competições","mostre do que você é capaz","#/competicoes"],
-      ["Indicações","venha pro mundo real","#/indicacoes"]],
-    itens:[["Sua conta","carteiras, time, senha","#/eu"]],
-    aviso:"preço real da B3 · nada aqui é recomendação" },
-
-  "educacional": { olho:"educacional", tit:"Antes de<br>arriscar",
-    sub:"Do começo, sem pular etapa.",
-    itens:[
-      ["O que é","nove tipos de investimento, um por um","#/edu-oque"],
-      ["Artigos","do começo até quando já há patrimônio","#/edu-artigos"],
-      ["Simulações","faça a conta com os seus números","#/edu-simulacoes"]],
-    ponte:["daqui você vai para",[["como funciona o site","#/como-funciona"],
-      ["as competições","#/competicoes"]]] },
-
-  "edu-oque": { olho:"educacional · o que é", tit:"O que é<br>cada coisa",
-    sub:"nove páginas, uma por tipo",
-    itens:[["Renda fixa","","#/renda-fixa"],["Renda variável","","#/renda-variavel"],
-      ["Fundo de investimento","","#/fundos"],["Previdência privada","","#/previdencia"],
-      ["Clube de investimento","","#/clubes"],["Consórcio","","#/consorcio"],
-      ["Seguro de vida","","#/seguro-vida"],["Ouro, dólar e bitcoin","","#/alternativos"],
-      ["Investir no exterior","","#/internacional"]] },
-
-  "edu-artigos": { olho:"educacional · artigos", tit:"Artigos",
-    sub:"três etapas, na ordem",
-    itens:[
-      ["Comece por aqui","dívidas, juros, correção","#/edu-comecar"],
-      ["Montar a sua carteira","a conta que ninguém faz, a 60/40","#/edu-carteira"],
-      ["Quando já há patrimônio","crédito, casa, sucessão","#/edu-patrimonio"]] },
-
-  "edu-comecar": { olho:"artigos · comece por aqui", tit:"Comece<br>por aqui",
-    itens:[["Do começo, sem pular etapa","","#/aprender"],
-      ["Antes de poupar, saia das dívidas","","#/dividas"],
-      ["Como o dinheiro cresce","","#/crescer"],
-      ["Corrigir não é crescer","","#/corrigir"]] },
-
-  "edu-carteira": { olho:"artigos · montar a carteira", tit:"Montar a<br>sua carteira",
-    itens:[["Uma conta que ninguém faz","","#/porque"],
-      ["Como se monta uma carteira","","#/carteira-como"],
-      ["A carteira 60/40","","#/sessenta"],
-      ["Os grandes acumuladores","","#/grandes"]] },
-
-  "edu-patrimonio": { olho:"artigos · já há patrimônio", tit:"Quando já há<br>patrimônio",
-    itens:[["Quanto custa o dinheiro","","#/credito"],
-      ["Sair do aluguel e ter a casa própria","","#/casa"],
-      ["Comprar um bem","","#/comprar"],
-      ["A escada do consórcio","","#/escada"],
-      ["Pôr o patrimônio para trabalhar","","#/aplicado"],
-      ["Não perder na saída","","#/nao-perder"]] },
-
-  "edu-simulacoes": { olho:"educacional · simulações", tit:"Faça a conta",
-    sub:"com os seus números",
-    itens:[["Crescer e viver de renda","quanto junta, quanto rende, quanto dura","#/simulador"],
-      ["Quanto custa o crédito","o que o financiamento cobra de verdade","#/sim-credito"],
-      ["Comprar um bem","à vista, financiado ou por consórcio","#/sim-comprar"]] },
-
-  "competicoes": { olho:"competições", tit:"Mostre do que<br>você é capaz",
-    sub:"Três disputas, mesma régua.",
-    itens:[["Intraday","palpite de hora em hora","#/intraday"],
-      ["Carteira individual","a sua contra todas","#/individual"],
-      ["Em time","faculdade, empresa, turma","#/em-time"]] },
-
-  "intraday": { olho:"competições · intraday", tit:"Palpite de hora<br>em hora",
-    itens:[["Tiro curto","o palpite fecha na virada da hora","#/tiro-curto"],
-      ["Placar","quem acertou o quê hoje","#/placar"],
-      ["Copa do pregão","chave sorteada às 10h","#/copa"]] },
-
-  "individual": { olho:"competições · carteira individual", tit:"A sua contra<br>todas",
-    itens:[["Ranking","quem está ganhando agora","#/ranking"],
-      ["Crie sua carteira","escolha os papéis e os pesos","#/publicar"],
-      ["Mais escolhidos","o que as carteiras carregam","#/mais-escolhidos"],
-      ["Screening","ações","#/escolher-lista"],
-      ["Screening BDR","","#/escolher-lista-bdr"],
-      ["Duelo de carteiras","uma contra a outra, lado a lado","#/duelo"]] },
-
-  "em-time": { olho:"competições · em time", tit:"Faculdade,<br>empresa, turma",
-    itens:[["Ranking de equipe","quem está na frente","#/times"],
-      ["Crie seu time","você vira capitão","#/criar-time"],
-      ["Meu time","integrantes e pedidos de entrada","#/meu-time"],
-      ["As regras","como se apura o ciclo","#/regras-time"]] },
-
-  "escolher-lista": { olho:"screening · ações", tit:"O que você<br>quer olhar?",
-    itens:[["Em alta","","#/screening?t=alta"],["Em baixa","","#/screening?t=baixa"],
-      ["Maiores volumes","quem mais girou hoje","#/screening?o=liq"],
-      ["Volume destacado","girou muito acima da própria média","#/screening?o=avat"],
-      ["Índices","o Ibovespa e os setoriais","#/screening?set=1"],
-      ["Todos","","#/screening?t=todos"]],
-    aviso:"Os outros estados — saindo da alta, virando, sem tendência, saindo da baixa — continuam nas abas de dentro da lista.",
-    ponte:["ou","",[["o mesmo em BDR","#/escolher-lista-bdr"]]] },
-
-  "escolher-lista-bdr": { olho:"screening · BDR", tit:"O que você<br>quer olhar?",
-    itens:[["Em alta","","#/screening-bdr?t=alta"],["Em baixa","","#/screening-bdr?t=baixa"],
-      ["Maiores volumes","","#/screening-bdr?o=liq"],
-      ["Volume destacado","","#/screening-bdr?o=avat"],
-      ["Índices","","#/screening-bdr?set=1"],["Todos","","#/screening-bdr?t=todos"]],
-    ponte:["ou",[["o mesmo em ações","#/escolher-lista"]]] },
-
-  "indicacoes": { olho:"indicações", tit:"Venha pro<br>mundo real",
-    sub:"Aqui o dinheiro é seu de verdade.",
-    acoes:[["Falar com um especialista","#/servicos",true],
-           ["Fazer a minha conta","#/simulador",false]],
-    itens:[["Quem acompanha você","planejamento, assessoria, consultoria, gestão","#/ind-quem"],
-      ["Os produtos","renda fixa, variável, previdência, fundos…","#/ind-produtos"],
-      ["Proteger o que já existe","seguro, sucessão, blindagem, offshore","#/ind-proteger"]],
-    aviso:"Nada nesta página é recomendação de investimento." },
-
-  "ind-quem": { olho:"indicações", tit:"Quem acompanha<br>você",
-    itens:[["Planejamento financeiro","","#/servicos?s=planejamento"],
-      ["Assessoria de investimentos","","#/servicos?s=assessoria"],
-      ["Consultoria de investimentos","","#/servicos?s=consultoria"],
-      ["Gestão de recursos","","#/servicos?s=gestao"],
-      ["Gestão de grandes fortunas","","#/servicos?s=fortunas"]],
-    aviso:"Nada nesta página é recomendação de investimento." },
-
-  "ind-produtos": { olho:"indicações", tit:"Os produtos",
-    itens:[["Renda fixa","","#/servicos?s=rendafixa"],
-      ["Renda variável","","#/servicos?s=rendavar"],
-      ["Previdência","","#/servicos?s=previdencia"],
-      ["Fundos de investimento","","#/servicos?s=fundos"],
-      ["Clube de investimentos","","#/clube"],
-      ["Estratégias com consórcio","","#/servicos?s=consorcio"],
-      ["Conta internacional","","#/servicos?s=internacional"],
-      ["Ouro, dólar e bitcoin","","#/servicos?s=alternativos"]],
-    aviso:"Nada nesta página é recomendação de investimento." },
-
-  "ind-proteger": { olho:"indicações", tit:"Proteger o que<br>já existe",
-    itens:[["Seguro e sucessão","","#/sucessao"],
-      ["Planejamento sucessório","","#/servicos?s=sucessorio"],
-      ["Blindagem e proteção patrimonial","","#/servicos?s=blindagem"],
-      ["Estruturação empresarial","","#/servicos?s=empresarial"],
-      ["Abertura de offshore","","#/servicos?s=offshore"],
-      ["Conta no exterior","","#/servicos?s=exterior"]],
-    aviso:"Nada nesta página é recomendação de investimento." },
-
-  "eu": { olho:"sua conta", tit:"Sua conta",
-    itens:[["Minhas carteiras","as que você publicou","#/minhas"],
-      ["Dados da conta","apelido e e-mail","#/conta"],
-      ["Trocar a senha","","#/senha"],
-      ["Meu certificado","o que você concluiu","#/certificado"],
-      ["Indicar o site","seu link de convite","#/indicar"],
-      ["Assinar","","#/assinar"]] },
-
-  "menu": { olho:"menu", tit:"Tudo, de<br>uma vez",
-    sub:"Para quem já sabe onde quer chegar.",
-    itens:[["Educacional","antes de arriscar","#/educacional"],
-      ["Competições","mostre do que você é capaz","#/competicoes"],
-      ["Indicações","venha pro mundo real","#/indicacoes"],
-      ["Sua conta","","#/eu"]],
-    ponte:["ir direto",[["Ranking","#/ranking"],["Tiro curto","#/tiro-curto"],
-      ["Placar","#/placar"],["Screening","#/escolher-lista"],
-      ["Ranking de equipe","#/times"],["Meu time","#/meu-time"],
-      ["Falar com especialista","#/servicos"],["Como funciona","#/como-funciona"]]] }
-};
-
-function telaHub(id){
-  // hasOwn, e não HUBS[id] direto: "constructor" e "toString" vêm do Object
-  // e passariam por um teste de verdade, rendendo uma tela sem título.
-  const h = Object.hasOwn(HUBS, id) ? HUBS[id] : null;
-  if(!h) return telaRanking();
-  const frentes = (h.frentes||[]).map(([t,d,r],i) =>
-    `<a class="hubFrente" href="${r}"><span class="ic">${i+1}</span>
-      <span><b>${t}</b><span class="d">${d}</span></span>
-      <span class="seta">&rsaquo;</span></a>`).join("");
-  const acoes = (h.acoes||[]).map(([t,r,forte]) =>
-    `<a href="${r}" class="bt${forte?" lacre":""}" style="display:block;width:100%;
-      padding:13px;text-align:center;margin-bottom:9px">${t}</a>`).join("");
-  const itens = (h.itens||[]).map(([t,d,r]) =>
-    `<a class="hubEsc" href="${r}"><span><b>${t}</b>${
-      d ? `<span class="d">${d}</span>` : ""}</span>
-      <span class="seta">&rsaquo;</span></a>`).join("");
-  const ponte = h.ponte ? (() => {
-    const rot = h.ponte[0];
-    const vias = h.ponte[h.ponte.length-1];
-    return `<div class="hubPonte"><span class="rt2">${rot}</span>
-      <div class="vias">${vias.map(([t,r]) =>
-        `<a href="${r}">${t}</a>`).join("")}</div></div>`;
-  })() : "";
-  app().innerHTML = `<div class="hubCx">
-    <span class="hubOlho">${h.olho}</span>
-    <h1>${h.tit}</h1>
-    ${h.sub ? `<span class="sub">${h.sub}</span>` : `<span class="sub"></span>`}
-    ${acoes}${frentes}${itens}${ponte}
-    ${h.aviso ? `<p class="hubAviso">${h.aviso}</p>` : ""}
-  </div>`;
-}
-
 function rotear(){
   clearInterval(window.__timerRank);
   clearInterval(window.__timerVivo);
@@ -12777,11 +12353,7 @@ function rotear(){
 
   const m = h.match(/^#\/carteira\/(\d+)$/);
   if(m)                       return telaCarteira(m[1]);
-  // No celular a home é a escolha de caminho, não o ranking: quem chega numa
-  // tabela de dez colunas não sabe o que fazer com ela. No desktop nada muda.
-  if(h==="#/"||h===""){
-    return NO_CELULAR() ? telaHub("inicio") : telaRanking();
-  }
+  if(h==="#/"||h==="")        return telaRanking();
   if(h==="#/ranking")         return telaRanking();
   if(h==="#/entrar")          return telaEntrar();
   if(h==="#/publicar")        return telaPublicar();
@@ -12845,9 +12417,6 @@ function rotear(){
   if(h==="#/nova-senha")      return telaNovaSenha();
   const e = h.match(/^#\/editar\/(\d+)$/);
   if(e)                       return telaEditar(e[1]);
-  // telas-hub: páginas pequenas do celular. Só apontam para rotas que já
-  // existem — nenhuma delas substitui uma tela.
-  if(Object.hasOwn(HUBS, h.slice(2))) return telaHub(h.slice(2));
   telaRanking();
 }
 addEventListener("hashchange", rotear);
@@ -12866,7 +12435,7 @@ addEventListener("hashchange", rotear);
   // desfazendo o scrollTo do rotear. Quem manda na rolagem aqui é o rotear.
   if("scrollRestoration" in history) history.scrollRestoration = "manual";
   if(location.hash.includes("type=recovery")) location.hash = "#/nova-senha";
-  await carregarEu(); pintarNav(); ligarMenuCelular(); rotear();
+  await carregarEu(); pintarNav(); rotear();
   sb.auth.onAuthStateChange(async()=>{
     const tinha = !!eu;
     await carregarEu(); pintarNav();
