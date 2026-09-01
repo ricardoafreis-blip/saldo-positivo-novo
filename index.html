@@ -1619,6 +1619,37 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
 .hubEsc > span:first-child{flex:1 1 auto;min-width:0}
 .hubEsc .qtd{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--graf);
   flex:0 0 54px;width:54px;text-align:right;margin:0}
+.cxForm{max-width:52ch;border:1px solid var(--linha);border-radius:10px;
+  background:var(--p2);padding:18px}
+.cxForm input,.cxForm select,.cxForm textarea{width:100%;background:var(--papel);
+  border:1px solid var(--linha2);border-radius:6px;padding:10px 12px;
+  color:var(--tinta);font-size:14px;font-family:inherit;margin-bottom:9px}
+.cxForm input:focus,.cxForm select:focus,.cxForm textarea:focus{
+  outline:none;border-color:var(--ouro2)}
+.cxForm .marcas{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.cxForm .marcas button{border:1px solid var(--linha2);border-radius:99px;
+  padding:8px 14px;font-size:13px;color:var(--t2);background:none;cursor:pointer;
+  font-family:inherit}
+.cxForm .marcas button[data-on]{border-color:var(--ouro2);background:var(--p3);
+  color:var(--ouro2)}
+.tut{max-width:70ch}
+.tutP{display:flex;gap:15px;align-items:flex-start;padding:22px 0;
+  border-top:1px solid var(--linha)}
+.tutP:first-child{border-top:none}
+.tutN{width:30px;height:30px;border-radius:99px;flex:none;margin-top:3px;
+  border:1px solid var(--lacre);color:var(--ouro2);font-family:'IBM Plex Mono',monospace;
+  font-size:13px;display:flex;align-items:center;justify-content:center}
+.tutC{min-width:0}
+.tutC h2{font-family:Newsreader,Georgia,serif;font-size:21px;font-weight:500;
+  margin:0 0 7px}
+.tutC p{color:var(--t2);font-size:14px;margin:0 0 9px}
+.tutC ul{color:var(--t2);font-size:14px;margin:0 0 9px;padding-left:19px}
+.tutC li{margin-bottom:3px}
+.tutC b{color:var(--tinta);font-weight:500}
+.tutL{display:flex;flex-wrap:wrap;gap:7px;margin-top:11px}
+.tutL a{border:1px solid var(--linha2);border-radius:99px;padding:7px 14px;
+  font-size:12.5px;color:var(--t2)}
+.tutL a:hover{border-color:var(--ouro2);color:var(--ouro2)}
 .hubPonte{margin-top:20px;padding-top:13px;border-top:1px solid var(--linha)}
 .hubPonte .rt2{font-size:10px;letter-spacing:.13em;text-transform:uppercase;
   color:var(--graf);display:block;margin-bottom:9px}
@@ -1918,8 +1949,8 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
 <footer class="w">
 Nada aqui é recomendação de investimento — cada carteira é anotação pessoal de quem a
 publica, sem dinheiro real.
-<a href="#/servicos" style="color:var(--t2);border-bottom:1px solid var(--linha2)">Fale conosco</a>
- · <a href="#/como-funciona" style="color:var(--t2);border-bottom:1px solid var(--linha2)">Como funciona</a>
+<a href="#/fale-conosco" style="color:var(--t2);border-bottom:1px solid var(--linha2)">Fale conosco</a>
+ · <a href="#/tutorial" style="color:var(--t2);border-bottom:1px solid var(--linha2)">Tutorial</a>
  · <a href="#/termos" style="color:var(--t2);border-bottom:1px solid var(--linha2)">Termos e privacidade</a></footer>
 
 <script type="module">
@@ -2080,6 +2111,21 @@ const ehDiaUtil = () => !/^(sáb|dom)/i.test(partesBR(new Date()).dia);
 function emPregao(){
   const p = partesBR(new Date());
   return ehDiaUtil() && p.hora >= 10 && p.hora < 18;
+}
+
+/* Quanto do pregão já passou, de 0 a 1. Serve para comparar o volume girado
+   até agora com a FATIA da média de 21 dias que caberia a este horário: às
+   12h já passou um quarto do dia, então o normal é ter girado um quarto.
+   Sem isto, todo papel parecia girar pouco de manhã.
+   A janela 10h–18h é a mesma do emPregao() acima — uma definição só.      */
+function fracaoPregao(){
+  // Blocos de 10 minutos: 6 por hora, 48 no pregão de 10h às 18h.
+  // Só contam os blocos JÁ FECHADOS — às 10h07 nenhum fechou ainda.
+  if(!ehDiaUtil()) return 1;              // fim de semana: compara com o dia cheio
+  const p = partesBR(new Date());
+  const min = p.hora * 60 + p.minuto;
+  if(min < 600 || min >= 1080) return 1;  // fora do pregão: o volume guardado é de um dia inteiro
+  return Math.floor((min - 600) / 10) / 48;
 }
 
 const ATRASO_ALERTA = 2;
@@ -3009,9 +3055,6 @@ async function telaRanking(){
        vsibov:"quanto ganhou do índice, em pontos",
        sharpe:"retorno por unidade de risco · a partir de 20 pregões",
        dd:"maior queda desde o topo"}[ordem] || ""}</span>
-    <span class="divisor"></span>
-    <a href="#/mais-escolhidos" style="font-size:12px;color:var(--graf)"
-      >Maiores posições das carteiras &rarr;</a>
   </div>
   ${quando && eu?.admin?`<p id="linhaViva" style="font-size:11.5px;color:var(--graf);margin:0 0 12px"></p>`:""}
   ${filtro && CLASSE[filtro] ? `<p style="font-size:12.5px;color:var(--t2);max-width:60ch;margin:-2px 0 15px">
@@ -4785,6 +4828,7 @@ async function telaScreening(classe, soContar){
   const filtro = q.get("t") || "todos";
   const busca  = (q.get("q") || "").toUpperCase();
   const verSet = q.get("set") === "1";
+  const FR_PREGAO = fracaoPregao();   // fatia do dia já decorrida
 
   const IND_AMPLO = ["IBOV","^BVSP","IBOVESPA","IBXX","IBRX","IBRA"];
   const IND_SET = { IFNC:"Financeiro", ICON:"Consumo", IMAT:"Materiais básicos",
@@ -4825,7 +4869,15 @@ async function telaScreening(classe, soContar){
     // guardada em .liqMedia
     y.liqMedia = x.liquidez;
     if(v && v[5] > 0){ y.liquidez = Number(v[5]); y.giroHoje = true; }
-    y.avat = (y.giroHoje && y.liqMedia > 0) ? y.liquidez / y.liqMedia : null;
+    /* A coluna Volume diz "negociado hoje". Quando não há cotação ao vivo,
+       y.liquidez ainda é a média de 21 dias — e mostrá-la ali seria chamar
+       média de volume do dia. Então a coluna passa a ler volHoje, que só
+       existe quando o volume é mesmo de hoje. A média continua em liqMedia,
+       que é quem ordena e filtra. */
+    y.volHoje = y.giroHoje ? y.liquidez : null;
+    // fração zero é a primeira dezena do dia: traço, não divisão por zero
+    y.avat = (y.giroHoje && y.liqMedia > 0 && FR_PREGAO > 0)
+      ? y.liquidez / (y.liqMedia * FR_PREGAO) : null;
     /* A variação do dia sai da coluna oscilacao, gravada pelo mt5_gravar a
        partir da mesma barra de onde vêm o preço e as três forças. Não se
        calcula nada aqui: o número é o do banco. Antes vinha só da cotacao_viva,
@@ -5006,7 +5058,7 @@ async function telaScreening(classe, soContar){
       <td class="mA m3 some" style="white-space:nowrap">${
         x.ema72==null?"—":n2(x.ema72, x.fech>1000?0:2)}${dp(x.fech, x.ema72)}</td>
       <td class="some graf" style="padding:6px 0 6px 18px"><div style="margin-left:auto;width:180px">${risco(x)}</div></td>
-      <td class="d mono nulo some" style="font-size:12px">${x.liquidez==null?"—":grana(x.liquidez)}</td>
+      <td class="d mono nulo some" style="font-size:12px">${x.volHoje==null?"—":grana(x.volHoje)}</td>
     </tr>`).join("")}
     ${l.map(x=>`<tr>
       <td class="mono" style="font-weight:500">${esc(x.ativo)}</td>
@@ -5019,7 +5071,7 @@ async function telaScreening(classe, soContar){
       <td class="mA m3 some" style="white-space:nowrap">${
         x.ema72==null?"—":n2(x.ema72)}${dp(x.fech, x.ema72)}</td>
       <td class="some graf" style="padding:6px 0 6px 18px"><div style="margin-left:auto;width:180px">${risco(x)}</div></td>
-      <td class="d mono nulo some" style="font-size:12px;white-space:nowrap">${grana(x.liquidez)}</td>
+      <td class="d mono nulo some" style="font-size:12px;white-space:nowrap">${x.volHoje==null?"—":grana(x.volHoje)}</td>
       <td class="d mono some" style="font-size:12px;white-space:nowrap;${
         x.avat==null?"opacity:.45" : x.avat>=2?"color:var(--ouro2)"
         : x.avat>=1.3?"color:var(--alta)" : ""}">${
@@ -5117,6 +5169,210 @@ async function telaScreening(classe, soContar){
       telaScreening(classe).then(() => window.scrollTo(0, y));
     }, 30000);
   }
+}
+
+
+/* ══ TUTORIAL ══════════════════════════════════════════════════════════════
+   Passo a passo, uma coisa de cada vez. Tudo aqui é o que o site faz hoje:
+   as regras vieram do próprio código e das regras de time que já estavam
+   escritas no Como funciona.                                              */
+
+/* ══ FALE CONOSCO ══════════════════════════════════════════════════════════
+   Separado da lista de serviços: quem quer tirar uma dúvida ou pedir uma
+   palestra não está pedindo assessoria de investimento. Grava na mesma tabela
+   lead, mas com origem própria — assim os pedidos não se misturam no #/leads. */
+function telaFale(){
+  const q = new URLSearchParams(location.hash.split("?")[1] || "");
+  let assunto = q.get("a") === "aulas" ? "aulas" : "duvida";
+
+  const pintar = (recado="", ruim=false) => {
+    app().innerHTML = `
+    <div class="cabeca" style="text-align:left;max-width:60ch">
+      <div class="trilho">Fale conosco</div>
+      <h1>Fale com a gente</h1>
+      <p>Uma dúvida sobre o site, um erro que você achou, ou uma turma que
+        quer aula. Respondemos em até um dia útil.</p>
+    </div>
+
+    <div class="cxForm">
+      <div class="marcas">
+        <button data-a="duvida"${assunto==="duvida"?' data-on="1"':""}>Dúvida ou recado</button>
+        <button data-a="aulas"${assunto==="aulas"?' data-on="1"':""}>Curso ou palestra</button>
+      </div>
+      <input id="fNome" placeholder="seu nome" autocomplete="name">
+      <input id="fTel"  placeholder="WhatsApp com DDD" autocomplete="tel">
+      <input id="fMail" placeholder="e-mail (opcional)" autocomplete="email">
+      <select id="fHora">
+        <option value="qualquer">qualquer horário</option>
+        <option value="manha">de manhã</option>
+        <option value="tarde">à tarde</option>
+        <option value="noite">à noite</option>
+      </select>
+      <textarea id="fRec" rows="4" placeholder="o que você quer dizer"></textarea>
+      <input id="fIsca" tabindex="-1" autocomplete="off"
+        style="position:absolute;left:-9999px;width:1px;height:1px">
+      <label class="lgpd"><input type="checkbox" id="fOk">
+        <span>Autorizo o contato por telefone, WhatsApp ou e-mail sobre este
+        assunto. Os dados são usados só para isso e podem ser apagados a
+        qualquer momento — é só pedir.</span></label>
+      <button class="bt lacre" id="fEnv" style="margin-top:12px;width:100%"
+        >Enviar</button>
+      <div style="font-size:12px;margin-top:9px;min-height:18px;color:${
+        ruim?"var(--baixa)":"var(--alta)"}">${esc(recado)}</div>
+    </div>`;
+
+    document.querySelectorAll(".marcas button[data-a]").forEach(el =>
+      el.onclick = () => { assunto = el.dataset.a; pintar(); });
+
+    document.getElementById("fEnv").onclick = async () => {
+      const nome = document.getElementById("fNome").value.trim();
+      const tel  = document.getElementById("fTel").value.trim();
+      const rec  = document.getElementById("fRec").value.trim();
+      if(document.getElementById("fIsca").value) return;
+      if(!nome || !tel) return pintar("Falta o nome ou o WhatsApp.", true);
+      if(!rec) return pintar("Escreva o recado.", true);
+      if(!document.getElementById("fOk").checked)
+        return pintar("Marque a autorização de contato.", true);
+      const bt = document.getElementById("fEnv");
+      bt.disabled = true; bt.textContent = "enviando…";
+      const { error } = await sb.from("lead").insert({
+        origem: assunto === "aulas" ? "aulas" : "contato",
+        nome, whatsapp: tel,
+        email:   document.getElementById("fMail").value.trim() || null,
+        horario: document.getElementById("fHora").value,
+        recado:  rec,
+        assuntos: [assunto] });
+      if(error) return pintar("Não consegui registrar: " + error.message, true);
+      pintar("Recado registrado. Respondemos em até um dia útil.");
+    };
+  };
+  pintar();
+}
+
+function telaTutorial(){
+  const passo = (n, tit, corpo, links) => `
+    <div class="tutP">
+      <span class="tutN">${n}</span>
+      <div class="tutC">
+        <h2>${tit}</h2>
+        ${corpo}
+        ${links ? `<div class="tutL">${links.map(([t,r]) =>
+          `<a href="${r}">${t}</a>`).join("")}</div>` : ""}
+      </div>
+    </div>`;
+
+  app().innerHTML = `
+  <div class="cabeca" style="text-align:left;max-width:70ch">
+    <div class="trilho">Tutorial</div>
+    <h1>Do zero ao ranking</h1>
+    <p>Cada passo explica uma coisa só, na ordem em que ela aparece. Se você
+      já sabe o começo, pule para o passo que interessa.</p>
+  </div>
+
+  <div class="tut">
+    ${passo(1, "Criar a conta", `
+      <p>Precisa de e-mail e senha. O <b>apelido é o que aparece</b> no ranking
+      e nos certificados; o e-mail não aparece para ninguém. Não se cobra nada
+      para entrar.</p>`, [["Criar conta","#/entrar?novo=1"]])}
+
+    ${passo(2, "Montar a sua carteira", `
+      <p>Você escolhe uma <b>classe</b> e ela não muda depois — trocar de classe
+      depois de ver o resultado seria escolher a régua com o jogo jogado. São
+      quatro:</p>
+      <ul>
+        <li><b>Comprada</b> — só compra, sem alavancagem.</li>
+        <li><b>60/40</b> — parte em bolsa, parte em renda fixa.</li>
+        <li><b>Long × short</b> — compra uma coisa e vende outra.</li>
+        <li><b>Vendida</b> — aposta na queda.</li>
+      </ul>
+      <p>Depois escolhe os papéis e os pesos, que somam cem por cento. Ao
+      publicar, a carteira <b>começa a contar no próximo pregão</b>: não existe
+      histórico retroativo, e ninguém consegue mudar o que já passou.</p>`,
+      [["Criar carteira","#/publicar"],["Ver o Screening","#/escolher-lista"]])}
+
+    ${passo(3, "Acompanhar no ranking", `
+      <p>Sua carteira só é comparada com outras <b>da mesma classe</b>. O
+      ranking mostra o retorno no dia, na semana, no mês e desde a publicação,
+      além do resultado contra o Ibovespa, o índice Sharpe, a maior queda e há
+      quantos pregões ela existe.</p>
+      <p>Os pesos mudam sozinhos com o preço: se um papel sobe muito, ele passa
+      a pesar mais. A tela da carteira mostra lado a lado o <b>peso declarado</b>
+      e o <b>peso de hoje</b>.</p>`, [["Ver o ranking","#/ranking"]])}
+
+    ${passo(4, "Usar o Screening", `
+      <p>É a fotografia de cada papel da bolsa. Para cada um você vê o preço, a
+      variação do dia, três médias — a do <b>trader</b>, a do <b>investidor</b> e
+      a do <b>institucional</b> —, o gráfico dos últimos pregões, o volume
+      girado hoje e o <b>%MMVol</b>.</p>
+      <p>O %MMVol compara o quanto o papel já girou hoje com a fatia da média de
+      21 pregões que caberia a este horário. Acima de 1,3 o papel está girando
+      bem mais que o normal para a hora.</p>
+      <p>Os papéis são separados por estado: em alta, saindo da alta, virando,
+      sem tendência, saindo da baixa e em baixa.</p>`,
+      [["Screening de ações","#/escolher-lista"],
+       ["Screening de BDR","#/escolher-lista-bdr"]])}
+
+    ${passo(5, "Jogar o Tiro curto", `
+      <p>De hora em hora abre uma rodada com <b>quatro perguntas</b> sobre três
+      papéis sorteados: quem sobe mais, quem cai mais, quem gira mais volume, e
+      se a PETR4 fica acima ou abaixo do corte da hora.</p>
+      <p>O palpite fecha na virada da hora e a rodada é apurada com a cotação da
+      hora seguinte. Acertar seguido vale <b>multiplicador</b>, e a nota é
+      acertos sobre rodadas respondidas — quem responde tudo não leva vantagem
+      sobre quem responde pouco e acerta.</p>`,
+      [["Rodada de agora","#/tiro-curto"],["Placar do dia","#/placar"]])}
+
+    ${passo(6, "Entrar na Copa do pregão", `
+      <p>Mata-mata de um dia só, com <b>oito vagas</b>. A inscrição vai até as
+      10h, quando a chave é sorteada. As quartas valem a rodada das 12h, a
+      semifinal a das 14h e a final a das 16h.</p>
+      <p>Vence quem faz mais pontos naquela rodada — é o mesmo Tiro curto de
+      sempre, e os pontos daquela hora decidem quem avança. Quem perde sai na
+      mesma tarde e pode entrar na do dia seguinte.</p>`,
+      [["Copa do pregão","#/copa"]])}
+
+    ${passo(7, "Duelar com alguém", `
+      <p>Um duelo põe duas carteiras frente a frente pelo mesmo período. Você
+      escolhe o adversário, ele aceita, e no fim do prazo compara-se o retorno
+      das duas.</p>`, [["Meus duelos","#/duelo"]])}
+
+    ${passo(8, "Competir em time", `
+      <p>Qualquer pessoa com uma carteira da classe <b>Comprada</b> publicada
+      pode entrar num time. Ao entrar você indica qual das suas carteiras
+      concorre, e pode trocar quando quiser. Uma pessoa, um time por ciclo. O
+      capitão aprova quem entra, e o time só pontua com <b>pelo menos cinco
+      integrantes</b>.</p>
+      <p>A carteira do time são os <b>dez papéis mais presentes</b> nas carteiras
+      dos integrantes, com dez por cento em cada. Cada pessoa vale um voto por
+      papel: quem concentra mais num papel não pesa mais que os outros. Se você
+      mexe na sua carteira, a mudança entra na do time no pregão seguinte.</p>
+      <p>Havendo empate na décima vaga, a preferência é do capitão até a abertura
+      do pregão seguinte; se ele não escolher, entra o papel de maior volume
+      financeiro médio.</p>
+      <p>Cada time tem o seu <b>mural</b>, fechado aos integrantes — é onde o
+      professor comenta e corrige em cima da carteira de verdade.</p>`,
+      [["Criar meu time","#/criar-time"],["Ranking de equipes","#/times"]])}
+
+    ${passo(9, "Como se ganha em time", `
+      <p>Há dois campeonatos: um <b>mensal</b> e um <b>trimestral</b>, que começa
+      em janeiro, abril, julho e outubro. O time se inscreve num, no outro ou
+      nos dois. O elenco congela quando o ciclo começa — quem entra ou sai depois
+      só vale no ciclo seguinte.</p>
+      <p>São três réguas: <b>rentabilidade</b>, <b>índice Sharpe</b> e <b>menor
+      queda</b>. O campeão geral é quem soma as menores posições nas três —
+      primeiro lugar vale um ponto, segundo vale dois. Rentabilidade e queda
+      contam desde o primeiro pregão; o Sharpe entra no segundo, porque com um
+      retorno só não há dispersão para medir.</p>
+      <p>Não há prêmio em dinheiro. O que se ganha é reconhecimento: título no
+      perfil, destaque do apelido no ranking e certificado para imprimir — do
+      time, de cada integrante e do capitão.</p>`, [["Ranking de equipes","#/times"]])}
+
+    ${passo(10, "Sair do simulado", `
+      <p>Quando quiser pôr dinheiro de verdade, as Indicações levam a
+      profissionais registrados. Nada no site é recomendação de investimento —
+      cada carteira é anotação pessoal de quem a publica, sem dinheiro real.</p>`,
+      [["Indicações","#/indicacoes"],["Simule o seu planejamento","#/simulador"]])}
+  </div>`;
 }
 
 function telaComo(){
@@ -5260,59 +5516,9 @@ function telaComo(){
     Contratar serviço não melhora a sua posição em nenhum deles — se melhorasse, o ranking
     não valeria nada, e é o ranking que dá sentido ao resto.</p>
 
-  <h2 id="regras-do-time" style="font-size:20px;margin:38px 0 6px">As regras da competição em time</h2>
-  <div style="max-width:74ch">
-    <p style="color:var(--t2);font-size:14px;line-height:1.6;margin:0 0 14px">
-      Escritas antes de a temporada começar, e iguais para todo mundo. É isso
-      que faz o troféu significar alguma coisa: ninguém muda critério com a
-      competição andando.</p>
-
-    <h3 style="font-size:15px;margin:0 0 5px">Quem pode entrar</h3>
-    <p style="color:var(--t2);font-size:13.5px;line-height:1.65;margin:0 0 13px">
-      Qualquer pessoa com conta e com uma <b>carteira da classe Comprada</b>
-      publicada — dez papéis, dez por cento em cada. Ao entrar, você indica qual
-      das suas carteiras concorre pelo time, e pode trocar quando quiser.
-      <b>Uma pessoa, um time por ciclo.</b> O capitão aprova quem entra. O time
-      só pontua com pelo menos cinco integrantes, e não há teto.</p>
-
-    <h3 style="font-size:15px;margin:0 0 5px">A carteira do time</h3>
-    <p style="color:var(--t2);font-size:13.5px;line-height:1.65;margin:0 0 13px">
-      São os <b>dez papéis mais presentes</b> nas carteiras dos integrantes, com
-      dez por cento em cada. Cada pessoa vale <b>um voto por papel</b>: quem
-      concentra mais num papel não pesa mais que os outros. Você mexe na sua
-      carteira quando quiser, e a mudança entra na do time <b>no pregão
-      seguinte</b> — o que já passou não muda.</p>
-
-    <h3 style="font-size:15px;margin:0 0 5px">Empate na décima vaga</h3>
-    <p style="color:var(--t2);font-size:13.5px;line-height:1.65;margin:0 0 13px">
-      A preferência é do <b>capitão</b>, até a abertura do pregão seguinte, entre
-      os papéis empatados. Se ele não escolher, entra o de <b>maior volume
-      financeiro médio</b>. Assim o time nunca fica sem carteira por causa de um
-      capitão ausente.</p>
-
-    <h3 style="font-size:15px;margin:0 0 5px">Os campeonatos</h3>
-    <p style="color:var(--t2);font-size:13.5px;line-height:1.65;margin:0 0 13px">
-      Dois: um <b>mensal</b> e um <b>trimestral</b>, que começa em janeiro, abril,
-      julho e outubro. O time se inscreve num, no outro, ou nos dois. O elenco
-      <b>congela quando o ciclo começa</b>: quem entra ou sai depois só vale no
-      ciclo seguinte, e time criado no meio joga o próximo.</p>
-
-    <h3 style="font-size:15px;margin:0 0 5px">Como se ganha</h3>
-    <p style="color:var(--t2);font-size:13.5px;line-height:1.65;margin:0 0 13px">
-      Três réguas: <b>rentabilidade</b>, <b>índice Sharpe</b> e <b>menor queda</b>.
-      O campeão geral é quem soma as menores posições nas três — primeiro lugar
-      vale um ponto, segundo vale dois. Rentabilidade e queda contam desde o
-      primeiro pregão; o Sharpe entra no segundo, porque com um retorno só não há
-      dispersão para medir.</p>
-
-    <h3 style="font-size:15px;margin:0 0 5px">O que se ganha</h3>
-    <p style="color:var(--t2);font-size:13.5px;line-height:1.65;margin:0 0 10px">
-      Não há prêmio em dinheiro. O que se ganha é <b>reconhecimento</b>: título no
-      perfil, destaque do apelido no ranking e certificado para imprimir — do time,
-      de cada integrante e do capitão.</p>
-    <p style="margin:0"><a href="#/times" class="bt">Ver o ranking de equipes</a>
-      <a href="#/criar-time" class="bt lacre" style="margin-left:8px">Criar meu time</a></p>
-  </div>
+    <p style="color:var(--t2);font-size:14px;margin:30px 0 0">
+      As regras da competição em time estão explicadas passo a passo no
+      <a href="#/tutorial" style="color:var(--ouro2)">Tutorial</a>.</p>
 
   <h2 style="font-size:20px;margin:38px 0 6px">Sala de aula</h2>
   <div style="max-width:74ch">
@@ -5333,7 +5539,7 @@ function telaComo(){
       comenta e corrige em cima da carteira de verdade. O que ainda não existe é
       o curso pago — esse estamos montando. Se você dá aula, em colégio,
       faculdade, curso livre ou por conta própria, e quer uma turma aqui ou uma
-      palestra, <a href="#/servicos?origem=aulas" style="color:var(--ouro2)">fale
+      palestra, <a href="#/fale-conosco?a=aulas" style="color:var(--ouro2)">fale
       com a gente</a>.</p>
   </div>
 
@@ -8930,30 +9136,45 @@ function blocoDisciplina(s, pico){
 }
 
 function ligarSim(){
-  const liga = (id, aplica) => {
+  /* O limite era aplicado a CADA TECLA. Quem começava a digitar a idade batia
+     no mínimo já no primeiro dígito: o "4" de 40 virava 14 na hora, e o campo
+     era redesenhado com 14. Daí só se conseguia 14 ou 90.
+     Agora o valor digitado entra como está enquanto o campo tem o foco, e o
+     limite só é aplicado quando a pessoa sai do campo. */
+  const liga = (id, aplica, min, max) => {
     const el = $("#"+id); if(!el) return;
-    el.oninput = () => {
-      let v = Number(String(el.value).replace(/[^\d.,-]/g,"").replace(",","."));
-      if(!isFinite(v)) v = 0;
-      aplica(v);
+    const ler = () => {
+      const v = Number(String(el.value).replace(/[^\d.,-]/g,"").replace(",","."));
+      return isFinite(v) ? v : 0;
+    };
+    const coerir = () => {
       if(CONTA.contribuiAte <= CONTA.idade) CONTA.contribuiAte = CONTA.idade + 1;
       if(CONTA.contaAte <= CONTA.contribuiAte) CONTA.contaAte = CONTA.contribuiAte + 20;
+    };
+    el.oninput = () => {
+      if(el.value.trim() === "") return;     // campo vazio: espera a pessoa digitar
+      aplica(ler());
+      coerir();
       const pos = el.selectionStart;
       simTudo();
       const n = $("#"+id); if(n){ n.focus(); try{ n.setSelectionRange(pos,pos); }catch(e){} }
     };
+    el.onblur = () => {
+      aplica(Math.min(max, Math.max(min, ler())));
+      coerir();
+      simTudo();
+    };
   };
-  const lim = (v,a,b) => Math.min(b, Math.max(a, v));
-  liga("cIdade", v => CONTA.idade        = lim(v,14,90));
-  liga("cAte",   v => CONTA.contribuiAte = lim(v,15,95));
-  liga("cFim",   v => CONTA.contaAte     = lim(v,16,120));
-  liga("cRenda", v => CONTA.renda        = lim(v,0,1e7));
-  liga("cGasto", v => CONTA.gasto        = lim(v,0,1e7));
-  liga("cPoupo", v => CONTA.poupo        = lim(v,0,1e7));
-  liga("cTem",   v => CONTA.tem          = lim(v,0,1e10));
-  liga("cTaxa",  v => CONTA.taxa         = lim(v,0,60));
-  liga("cInf",   v => CONTA.inflacao     = lim(v,0,40));
-  liga("cValor", v => CONTA.valor        = lim(v,0,1e10));
+  liga("cIdade", v => CONTA.idade        = v, 14, 90);
+  liga("cAte",   v => CONTA.contribuiAte = v, 15, 95);
+  liga("cFim",   v => CONTA.contaAte     = v, 16, 120);
+  liga("cRenda", v => CONTA.renda        = v, 0, 1e7);
+  liga("cGasto", v => CONTA.gasto        = v, 0, 1e7);
+  liga("cPoupo", v => CONTA.poupo        = v, 0, 1e7);
+  liga("cTem",   v => CONTA.tem          = v, 0, 1e10);
+  liga("cTaxa",  v => CONTA.taxa         = v, 0, 60);
+  liga("cInf",   v => CONTA.inflacao     = v, 0, 40);
+  liga("cValor", v => CONTA.valor        = v, 0, 1e10);
 
   const vl = $("#voltarLim");
   if(vl) vl.onclick = () => { CONTA.valor = null; simTudo(); };
@@ -12032,6 +12253,12 @@ async function telaTiroCurto(){
        giro de hoje, quando existe.                                        */
     y.liqMedia = x.liquidez;
     if(v && v[5] > 0){ y.liquidez = Number(v[5]); y.giroHoje = true; }
+    /* A coluna Volume diz "negociado hoje". Quando não há cotação ao vivo,
+       y.liquidez ainda é a média de 21 dias — e mostrá-la ali seria chamar
+       média de volume do dia. Então a coluna passa a ler volHoje, que só
+       existe quando o volume é mesmo de hoje. A média continua em liqMedia,
+       que é quem ordena e filtra. */
+    y.volHoje = y.giroHoje ? y.liquidez : null;
     y.e = estadoDe(y);
     FICHA[x.ativo] = y;
   });
@@ -12174,10 +12401,6 @@ function jogoPetr(rodada, escolhido, aberta, ficha){
   return cxJogo("petr", `
     <p style="margin:0 0 10px;font-size:12.5px;color:var(--t2)">
       A PETR4 vai girar acima ou abaixo de <b>${esc(rot)}</b> nesta hora?</p>
-    ${p ? `<p style="margin:0 0 10px;font-size:11px;color:var(--graf)">
-      no dia ela girou <b class="mono">${p.giroHoje ? grana(p.liquidez) : "—"}</b>,
-      contra uma média de 21 pregões de
-      <b class="mono">${grana(p.liqMedia)}</b></p>` : ""}
     <div class="chips">
       ${["acima","abaixo"].map(v =>
         `<button class="chip vJ" data-j="petr" data-v="${v}"${
@@ -12480,8 +12703,17 @@ async function telaDesafiar(){
     + aviso("Você precisa de uma carteira publicada para desafiar alguém.")
     + `<p style="margin-top:14px"><a href="#/publicar" class="bt lacre">Criar carteira</a></p>`;
 
-  const { data:gente } = await sb.from("perfil_publico").select("id,apelido")
-    .neq("id", eu.id).order("apelido").limit(300);
+  /* Antes se escolhia a PESSOA, e não se sabia com que carteira ela viria.
+     Agora a lista é de carteiras — cada uma com o dono ao lado. O valor
+     continua sendo o dono, porque é ele quem aceita o desafio e quem o banco
+     guarda; o que muda é você ver contra o que está desafiando. */
+  const [{ data:gente }, { data:alheias }] = await Promise.all([
+    sb.from("perfil_publico").select("id,apelido").neq("id", eu.id)
+      .order("apelido").limit(300),
+    sb.from("carteira").select("id,nome,classe,usuario_id")
+      .neq("usuario_id", eu.id).eq("ativa", true).order("nome").limit(500)
+  ]);
+  const apelidoDe = {}; (gente||[]).forEach(g => apelidoDe[g.id] = g.apelido || "—");
 
   const hoje = HOJE_BR();
   const daqui = n => { const d = new Date(hoje + "T12:00:00");
@@ -12489,13 +12721,18 @@ async function telaDesafiar(){
 
   app().innerHTML = `
   <div class="cabeca"><h1>Desafiar alguém</h1>
-    <p>Escolha a pessoa, a sua carteira e o prazo. Ela aceita com uma carteira
-      da mesma classe. Mínimo de ${DUELO_MIN} pregões.</p></div>
+    <p>Escolha a carteira que quer enfrentar, a sua e o prazo. Mínimo de
+      ${DUELO_MIN} pregões.</p></div>
   <div id="erro"></div>
   <div class="card" style="max-width:560px">
-    <label>Quem</label>
-    <select id="dQuem">${(gente||[]).map(p =>
-      `<option value="${p.id}">${esc(p.apelido||"—")}</option>`).join("")}</select>
+    <label>Contra qual carteira</label>
+    <select id="dQuem">${(alheias||[])
+      .filter(c => apelidoDe[c.usuario_id])
+      .map(c => `<option value="${c.usuario_id}" data-cl="${c.classe}"
+        >${esc(c.nome)} · ${esc(apelidoDe[c.usuario_id])}</option>`).join("")}</select>
+    <p style="font-size:11.5px;color:var(--graf);margin:8px 0 13px">
+      Quem escolhe a carteira que entra do outro lado é a pessoa, ao aceitar —
+      pode ser outra dela, desde que da mesma classe.</p>
 
     <label>Sua carteira</label>
     <select id="dCart">${cs.map(c =>
@@ -12677,8 +12914,7 @@ async function telaCopa(){
           : c.situacao === "inscricoes"
             ? "Ninguém se inscreveu ainda. As oito vagas vão por ordem de chegada."
             : "A copa de hoje não aconteceu: menos de duas pessoas na chave quando "
-              + "as inscrições fecharam. A de amanhã abre inscrição assim que o "
-              + "pregão de hoje for apurado."}
+              + "as inscrições fecharam. A inscrição para a próxima já está aberta."}
         </p>${vg.length?`<div class="chips" style="margin-top:12px">${vg.map(v =>
           `<span class="chip">${v.ordem}. ${esc(nomes[v.usuario_id]||"—")}</span>`).join("")}</div>`:""}
       </div>`
@@ -12726,11 +12962,12 @@ const HUBS = {
     sub:"Do começo, sem pular etapa.",
     itens:[
       ["O que é","nove tipos de investimento, um por um","#/edu-oque"],
+      ["Tutorial","do zero ao ranking, um passo de cada vez","#/tutorial"],
       ["Artigos","do começo até quando já há patrimônio","#/edu-artigos"],
       ["Simulações","faça a conta com os seus números","#/edu-simulacoes"],
       ["Peça um curso ou uma palestra",
        "para a sua turma, empresa ou grupo — online ou presencial",
-       "#/servicos?origem=aulas"]],
+       "#/fale-conosco?a=aulas"]],
     ponte:["daqui você vai para",[["como funciona o site","#/como-funciona"],
       ["as competições","#/competicoes"]]] },
 
@@ -12868,7 +13105,7 @@ const HUBS = {
     ponte:["ir direto",[["Ranking","#/ranking"],["Tiro curto","#/tiro-curto"],
       ["Placar","#/placar"],["Screening","#/escolher-lista"],
       ["Ranking de equipe","#/times"],["Meu time","#/meu-time"],
-      ["Falar com especialista","#/servicos"],["Como funciona","#/como-funciona"]]] }
+      ["Falar com especialista","#/servicos"],["Tutorial","#/tutorial"],["Como funciona","#/como-funciona"]]] }
 };
 
 function telaHub(id){
@@ -12970,6 +13207,8 @@ const PAI = {
   "servicos":"indicacoes", "sucessao":"ind-proteger", "clube":"ind-produtos",
   "minhas":"eu", "conta":"eu", "senha":"eu", "certificado":"eu",
   "indicar":"eu", "assinar":"eu",
+  "tutorial":"educacional",
+  "fale-conosco":"inicio",
   "aprender":"edu-comecar", "dividas":"edu-comecar", "crescer":"edu-comecar",
   "corrigir":"edu-comecar",
   "porque":"edu-carteira", "carteira-como":"edu-carteira",
@@ -13114,6 +13353,8 @@ function rotear(){
   if(h==="#/escada")          return telaEscada();
   if(h==="#/aplicado")        return telaAplicado();
   if(h==="#/como-funciona")   return telaComo();
+  if(h==="#/tutorial")        return telaTutorial();
+  if(h==="#/fale-conosco")    return telaFale();
   if(h==="#/termos")          return telaTermos();
   if(h==="#/screening")       return telaScreening("acao");
   if(h==="#/screening-bdr")   return telaScreening("bdr");
