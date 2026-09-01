@@ -1882,7 +1882,9 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
           <a href="#/aplicado">Pôr o patrimônio para trabalhar</a>
           <a href="#/nao-perder">Não perder na saída</a>
           <span class="risco"></span>
+          <a href="#/tutorial">Tutorial</a>
           <a href="#/como-funciona">Como funciona</a>
+          <a href="#/fale-conosco?a=aulas">Peça um curso ou uma palestra</a>
         </div>
       </div>
 
@@ -12902,14 +12904,14 @@ async function telaCopa(){
   </div>
   <div id="erro"></div>
 
-  ${!jg.length
+  ${!jg.length && !(insc && !ehHoje)
     ? `<div class="card"><p style="margin:0;color:var(--t2);font-size:13.5px">
         ${vg.length
           ? "A chave é sorteada quando a rodada das 11h fechar."
           : c.situacao === "inscricoes"
             ? "Ninguém se inscreveu ainda. As oito vagas vão por ordem de chegada."
             : "A copa de hoje não aconteceu: menos de duas pessoas na chave quando "
-              + "as inscrições fecharam. A inscrição para a próxima já está aberta."}
+              + "as inscrições fecharam."}
         </p>${vg.length?`<div class="chips" style="margin-top:12px">${vg.map(v =>
           `<span class="chip">${v.ordem}. ${esc(nomes[v.usuario_id]||"—")}</span>`).join("")}</div>`:""}
       </div>`
