@@ -1958,11 +1958,17 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
 .caixaSino .topoN button{background:none;border:none;color:var(--ouro2);
   font-size:11.5px;cursor:pointer;font-family:inherit}
 .caixaSino .nada{padding:22px 12px;text-align:center;color:var(--graf);font-size:13px}
-.caixaSino .item{display:block;width:100%;text-align:left;background:none;
-  border:none;border-bottom:1px solid rgba(31,48,73,.5);padding:10px;
-  cursor:pointer;font-family:inherit;color:var(--t2);font-size:13px;line-height:1.4}
-.caixaSino .item:last-child{border-bottom:none}
-.caixaSino .item:hover{background:var(--p3)}
+.caixaSino .topoN span{display:flex;gap:12px}
+.caixaSino .linhaN{display:flex;align-items:stretch;
+  border-bottom:1px solid rgba(31,48,73,.5)}
+.caixaSino .linhaN:last-child{border-bottom:none}
+.caixaSino .item{display:block;flex:1;min-width:0;text-align:left;background:none;
+  border:none;padding:10px;cursor:pointer;font-family:inherit;color:var(--t2);
+  font-size:13px;line-height:1.4}
+.caixaSino .xN{flex:none;width:32px;background:none;border:none;cursor:pointer;
+  color:var(--linha2);font-size:17px;line-height:1;font-family:inherit}
+.caixaSino .xN:hover{color:var(--baixa)}
+.caixaSino .linhaN:hover{background:var(--p3)}
 .caixaSino .item.novo{color:var(--tinta)}
 .caixaSino .item.novo::before{content:"";display:inline-block;width:6px;height:6px;
   border-radius:99px;background:var(--lacre);margin-right:7px;vertical-align:middle}
@@ -13615,15 +13621,27 @@ function pintarCaixaSino(){
   const cx = document.getElementById("caixaSino");
   if(!cx) return;
   cx.innerHTML = `
-    <div class="topoN"><b>Notificações</b>${
+    <div class="topoN"><b>Notificações</b><span>${
       NOTIF.some(x => !x.vista_em)
-        ? `<button id="nLer">marcar todas como lidas</button>` : ""}</div>
+        ? `<button id="nLer">marcar todas como lidas</button>` : ""}${
+      NOTIF.some(x => x.vista_em)
+        ? `<button id="nLimpar">apagar as lidas</button>` : ""}</span></div>
     ${NOTIF.length
-      ? NOTIF.map(x => `<button class="item${x.vista_em?"":" novo"}" data-id="${x.id}"
-          data-rota="${esc(x.rota||"")}">${esc(x.texto)}
-          <span class="qd">${quandoFoi(x.criada_em)}</span></button>`).join("")
+      ? NOTIF.map(x => `<div class="linhaN">
+          <button class="item${x.vista_em?"":" novo"}" data-id="${x.id}"
+            data-rota="${esc(x.rota||"")}">${esc(x.texto)}
+            <span class="qd">${quandoFoi(x.criada_em)}</span></button>
+          <button class="xN" data-del="${x.id}" title="apagar">&times;</button>
+        </div>`).join("")
       : `<div class="nada">Nada por aqui ainda.</div>`}`;
 
+  const limpar = document.getElementById("nLimpar");
+  if(limpar) limpar.onclick = async () => {
+    const ids = NOTIF.filter(x => x.vista_em).map(x => x.id);
+    if(!ids.length) return;
+    await sb.from("notificacao").delete().in("id", ids);
+    await carregarNotif(); pintarCaixaSino();
+  };
   const ler = document.getElementById("nLer");
   if(ler) ler.onclick = async () => {
     const ids = NOTIF.filter(x => !x.vista_em).map(x => x.id);
@@ -13632,6 +13650,14 @@ function pintarCaixaSino(){
       .in("id", ids);
     await carregarNotif(); pintarCaixaSino();
   };
+  cx.querySelectorAll(".xN").forEach(b => b.onclick = async ev => {
+    ev.stopPropagation();
+    b.disabled = true;
+    const { error } = await sb.from("notificacao").delete()
+      .eq("id", Number(b.dataset.del));
+    if(error){ b.disabled = false; return; }
+    await carregarNotif(); pintarCaixaSino();
+  });
   cx.querySelectorAll(".item").forEach(b => b.onclick = async () => {
     const id = Number(b.dataset.id), r = b.dataset.rota;
     await sb.from("notificacao").update({ vista_em:new Date().toISOString() })
