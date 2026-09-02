@@ -6514,6 +6514,8 @@ async function telaLeads(){
         <div class="ret">${x.retomar_em
           ? `<span style="color:${venceu(x)?"var(--baixa)":"var(--t2)"}">retomar ${dataBR(x.retomar_em)}</span>`
           : `<span style="color:var(--graf)">sem data</span>`}
+          <button class="lnk abreLead" data-abrir="${ab?lk({id:""}):lk({id:x.id})}"
+            style="font-size:11px;margin-left:10px">${ab?"fechar":"abrir"}</button>
           <button class="lnk apagaLead" data-del="${x.id}"
             style="color:var(--baixa);font-size:11px;margin-left:10px">apagar</button></div>
       </div>
@@ -6548,6 +6550,9 @@ async function telaLeads(){
   document.querySelectorAll("#app .lead .topo").forEach(t =>
     t.onclick = ev => { if(ev.target.closest("button")) return;
       location.hash = t.dataset.abre; });
+
+  document.querySelectorAll(".abreLead").forEach(b =>
+    b.onclick = () => { location.hash = b.dataset.abrir; });
 
   /* apagar o pedido: some da lista e leva junto as anotações dele */
   document.querySelectorAll(".apagaLead").forEach(b => b.onclick = async () => {
