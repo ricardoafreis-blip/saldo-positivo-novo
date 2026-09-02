@@ -6549,10 +6549,13 @@ async function telaLeads(){
      política de segurança sem 'unsafe-inline' para atributos de evento */
   document.querySelectorAll("#app .lead .topo").forEach(t =>
     t.onclick = ev => { if(ev.target.closest("button")) return;
-      location.hash = t.dataset.abre; });
+      location.hash = t.dataset.abre; telaLeads(); });
 
+  /* o hash sozinho não basta: em alguns navegadores a troca por JS não
+     dispara o redesenho. O apagar já chamava telaLeads() na mão; aqui é
+     a mesma coisa. */
   document.querySelectorAll(".abreLead").forEach(b =>
-    b.onclick = () => { location.hash = b.dataset.abrir; });
+    b.onclick = () => { location.hash = b.dataset.abrir; telaLeads(); });
 
   /* apagar o pedido: some da lista e leva junto as anotações dele */
   document.querySelectorAll(".apagaLead").forEach(b => b.onclick = async () => {
