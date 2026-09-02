@@ -6487,7 +6487,7 @@ async function telaLeads(){
       >Criaram conta<span class="n">${nContas}</span></a>
   </div>
   <div class="abas">
-    <a href="${lk({s:"",id:""})}" class="aba${!filtro?" on":""}">Todos<span class="n">${todos.length}</span></a>
+    <a href="${lk({s:"",id:""})}" class="aba${!filtro?" on":""}">Todos<span class="n">${daOrigem.length}</span></a>
     ${aRetomar?`<a href="${lk({s:"retomar",id:""})}" class="aba${filtro==="retomar"?" on":""}"
       style="color:var(--baixa)">Retomar<span class="n">${aRetomar}</span></a>`:""}
     ${SITUACAO.filter(([k])=>conta[k]).map(([k,r])=>`<a href="${lk({s:k,id:""})}"
@@ -6513,7 +6513,9 @@ async function telaLeads(){
           (x.assuntos||[]).length>3?`<span class="tg">+${x.assuntos.length-3}</span>`:""}</div>
         <div class="ret">${x.retomar_em
           ? `<span style="color:${venceu(x)?"var(--baixa)":"var(--t2)"}">retomar ${dataBR(x.retomar_em)}</span>`
-          : `<span style="color:var(--graf)">sem data</span>`}</div>
+          : `<span style="color:var(--graf)">sem data</span>`}
+          <button class="lnk apagaLead" data-del="${x.id}"
+            style="color:var(--baixa);font-size:11px;margin-left:10px">apagar</button></div>
       </div>
       ${!ab ? "" : `<div class="corpo">
         ${x.recado?`<p class="rec">“${esc(x.recado)}”</p>`:""}
@@ -6544,7 +6546,8 @@ async function telaLeads(){
      porque handler escrito no HTML não dispara quando o servidor manda uma
      política de segurança sem 'unsafe-inline' para atributos de evento */
   document.querySelectorAll("#app .lead .topo").forEach(t =>
-    t.onclick = () => { location.hash = t.dataset.abre; });
+    t.onclick = ev => { if(ev.target.closest("button")) return;
+      location.hash = t.dataset.abre; });
 
   /* apagar o pedido: some da lista e leva junto as anotações dele */
   document.querySelectorAll(".apagaLead").forEach(b => b.onclick = async () => {
