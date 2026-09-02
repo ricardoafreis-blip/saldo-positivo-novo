@@ -43,8 +43,16 @@ button{cursor:pointer;border:none;background:none;color:inherit}
 .aviso b{color:var(--tinta);font-weight:500}
 
 header{border-bottom:1px solid var(--linha);background:linear-gradient(180deg,#0C1425,#0A1120)}
-header .alto{display:flex;align-items:center;justify-content:space-between;gap:20px;
-  padding:14px 0 12px}
+/* Sem space-between: com quatro itens, a barra espalhava tudo e o sino
+   mudava de lugar conforme o apelido da página crescia ou encolhia.
+   Agora a marca fica à esquerda e o resto vai colado à direita. */
+header .alto{display:flex;align-items:center;gap:10px;padding:14px 0 12px}
+/* marca à esquerda; sino e depois o apelido, colados à direita. Vale nas duas
+   larguras — a ordem no HTML é outra, quem manda aqui é o order. */
+header .alto .marca{order:1}
+header .alto .sino{order:2;margin-left:auto}
+header .alto .dir{order:3;margin-left:0}
+header .alto .hamb{order:4}
 header .marca{font-family:Newsreader,serif;font-weight:500;font-size:26px;
   letter-spacing:-.025em;color:var(--tinta);line-height:1.05;white-space:nowrap}
 header .marca:hover{color:var(--tinta)}
@@ -168,7 +176,9 @@ header .dir a:hover{color:var(--ouro2)}
 .hamb[aria-expanded="true"] span:nth-child(3){transform:translateY(-5px) rotate(-45deg)}
 
 @media(max-width:820px){
-  .hamb{display:flex}
+  /* o botão de risquinhos saiu: no celular a navegação é pelos hubs, e ele
+     só levava a uma tela que repetia a mesma escolha da home */
+  .hamb{display:none}
   header .alto{align-items:center}
   /* guardado por padrão; a classe .aberto libera */
   .momentos nav{display:none}
@@ -860,7 +870,13 @@ button.lig:hover{color:var(--tinta);border-bottom-color:var(--tinta)}
    quebra; abaixo de 820px a quebra volta, senão não caberia no celular.   */
 .ordena{display:flex;gap:14px;align-items:center;flex-wrap:nowrap;
   justify-content:flex-start;padding:14px 0 6px}
-@media(max-width:820px){ .ordena{flex-wrap:wrap} }
+@media(max-width:820px){
+  .ordena{flex-wrap:wrap;gap:9px}
+  /* 190px fixos deixavam a caixa estreita e o botão espremido ao lado */
+  .ordena input[type="search"],.ordena input{width:100% !important;flex:1 1 100% !important}
+  .ordena select{flex:1 1 100%;min-width:0}
+  .ordena .rot{flex:0 0 auto}
+}
 .selOrdem{width:auto;min-width:190px;margin:0;padding:7px 11px;font-size:13px;
   background:var(--p2);border-color:var(--linha2);cursor:pointer}
 .selOrdem:hover{border-color:var(--graf)}
@@ -1620,6 +1636,19 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
   margin:10px 0 0;background:var(--p3)}
 .hubPlacar .barraP i{display:block;height:100%}
 .hubPlacar .tot{font-size:10.5px;color:var(--graf);margin:8px 0 0}
+.noDia{display:block;font-family:'IBM Plex Mono',monospace;font-size:10.5px;
+  opacity:.55;font-weight:400;line-height:1.3;margin-top:1px}
+.cxCopa{max-width:520px;margin:22px auto 0;border:1px solid var(--linha2);
+  border-radius:12px;background:var(--p2);padding:18px;text-align:center}
+.cxCopa.dentro{border-color:var(--lacre);
+  background:linear-gradient(180deg,rgba(201,162,39,.07),var(--p2))}
+.cxCopa .marcaC{display:inline-block;font-size:9.5px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--ouro2);border:1px solid var(--lacre);
+  border-radius:99px;padding:3px 11px;margin-bottom:10px}
+.cxCopa .tit{font-family:Newsreader,Georgia,serif;font-size:19px;
+  font-weight:500;margin:0 0 6px;color:var(--tinta)}
+.cxCopa .sub{font-size:12.5px;color:var(--t2);margin:0 0 14px;
+  max-width:44ch;margin-left:auto;margin-right:auto}
 .hubEsc > span:first-child{flex:1 1 auto;min-width:0}
 .hubEsc .qtd{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--graf);
   flex:0 0 54px;width:54px;text-align:right;margin:0}
@@ -1830,6 +1859,115 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
   .tbTimes td:nth-child(7)::before{content:"sharpe"}
   .tbTimes td:nth-child(8)::before{content:"maior queda"}
 }
+
+/* ══ MODELO DE COLUNA (desktop) ═══════════════════════════════════════════
+   O menu deixa de ser uma faixa no topo e vira coluna à esquerda. O bloco
+   .momentos é o MESMO de antes — os 59 links não foram reescritos, só
+   mudaram de lugar. Abaixo de 820px nada disto vale e o celular segue com o
+   botão de risquinhos.                                                    */
+.percurso{display:none}
+
+@media(min-width:821px){
+  .quadro{display:flex;align-items:flex-start;gap:0;
+    max-width:1320px;margin:0 auto;padding:0 20px}
+  .quadro > .w{padding:0}
+  .quadro #app{flex:1;min-width:0;padding:18px 0 0 24px}
+  .quadro .voltarCx{display:none}
+
+  .viagem{display:none}
+  header .momentos{display:none}      /* no desktop quem manda é a coluna */
+  .percurso{display:block;border-bottom:1px solid var(--linha);
+    padding:9px 20px 10px;text-align:center;opacity:.4;margin:0;
+    font-family:Newsreader,Georgia,serif;font-size:12.5px;color:var(--t2)}
+
+  /* ── a coluna, com a marcação limpa do esboço ── */
+  .colMenu{width:236px;flex:none;border-right:1px solid var(--linha);
+    background:#0B1322;padding:12px 10px 24px;align-self:stretch}
+  .colMenu .gr{margin-bottom:6px}
+  /* Tudo nasce no mesmo eixo: nome, descrição, subtítulo e link começam nos
+     mesmos 10px da borda. Antes o nome e a descrição ficavam lado a lado e a
+     descrição quebrava em duas linhas, empurrando o nome para o meio. */
+  .colMenu .cabg{display:block;width:100%;background:none;border:none;
+    cursor:pointer;font-family:inherit;color:inherit;padding:7px 8px 4px 10px;
+    text-align:left;position:relative}
+  .colMenu .rot{font-family:Newsreader,Georgia,serif;font-size:19px;
+    color:var(--ouro2);display:block;line-height:1.15}
+  /* mesma cor aberto ou fechado: quem conta o estado é a seta, não o nome —
+     senão os três grupos parecem de padrões diferentes */
+  .colMenu .cabg:hover .rot{color:var(--tinta)}
+  .colMenu .dfn{display:block;font-size:10px;color:var(--graf);
+    margin-top:1px;line-height:1.3}
+  .colMenu .st{position:absolute;right:8px;top:11px;color:var(--linha2);
+    font-size:10px;transition:transform .15s,color .15s}
+  .colMenu .cabg:hover .st,.colMenu .cabs:hover .st{color:var(--graf)}
+  .colMenu .gr.fechado .st,.colMenu .bl.fechado .st{transform:rotate(-90deg)}
+  .colMenu .gr.fechado .lst,.colMenu .bl.fechado .itens{display:none}
+  /* o subtítulo é o mesmo dourado do nome, porém mais escuro e menor:
+     três degraus da mesma família, em vez de três cores diferentes */
+  .colMenu .cabs{display:block;width:100%;font-size:9px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--lacre);margin:11px 0 4px;
+    padding:2px 8px 2px 10px;background:none;border:none;cursor:pointer;
+    font-family:inherit;text-align:left;position:relative}
+  .colMenu .cabs:hover{color:var(--ouro2)}
+  .colMenu .cabs .st{top:3px}
+  .colMenu a{display:block;font-size:12.5px;color:var(--t2);
+    padding:4px 8px 4px 10px;border-radius:5px;
+    border-left:2px solid transparent;line-height:1.35;margin-left:-2px}
+  .colMenu a:hover{background:var(--p3);color:var(--tinta)}
+  .colMenu a.aqui{background:var(--p3);color:var(--ouro2);
+    border-left-color:var(--lacre)}
+  .colMenu a.dest{color:var(--ouro2);font-weight:500;margin:4px 8px 8px 10px;
+    padding:8px 12px;border:1px solid var(--linha2);border-radius:5px;
+    border-left-width:1px}
+  .colMenu a.dest:hover{border-color:var(--ouro2);background:var(--p3)}
+  .colMenu .risco{display:block;height:1px;background:var(--linha);margin:9px 4px}
+
+  /* o cabeçalho passa a usar a mesma largura e o mesmo recuo do quadro, para
+     a marca nascer no mesmo eixo da coluna em vez de flutuar no meio */
+  header > .w{max-width:1320px;padding:0 20px}
+  header .alto{padding:12px 0}
+  header .marca{font-size:30px}
+  .percurso{max-width:1320px;margin:0 auto;padding-left:20px;padding-right:20px}
+
+
+}
+
+
+/* ══ SINO E QUADRO DE NOTIFICAÇÕES ═══════════════════════════════════════ */
+.sino{position:relative;background:none;border:1px solid var(--linha2);
+  border-radius:8px;width:38px;height:34px;cursor:pointer;flex:none;
+  display:flex;align-items:center;justify-content:center}
+.sino svg{width:19px;height:19px;display:block;fill:none;stroke:var(--t2);
+  stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.sino:hover{border-color:var(--ouro2)}
+.sino:hover svg{stroke:var(--ouro2)}
+.sino.aceso svg{stroke:var(--ouro2)}
+/* o atributo hidden esconde com display:none, e as regras abaixo usam
+   display:flex — sem estas duas linhas, o CSS vence e o zero aparece */
+.sino[hidden],.sino .bd[hidden]{display:none}
+.sino .bd{position:absolute;top:-6px;right:-6px;background:var(--lacre);
+  color:#14100A;font-family:'IBM Plex Mono',monospace;font-size:10px;
+  font-weight:700;min-width:17px;height:17px;border-radius:99px;
+  display:flex;align-items:center;justify-content:center;padding:0 4px}
+.caixaSino{position:fixed;top:60px;right:16px;width:330px;max-width:calc(100vw - 24px);
+  max-height:70vh;overflow:auto;background:var(--p2);border:1px solid var(--linha2);
+  border-radius:12px;box-shadow:0 18px 44px rgba(0,0,0,.55);z-index:60;padding:6px}
+.caixaSino .topoN{display:flex;align-items:center;justify-content:space-between;
+  padding:8px 10px 9px;border-bottom:1px solid var(--linha)}
+.caixaSino .topoN b{font-family:Newsreader,Georgia,serif;font-weight:500;font-size:16px}
+.caixaSino .topoN button{background:none;border:none;color:var(--ouro2);
+  font-size:11.5px;cursor:pointer;font-family:inherit}
+.caixaSino .nada{padding:22px 12px;text-align:center;color:var(--graf);font-size:13px}
+.caixaSino .item{display:block;width:100%;text-align:left;background:none;
+  border:none;border-bottom:1px solid rgba(31,48,73,.5);padding:10px;
+  cursor:pointer;font-family:inherit;color:var(--t2);font-size:13px;line-height:1.4}
+.caixaSino .item:last-child{border-bottom:none}
+.caixaSino .item:hover{background:var(--p3)}
+.caixaSino .item.novo{color:var(--tinta)}
+.caixaSino .item.novo::before{content:"";display:inline-block;width:6px;height:6px;
+  border-radius:99px;background:var(--lacre);margin-right:7px;vertical-align:middle}
+.caixaSino .qd{display:block;font-size:11px;color:var(--graf);margin-top:2px}
+
 </style>
 </head>
 <body>
@@ -1838,9 +1976,18 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
   <div class="alto">
     <a href="#/" class="marca">Saldo Positivo</a>
     <span class="dir" id="navDir"></span>
+    <button type="button" class="sino" id="btSinoTopo" aria-label="notificações"
+      hidden><svg viewBox="0 0 20 20" aria-hidden="true">
+        <path d="M10 2.6a4.6 4.6 0 0 0-4.6 4.6c0 3.2-.9 4.5-1.5 5.2-.3.3-.1.9.4.9h11.4c.5 0 .7-.6.4-.9-.6-.7-1.5-2-1.5-5.2A4.6 4.6 0 0 0 10 2.6Z"/>
+        <path d="M8.2 15.4a1.9 1.9 0 0 0 3.6 0"/>
+      </svg><span class="bd" id="sinoConta" hidden></span></button>
     <button type="button" class="hamb" id="btMenu" aria-label="menu"
       aria-expanded="false"><span></span><span></span><span></span></button>
   </div>
+  <!-- fora do .momentos de propósito: no desktop o .momentos some e a frase
+       precisa continuar aparecendo -->
+  <p class="percurso">Do mundo simulado ao mundo real, do iniciante ao
+    profissional.</p>
   <div class="momentos">
     <div class="viagem">
       <span class="pt1">mundo simulado</span>
@@ -1849,11 +1996,13 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
       <span class="li"></span>
       <span class="pt2">mundo real</span>
     </div>
+
     <nav>
       <div class="grupo" data-g="aprender">
         <button type="button" class="rotg abre">Aprender<i class="cv"></i></button>
         <span class="def">antes de arriscar</span>
         <div class="painel">
+          <a class="topo" href="#/fale-conosco?a=aulas">Peça um curso ou uma palestra</a>
           <span class="sub"><i>1</i>Comece por aqui</span>
           <a href="#/aprender">Do começo, sem pular etapa</a>
           <a href="#/dividas">Antes de poupar, saia das dívidas</a>
@@ -1884,7 +2033,6 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
           <span class="risco"></span>
           <a href="#/tutorial">Tutorial</a>
           <a href="#/como-funciona">Como funciona</a>
-          <a href="#/fale-conosco?a=aulas">Peça um curso ou uma palestra</a>
         </div>
       </div>
 
@@ -1949,8 +2097,16 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
   </div>
 </div></header>
 
-<div class="w voltarCx" id="voltarCx"></div>
-<main class="w" id="app"><div class="carreg">carregando…</div></main>
+<!-- Duas colunas no desktop: o menu à esquerda, a página à direita. Abaixo de
+     820px o .quadro volta a ser uma coluna só e o menu some atrás do botão de
+     risquinhos, como já era. O .momentos continua sendo o MESMO bloco de
+     antes — não foi reescrito, só mudou de lugar. -->
+<div class="caixaSino" id="caixaSino" hidden></div>
+
+<div class="quadro" id="quadro">
+  <div class="w voltarCx" id="voltarCx"></div>
+  <main class="w" id="app"><div class="carreg">carregando…</div></main>
+</div>
 
 <footer class="w">
 Nada aqui é recomendação de investimento — cada carteira é anotação pessoal de quem a
@@ -2653,7 +2809,13 @@ function colunasPorClasse(lista, ordem, rotulo){
           <div class="autor">${esc(x.c.apelido)}${x.m.dias
             ? ` · ${x.m.dias} ${x.m.dias===1?"pregão":"pregões"}`
             : " · estreia no próximo pregão"}</div></span>
-        <span class="num ${v==null?"nulo":cor(v)}">${txt}</span></div>`;
+        <span class="num ${v==null?"nulo":cor(v)}">${txt}<span class="noDia ${
+          x.m.hoje==null?"nulo":cor(x.m.hoje)}">${
+          /* o resultado do dia, pequeno e fosco, embaixo do número grande.
+             Quando é parcial ganha o mesmo pontinho usado no resto da tela. */
+          x.m.hoje==null ? "" : pct(x.m.hoje) + (x.m.parcial
+            ? '<sup style="font-size:9px;opacity:.75;margin-left:1px">•</sup>' : "")
+        }</span></span></div>`;
     }).join("")
     : `<div class="vazio">Nenhuma carteira nesta classe ainda.</div>`}
     <div class="pe">
@@ -2895,9 +3057,17 @@ function pintarParciais(vv){
       const num = el.querySelector(".num");
       if(!num) return;
       num.className = `num ${v==null?"nulo":cor(v)}`;
-      num.innerHTML = semDados ? "estreia" : v==null ? "—"
+      /* o .noDia mora DENTRO do .num; reescrever o innerHTML inteiro apagava
+         o número do dia a cada atualização de 15 segundos. Aqui ele é
+         remontado junto, com o valor novo. */
+      const grande = semDados ? "estreia" : v==null ? "—"
         : formatar(v) + ((valeParcial || (chave==="acum" && x.m.parcial && PARCIAL_NO_ACUM))
             ? '<sup style="font-size:10px;opacity:.75;margin-left:1px">•</sup>' : "");
+      num.innerHTML = grande + `<span class="noDia ${
+        x.m.hoje==null?"nulo":cor(x.m.hoje)}">${
+        x.m.hoje==null ? "" : pct(x.m.hoje) + (x.m.parcial
+          ? '<sup style="font-size:9px;opacity:.75;margin-left:1px">•</sup>' : "")
+      }</span>`;
     });
 
     const ordenadas = linhas.slice().sort((p, q) => {
@@ -3936,7 +4106,11 @@ async function telaCarteira(id){
     if(!podeSeguir){ location.hash = "#/assinar"; return rotear(); }
     bs.disabled = true;
     const { error } = await sb.rpc("seguir", { cid:Number(id), valor:!sigo });
-    if(error){ bs.disabled=false; return alert(error.message); }
+    if(error){ bs.disabled = false;
+      const cx = document.createElement("div");
+      cx.innerHTML = aviso(error.message, true);
+      bs.parentElement.insertBefore(cx.firstElementChild, bs.nextSibling);
+      return; }
     telaCarteira(id);
   };
 
@@ -4937,6 +5111,8 @@ async function telaScreening(classe, soContar){
     forca:  (a,b) => (b.forca ?? -9) - (a.forca ?? -9),
     dist:   (a,b) => b.dist - a.dist,
     amp:    (a,b) => b.amplitude - a.amplitude,
+    oscmais:(a,b) => (b.osc ?? 0) - (a.osc ?? 0),
+    oscmenos:(a,b) => (a.osc ?? 0) - (b.osc ?? 0),
     cod:    (a,b) => a.ativo.localeCompare(b.ativo),
   }[ordem] || ((a,b) => (b.liquidez ?? 0) - (a.liquidez ?? 0));
   l.sort(ordenar);
@@ -5010,6 +5186,8 @@ async function telaScreening(classe, soContar){
     <select id="selO" class="selOrdem">
       ${[["liq","Mais negociados"],
          ["avat","%MMVol — volume acima do normal"],
+         ["oscmais","Maior alta no dia"],
+         ["oscmenos","Maior queda no dia"],
          ["estado","Da alta mais forte à baixa mais forte"],
          ["forca","Mais acima da média longa"],
          ["dist","Médias mais afastadas"],["cod","Código"]]
@@ -6238,7 +6416,9 @@ async function telaLeads(){
   app().innerHTML = `<div class="carreg">carregando pedidos…</div>`;
 
   const { data, error } = await sb.from("lead").select("*")
-    .in("origem",["servicos","clube","cadastro"])
+    /* contato e aulas vêm do Fale conosco; sem estarem aqui, o pedido é
+       gravado mas nunca aparece nesta tela. */
+    .in("origem",["servicos","clube","cadastro","contato","aulas"])
     .order("criado_em", { ascending:false }).limit(400);
   if(error) return app().innerHTML = aviso("Não consegui ler os pedidos: " + error.message +
     " — se falar em permissão, a política lead_ler ainda não está no banco.", true);
@@ -12819,7 +12999,16 @@ async function telaCopa(){
             : `<button class="bt lacre" id="btCopa">Inscreva-se para a próxima</button>`}
           <div id="erro" style="margin-top:12px"></div>
         </div>` : "");
-    const bt = document.getElementById("btCopa");
+    const bs = document.getElementById("btSairCopa");
+  if(bs) bs.onclick = async () => {
+    bs.disabled = true;
+    const { data, error } = await sb.rpc("sair_da_copa");
+    if(error){ bs.disabled = false;
+      return $("#erro").innerHTML = aviso(error.message, true); }
+    $("#erro").innerHTML = aviso(data || "inscrição cancelada");
+    telaCopa();
+  };
+  const bt = document.getElementById("btCopa");
     if(bt) bt.onclick = async () => {
       bt.disabled = true;
       const { data, error } = await sb.rpc("entrar_na_copa");
@@ -12888,20 +13077,27 @@ async function telaCopa(){
       ${c.campeao?`<span class="p"><span class="n" style="color:var(--ouro2)">${
         esc(nomes[c.campeao]||"—")}</span>campeão de hoje</span>`:""}
     </div>
-    ${insc
-      ? (naInsc
-          ? `<p style="margin:20px 0 0;color:var(--ouro2);font-size:13.5px">
-             Você está na chave${ehHoje?"":" de "+dataBR(insc.data)}. A partir
-             das 12h, os pontos da rodada valem pelo confronto.</p>`
-          : `<p style="margin:20px 0 0">
-             <button class="bt lacre" id="btCopa">Entrar na chave${
-               ehHoje?"":" de "+dataBR(insc.data)}</button>
-             ${ehHoje?"":`<span style="display:block;margin-top:8px;
-               font-size:12.5px;color:var(--graf)">A de hoje já foi chaveada.
-               Esta inscrição vale para o próximo pregão.</span>`}</p>`)
-      : `<p style="margin:20px 0 0;font-size:13px;color:var(--graf)">
-         Nenhuma copa com inscrição aberta no momento.</p>`}
   </div>
+
+  ${insc
+    ? (naInsc
+        ? `<div class="cxCopa dentro">
+             <div class="marcaC">inscrito</div>
+             <p class="tit">Você está na chave de ${dataBR(insc.data)}</p>
+             <p class="sub">A partir das 12h, os pontos da rodada valem pelo
+               confronto. Quem perde sai na mesma tarde.</p>
+             <button class="bt" id="btSairCopa">Cancelar minha inscrição</button>
+           </div>`
+        : `<div class="cxCopa">
+             <p class="tit">Inscrição aberta para ${dataBR(insc.data)}</p>
+             <p class="sub">${ehHoje
+               ? "As oito vagas vão por ordem de chegada."
+               : "A de hoje já foi chaveada — esta vale para o próximo pregão."}</p>
+             <button class="bt lacre" id="btCopa">Entrar na chave</button>
+           </div>`)
+    : `<div class="cxCopa">
+         <p class="sub" style="margin:0">Nenhuma copa com inscrição aberta
+           no momento.</p></div>`}
   <div id="erro"></div>
 
   ${!jg.length && !(insc && !ehHoje)
@@ -12918,8 +13114,7 @@ async function telaCopa(){
     : Object.entries(FASES).filter(([f]) => porFase[f]).map(([f, rot]) =>
       `<h2 style="font-size:19px;margin:26px 0 10px">${esc(rot)}</h2>
        <div class="card">${porFase[f].map(confronto).join("")}</div>`).join("")}
-
-  <p style="margin:18px 0 0"><a href="#/tiro-curto" class="bt">Ir para a rodada de agora</a></p>`;
+`;
 
   const b = document.getElementById("btCopa");
   if(b) b.onclick = async () => {
@@ -13255,6 +13450,177 @@ function pintarVoltar(){
     cx.innerHTML = "";
   }
 }
+
+/* ══ modelo de coluna (desktop) ═══════════════════════════════════════════
+   A coluna NÃO é escrita à mão: ela é montada lendo o menu que já existe no
+   cabeçalho — mesmos rótulos, mesmos href, mesma ordem. Assim nenhum link
+   pode se perder, e a marcação sai limpa em vez de brigar com o CSS antigo
+   do menu de topo. Abaixo de 821px a coluna nem é criada.                  */
+function montarColuna(){
+  if(document.getElementById("colMenu")) return;
+  const grupos = [...document.querySelectorAll("nav .grupo, nav .meio")];
+  if(!grupos.length) return;
+  const col = document.createElement("aside");
+  col.className = "colMenu"; col.id = "colMenu";
+
+  col.innerHTML = grupos.map((g, i) => {
+    const nome = (g.querySelector(".rotg")?.textContent || "").replace(/\s+/g," ").trim();
+    const def  = (g.querySelector(".def")?.textContent  || "").trim();
+    // percorre o painel na ordem: subtítulo abre um bloco, links entram nele
+    const cx = g.querySelector(".painel") || g.querySelector(".trio") || g;
+    const blocos = []; let atual = null;
+    const anda = no => {
+      for(const e of no.children){
+        if(e.matches(".sub, .rams")){
+          atual = { t: e.textContent.replace(/\s+/g," ").replace(/^\d+/,"").trim(), a: [] };
+          blocos.push(atual);
+        } else if(e.tagName === "A"){
+          if(!atual){ atual = { t:"", a:[] }; blocos.push(atual); }
+          atual.a.push(e);
+        } else if(e.children.length){ anda(e); }
+      }
+    };
+    anda(cx);
+
+    const lista = blocos.map(b => {
+      const links = b.a.map(a =>
+        `<a href="${a.getAttribute("href")}"${
+          a.classList.contains("topo") ? ' class="dest"' : ""
+        }>${a.textContent.trim()}</a>`).join("");
+      return b.t
+        ? `<div class="bl"><button class="cabs">${b.t}
+             <span class="st">&#9662;</span></button>
+             <div class="itens">${links}</div></div>`
+        : links;
+    }).join("");
+
+    return `<div class="gr" data-g="${g.dataset.g || i}">
+      <button class="cabg"><span class="rot">${nome}</span>
+        <span class="dfn">${def}</span><span class="st">&#9662;</span></button>
+      <div class="lst">${lista}</div>
+    </div>${i < grupos.length - 1 ? '<span class="risco"></span>' : ""}`;
+  }).join("");
+
+  col.querySelectorAll(".cabg").forEach(b =>
+    b.onclick = () => b.parentElement.classList.toggle("fechado"));
+  col.querySelectorAll(".cabs").forEach(b =>
+    b.onclick = () => b.parentElement.classList.toggle("fechado"));
+  document.getElementById("quadro").insertBefore(col,
+    document.getElementById("quadro").firstChild);
+}
+
+function armarColuna(){
+  const largo = matchMedia("(min-width:821px)").matches;
+  const col = document.getElementById("colMenu");
+  if(largo){ montarColuna(); }
+  else if(col){ col.remove(); }
+}
+
+/* marca o link da página e deixa aberto só o grupo dela */
+function abrirGrupoDaRota(){
+  const col = document.getElementById("colMenu");
+  if(!col) return;
+  const bruto = location.hash || "#/";
+  const base  = bruto.split("?")[0];
+  const alvo  = (base === "#/" || base === "") ? "#/ranking" : bruto;
+  const links = [...col.querySelectorAll("a")];
+  links.forEach(a => a.classList.remove("aqui"));
+  const m = links.find(a => a.getAttribute("href") === alvo)
+         || links.find(a => a.getAttribute("href") === base);
+  if(m) m.classList.add("aqui");
+  /* A coluna abre com Aprender e Indicações recolhidos: quem chega quer ver
+     as competições. Os outros dois ficam a um clique, com a barrinha dourada
+     marcando a página quando ela mora lá dentro. */
+  col.querySelectorAll(".gr").forEach(g =>
+    g.classList.toggle("fechado", g.dataset.g !== "competicoes"));
+}
+addEventListener("resize", armarColuna);
+
+
+/* ══ NOTIFICAÇÕES ════════════════════════════════════════════════════════
+   Lê a tabela notificacao, que os gatilhos do banco preenchem quando alguém
+   escreve no mural do time, quando uma carteira acompanhada muda, ou quando
+   chega um desafio de duelo. O sino acende quando há coisa não vista.     */
+let NOTIF = [];
+async function carregarNotif(){
+  if(!eu){ NOTIF = []; return pintarSino(); }
+  const { data, error } = await sb.from("notificacao")
+    .select("id,tipo,texto,rota,criada_em,vista_em")
+    .order("criada_em", { ascending:false }).limit(30);
+  if(error){ NOTIF = []; return pintarSino(); }   // tabela ainda não existe: sino some
+  NOTIF = data || [];
+  pintarSino();
+}
+function pintarSino(){
+  const b = document.getElementById("btSinoTopo");
+  const n = document.getElementById("sinoConta");
+  if(!b || !n) return;
+  const novas = NOTIF.filter(x => !x.vista_em).length;
+  b.hidden = !eu;
+  b.classList.toggle("aceso", novas > 0);
+  n.hidden = novas === 0;
+  n.textContent = novas > 9 ? "9+" : String(novas);
+}
+function quandoFoi(iso){
+  const min = Math.round((Date.now() - new Date(iso)) / 60000);
+  if(min < 1)  return "agora";
+  if(min < 60) return min + " min";
+  const h = Math.round(min/60);
+  if(h < 24)   return h + "h";
+  return Math.round(h/24) + "d";
+}
+function pintarCaixaSino(){
+  const cx = document.getElementById("caixaSino");
+  if(!cx) return;
+  cx.innerHTML = `
+    <div class="topoN"><b>Notificações</b>${
+      NOTIF.some(x => !x.vista_em)
+        ? `<button id="nLer">marcar todas como lidas</button>` : ""}</div>
+    ${NOTIF.length
+      ? NOTIF.map(x => `<button class="item${x.vista_em?"":" novo"}" data-id="${x.id}"
+          data-rota="${esc(x.rota||"")}">${esc(x.texto)}
+          <span class="qd">${quandoFoi(x.criada_em)}</span></button>`).join("")
+      : `<div class="nada">Nada por aqui ainda.</div>`}`;
+
+  const ler = document.getElementById("nLer");
+  if(ler) ler.onclick = async () => {
+    const ids = NOTIF.filter(x => !x.vista_em).map(x => x.id);
+    if(!ids.length) return;
+    await sb.from("notificacao").update({ vista_em:new Date().toISOString() })
+      .in("id", ids);
+    await carregarNotif(); pintarCaixaSino();
+  };
+  cx.querySelectorAll(".item").forEach(b => b.onclick = async () => {
+    const id = Number(b.dataset.id), r = b.dataset.rota;
+    await sb.from("notificacao").update({ vista_em:new Date().toISOString() })
+      .eq("id", id);
+    cx.hidden = true;
+    await carregarNotif();
+    if(r){ location.hash = r; rotear(); }
+  });
+}
+function ligarSino(){
+  const b = document.getElementById("btSinoTopo");
+  const cx = document.getElementById("caixaSino");
+  if(!b || !cx || b.dataset.lig) return;
+  b.dataset.lig = "1";
+  b.onclick = ev => {
+    ev.stopPropagation();
+    if(cx.hidden){ pintarCaixaSino(); cx.hidden = false; }
+    else cx.hidden = true;
+  };
+  document.addEventListener("click", ev => {
+    if(!cx.hidden && !cx.contains(ev.target) && ev.target !== b) cx.hidden = true;
+  });
+  /* tempo real: a notificação nova acende o sino sem recarregar */
+  if(window.__canalNotif) sb.removeChannel(window.__canalNotif);
+  window.__canalNotif = sb.channel("notif")
+    .on("postgres_changes",
+        { event:"INSERT", schema:"public", table:"notificacao" },
+        carregarNotif)
+    .subscribe();
+}
+
 function rotear(){
   clearInterval(window.__timerRank);
   clearInterval(window.__timerVivo);
@@ -13306,6 +13672,7 @@ function rotear(){
   }
 
   pintarVoltar();
+  armarColuna(); setTimeout(abrirGrupoDaRota, 0);
   const m = h.match(/^#\/carteira\/(\d+)$/);
   if(m)                       return telaCarteira(m[1]);
   // No celular a home é a escolha de caminho, não o ranking: quem chega numa
@@ -13404,6 +13771,7 @@ addEventListener("hashchange", rotear);
   if("scrollRestoration" in history) history.scrollRestoration = "manual";
   if(location.hash.includes("type=recovery")) location.hash = "#/nova-senha";
   await carregarEu(); pintarNav(); ligarMenuCelular(); rotear();
+  ligarSino(); carregarNotif();
   sb.auth.onAuthStateChange(async()=>{
     const tinha = !!eu;
     await carregarEu(); pintarNav();
