@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict OMZCHkE1J4HcGG7MXcun3mYgAJfpRSndTKNdRVDW91X4tdTaSXHbJT9D8QEveC8
+\restrict YXhiHkWSCCkqJQmMc2WROc0bPBmPfDO1dfwOR82y6Q7qzgCQfaYVHdOHYoy3uAw
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.11 (Ubuntu 17.11-1.pgdg24.04+2)
@@ -390,7 +390,7 @@ CREATE TABLE public.lead (
     responsavel uuid,
     CONSTRAINT lead_cep_ok CHECK (((cep IS NULL) OR (cep ~ '^\d{8}$'::text))),
     CONSTRAINT lead_cpf_ok CHECK (((cpf IS NULL) OR public.cpf_valido(cpf))),
-    CONSTRAINT lead_origem_ok CHECK ((origem = ANY (ARRAY['cadastro'::text, 'servicos'::text, 'clube'::text, 'assinatura'::text, 'manual'::text, 'importado'::text]))),
+    CONSTRAINT lead_origem_ok CHECK ((origem = ANY (ARRAY['cadastro'::text, 'servicos'::text, 'clube'::text, 'assinatura'::text, 'manual'::text, 'importado'::text, 'contato'::text, 'aulas'::text]))),
     CONSTRAINT lead_tel_ok CHECK (((telefone IS NULL) OR (telefone ~ '^\d{10,13}$'::text))),
     CONSTRAINT lead_uf_ok CHECK (((uf IS NULL) OR (uf ~ '^[A-Z]{2}$'::text)))
 );
@@ -6847,5 +6847,5 @@ CREATE POLICY voto_por ON public.voto FOR INSERT TO authenticated WITH CHECK (((
 -- PostgreSQL database dump complete
 --
 
-\unrestrict OMZCHkE1J4HcGG7MXcun3mYgAJfpRSndTKNdRVDW91X4tdTaSXHbJT9D8QEveC8
+\unrestrict YXhiHkWSCCkqJQmMc2WROc0bPBmPfDO1dfwOR82y6Q7qzgCQfaYVHdOHYoy3uAw
 
