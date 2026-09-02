@@ -6501,7 +6501,7 @@ async function telaLeads(){
   : l.map(x=>{
     const ab = String(x.id) === String(aberto);
     return `<div class="lead${ab?" ab":""}${venceu(x)?" urg":""}">
-      <div class="topo" onclick="location.hash='${ab?lk({id:""}):lk({id:x.id})}'">
+      <div class="topo" data-abre="${ab?lk({id:""}):lk({id:x.id})}">
         <div class="quem">
           <div class="nm">${esc(x.nome||"—")}
             <span class="sit s-${esc(x.situacao||"novo")}">${rotSit(x.situacao||"novo")}</span></div>
@@ -6539,6 +6539,12 @@ async function telaLeads(){
               Nenhuma anotação ainda. O histórico não é sobrescrito: cada linha fica com a data.</p>`}
       </div>`}
     </div>`; }).join("")}`;
+
+  /* abrir e fechar o cartão: ligado aqui em JS, e não por atributo no HTML,
+     porque handler escrito no HTML não dispara quando o servidor manda uma
+     política de segurança sem 'unsafe-inline' para atributos de evento */
+  document.querySelectorAll("#app .lead .topo").forEach(t =>
+    t.onclick = () => { location.hash = t.dataset.abre; });
 
   /* apagar o pedido: some da lista e leva junto as anotações dele */
   document.querySelectorAll(".apagaLead").forEach(b => b.onclick = async () => {
