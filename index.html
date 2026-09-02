@@ -6519,6 +6519,8 @@ async function telaLeads(){
           <input type="date" data-ret="${x.id}" value="${x.retomar_em||""}">
           <a class="wa" href="https://wa.me/55${esc((x.whatsapp||"").replace(/\D/g,""))}"
              target="_blank" rel="noopener">abrir no WhatsApp</a>
+          <button class="bt apagaLead" data-del="${x.id}"
+            style="border-color:var(--baixa);color:var(--baixa)">Apagar pedido</button>
         </div>
         <div class="anot">
           <textarea id="nvNota" rows="2" placeholder="o que foi conversado — fica registrado com a data"></textarea>
@@ -6531,6 +6533,18 @@ async function telaLeads(){
               Nenhuma anotação ainda. O histórico não é sobrescrito: cada linha fica com a data.</p>`}
       </div>`}
     </div>`; }).join("")}`;
+
+  /* apagar o pedido: some da lista e leva junto as anotações dele */
+  document.querySelectorAll(".apagaLead").forEach(b => b.onclick = async () => {
+    if(!confirm("Apagar este pedido? As anotações vão junto.")) return;
+    b.disabled = true;
+    const id = Number(b.dataset.del);   // vem do atributo como texto
+    await sb.from("lead_nota").delete().eq("lead_id", id);
+    const { error } = await sb.from("lead").delete().eq("id", id);
+    if(error){ b.disabled = false;
+      return $("#erro").innerHTML = aviso("Não consegui apagar: " + error.message, true); }
+    location.hash = lk({ id:"" }); telaLeads();
+  });
 
   const salvar = async (id, campo) => {
     const { error } = await sb.from("lead").update(campo).eq("id", id);
@@ -12809,12 +12823,18 @@ async function telaDuelo(){
   ${(meus.length || feitos.length) ? `<p style="margin:0 0 20px">
     <button class="bt lacre" id="btDesafiar">Desafiar alguém</button></p>` : ""}
 
+  <div class="card" id="formDesafio" style="margin-top:26px"></div>
+
   ${chamados.length ? `
   <h2 style="font-size:19px;margin:26px 0 12px">Te desafiaram</h2>
   ${chamados.map(d => `<div class="card" style="border-color:var(--lacre)">
-    <p style="margin:0 0 6px;font-size:14px"><b>${esc(nomes[d.desafiante]||"—")}</b>
-      te chamou para um duelo de ${esc(CLASSE[d.classe]?.nome || d.classe)},
-      de ${dataBR(d.inicio)} a ${dataBR(d.fim)}.</p>
+    <p style="margin:0 0 4px;font-size:14px"><b>${esc(nomes[d.desafiante]||"—")}</b>
+      te chamou para um duelo de ${dataBR(d.inicio)} a ${dataBR(d.fim)}.</p>
+    <p style="margin:0 0 8px;font-size:12.5px;color:var(--t2)">
+      A carteira dele é <b>${esc(carts[d.carteira_a]||"—")}</b>, da classe
+      <b>${esc(CLASSE[d.classe]?.nome || d.classe)}</b>${
+        CLASSE[d.classe]?.regra ? " — " + esc(CLASSE[d.classe].regra) : ""}
+      Você entra com a carteira que quiser.</p>
     ${d.recado?`<p style="margin:0 0 10px;font-size:12.5px;color:var(--t2)">
       "${esc(d.recado)}"</p>`:""}
     <button class="bt lacre aceitaD" data-id="${d.id}"
@@ -12838,7 +12858,12 @@ async function telaDuelo(){
         <th class="d">Venceu</th></tr></thead>
       <tbody>${feitos.slice(0,40).map(linha).join("")}</tbody></table>`}`;
 
-  document.getElementById("btDesafiar").onclick = () => location.hash = "#/desafiar";
+  montarDesafio();
+  const bd = document.getElementById("btDesafiar");
+  if(bd) bd.onclick = () => {
+    const f = document.getElementById("formDesafio");
+    if(f){ f.hidden = false; f.scrollIntoView({behavior:"smooth", block:"start"}); }
+  };
 
   document.querySelectorAll(".aceitaD").forEach(b => b.onclick = () => aceitarDuelo(b.dataset.id));
   document.querySelectorAll(".recusaD").forEach(b => b.onclick = async () => {
@@ -12851,12 +12876,13 @@ async function telaDuelo(){
 async function aceitarDuelo(id){
   const { data:d } = await sb.from("duelo").select("*").eq("id", id).maybeSingle();
   if(!d) return;
+  /* qualquer carteira sua serve: a classe do desafiante aparece no convite,
+     e quem decide se o confronto faz sentido é você, ao aceitar */
   const { data:cs } = await sb.from("carteira")
-    .select("id,nome").eq("usuario_id", eu.id).eq("ativa", true)
-    .eq("classe", d.classe).order("criada_em");
+    .select("id,nome,classe").eq("usuario_id", eu.id).eq("ativa", true)
+    .order("criada_em");
   if(!cs || !cs.length) return $("#erro").innerHTML = aviso("Para aceitar você "
-    + "precisa de uma carteira da classe " + (CLASSE[d.classe]?.nome || d.classe)
-    + ". Publique uma e volte aqui.", true);
+    + "precisa de uma carteira publicada. Publique uma e volte aqui.", true);
 
   const qual = cs.length === 1 ? cs[0].id : escolherCarteira(cs);
   if(!qual) return;
@@ -12869,9 +12895,12 @@ async function aceitarDuelo(id){
 
 /* ---------- #/desafiar ---------- */
 
-async function telaDesafiar(){
-  if(!eu){ location.hash = "#/entrar"; return rotear(); }
-  app().innerHTML = `<div class="carreg">…</div>`;
+/* Era uma tela própria em #/desafiar. Virou um bloco que o #/duelo monta no
+   fim da lista: ninguém chegava lá sem passar pela lista mesmo, e duas telas
+   para uma coisa só era ida e volta à toa. A rota antiga continua existindo
+   e cai no #/duelo. */
+async function montarDesafio(){
+  if(!eu) return;
 
   const { data:cs } = await sb.from("carteira").select("id,nome,classe")
     .eq("usuario_id", eu.id).eq("ativa", true).order("criada_em");
@@ -12896,28 +12925,30 @@ async function telaDesafiar(){
   const daqui = n => { const d = new Date(hoje + "T12:00:00");
     d.setDate(d.getDate() + n); return d.toISOString().slice(0,10); };
 
-  app().innerHTML = `
-  <div class="cabeca"><h1>Desafiar alguém</h1>
-    <p>Escolha a carteira que quer enfrentar, a sua e o prazo. Mínimo de
-      ${DUELO_MIN} pregões.</p></div>
+  const cxD = document.getElementById("formDesafio");
+  if(!cxD) return;
+  cxD.innerHTML = `
+  <h2 style="font-size:19px;margin:0 0 4px">Desafiar alguém</h2>
+  <p style="font-size:12.5px;color:var(--t2);max-width:62ch;margin:0 0 14px">
+    Escolha a carteira que quer enfrentar, a sua e o prazo. Mínimo de
+    ${DUELO_MIN} pregões. A pessoa entra com a carteira que ela quiser — pode
+    ser de outra classe, e a classe dela aparece no convite.</p>
   <div id="erro"></div>
   <div class="card" style="max-width:560px">
     <label>Contra qual carteira</label>
     <select id="dQuem">${(alheias||[])
       .filter(c => apelidoDe[c.usuario_id])
       .map(c => `<option value="${c.usuario_id}" data-cl="${c.classe}"
-        >${esc(c.nome)} · ${esc(apelidoDe[c.usuario_id])}</option>`).join("")}</select>
+        >${esc(c.nome)} · ${esc(apelidoDe[c.usuario_id])} · ${
+        esc(CLASSE[c.classe]?.nome || c.classe)}</option>`).join("")}</select>
     <p style="font-size:11.5px;color:var(--graf);margin:8px 0 13px">
-      Quem escolhe a carteira que entra do outro lado é a pessoa, ao aceitar —
-      pode ser outra dela, desde que da mesma classe.</p>
+      Quem escolhe a carteira que entra do outro lado é a pessoa, ao aceitar.</p>
 
     <label>Sua carteira</label>
     <select id="dCart">${cs.map(c =>
       `<option value="${c.id}" data-cl="${c.classe}">${esc(c.nome)} · ${
         esc(CLASSE[c.classe]?.nome || c.classe)}</option>`).join("")}</select>
-    <p style="font-size:11.5px;color:var(--graf);margin:8px 0 13px">
-      O duelo é entre carteiras da mesma classe — comparar uma Vendida com uma
-      Comprada seria apostar na direção do índice, não em quem escolhe melhor.</p>
+    
 
     <label>Começa em</label>
     <input id="dIni" type="date" value="${daqui(1)}" min="${daqui(1)}">
@@ -12948,7 +12979,7 @@ async function telaDesafiar(){
       situacao: "convidado" });
     if(error) return $("#erro").innerHTML = aviso("Não consegui enviar: "
       + error.message, true);
-    location.hash = "#/duelo"; rotear();
+    telaDuelo();
   };
 }
 
@@ -13121,6 +13152,17 @@ async function telaCopa(){
     const { data, error } = await sb.rpc("entrar_na_copa");
     if(error) return $("#erro").innerHTML = aviso(error.message, true);
     $("#erro").innerHTML = aviso(data || "pronto");
+    telaCopa();
+  };
+  /* o cancelar mora nesta parte da tela — o outro, lá em cima, só vale no
+     trecho do dia sem copa, que sai antes de chegar aqui */
+  const bsair = document.getElementById("btSairCopa");
+  if(bsair) bsair.onclick = async () => {
+    bsair.disabled = true;
+    const { data, error } = await sb.rpc("sair_da_copa");
+    if(error){ bsair.disabled = false;
+      return $("#erro").innerHTML = aviso(error.message, true); }
+    $("#erro").innerHTML = aviso(data || "inscrição cancelada");
     telaCopa();
   };
 }
@@ -13673,6 +13715,9 @@ function rotear(){
 
   pintarVoltar();
   armarColuna(); setTimeout(abrirGrupoDaRota, 0);
+  /* relê as notificações a cada troca de tela: sem isto elas só apareciam
+     no arranque, e quem ficava com a página aberta nunca via chegar nada */
+  if(eu) carregarNotif();
   const m = h.match(/^#\/carteira\/(\d+)$/);
   if(m)                       return telaCarteira(m[1]);
   // No celular a home é a escolha de caminho, não o ranking: quem chega numa
@@ -13739,7 +13784,7 @@ function rotear(){
   if(h==="#/regras-time")           return telaRegrasTime();
   if(h==="#/meu-time")              return irParaMeuTime();
   if(/^#\/rodada\/\d+$/.test(h))    return telaRodada(h.split("/")[2]);
-  if(h==="#/desafiar")              return telaDesafiar();
+  if(h==="#/desafiar")              { location.hash = "#/duelo"; return rotear(); }
   if(h==="#/copa")                  return telaCopa();
   if(/^#\/time\/\d+\/capitao$/.test(h)) return telaCapitao(h.split("/")[2]);
   if(/^#\/time\/\d+$/.test(h))          return telaTime(h.split("/")[2]);
