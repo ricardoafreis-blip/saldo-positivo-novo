@@ -419,7 +419,9 @@ tr.semdado:hover td{opacity:1}
 
 .lead{border:1px solid var(--linha);border-radius:4px;background:var(--p2);margin-top:9px}
 .lead.urg{border-left:2px solid var(--baixa)}
-.lead.ab{border-color:var(--linha2)}
+/* NÃO usar `ab` aqui: essa classe é do acordeão de criar carteira, e a regra
+   `.ab .corpo{display:none}` lá em cima escondia o corpo do pedido. */
+.lead.abLead{border-color:var(--linha2)}
 .lead .topo{display:grid;grid-template-columns:1.3fr 1fr auto;gap:16px;align-items:center;
   padding:13px 16px;cursor:pointer}
 @media(max-width:760px){.lead .topo{grid-template-columns:1fr;gap:7px}}
@@ -6500,7 +6502,7 @@ async function telaLeads(){
         : "Nenhum pedido aqui. Os que chegarem pela tela de serviços aparecem nesta lista."}</p></div>`
   : l.map(x=>{
     const ab = String(x.id) === String(aberto);
-    return `<div class="lead${ab?" ab":""}${venceu(x)?" urg":""}">
+    return `<div class="lead${ab?" abLead":""}${venceu(x)?" urg":""}">
       <div class="topo" data-abre="${ab?lk({id:""}):lk({id:x.id})}">
         <div class="quem">
           <div class="nm">${esc(x.nome||"—")}
