@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict YXhiHkWSCCkqJQmMc2WROc0bPBmPfDO1dfwOR82y6Q7qzgCQfaYVHdOHYoy3uAw
+\restrict SolDxmPETk9z4cDajUxJCJ2d18mDx7WEtLRPahLJOVG8c2ztYxNt7Xczoqu4deZ
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.11 (Ubuntu 17.11-1.pgdg24.04+2)
@@ -1565,7 +1565,19 @@ declare
   n       int := 0;
 begin
   select min(data) into v_prox from oscilacao where data > v_dia;
-
+  -- garante a linha do próprio dia antes de apurar. Antes, a rotina só
+  -- apurava dias que ela mesma tinha criado na véspera: bastava faltar um
+  -- pregão para a corrente romper e não reatar mais.
+  for r in
+    select i.ciclo_id, i.time_id from time_inscricao i
+      join ciclo c on c.id = i.ciclo_id
+     where c.situacao = 'aberto' and v_dia between c.inicio and c.fim
+       and not exists (select 1 from time_carteira_dia d
+                        where d.ciclo_id = i.ciclo_id and d.time_id = i.time_id
+                          and d.data = v_dia)
+  loop
+    perform montar_carteira_time(r.ciclo_id, r.time_id, v_dia);
+  end loop;
   for r in
     select d.ciclo_id, d.time_id, d.ativos
       from time_carteira_dia d
@@ -1575,21 +1587,16 @@ begin
     select avg(o.valor)::real into v_ret
       from oscilacao o
      where o.data = v_dia and o.ativo = any(r.ativos);
-
     if v_ret is null then continue; end if;
-
     select indice into v_ant from time_carteira_dia
      where ciclo_id = r.ciclo_id and time_id = r.time_id and data < v_dia
      order by data desc limit 1;
-
     update time_carteira_dia
        set retorno = v_ret,
            indice  = coalesce(v_ant, 100) * (1 + v_ret)
      where ciclo_id = r.ciclo_id and time_id = r.time_id and data = v_dia;
-
     n := n + 1;
   end loop;
-
   -- carteira do próximo pregão, com o que os membros têm agora
   if v_prox is not null then
     for r in
@@ -1600,7 +1607,6 @@ begin
       perform montar_carteira_time(r.ciclo_id, r.time_id, v_prox);
     end loop;
   end if;
-
   return n;
 end;
 $$;
@@ -1897,7 +1903,9 @@ begin
   if v_membros < v_min then
     return null;
   end if;
-
+  -- a temp é on commit drop: sem este drop, a segunda chamada dentro da
+  -- mesma transação falha com "relation _cont already exists"
+  drop table if exists _cont;
   create temp table _cont on commit drop as
     select p.ativo, count(distinct m.usuario_id)::bigint as cabecas,
            coalesce(u.liquidez, 0) as liq
@@ -1908,10 +1916,8 @@ begin
        and m.carteira_id is not null
        and p.peso > 0
      group by p.ativo, u.liquidez;
-
   select cabecas into v_corte
     from _cont order by cabecas desc, liq desc offset 9 limit 1;
-
   if v_corte is null then
     select array_agg(ativo order by cabecas desc, liq desc) into v_ativos from _cont;
     insert into time_carteira_dia (ciclo_id, time_id, data, ativos)
@@ -1920,25 +1926,18 @@ begin
       montada_em = now();
     return v_ativos;
   end if;
-
   select array_agg(ativo order by cabecas desc, liq desc) into v_ativos
     from _cont where cabecas > v_corte;
   v_faltam := 10 - coalesce(array_length(v_ativos,1), 0);
-
-  -- só os mais líquidos vão à mesa do capitão: o dobro das vagas, no mínimo
-  -- quatro, para escolher entre dois nunca virar escolha única.
   v_teto := greatest(v_faltam * 2, 4);
   select array_agg(ativo order by liq desc, ativo) into v_cands
     from (select ativo, liq from _cont where cabecas = v_corte
            order by liq desc, ativo limit v_teto) x;
-
   if coalesce(array_length(v_cands,1),0) > v_faltam then
     v_auto := v_cands[1:v_faltam];
-
     select e.escolha into v_escolha
       from time_empate e
      where e.ciclo_id = p_ciclo and e.time_id = p_time and e.data = p_data;
-
     if v_escolha is not null
        and array_length(v_escolha,1) = v_faltam
        and v_escolha <@ v_cands then
@@ -1946,7 +1945,6 @@ begin
     else
       v_ativos := v_ativos || v_auto;
     end if;
-
     insert into time_empate (ciclo_id, time_id, data, vagas, candidatos, automatico)
     values (p_ciclo, p_time, p_data, v_faltam, v_cands, v_auto)
     on conflict (ciclo_id, time_id, data) do update
@@ -1955,12 +1953,10 @@ begin
   else
     v_ativos := v_ativos || coalesce(v_cands, '{}');
   end if;
-
   insert into time_carteira_dia (ciclo_id, time_id, data, ativos)
   values (p_ciclo, p_time, p_data, v_ativos)
   on conflict (ciclo_id, time_id, data) do update
     set ativos = excluded.ativos, montada_em = now();
-
   return v_ativos;
 end;
 $$;
@@ -2117,6 +2113,89 @@ begin
      and (x.var is not null or x.ant > 0);
   get diagnostics n = row_count;
   return jsonb_build_object('gravados', n, 'quando', now());
+end $$;
+
+
+--
+-- Name: notif_duelo(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.notif_duelo() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+declare quem text;
+begin
+  select coalesce(p.apelido,'alguém') into quem from perfil p where p.id = new.desafiante;
+  insert into notificacao (usuario_id, tipo, texto, rota)
+  values (new.desafiado, 'duelo', quem || ' te desafiou para um duelo', '#/duelo');
+  return new;
+end $$;
+
+
+--
+-- Name: notif_lead(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.notif_lead() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+declare rotulo text;
+begin
+  rotulo := case new.origem
+    when 'aulas'    then 'Pedido de curso ou palestra'
+    when 'contato'  then 'Recado pelo Fale conosco'
+    when 'servicos' then 'Pedido de contato com especialista'
+    when 'clube'    then 'Interesse no clube'
+    else 'Novo pedido de contato' end;
+  insert into notificacao (usuario_id, tipo, texto, rota)
+  select p.id, 'lead',
+         rotulo || coalesce(' — ' || new.nome, ''), '#/leads'
+    from perfil p
+   where p.admin = true;
+  return new;
+end $$;
+
+
+--
+-- Name: notif_msg(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.notif_msg() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+declare quem text;
+begin
+  select coalesce(p.apelido,'alguém') into quem from perfil p where p.id = new.autor;
+  insert into notificacao (usuario_id, tipo, texto, rota)
+  select m.usuario_id, 'mensagem',
+         quem || ' escreveu no mural do time', '#/meu-time'
+    from time_membro m
+   where m.time_id = new.time_id and m.usuario_id <> new.autor;
+  return new;
+end $$;
+
+
+--
+-- Name: notif_rebal(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.notif_rebal() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+declare nome text;
+begin
+  select c.nome into nome from carteira c where c.id = new.carteira_id;
+  insert into notificacao (usuario_id, tipo, texto, rota)
+  select s.usuario_id, 'carteira',
+         'A carteira ' || coalesce(nome,'que você acompanha') || ' mudou',
+         '#/carteira/' || new.carteira_id
+    from seguidor s
+   where s.carteira_id = new.carteira_id;
+  return new;
 end $$;
 
 
@@ -2711,6 +2790,43 @@ end $$;
 
 
 --
+-- Name: sair_da_copa(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.sair_da_copa() RETURNS text
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+declare
+  agora  timestamp := (now() at time zone 'America/Sao_Paulo');
+  hoje   date := agora::date;
+  v_copa bigint; v_data date;
+begin
+  if auth.uid() is null then raise exception 'precisa estar logado'; end if;
+  -- só dá para sair enquanto a inscrição está aberta: depois do sorteio a
+  -- chave já está montada e sair deixaria um confronto sem adversário
+  select id, data into v_copa, v_data
+    from copa
+   where situacao = 'inscricoes'
+     and (data > hoje or (data = hoje and extract(hour from agora) < 10))
+   order by data limit 1;
+  if v_copa is null then return 'não há inscrição aberta para cancelar'; end if;
+  delete from copa_vaga
+   where copa_id = v_copa and usuario_id = auth.uid();
+  if not found then return 'você não estava nessa chave'; end if;
+  -- as vagas seguintes sobem, para a ordem não ficar com buraco.
+  -- copa_vaga não tem coluna id: a linha é identificada por copa_id + usuario_id
+  with fila as (
+    select usuario_id, row_number() over (order by ordem) as nova
+      from copa_vaga where copa_id = v_copa)
+  update copa_vaga v set ordem = f.nova
+    from fila f
+   where v.copa_id = v_copa and v.usuario_id = f.usuario_id;
+  return 'inscrição de ' || to_char(v_data, 'DD/MM') || ' cancelada';
+end $$;
+
+
+--
 -- Name: salvar_lead(jsonb); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -2771,11 +2887,8 @@ CREATE FUNCTION public.seguir(cid bigint, valor boolean) RETURNS void
     AS $$
 begin
   if auth.uid() is null then raise exception 'precisa estar logado'; end if;
-
   if valor then
-    if not coalesce((select p.assinante from perfil p where p.id = auth.uid()), false) then
-      raise exception 'acompanhar por e-mail é para assinantes';
-    end if;
+    -- a exigência de assinante saiu daqui: não existem assinantes
     if not exists (select 1 from carteira c where c.id = cid and c.ativa) then
       raise exception 'carteira não encontrada';
     end if;
@@ -3977,6 +4090,53 @@ ALTER SEQUENCE public.nota_id_seq OWNED BY public.nota.id;
 
 
 --
+-- Name: notificacao; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.notificacao (
+    id bigint NOT NULL,
+    usuario_id uuid NOT NULL,
+    tipo text NOT NULL,
+    texto text NOT NULL,
+    rota text,
+    criada_em timestamp with time zone DEFAULT now() NOT NULL,
+    vista_em timestamp with time zone,
+    CONSTRAINT notificacao_tipo_check CHECK ((tipo = ANY (ARRAY['mensagem'::text, 'carteira'::text, 'duelo'::text, 'lead'::text])))
+);
+
+
+--
+-- Name: notificacao_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.notificacao_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: notificacao_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.notificacao_id_seq OWNED BY public.notificacao.id;
+
+
+--
+-- Name: oscilacao_foto; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.oscilacao_foto (
+    data date NOT NULL,
+    ativo text NOT NULL,
+    valor real,
+    tirada_em timestamp with time zone DEFAULT now()
+);
+
+
+--
 -- Name: painel_assinatura; Type: VIEW; Schema: public; Owner: -
 --
 
@@ -4718,6 +4878,13 @@ ALTER TABLE ONLY public.nota ALTER COLUMN id SET DEFAULT nextval('public.nota_id
 
 
 --
+-- Name: notificacao id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.notificacao ALTER COLUMN id SET DEFAULT nextval('public.notificacao_id_seq'::regclass);
+
+
+--
 -- Name: posicao id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -4981,6 +5148,22 @@ ALTER TABLE ONLY public.lead
 
 ALTER TABLE ONLY public.nota
     ADD CONSTRAINT nota_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: notificacao notificacao_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.notificacao
+    ADD CONSTRAINT notificacao_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: oscilacao_foto oscilacao_foto_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.oscilacao_foto
+    ADD CONSTRAINT oscilacao_foto_pkey PRIMARY KEY (data, ativo);
 
 
 --
@@ -5359,6 +5542,13 @@ CREATE INDEX msg_do_time ON public.time_msg USING btree (time_id, criada_em DESC
 
 
 --
+-- Name: notificacao_dono; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX notificacao_dono ON public.notificacao USING btree (usuario_id, vista_em, criada_em DESC);
+
+
+--
 -- Name: oscilacao_ativo_data_uk; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -5496,6 +5686,34 @@ CREATE TRIGGER tg_fila_posicao AFTER INSERT ON public.posicao FOR EACH ROW EXECU
 --
 
 CREATE TRIGGER tg_fotografar_hora AFTER INSERT OR UPDATE ON public.cotacao_viva FOR EACH ROW EXECUTE FUNCTION public.fotografar_hora();
+
+
+--
+-- Name: duelo tg_notif_duelo; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER tg_notif_duelo AFTER INSERT ON public.duelo FOR EACH ROW EXECUTE FUNCTION public.notif_duelo();
+
+
+--
+-- Name: lead tg_notif_lead; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER tg_notif_lead AFTER INSERT ON public.lead FOR EACH ROW EXECUTE FUNCTION public.notif_lead();
+
+
+--
+-- Name: time_msg tg_notif_msg; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER tg_notif_msg AFTER INSERT ON public.time_msg FOR EACH ROW EXECUTE FUNCTION public.notif_msg();
+
+
+--
+-- Name: rebalanceamento tg_notif_rebal; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER tg_notif_rebal AFTER INSERT ON public.rebalanceamento FOR EACH ROW EXECUTE FUNCTION public.notif_rebal();
 
 
 --
@@ -5702,6 +5920,14 @@ ALTER TABLE ONLY public.lead
 
 ALTER TABLE ONLY public.nota
     ADD CONSTRAINT nota_carteira_id_fkey FOREIGN KEY (carteira_id) REFERENCES public.carteira(id) ON DELETE CASCADE;
+
+
+--
+-- Name: notificacao notificacao_usuario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.notificacao
+    ADD CONSTRAINT notificacao_usuario_id_fkey FOREIGN KEY (usuario_id) REFERENCES auth.users(id) ON DELETE CASCADE;
 
 
 --
@@ -6287,6 +6513,15 @@ CREATE POLICY is_ler ON public.intraday_sequencia FOR SELECT TO authenticated US
 ALTER TABLE public.lead ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: lead lead_apagar; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY lead_apagar ON public.lead FOR DELETE USING ((EXISTS ( SELECT 1
+   FROM public.perfil p
+  WHERE ((p.id = auth.uid()) AND p.admin))));
+
+
+--
 -- Name: lead lead_deixar; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -6323,6 +6558,15 @@ CREATE POLICY lead_marcar ON public.lead FOR UPDATE TO authenticated USING ((EXI
 --
 
 ALTER TABLE public.lead_nota ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: lead_nota lead_nota_apagar; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY lead_nota_apagar ON public.lead_nota FOR DELETE USING ((EXISTS ( SELECT 1
+   FROM public.perfil p
+  WHERE ((p.id = auth.uid()) AND p.admin))));
+
 
 --
 -- Name: time_msg msg_apagar; Type: POLICY; Schema: public; Owner: -
@@ -6388,6 +6632,33 @@ CREATE POLICY nota_admin ON public.lead_nota TO authenticated USING ((EXISTS ( S
 
 
 --
+-- Name: notificacao notif_apagar; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY notif_apagar ON public.notificacao FOR DELETE USING ((usuario_id = auth.uid()));
+
+
+--
+-- Name: notificacao notif_ler; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY notif_ler ON public.notificacao FOR SELECT USING ((usuario_id = auth.uid()));
+
+
+--
+-- Name: notificacao notif_marcar; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY notif_marcar ON public.notificacao FOR UPDATE USING ((usuario_id = auth.uid())) WITH CHECK ((usuario_id = auth.uid()));
+
+
+--
+-- Name: notificacao; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.notificacao ENABLE ROW LEVEL SECURITY;
+
+--
 -- Name: oscilacao o_le; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -6399,6 +6670,12 @@ CREATE POLICY o_le ON public.oscilacao FOR SELECT USING (true);
 --
 
 ALTER TABLE public.oscilacao ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: oscilacao_foto; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.oscilacao_foto ENABLE ROW LEVEL SECURITY;
 
 --
 -- Name: perfil p_alt; Type: POLICY; Schema: public; Owner: -
@@ -6847,5 +7124,5 @@ CREATE POLICY voto_por ON public.voto FOR INSERT TO authenticated WITH CHECK (((
 -- PostgreSQL database dump complete
 --
 
-\unrestrict YXhiHkWSCCkqJQmMc2WROc0bPBmPfDO1dfwOR82y6Q7qzgCQfaYVHdOHYoy3uAw
+\unrestrict SolDxmPETk9z4cDajUxJCJ2d18mDx7WEtLRPahLJOVG8c2ztYxNt7Xczoqu4deZ
 
