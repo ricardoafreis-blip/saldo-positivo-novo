@@ -48,9 +48,12 @@ header{border-bottom:1px solid var(--linha);background:linear-gradient(180deg,#0
    Agora a marca fica à esquerda e o resto vai colado à direita. */
 header .alto{display:flex;align-items:center;gap:10px;padding:14px 0 12px}
 /* marca à esquerda; sino e depois o apelido, colados à direita. Vale nas duas
-   larguras — a ordem no HTML é outra, quem manda aqui é o order. */
-header .alto .marca{order:1}
-header .alto .sino{order:2;margin-left:auto}
+   larguras — a ordem no HTML é outra, quem manda aqui é o order.
+   O margin-right:auto fica na MARCA, e não no sino: o sino some quando
+   ninguém está logado, e com ele sumia o empurrão, jogando "entrar" e
+   "criar conta" para o lado da marca. */
+header .alto .marca{order:1;margin-right:auto}
+header .alto .sino{order:2;margin-left:0}
 header .alto .dir{order:3;margin-left:0}
 header .alto .hamb{order:4}
 header .marca{font-family:Newsreader,serif;font-weight:500;font-size:26px;
@@ -2693,6 +2696,9 @@ function ligarMenus(){
 function pintarNav(){
   ligarMenus();
   sincronizarMenus();
+  /* o sino vive fora do #navDir e não era repintado aqui: quem saía
+     continuava vendo o sino sozinho no cabeçalho. */
+  if(typeof pintarSino === "function") pintarSino();
   $("#navDir").innerHTML = eu
     ? `<details class="eu" id="menuEu">
          <summary><span class="ini">${esc((eu.apelido||"?").trim().slice(0,2).toUpperCase())}</span
