@@ -85,7 +85,10 @@ nav>.meio{border-left:1px solid var(--linha);border-right:1px solid var(--linha)
 .meio .cab .rotg{font-size:20px}
 .meio .filete{width:52px;height:1px;margin:11px auto 13px;
   background:linear-gradient(90deg,transparent,var(--ouro2),transparent);opacity:.7}
-.trio{display:grid;grid-template-columns:repeat(3,1fr)}
+/* quatro colunas quando cabem; abaixo disso o grid quebra sozinho em duas,
+   sem deixar bloco órfão. Era repeat(3,1fr) fixo, que não comportava o
+   quarto subtítulo. */
+.trio{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
 .trio>div{padding:0 14px;text-align:center}
 .trio>div+div{border-left:1px solid rgba(31,48,73,.6)}
 .rams{display:block;font-family:'IBM Plex Mono',monospace;font-size:9.5px;
@@ -2086,6 +2089,8 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
             <a href="#/times">Ranking de equipe</a>
             <a href="#/criar-time">Crie seu time</a>
             <a href="#/meu-time">Meu time</a>
+          </div>
+          <div><span class="rams">Hall</span>
             <a href="#/melhores">Os melhores</a>
           </div>
         </div>
