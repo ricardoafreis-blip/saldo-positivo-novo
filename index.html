@@ -13151,8 +13151,6 @@ async function telaDuelo(){
   ${(meus.length || feitos.length) ? `<p style="margin:0 0 20px">
     <button class="bt lacre" id="btDesafiar">Desafiar alguém</button></p>` : ""}
 
-  <div class="card" id="formDesafio" style="margin-top:26px"></div>
-
   ${chamados.length ? `
   <h2 style="font-size:19px;margin:26px 0 12px">Te desafiaram</h2>
   ${chamados.map(d => `<div class="card" style="border-color:var(--lacre)">
@@ -13184,7 +13182,11 @@ async function telaDuelo(){
     <table><thead><tr><th>Desafiante</th><th></th><th>Desafiado</th>
         <th class="d">Período</th><th class="d">A</th><th class="d">B</th>
         <th class="d">Venceu</th></tr></thead>
-      <tbody>${feitos.slice(0,40).map(linha).join("")}</tbody></table>`}`;
+      <tbody>${feitos.slice(0,40).map(linha).join("")}</tbody></table>`}
+
+  <!-- o formulário fica no fim e nasce recolhido: quem abre a tela quer ver
+       como está a disputa, não criar duelo. O botão acima rola até aqui. -->
+  <div class="card" id="formDesafio" style="margin-top:26px" hidden></div>`;
 
   montarDesafio();
   const bd = document.getElementById("btDesafiar");
