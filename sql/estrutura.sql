@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict SolDxmPETk9z4cDajUxJCJ2d18mDx7WEtLRPahLJOVG8c2ztYxNt7Xczoqu4deZ
+\restrict Uk0EYjE4FurP1Rc7Qn7Q1gsJxMOOM4HObR28ZcVffdHreVVFvQXOp8pHSA7aBvl
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.11 (Ubuntu 17.11-1.pgdg24.04+2)
@@ -982,33 +982,51 @@ CREATE FUNCTION public.chavear_copa(p_copa bigint) RETURNS text
     SET search_path TO 'public'
     AS $$
 declare
-  r      record;
   v      uuid[];
   n      int;
   i      int;
   v_rod  bigint;
   d      date;
+  v_fase text;
+  k      int;      -- quantos jogos tem a primeira fase
+  h      int;      -- hora da rodada dessa fase
+  base   int;      -- índice do adversário: base - i
 begin
   select data into d from copa where id = p_copa;
   select array_agg(usuario_id order by ordem) into v
     from copa_vaga where copa_id = p_copa;
   n := coalesce(array_length(v,1), 0);
+
   if n < 2 then
     update copa set situacao = 'encerrada' where id = p_copa;
     return 'menos de duas pessoas na chave — copa de hoje não acontece';
   end if;
 
-  select id into v_rod from rodada where data = d and hora = 12;
+  -- A CHAVE COMEÇA NA FASE QUE CABE. Antes eram sempre 4 quartas: com 2
+  -- inscritos sobravam dois jogos sem jogador nenhum dos dois lados, que
+  -- nunca ganhavam vencedor — e o apurar_copa, que só monta a semifinal
+  -- quando não há quartas pendentes, travava a copa em 'andamento' para
+  -- sempre. Por isso copa apurada nunca aconteceu de verdade.
+  if    n >= 5 then v_fase := 'quartas'; k := 4; h := 12;
+  elsif n >= 3 then v_fase := 'semi';    k := 2; h := 14;
+  else              v_fase := 'final';   k := 1; h := 16;
+  end if;
+  base := 2*k + 1;
 
-  for i in 1..4 loop
+  select id into v_rod from rodada where data = d and hora = h;
+
+  -- v[i] contra v[base-i]. Quando o adversário não existe, quem entrou
+  -- primeiro passa direto — os byes caem nos primeiros da ordem de chegada,
+  -- que é a ordem de inscrição.
+  for i in 1..k loop
     insert into copa_jogo (copa_id, fase, posicao, rodada_id, jogador_a, jogador_b)
-    values (p_copa, 'quartas', i, v_rod,
-            v[i], case when 9 - i <= n then v[9 - i] end)
+    values (p_copa, v_fase, i, v_rod,
+            v[i], case when base - i <= n then v[base - i] end)
     on conflict (copa_id, fase, posicao) do nothing;
   end loop;
 
   update copa set situacao = 'andamento' where id = p_copa;
-  return format('chave montada com %s participante(s)', n);
+  return format('chave montada em %s com %s participante(s)', v_fase, n);
 end;
 $$;
 
@@ -2678,29 +2696,35 @@ CREATE FUNCTION public.robo_fechar_dia(d date DEFAULT NULL::date) RETURNS text
     SET search_path TO 'public'
     AS $$
 declare
-  v_dia   date := coalesce(d, (select max(data) from oscilacao));
+  v_dia   date;
   v_saida text; v_times int; v_intra text; v_duelo int; v_copa text;
+  v_agora timestamp := (now() at time zone 'America/Sao_Paulo');
 begin
+  -- O MT5 exporta DURANTE o pregão, então a oscilacao do dia corrente já
+  -- existe desde cedo, com preço intradiário. Sem esta trava, max(data)
+  -- apontava para hoje e o robô da manhã fechava o dia que nem começou —
+  -- e o `jafechou` do fechar_dia impedia qualquer correção depois.
+  -- Só apura o dia corrente depois das 18h; antes disso, o último anterior.
+  v_dia := coalesce(d, (
+    select max(o.data) from oscilacao o
+     where o.data < v_agora::date
+        or (o.data = v_agora::date and extract(hour from v_agora) >= 18)));
+  if v_dia is null then return 'não há pregão encerrado para apurar'; end if;
+
   perform set_config('request.jwt.claims',
     json_build_object('sub', (select id from perfil where admin
                               order by criado_em limit 1))::text, true);
-
   v_saida := fechar_dia(v_dia);
-
   begin v_times := fechar_dia_times(v_dia);
   exception when others then v_times := -1; end;
-
   begin
     perform abrir_rodadas();
     v_intra := apurar_rodadas_vencidas();
   exception when others then v_intra := 'FALHOU'; end;
-
   begin v_copa := tocar_copa();
   exception when others then v_copa := 'FALHOU'; end;
-
   begin v_duelo := encerrar_duelos();
   exception when others then v_duelo := -1; end;
-
   return v_saida
        || case when v_times >= 0 then ' · times: ' || v_times else ' · times: FALHOU' end
        || ' · intraday: ' || coalesce(v_intra, '—')
@@ -7124,5 +7148,5 @@ CREATE POLICY voto_por ON public.voto FOR INSERT TO authenticated WITH CHECK (((
 -- PostgreSQL database dump complete
 --
 
-\unrestrict SolDxmPETk9z4cDajUxJCJ2d18mDx7WEtLRPahLJOVG8c2ztYxNt7Xczoqu4deZ
+\unrestrict Uk0EYjE4FurP1Rc7Qn7Q1gsJxMOOM4HObR28ZcVffdHreVVFvQXOp8pHSA7aBvl
 
