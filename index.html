@@ -12990,6 +12990,43 @@ const DUELO_MIN = 5;   // pregões
 
 function diasBR(n){ return n + (n === 1 ? " dia" : " dias"); }
 
+/* ── DUELO AO VIVO ────────────────────────────────────────────────────────
+   O encerrar_duelos só decide em `fim`, comparando retorno_periodo dos dois
+   lados. Aqui a mesma conta é feita do início até HOJE, para o duelo ter
+   jornada em vez de um resultado surpresa no último dia. Índice base 100,
+   igual ao gráfico da carteira, para os dois lados ficarem comparáveis
+   mesmo tendo tamanhos diferentes.                                        */
+function corridaDuelo(sa, sb, nomeA, nomeB){
+  if(!sa || !sb || sa.length < 2 || sb.length < 2) return "";
+  const dias = [...new Set(sa.map(x=>x.data).concat(sb.map(x=>x.data)))].sort();
+  const trilha = s => { const m = {}; s.forEach(x => m[x.data] = x.retorno);
+    let i = 100; return dias.map(d => { i *= 1 + (m[d] ?? 0); return i; }); };
+  const a = trilha(sa), b = trilha(sb);
+  const L=40, R=54, T=10, B=18, W=560, H=150;
+  let lo = Math.min(...a, ...b), hi = Math.max(...a, ...b);
+  const folga = (hi - lo) * .14 || 1; lo -= folga; hi += folga;
+  const px = i => L + (W-L-R) * (dias.length===1 ? 0 : i/(dias.length-1));
+  const py = v => T + (H-T-B) * (1 - (v-lo)/(hi-lo));
+  const tr = arr => arr.map((v,i)=>`${i?"L":"M"}${px(i).toFixed(1)},${py(v).toFixed(1)}`).join("");
+  const fim = arr => arr[arr.length-1]/100 - 1;
+  const rot = (arr, cor) => `<text x="${(W-R+5).toFixed(0)}" y="${(py(arr[arr.length-1])+4).toFixed(0)}"
+    fill="${cor}" font-size="11" font-family="IBM Plex Mono,monospace">${pct(fim(arr))}</text>`;
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">
+    <line x1="${L}" y1="${py(100).toFixed(1)}" x2="${W-R}" y2="${py(100).toFixed(1)}"
+      stroke="var(--linha)" stroke-dasharray="3 3"/>
+    <path d="${tr(a)}" fill="none" stroke="var(--ouro2)" stroke-width="1.6"/>
+    <path d="${tr(b)}" fill="none" stroke="var(--t2)" stroke-width="1.6"/>
+    ${rot(a,"var(--ouro2)")}${rot(b,"var(--t2)")}
+    <text x="${L}" y="${H-4}" fill="var(--graf)" font-size="10">${dataBR(dias[0])}</text>
+    <text x="${(W-R).toFixed(0)}" y="${H-4}" fill="var(--graf)" font-size="10"
+      text-anchor="end">${dataBR(dias[dias.length-1])}</text>
+  </svg>
+  <div style="font-size:11.5px;color:var(--graf);margin-top:4px">
+    <span style="color:var(--ouro2)">━</span> ${esc(nomeA)}
+    &nbsp;&nbsp;<span style="color:var(--t2)">━</span> ${esc(nomeB)}
+    &nbsp;· ${dias.length} ${dias.length===1?"pregão":"pregões"} corridos</div>`;
+}
+
 async function telaDuelo(){
   if(!eu){ location.hash = "#/entrar?de=" + encodeURIComponent("#/duelo");
            return rotear(); }
@@ -13014,26 +13051,56 @@ async function telaDuelo(){
     (cs||[]).forEach(c => carts[c.id] = c.nome);
   }
 
+  /* séries dos duelos em andamento, para o placar ao vivo e a corrida.
+     Uma consulta só, do menor início até hoje. */
+  let serie = {};
+  if(abertos.length){
+    const de = abertos.map(d => d.inicio).sort()[0];
+    const cAb = [...new Set(abertos.flatMap(d => [d.carteira_a, d.carteira_b]).filter(Boolean))];
+    const { data:rd } = await sb.from("retorno_dia")
+      .select("carteira_id,data,retorno").in("carteira_id", cAb)
+      .gte("data", de).order("data").limit(4000);
+    (rd||[]).forEach(x => (serie[x.carteira_id] = serie[x.carteira_id] || []).push(x));
+  }
+  /* o acumulado de uma carteira dentro da janela do duelo — mesma conta do
+     retorno_periodo, composta sobre os retornos do intervalo */
+  const ateHoje = (cid, d) => {
+    const s = (serie[cid]||[]).filter(x => x.data >= d.inicio && x.data <= d.fim);
+    if(!s.length) return null;
+    return s.reduce((a,x) => a * (1 + (x.retorno ?? 0)), 1) - 1;
+  };
+
   const linha = d => {
-    const souA = d.desafiante === eu.id;
-    const eu_r = souA ? d.ret_a : d.ret_b;
-    const ele_r = souA ? d.ret_b : d.ret_a;
-    const adv = souA ? d.desafiado : d.desafiante;
-    const venci = d.vencedor && d.vencedor === eu.id;
-    return `<tr>
+    const vivo = d.situacao === "aceito";
+    const ra = vivo ? ateHoje(d.carteira_a, d) : d.ret_a;
+    const rb = vivo ? ateHoje(d.carteira_b, d) : d.ret_b;
+    const dif = (ra != null && rb != null) ? ra - rb : null;
+    return `<tr${vivo?` class="duVivo" data-du="${d.id}" style="cursor:pointer"`:""}>
       <td><b>${esc(nomes[d.desafiante]||"—")}</b>
         <div style="font-size:11px;color:var(--graf)">${esc(carts[d.carteira_a]||"—")}</div></td>
       <td class="d mono" style="color:var(--graf)">×</td>
       <td><b>${esc(nomes[d.desafiado]||"—")}</b>
         <div style="font-size:11px;color:var(--graf)">${esc(carts[d.carteira_b]||"—")}</div></td>
       <td class="d" style="font-size:11.5px;color:var(--t2)">${dataBR(d.inicio)}<br>${dataBR(d.fim)}</td>
-      <td class="d mono">${d.ret_a==null?"—":`<span class="${cor(d.ret_a)}">${pct(d.ret_a)}</span>`}</td>
-      <td class="d mono">${d.ret_b==null?"—":`<span class="${cor(d.ret_b)}">${pct(d.ret_b)}</span>`}</td>
+      <td class="d mono">${ra==null?"—":`<span class="${cor(ra)}">${pct(ra)}</span>`}</td>
+      <td class="d mono">${rb==null?"—":`<span class="${cor(rb)}">${pct(rb)}</span>`}</td>
       <td class="d">${d.situacao === "encerrado"
         ? (d.vencedor ? `<span class="pill">${esc(nomes[d.vencedor]||"")}</span>`
                       : '<span class="pill">empate</span>')
-        : `<span class="pill">${esc(d.situacao)}</span>`}</td>
-    </tr>`;
+        : dif == null ? `<span class="pill">${esc(d.situacao)}</span>`
+        : Math.abs(dif) < 0.00005
+          ? '<span class="pill">empatado</span>'
+          : `<span class="pill">${esc(nomes[dif > 0 ? d.desafiante : d.desafiado]||"")}
+             <span class="mono" style="color:var(--graf)">+${pct(Math.abs(dif)).replace("+","")}</span></span>`}</td>
+    </tr>${!vivo ? "" : `
+    <tr class="duCorrida" data-cor="${d.id}" hidden><td colspan="7" style="padding:10px 4px 16px">
+      ${corridaDuelo(
+        (serie[d.carteira_a]||[]).filter(x => x.data >= d.inicio && x.data <= d.fim),
+        (serie[d.carteira_b]||[]).filter(x => x.data >= d.inicio && x.data <= d.fim),
+        (nomes[d.desafiante]||"—") + " · " + (carts[d.carteira_a]||""),
+        (nomes[d.desafiado]||"—") + " · " + (carts[d.carteira_b]||""))
+        || '<p style="font-size:12px;color:var(--graf);margin:0">a corrida aparece a partir do segundo pregão apurado</p>'}
+    </td></tr>`}`;
   };
 
   app().innerHTML = `
@@ -13125,6 +13192,12 @@ async function telaDuelo(){
     const f = document.getElementById("formDesafio");
     if(f){ f.hidden = false; f.scrollIntoView({behavior:"smooth", block:"start"}); }
   };
+
+  /* clicar na linha do duelo abre a corrida logo abaixo dela */
+  document.querySelectorAll(".duVivo").forEach(tr => tr.onclick = () => {
+    const alvo = document.querySelector(`.duCorrida[data-cor="${tr.dataset.du}"]`);
+    if(alvo) alvo.hidden = !alvo.hidden;
+  });
 
   document.querySelectorAll(".aceitaD").forEach(b => b.onclick = () => aceitarDuelo(b.dataset.id));
   document.querySelectorAll(".recusaD").forEach(b => b.onclick = async () => {
