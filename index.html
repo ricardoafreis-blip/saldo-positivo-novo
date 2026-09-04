@@ -13027,6 +13027,24 @@ function corridaDuelo(sa, sb, nomeA, nomeB){
     &nbsp;· ${dias.length} ${dias.length===1?"pregão":"pregões"} corridos</div>`;
 }
 
+/* #/desafiar — o formulário em tela própria. Antes ele morava dentro do
+   #/duelo e empurrava a lista para baixo; a lista é o que se acompanha todo
+   dia, o formulário é ação ocasional. */
+async function telaDesafiar(){
+  if(!eu){ location.hash = "#/entrar?de=" + encodeURIComponent("#/desafiar");
+           return rotear(); }
+  app().innerHTML = `
+  <div class="cabeca">
+    <h1>Desafiar alguém</h1>
+    <p>Escolha a carteira que quer enfrentar, a sua e o prazo. Mínimo de
+      ${DUELO_MIN} pregões. A pessoa entra com a carteira que ela quiser — pode
+      ser de outra classe, e a classe dela aparece no convite.</p>
+    <p style="margin-top:10px"><a href="#/duelo" class="lnk">‹ voltar aos duelos</a></p>
+  </div>
+  <div class="card" id="formDesafio"></div>`;
+  montarDesafio();
+}
+
 async function telaDuelo(){
   if(!eu){ location.hash = "#/entrar?de=" + encodeURIComponent("#/duelo");
            return rotear(); }
@@ -13038,7 +13056,10 @@ async function telaDuelo(){
 
   const meus     = l.filter(d => d.desafiante === eu.id || d.desafiado === eu.id);
   const chamados = meus.filter(d => d.desafiado === eu.id && d.situacao === "convidado");
-  const abertos  = meus.filter(d => d.situacao === "aceito");
+  /* a lista mostra TODOS os duelos correndo no site, não só os seus: sem isso
+     a ordenação "os meus primeiro" não teria contra o que ordenar, e não há
+     torcida se só dá para ver a própria disputa. */
+  const abertos  = l.filter(d => d.situacao === "aceito");
   const feitos   = l.filter(d => d.situacao === "encerrado");
 
   const ids = [...new Set(l.flatMap(d => [d.desafiante, d.desafiado]))];
@@ -13070,16 +13091,34 @@ async function telaDuelo(){
     return s.reduce((a,x) => a * (1 + (x.retorno ?? 0)), 1) - 1;
   };
 
+  /* ordenação escolhida na tela, guardada no endereço */
+  const q = new URLSearchParams(location.hash.split("?")[1] || "");
+  const ORDENS = [["fim","Termina antes"], ["meus","Os meus"],
+                  ["vantagem","Maior vantagem"], ["novos","Mais recentes"]];
+  const ord = ORDENS.some(([k]) => k === q.get("ord")) ? q.get("ord") : "fim";
+  const meuDuelo = d => d.desafiante === eu.id || d.desafiado === eu.id;
+  const vantagem = d => {
+    const a = ateHoje(d.carteira_a, d), b = ateHoje(d.carteira_b, d);
+    return (a == null || b == null) ? -Infinity : Math.abs(a - b);
+  };
+  abertos.sort((x,y) =>
+      ord === "meus"     ? (meuDuelo(y) - meuDuelo(x)) || (x.fim < y.fim ? -1 : 1)
+    : ord === "vantagem" ? vantagem(y) - vantagem(x)
+    : ord === "novos"    ? (x.criado_em < y.criado_em ? 1 : -1)
+    :                      (x.fim < y.fim ? -1 : x.fim > y.fim ? 1 : 0));
+
   const linha = d => {
     const vivo = d.situacao === "aceito";
     const ra = vivo ? ateHoje(d.carteira_a, d) : d.ret_a;
     const rb = vivo ? ateHoje(d.carteira_b, d) : d.ret_b;
     const dif = (ra != null && rb != null) ? ra - rb : null;
-    return `<tr${vivo?` class="duVivo" data-du="${d.id}" style="cursor:pointer"`:""}>
-      <td><b>${esc(nomes[d.desafiante]||"—")}</b>
+    return `<tr${vivo?` class="duVivo${meuDuelo(d)?" meuDuelo":""}" data-du="${d.id}" style="cursor:pointer"`:""}>
+      <td><b>${esc(nomes[d.desafiante]||"—")}</b>${
+        d.desafiante===eu.id?' <span class="pill">você</span>':""}
         <div style="font-size:11px;color:var(--graf)">${esc(carts[d.carteira_a]||"—")}</div></td>
       <td class="d mono" style="color:var(--graf)">×</td>
-      <td><b>${esc(nomes[d.desafiado]||"—")}</b>
+      <td><b>${esc(nomes[d.desafiado]||"—")}</b>${
+        d.desafiado===eu.id?' <span class="pill">você</span>':""}
         <div style="font-size:11px;color:var(--graf)">${esc(carts[d.carteira_b]||"—")}</div></td>
       <td class="d" style="font-size:11.5px;color:var(--t2)">${dataBR(d.inicio)}<br>${dataBR(d.fim)}</td>
       <td class="d mono">${ra==null?"—":`<span class="${cor(ra)}">${pct(ra)}</span>`}</td>
@@ -13145,11 +13184,11 @@ async function telaDuelo(){
           prazo, o placar sai sozinho. A carteira não congela: mexa nela quando
           quiser durante o duelo, valendo do pregão seguinte.</p></div>
     </div>
-    <p style="margin:18px 0 0"><button class="bt lacre" id="btDesafiar">Desafiar alguém</button></p>
+    <p style="margin:18px 0 0"><a href="#/desafiar" class="bt lacre">Desafiar alguém</a></p>
   </div>` }
 
   ${(meus.length || feitos.length) ? `<p style="margin:0 0 20px">
-    <button class="bt lacre" id="btDesafiar">Desafiar alguém</button></p>` : ""}
+    <a href="#/desafiar" class="bt lacre">Desafiar alguém</a></p>` : ""}
 
   ${chamados.length ? `
   <h2 style="font-size:19px;margin:26px 0 12px">Te desafiaram</h2>
@@ -13171,7 +13210,14 @@ async function telaDuelo(){
   </div>`).join("")}` : ""}
 
   ${abertos.length ? `
-  <h2 style="font-size:19px;margin:26px 0 12px">Em andamento</h2>
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;
+              flex-wrap:wrap;gap:10px;margin:26px 0 10px">
+    <h2 style="font-size:19px;margin:0">Em andamento</h2>
+    <div class="abas" style="margin:0">
+      ${ORDENS.map(([k,r]) => `<a href="#/duelo?ord=${k}"
+        class="aba${ord===k?" on":""}">${r}</a>`).join("")}
+    </div>
+  </div>
   <table><thead><tr><th>Desafiante</th><th></th><th>Desafiado</th>
     <th class="d">Período</th><th class="d">A</th><th class="d">B</th>
     <th class="d">Situação</th></tr></thead>
@@ -13182,18 +13228,7 @@ async function telaDuelo(){
     <table><thead><tr><th>Desafiante</th><th></th><th>Desafiado</th>
         <th class="d">Período</th><th class="d">A</th><th class="d">B</th>
         <th class="d">Venceu</th></tr></thead>
-      <tbody>${feitos.slice(0,40).map(linha).join("")}</tbody></table>`}
-
-  <!-- o formulário fica no fim e nasce recolhido: quem abre a tela quer ver
-       como está a disputa, não criar duelo. O botão acima rola até aqui. -->
-  <div class="card" id="formDesafio" style="margin-top:26px" hidden></div>`;
-
-  montarDesafio();
-  const bd = document.getElementById("btDesafiar");
-  if(bd) bd.onclick = () => {
-    const f = document.getElementById("formDesafio");
-    if(f){ f.hidden = false; f.scrollIntoView({behavior:"smooth", block:"start"}); }
-  };
+      <tbody>${feitos.slice(0,40).map(linha).join("")}</tbody></table>`}`;
 
   /* clicar na linha do duelo abre a corrida logo abaixo dela */
   document.querySelectorAll(".duVivo").forEach(tr => tr.onclick = () => {
@@ -13315,6 +13350,9 @@ async function montarDesafio(){
       situacao: "convidado" });
     if(error) return $("#erro").innerHTML = aviso("Não consegui enviar: "
       + error.message, true);
+    /* o formulário agora vive em #/desafiar: depois de enviar, volta para a
+       lista, que é onde o duelo passa a aparecer */
+    location.hash = "#/duelo";
     telaDuelo();
   };
 }
@@ -14141,7 +14179,7 @@ function rotear(){
   if(h==="#/regras-time")           return telaRegrasTime();
   if(h==="#/meu-time")              return irParaMeuTime();
   if(/^#\/rodada\/\d+$/.test(h))    return telaRodada(h.split("/")[2]);
-  if(h==="#/desafiar")              { location.hash = "#/duelo"; return rotear(); }
+  if(h==="#/desafiar")              return telaDesafiar();
   if(h==="#/copa")                  return telaCopa();
   if(/^#\/time\/\d+\/capitao$/.test(h)) return telaCapitao(h.split("/")[2]);
   if(/^#\/time\/\d+$/.test(h))          return telaTime(h.split("/")[2]);
