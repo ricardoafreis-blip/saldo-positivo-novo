@@ -13034,12 +13034,13 @@ async function telaDesafiar(){
   if(!eu){ location.hash = "#/entrar?de=" + encodeURIComponent("#/desafiar");
            return rotear(); }
   app().innerHTML = `
+  <p style="margin:0 0 6px"><a href="#/duelo" class="lnk"
+    style="color:var(--ouro2)">‹ voltar aos duelos</a></p>
   <div class="cabeca">
     <h1>Desafiar alguém</h1>
     <p>Escolha a carteira que quer enfrentar, a sua e o prazo. Mínimo de
       ${DUELO_MIN} pregões. A pessoa entra com a carteira que ela quiser — pode
       ser de outra classe, e a classe dela aparece no convite.</p>
-    <p style="margin-top:10px"><a href="#/duelo" class="lnk">‹ voltar aos duelos</a></p>
   </div>
   <div class="card" id="formDesafio"></div>`;
   montarDesafio();
@@ -13116,7 +13117,6 @@ async function telaDuelo(){
       <td><b>${esc(nomes[d.desafiante]||"—")}</b>${
         d.desafiante===eu.id?' <span class="pill">você</span>':""}
         <div style="font-size:11px;color:var(--graf)">${esc(carts[d.carteira_a]||"—")}</div></td>
-      <td class="d mono" style="color:var(--graf)">×</td>
       <td><b>${esc(nomes[d.desafiado]||"—")}</b>${
         d.desafiado===eu.id?' <span class="pill">você</span>':""}
         <div style="font-size:11px;color:var(--graf)">${esc(carts[d.carteira_b]||"—")}</div></td>
@@ -13132,7 +13132,7 @@ async function telaDuelo(){
           : `<span class="pill">${esc(nomes[dif > 0 ? d.desafiante : d.desafiado]||"")}
              <span class="mono" style="color:var(--graf)">+${pct(Math.abs(dif)).replace("+","")}</span></span>`}</td>
     </tr>${!vivo ? "" : `
-    <tr class="duCorrida" data-cor="${d.id}" hidden><td colspan="7" style="padding:10px 4px 16px">
+    <tr class="duCorrida" data-cor="${d.id}" hidden><td colspan="6" style="padding:10px 4px 16px">
       ${corridaDuelo(
         (serie[d.carteira_a]||[]).filter(x => x.data >= d.inicio && x.data <= d.fim),
         (serie[d.carteira_b]||[]).filter(x => x.data >= d.inicio && x.data <= d.fim),
@@ -13218,14 +13218,14 @@ async function telaDuelo(){
         class="aba${ord===k?" on":""}">${r}</a>`).join("")}
     </div>
   </div>
-  <table><thead><tr><th>Desafiante</th><th></th><th>Desafiado</th>
+  <table><thead><tr><th>Desafiante</th><th>Desafiado</th>
     <th class="d">Período</th><th class="d">A</th><th class="d">B</th>
     <th class="d">Situação</th></tr></thead>
   <tbody>${abertos.map(linha).join("")}</tbody></table>` : ""}
 
   ${!feitos.length ? "" : `
   <h2 style="font-size:19px;margin:26px 0 12px">Duelos encerrados</h2>
-    <table><thead><tr><th>Desafiante</th><th></th><th>Desafiado</th>
+    <table><thead><tr><th>Desafiante</th><th>Desafiado</th>
         <th class="d">Período</th><th class="d">A</th><th class="d">B</th>
         <th class="d">Venceu</th></tr></thead>
       <tbody>${feitos.slice(0,40).map(linha).join("")}</tbody></table>`}`;
