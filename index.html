@@ -14080,6 +14080,13 @@ function rotear(){
     window.scrollTo(0, 0);
   }
 
+  // A coluna do desktop tem que existir ANTES do desvio de quem não tem
+  // conta: os dois "return" abaixo saíam da função sem passar por aqui, e a
+  // abertura no desktop ficava sem menu nenhum — o topo está escondido de
+  // propósito no desktop, e a coluna ainda não existia. A tela abria com a
+  // cara do celular e só virava desktop depois da primeira navegação.
+  armarColuna(); setTimeout(abrirGrupoDaRota, 0);
+
   // sem conta, o site inteiro é uma tela só: a abertura.
   // Quem CHEGA vê a mensagem — inclusive se a aba tinha outra rota guardada.
   // O login só aparece depois de um clique, e guarda o destino.
@@ -14108,7 +14115,6 @@ function rotear(){
   }
 
   pintarVoltar();
-  armarColuna(); setTimeout(abrirGrupoDaRota, 0);
   /* relê as notificações a cada troca de tela: sem isto elas só apareciam
      no arranque, e quem ficava com a página aberta nunca via chegar nada */
   if(eu) carregarNotif();
