@@ -13921,6 +13921,12 @@ function montarColuna(){
     b.onclick = () => b.parentElement.classList.toggle("fechado"));
   col.querySelectorAll(".cabs").forEach(b =>
     b.onclick = () => b.parentElement.classList.toggle("fechado"));
+  /* A coluna NASCE com Aprender e Indicações recolhidos: quem chega quer ver
+     as competições. Daí em diante quem manda é a pessoa — abriu, fica aberto
+     até ela mesma fechar. Antes isto era refeito a cada navegação, e o grupo
+     que ela estava lendo colapsava embaixo do cursor a cada link clicado. */
+  col.querySelectorAll(".gr").forEach(g =>
+    g.classList.toggle("fechado", g.dataset.g !== "competicoes"));
   document.getElementById("quadro").insertBefore(col,
     document.getElementById("quadro").firstChild);
 }
@@ -13932,7 +13938,7 @@ function armarColuna(){
   else if(col){ col.remove(); }
 }
 
-/* marca o link da página e deixa aberto só o grupo dela */
+/* marca o link da página; NÃO mexe em grupo aberto ou fechado */
 function abrirGrupoDaRota(){
   const col = document.getElementById("colMenu");
   if(!col) return;
@@ -13944,11 +13950,6 @@ function abrirGrupoDaRota(){
   const m = links.find(a => a.getAttribute("href") === alvo)
          || links.find(a => a.getAttribute("href") === base);
   if(m) m.classList.add("aqui");
-  /* A coluna abre com Aprender e Indicações recolhidos: quem chega quer ver
-     as competições. Os outros dois ficam a um clique, com a barrinha dourada
-     marcando a página quando ela mora lá dentro. */
-  col.querySelectorAll(".gr").forEach(g =>
-    g.classList.toggle("fechado", g.dataset.g !== "competicoes"));
 }
 addEventListener("resize", armarColuna);
 
