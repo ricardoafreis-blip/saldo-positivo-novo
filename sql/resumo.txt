@@ -10,7 +10,7 @@ carteira | 84
 ciclo | 2
 conquista | 0
 conta_arquivada | 0
-copa | 9
+copa | 10
 copa_jogo | 4
 copa_vaga | 6
 cotacao_hora | 23347
@@ -28,13 +28,13 @@ intraday_sequencia | 1
 lead | 1
 lead_nota | 0
 messages | 0
-messages_2026_09_02 | 0
-messages_2026_09_03 | 0
 messages_2026_09_04 | 0
 messages_2026_09_05 | 0
 messages_2026_09_06 | 0
 messages_2026_09_07 | 0
 messages_2026_09_08 | 0
+messages_2026_09_09 | 0
+messages_2026_09_10 | 0
 mfa_amr_claims | 11
 mfa_challenges | 0
 mfa_factors | 0
@@ -57,7 +57,7 @@ peso_atual_backup | 46
 posicao | 610
 rebalanceamento | 530
 referencia | 11
-refresh_tokens | 26
+refresh_tokens | 31
 regra | 80
 resumo | 84
 retorno_dia | 2912
