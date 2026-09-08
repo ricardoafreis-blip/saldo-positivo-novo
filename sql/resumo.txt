@@ -10,7 +10,7 @@ carteira | 84
 ciclo | 2
 conquista | 0
 conta_arquivada | 0
-copa | 10
+copa | 12
 copa_jogo | 4
 copa_vaga | 6
 cotacao_hora | 23347
@@ -61,9 +61,9 @@ refresh_tokens | 31
 regra | 80
 resumo | 84
 retorno_dia | 2912
-rodada | 54
+rodada | 66
 rodada_gabarito | 151
-rodada_papel | 432
+rodada_papel | 540
 s3_multipart_uploads | 0
 s3_multipart_uploads_parts | 0
 saml_providers | 0
