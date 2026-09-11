@@ -2062,12 +2062,7 @@ table.aula td.num,table.aula th.num{text-align:right;white-space:nowrap;
           <a href="#/seguro-vida">O que é seguro de vida</a>
           <a href="#/alternativos">Ouro, dólar e bitcoin</a>
           <a href="#/internacional">O que é investir no exterior</a>
-          <span class="sub"><i>3</i>Montar a sua carteira</span>
-          <a href="#/porque">Uma conta que ninguém faz</a>
-          <a href="#/carteira-como">Como se monta uma carteira</a>
-          <a href="#/sessenta">A carteira 60/40</a>
-          <a href="#/grandes">Os grandes acumuladores</a>
-          <span class="sub"><i>4</i>Noções de aplicação em bolsa de valores</span>
+          <span class="sub"><i>3</i>Noções de aplicação em bolsa de valores</span>
             <a href="#/curso-precos">Por que os preços se movem</a>
             <a href="#/curso-fundamentos">Análise fundamentalista</a>
             <a href="#/curso-grafica">Análise gráfica</a>
@@ -2083,7 +2078,7 @@ table.aula td.num,table.aula th.num{text-align:right;white-space:nowrap;
             <a href="#/curso-portfolio">Estratégias de portfólio</a>
             <a href="#/curso-metodos">O que cada método faz bem, e onde falha</a>
             <a href="#/curso-carteiras">As carteiras</a>
-            <span class="sub"><i>5</i>Quando já há patrimônio</span>
+            <span class="sub"><i>4</i>Quando já há patrimônio</span>
           <a href="#/credito">Quanto custa o dinheiro</a>
           <a href="#/casa">Sair do aluguel e ter a casa própria</a>
           <a href="#/comprar">Comprar um bem</a>
@@ -6983,309 +6978,6 @@ async function telaConsenso(){
 // Fica aparecendo até a pessoa dizer que não quer mais. Contador
 // escondido decide pelo usuário; um botão deixa a escolha com ele.
 
-function telaAprender(){
-  const volta = p => (1/(1-p/100) - 1) * 100;
-  const linhas = [1,5,10,20,30,50,70,80,90];
-
-  const dobra = [];
-  for(let i=0, v=1; i<=10; i++, v*=2) dobra.push(v);
-
-  app().innerHTML = `
-  <div class="trilho"><a href="#/aprender" style="color:var(--ouro2);text-decoration:none">Aprender</a> · montar a sua carteira</div>
-  <div class="cabeca" style="text-align:left;max-width:70ch">
-    <h1>Uma conta que ninguém faz</h1>
-    <p>Não é falta de informação, e não é falta de inteligência. É que a bolsa
-      funciona numa lógica que a vida inteira nos ensinou a ignorar — e nela
-      <b>a taxa de acerto não é o que decide quem ganha dinheiro.</b></p>
-  </div>
-
-  <div class="apr">
-    <h2>A vida ensina uma lógica. O mercado usa outra.</h2>
-    <div class="duasL">
-      <div class="lg">
-        <span class="rot">o que a vida ensina</span>
-        <b>Lógica linear</b>
-        <p>Cada evento vale <b>um</b>. De 1 a 1000 você vai de um em um. Você
-          precisa tirar 8 em 10 na prova. Precisa vender para 8 em cada 10
-          pessoas que te procuram. Errar duas de dez é aceitável, e o esforço
-          compensa proporcionalmente: quem faz mais, colhe mais.</p>
-        <p class="ex">Aqui, <b>persistir é virtude</b>. Quem desiste não
-          chega — e a vida inteira nos treina para isso.</p>
-      </div>
-      <div class="lg lgOuro">
-        <span class="rot">o que o mercado usa</span>
-        <b>Lógica logarítmica</b>
-        <p>Os eventos <b>não valem igual</b>. Você pode acertar noventa vezes
-          seguidas e uma única vez apagar tudo. Não adianta ganhar 100% em
-          noventa operações se numa delas você perde 100%: acabou o jogo, e
-          não há nonagésima primeira.</p>
-        <p class="ex">Aqui, <b>persistir no erro é ruína</b>. E é exatamente
-          o instinto que nos trouxe até aqui.</p>
-      </div>
-    </div>
-  </div>
-
-  <div class="apr">
-    <h2>O ganho é generoso. A perda é impiedosa.</h2>
-    <p class="apP">Dobrar o dinheiro dez vezes transforma 1 em 1.024. É por isso
-      que o tempo é o maior aliado de quem investe:</p>
-    <div class="escada">
-      ${dobra.map((v,i)=>`<div class="deg" style="height:${
-        Math.max(9, (Math.log2(v)+1)/11*100)}%" title="${i} dobras: ${v}×">
-        <span>${v}</span></div>`).join("")}
-    </div>
-    <p class="apLeg">cada degrau é uma vez que o dinheiro dobrou</p>
-
-    <p class="apP" style="margin-top:26px">Só que a queda não desfaz na mesma
-      moeda. <b>Para voltar ao ponto de partida, o ganho necessário cresce muito
-      mais rápido que a perda sofrida:</b></p>
-    <div class="tabVolta">
-      <div class="cabV"><span>se você perde</span><span>precisa ganhar para voltar</span></div>
-      ${linhas.map(p=>{
-        const v = volta(p);
-        const grave = p >= 50;
-        return `<div class="lnV${grave?" grave":""}">
-          <span class="perc">−${p}%</span>
-          <span class="barra"><i style="width:${Math.min(100, v/9)}%"></i></span>
-          <span class="ganho">+${v.toFixed(0)}%</span></div>`;
-      }).join("")}
-    </div>
-    <p class="apP" style="margin-top:16px">Perder 1% custa 1% para voltar —
-      simétrico, indolor. Perder metade exige <b>dobrar</b> o que sobrou.
-      Perder 80% exige multiplicar por cinco. Perder 90%, por dez.
-      <b>É por isso que não perder muito importa mais do que ganhar muito.</b></p>
-
-    <p class="apP" style="margin-top:16px">Repare onde a conta vira. Até uns 10%
-      de queda, ela é quase justa: caiu 10, sobe 11 e você voltou. <b>A partir de
-      mais ou menos 25%, a relação descola de vez.</b> Caiu 25, precisa de 33.
-      Caiu 50, precisa de 100. Caiu 75, precisa de 300.</p>
-    <p class="apP">Perda grande não é perda pequena em tamanho maior — <b>é outro
-      problema</b>. Uma queda de 25% é o ponto em que a matemática deixa de te
-      ajudar e passa a trabalhar contra.</p>
-    <p class="apP">E é aí que muda quem decide o jogo. Enquanto os movimentos são
-      pequenos, o mundo parece linear e o que decide é <b>conhecimento</b>:
-      escolher bem, entender a empresa, saber o que se está comprando. Quando os
-      movimentos ficam grandes, o mundo vira logarítmico e o que decide é
-      <b>controle de risco</b>. Nenhuma quantidade de conhecimento te devolve de
-      uma queda de 75% — só a decisão, tomada antes, de nunca chegar lá.</p>
-  </div>
-
-  <div class="apr">
-    <h2>Fomos talhados para o contrário disso</h2>
-    <p class="apP">Persistência, lealdade, não largar a mão de quem está mal —
-      essas são as virtudes que nos fizeram sobreviver como espécie. E são
-      exatamente as que quebram uma carteira.</p>
-    <p class="apP">Segurar o papel que cai porque "uma hora volta" é lealdade.
-      Dobrar a aposta no que deu errado é persistência. Ter dificuldade de
-      admitir o erro é humano. O mercado cobra caro pelas três.</p>
-    <div class="citacao">
-      O gestor é o profissional pago para <b>mudar de ideia sem aviso</b> — e
-      para deixar pelo meio do caminho o que não presta. Não é falta de
-      convicção: é o trabalho.
-    </div>
-  </div>
-
-  <div class="apr">
-    <h2>O pequeno não controla o mercado. Controla a aposta.</h2>
-    <p class="apP">Você não domina o jogo, e o adversário do outro lado da tela
-      pode ser melhor do que você — mais informado, mais rápido, mais capital.
-      Nada disso está sob o seu controle. <b>O que está é quanto você arrisca
-      em cada tentativa e quanto você espera ganhar quando dá certo.</b></p>
-
-    <p class="apP">Suponha uma operação no índice futuro com alvo de
-      <b>200 pontos</b> e stop de <b>50</b>. Ou ganha 200, ou perde 50. Agora
-      suponha que você seja ruim de serviço e acerte apenas <b>3 em cada 10</b>:</p>
-
-    <div class="conta3">
-      <div class="l"><span class="q">3 acertos</span>
-        <span class="c">3 × 200 pontos</span><span class="v ok">+600</span></div>
-      <div class="l"><span class="q">7 erros</span>
-        <span class="c">7 × 50 pontos</span><span class="v ruim">−350</span></div>
-      <div class="l tot"><span class="q">no fim de dez</span>
-        <span class="c">errando sete vezes</span><span class="v ok">+250</span></div>
-    </div>
-
-    <p class="apP">Errou <b>setenta por cento</b> das vezes e terminou ganhando.
-      Fazendo a conta ao contrário: com essa relação, <b>bastam 2 acertos em 10
-      para não perder dinheiro</b>. É o poder do três para um — e ele vale mais
-      quanto pior você for.</p>
-
-    <div class="destaqueP">
-      <p>O problema não é a matemática. É que você vai se sentir um idiota.</p>
-      <p class="pe">Sete derrotas em dez, uma atrás da outra, com a conta
-        vermelha em quatro dias seguidos. A escola te ensinou que 30% é nota de
-        reprovação, e todo instinto vai mandar você aumentar o alvo, apertar o
-        stop ou abandonar o método justamente na sequência ruim — que é quando
-        ele está funcionando exatamente como previsto. <b>A conta é fácil. O
-        psicológico é o adversário de verdade.</b></p>
-    </div>
-
-    <h2>O grande não controla o preço. Controla o preço médio.</h2>
-    <p class="apP">Quem tem muito tem o problema oposto: <b>não consegue entrar
-      nem sair na hora que quer.</b> A posição é grande demais para o volume do
-      dia — se tentar comprar tudo de uma vez, ele mesmo empurra o preço contra
-      si. Então programa o dinheiro para comprar <b>em escada</b>, e cada degrau
-      abaixo é maior que o anterior.</p>
-
-    <div class="escadaP">
-      <div class="l"><span class="p">a R$ 10,00</span><span class="q">compra 1.000</span>
-        <span class="m">médio 10,00</span></div>
-      <div class="l"><span class="p">caiu para R$ 9,00</span><span class="q">compra 3.000</span>
-        <span class="m">médio 9,25</span></div>
-      <div class="l"><span class="p">caiu para R$ 8,00</span><span class="q">compra 9.000</span>
-        <span class="m">médio 8,38</span></div>
-      <div class="l"><span class="p">caiu para R$ 7,00</span><span class="q">compra 27.000</span>
-        <span class="m">médio 7,45</span></div>
-      <div class="l volta"><span class="p">voltou para R$ 8,00</span>
-        <span class="q">vende as 27.000</span><span class="m forte">médio 6,31</span></div>
-    </div>
-
-    <p class="apP">Repare no que aconteceu. Ele vendeu a R$ 8,00 o lote que
-      comprou a R$ 7,00 e realizou <b>R$ 27 mil</b>. Sobraram 13.000 ações que
-      custaram R$ 82 mil — <b class="destaque">R$ 6,31 cada</b>. Ele comprou a
-      dez, a nove e a oito, e o papel nem chegou perto de R$ 6,31 em momento
-      nenhum. <b>O papel só voltou de 7 para 8 e ele já está com metade do preço
-      de entrada.</b></p>
-
-    <p class="apP">O grande <b>só consegue comprar quando cai e vender quando
-      sobe</b> — é a condição dele, não uma escolha de estilo. Volume grande não
-      entra de uma vez sem empurrar o preço. Por isso o preço médio não é um
-      truque: <b>é a única saída que ele tem</b>, e é a arma que faz o método
-      funcionar.</p>
-
-    <div class="destaqueP">
-      <p>Essa arma é dele. Não é sua.</p>
-      <p class="pe">Ele tem dinheiro e tem tempo — <b>aguenta comprar de R$ 10,00
-        até R$ 0,01</b> e esperar o quanto for preciso. O pequeno não aguenta:
-        acaba o dinheiro no terceiro degrau, e ele <b>morre no meio do
-        caminho</b>, com a posição toda no prejuízo e sem bala para o degrau
-        seguinte — que era justamente o que faria o preço médio cair.
-        <b>Fazer preço médio sem os dois é só perder mais.</b></p>
-    </div>
-
-    <h2>Vinte papéis que discordam entre si</h2>
-    <p class="apP">A escada sozinha não basta, porque nenhuma carteira aguenta
-      cair de mãos dadas. O grande espalha em <b>vinte papéis antagônicos</b> —
-      escolhidos justamente porque reagem ao contrário um do outro:</p>
-
-    <div class="pares">
-      <div><span class="rot">minério sobe</span>
-        <p>Quem <b>vende</b> minério ganha. Quem <b>compra</b> minério como
-          insumo perde. Você vai vendendo pedaço de uma e comprando da outra.</p></div>
-      <div><span class="rot">dólar sobe</span>
-        <p>Quem <b>recebe</b> em dólar ganha. Quem <b>deve</b> em dólar perde.
-          O mesmo movimento paga os dois lados da carteira.</p></div>
-      <div><span class="rot">juro sobe</span>
-        <p>Quem tem <b>muita dívida</b> sofre. Quem tem <b>caixa líquido</b>
-          passa a render mais. De novo, um evento, duas direções.</p></div>
-    </div>
-
-    <p class="apP">E é por isso que ele precisa de <b>giro</b>. A carteira só
-      trabalha se houver o que vender quando alguma coisa sobe demais e o que
-      comprar quando alguma cai. Papel parado não gera degrau. O grande não
-      espera o papel voltar: <b>ele fabrica o retorno vendendo para quem está
-      com pressa e comprando de quem está com medo.</b></p>
-
-    <p class="apP">É isso que faz o rebalanceamento funcionar sem depender de
-      palpite: <b>a que subiu financia a compra da que caiu</b>, e você não
-      precisa saber qual das duas vai andar primeiro. Não é indecisão — é
-      construir uma carteira que não depende de você ter razão sobre o minério,
-      sobre o dólar ou sobre o juro.</p>
-
-    <div class="destaqueP">
-      <p>Só que nada disso salva empresa ruim.</p>
-      <p class="pe">Escada, rebalanceamento e diversificação pressupõem que o
-        papel <b>volta</b>. Empresa sem fundamento não volta: cai até zero e
-        fica lá. Aí a escada vira o pior instrumento possível, porque faz você
-        comprar cada vez mais do que está morrendo. <b>Separar o papel bom que
-        caiu do papel que caiu porque é ruim é o trabalho inteiro</b> — e é onde
-        entra estudar fundamento, não gráfico.</p>
-    </div>
-
-  <div class="apr">
-    <h2>São dois jogos diferentes</h2>
-    <p class="apP">Quem tem um bilhão <b>não entra na corrida</b>. Não pode:
-      comprar na alta, com todo mundo comprando, é pagar caro pelo próprio
-      volume. Ele entra quando o mercado está <b>vendendo para ele</b> — na
-      queda, no pânico, no papel que ninguém quer. E quando vem a correria, ele
-      está do outro lado, realizando o lucro para quem chegou depois.</p>
-
-    <div class="duasL">
-      <div class="lg">
-        <span class="rot">o pequeno</span>
-        <b>Opera a tendência</b>
-        <p>Entra no movimento que já começou, e o gráfico é a ferramenta.
-          A defesa é o <b>rigor no stop</b>: alvo largo, perda curta, e a
-          disciplina de sair na hora combinada mesmo achando que dessa vez vai
-          voltar. Ele não tem dinheiro para esperar — então o tempo é inimigo,
-          e o erro precisa ser barato.</p>
-      </div>
-      <div class="lg lgOuro">
-        <span class="rot">o grande</span>
-        <b>Opera contra a tendência</b>
-        <p>Compra o que está caindo e vende o que está subindo, porque é a única
-          forma de o volume dele caber no mercado. A defesa é o <b>preço médio,
-          o giro e a diversificação</b>. Ele tem dinheiro para esperar — então o
-          tempo é aliado, e o erro pode demorar a virar acerto.</p>
-      </div>
-    </div>
-
-    <p class="apP">Repare que <b>o controle de risco muda de natureza</b>. Para
-      o pequeno, risco é o tamanho da perda em cada tentativa. Para o grande,
-      risco é o tamanho da posição em cada papel e a correlação entre eles.
-      <b>São jogos diferentes, com regras diferentes</b> — e copiar o
-      comportamento do outro é o erro mais comum dos dois lados.</p>
-
-    <p class="apP">O pequeno que tenta operar como o grande faz preço médio
-      até acabar o dinheiro. O grande que tenta operar como o pequeno não
-      consegue nem montar a posição.</p>
-  </div>
-
-  <div class="apr">
-    <h2>Quanto custa cada erro</h2>
-    <p class="apP">Porque você vai errar. Todo mundo erra — a diferença é
-      quanto custa cada erro. Com dez papéis, um que vá a zero custa 10% do
-      total e os outros nove seguem trabalhando. Com dois papéis, o mesmo erro
-      leva metade de tudo, e você cai naquela tabela lá em cima: precisando de
-      100% só para voltar ao ponto de partida.</p>
-    <p class="apP"><b>Diversificar não é indecisão, é seguro.</b> Você não sabe
-      qual das dez está errada — se soubesse, não a teria comprado. O que dá
-      para garantir é que nenhuma delas sozinha derrube o conjunto.</p>
-    <p class="apP">Quando não dá para separar a boa da ruim, <b>o tamanho da
-      posição responde por você</b>: pequena o bastante para que estar errado
-      não seja fatal.</p>
-    <p class="apP">Três erros aparecem sempre, e nenhum deles é de escolha:
-      <b>concentrar sem perceber que concentrou</b>, carregar o que caiu por
-      motivo real porque "já perdi mesmo", e descobrir a barreira dos 25% depois
-      de já tê-la atravessado. São erros de risco — e é justamente o que uma
-      segunda leitura, de quem faz isso todo dia, pega antes.</p>
-  </div>
-
-  <div class="apr">
-    <h2>O que fica de tudo isso</h2>
-    <p class="apP">Uma coisa só: <b>em ação, você não controla o resultado.
-      Controla o tamanho do erro.</b> O pequeno controla pela relação entre alvo
-      e stop. O grande controla pelo preço médio, pelo giro e por uma carteira
-      que discorda de si mesma. Nenhum dos dois sabe para onde o papel vai
-      amanhã — e nenhum dos dois precisa saber para ganhar dinheiro.</p>
-    <p class="apP">O que os dois precisam é da mesma coisa, e é a parte que não
-      tem técnica: <b>fazer o combinado quando dói fazer o combinado.</b> Sair
-      no stop achando que dessa vez ia voltar. Comprar o degrau seguinte com a
-      posição toda no vermelho. Vender um pedaço do que está subindo bem.
-      Nenhuma dessas três é difícil de entender. As três são difíceis de
-      fazer.</p>
-    <p class="apP">E antes de qualquer uma delas vem o começo, que não é sobre
-      ação nenhuma: <b>ter o que investir</b>. Ajustar a despesa à receita, e não
-      o contrário. Nenhuma técnica compensa aporte que não existe — essa conta
-      está em <a href="#/crescer">como o dinheiro cresce</a>.</p>
-    <div class="apLinks">
-      <a href="#/publicar" class="bt lacre">Treinar com uma carteira &rarr;</a>
-      <a href="#/screening" class="bt">Ver em que fase cada papel está</a>
-    </div>
-  </div>
-  ${FIMP()}`;
-}
-
 function telaAbertura(){
   /* quem chegou por convite de time vê disso logo no alto. Sem esta faixa, o
      aluno clica no link do professor, cai num texto que fala de ranking
@@ -9786,12 +9478,6 @@ const TOPICOS_AP = [
     ["#/seguro-vida","O que é seguro de vida","Não é investimento. É o capital que você não vai ter tempo de acumular."],
     ["#/alternativos","Ouro, dólar e bitcoin","Nenhum paga renda. Servem para proteger, não para crescer."],
     ["#/internacional","O que é investir no exterior","Não depender de um país só, nem de uma moeda só."]
-  ]],
-  ["Montar a sua carteira", [
-    ["#/porque","Uma conta que ninguém faz","Dá para errar sete vezes em dez e terminar ganhando. A escola ensinou o contrário."],
-    ["#/carteira-como","Como se monta uma carteira","Peso importa mais que escolha. É aqui que o site vira ferramenta."],
-    ["#/sessenta","A carteira 60/40","Por que ela atravessou setenta anos, e quando ela falha."],
-    ["#/grandes","Os grandes acumuladores","O que Buffett e outros gestores têm em comum — e não é palpite."]
   ]],
   ["Noções de aplicação em bolsa de valores", [
     ["#/curso-precos","Por que os preços se movem","O preço é um acordo, não uma medida. Caro e barato só existem contra uma referência."],
@@ -12933,65 +12619,6 @@ function pagConsorcioBase(){
 }
 
 /* ─── PÁGINA: como se monta uma carteira ─── */
-function pagCarteiraComo(){
-  $("#app").innerHTML = `
-  <div class="trilho"><a href="#/aprender" style="color:var(--ouro2);text-decoration:none">Aprender</a> · montar a sua carteira</div>
-  <h1>Como se monta uma carteira</h1>
-  <p class="chapeu">Escolher o que comprar é a parte que todo mundo discute.
-    Decidir quanto de cada coisa é a parte que decide o resultado.</p>
-
-  <div class="caso">
-    <p>Duas pessoas compram exatamente os mesmos cinco papéis. Uma põe 20% em
-      cada. A outra põe 60% no que ela mais gosta e divide o resto.
-      <b>Ao fim de cinco anos, as duas carteiras não se parecem.</b></p>
-  </div>
-
-  <h2>O que é uma carteira</h2>
-  <p>Uma carteira não é uma lista de papéis: é uma <b>lista de pesos</b>. O que
-    você escolhe importa; quanto você põe em cada escolha importa mais. Um
-    acerto com 2% do patrimônio não muda a sua vida — e um erro com 40% muda.</p>
-
-  <h2>As três decisões, em ordem de importância</h2>
-  <div class="trinca">
-    <div><span class="rot">Primeiro</span>
-      <p><b>Quanto em renda variável e quanto em renda fixa.</b> É a decisão que
-        mais explica o seu resultado, e a que menos gente toma
-        conscientemente.</p></div>
-    <div><span class="rot">Segundo</span>
-      <p><b>Como dividir dentro de cada parte.</b> Setores, prazos, moedas. Aqui
-        entra diversificação de verdade.</p></div>
-    <div><span class="rot">Terceiro</span>
-      <p><b>Quais papéis.</b> É a decisão mais discutida e a menos
-        determinante.</p></div>
-  </div>
-
-  <h2>Rebalancear é o que mantém a carteira sendo a sua</h2>
-  <p>Se você montou 60% em ações e elas subiram muito, hoje você tem 75% em
-    ações — e um risco que você não escolheu. Rebalancear é voltar aos pesos
-    definidos, vendendo o que subiu e comprando o que ficou para trás.</p>
-  <p>É contraintuitivo e é justamente por isso que funciona: obriga a vender na
-    alta e comprar na baixa, que é o contrário do que o instinto manda.</p>
-
-  <h2>Diversificar não é espalhar</h2>
-  <p>Com pouco dinheiro, dividir entre muitos lugares não protege — só
-    fragmenta e encarece. A diversificação, nesse tamanho, vem <b>pronta dentro
-    do produto</b>: um ETF ou uma carteira recomendada já contém dezenas de
-    papéis. Espalhar de verdade vira necessidade quando o patrimônio cresce.</p>
-
-  <a class="simule" href="#/publicar">
-    <span class="k">O simulador de carteiras</span>
-    <span class="t">Publique a sua carteira e veja como ela se sai &rarr;</span>
-    <span class="d">Cotação real da B3, apurada todo pregão. Sem dinheiro em
-      risco, e ninguém muda o passado depois.</span>
-  </a>
-
-  <div class="adiante">
-    <a class="bt cheio" href="#/servicos">Consultar especialista &rarr;</a>
-    <a class="bt" href="#/aprender">Voltar ao índice</a>
-  </div>`;
-}
-
-/* ─── PÁGINA: um serviço em detalhe ─── */
 function pagReal(){ $("#app").innerHTML =
   TOPO("comece por aqui","Corrigir não é crescer",
     "Seu dinheiro pode dobrar de número e você continuar comprando a mesma coisa. Essa é a diferença entre o que parece e o que é.") + `
@@ -13414,81 +13041,6 @@ function pagSeguro(){ $("#app").innerHTML =
   </div>
 
   ` + FIMP(); }
-
-function pagSessenta(){ $("#app").innerHTML =
-  TOPO("montar a sua carteira","A carteira 60/40",
-    "Sessenta por cento em ações, quarenta em renda fixa. É a receita mais antiga que ainda funciona — e entender por quê ensina mais que decorá-la.") + `
-  <div class="caso">
-    <p>Não é a carteira que mais rende. Nem a que menos cai. <b>É a que a maior
-      parte das pessoas consegue carregar sem desistir no meio</b> — e essa é
-      uma qualidade que os números não mostram.</p>
-  </div>
-  <h2>Por que 60/40</h2>
-  <p>A parte em ações puxa o crescimento no longo prazo. A parte em renda fixa
-    segura a queda nos anos ruins e, principalmente, dá <b>de onde tirar</b>
-    quando você precisa de dinheiro numa hora em que vender ação seria burrice.</p>
-  <p>Os dois pedaços costumam se mover de forma diferente. Quando um cai, o
-    outro segura — e o rebalanceamento transforma isso em compra na baixa
-    automática.</p>
-  <h2>Onde ela falha</h2>
-  <p>Quando ações e renda fixa caem juntas, o que acontece em choque de
-    inflação e juro. O amortecedor some justamente no ano em que você mais
-    precisava dele.</p>
-  <p>E ela não é uma lei: 60/40 é ponto de partida. Quem tem 30 anos e prazo
-    longo pode carregar mais risco; quem vai precisar do dinheiro em cinco anos,
-    menos.</p>
-  <div class="trinca">
-    <div><span class="rot">A vantagem</span>
-      <p>Simples de entender, simples de manter, difícil de estragar.</p></div>
-    <div><span class="rot">O trabalho</span>
-      <p>Rebalancear de tempos em tempos. Sem isso ela vira outra coisa.</p></div>
-    <div><span class="rot">O ajuste</span>
-      <p>A proporção certa é a sua, não a do livro. Depende do seu prazo.</p></div>
-  </div>
-  ` + `<a class="simule" href="#/publicar">
-    <span class="k">O simulador de carteiras</span>
-    <span class="t">Veja as carteiras 60/40 publicadas aqui &rarr;</span>
-    <span class="d">O site tem essa classe própria. Dá para ver como elas estão indo, com dado real.</span></a>`
-    + FIMP(); }
-
-function pagGrandes(){ $("#app").innerHTML =
-  TOPO("montar a sua carteira","Os grandes acumuladores",
-    "Quem juntou muito dinheiro por muito tempo não fez isso adivinhando o mercado. Fez com poucas ideias, repetidas por décadas.") + `
-  <div class="caso">
-    <p>Warren Buffett acumulou a maior parte da fortuna dele <b>depois dos 60
-      anos</b>. Não porque ficou melhor: porque o juro composto precisa de
-      décadas para mostrar do que é capaz.</p>
-  </div>
-  <h2>O que eles têm em comum</h2>
-  <p><b>Prazo.</b> Todos operam em décadas, não em meses. O tempo é o único
-    ingrediente que não dá para comprar nem acelerar.</p>
-  <p><b>Poucas decisões.</b> Carteiras concentradas em coisas que entendem, com
-    pouquíssima troca. O giro alto costuma ser sinal de dúvida, não de
-    competência.</p>
-  <p><b>Empresa, não papel.</b> Compram participação em negócios que continuam
-    valendo se ninguém abrir a cotação por cinco anos.</p>
-  <p><b>Não perder.</b> A regra que mais aparece na fala de todos eles é
-    defensiva. Recuperar de uma queda de 50% exige subir 100% — a matemática
-    castiga o erro grande muito mais do que premia o acerto grande.</p>
-  <h2>O que não dá para copiar</h2>
-  <p>O tamanho, o acesso e as condições que eles têm. E o principal: o que os
-    deixou ricos <b>não foi o mercado financeiro</b>, foi o negócio ou a
-    carreira que veio antes. O mercado multiplicou o que já existia.</p>
-  <p>É por isso que copiar carteira de gente famosa quase nunca funciona: você
-    copia a decisão sem copiar o contexto que a sustenta.</p>
-  <div class="trinca">
-    <div><span class="rot">Dá para copiar</span>
-      <p>Prazo longo, poucas trocas, entender o que se compra.</p></div>
-    <div><span class="rot">Não dá</span>
-      <p>Acesso, escala e as condições que só o tamanho oferece.</p></div>
-    <div><span class="rot">O essencial</span>
-      <p>Primeiro se junta com o que se faz. Depois o mercado multiplica.</p></div>
-  </div>
-  ` + `<a class="simule" href="#/publicar">
-    <span class="k">O simulador de carteiras</span>
-    <span class="t">Publique a sua e compare com as outras &rarr;</span>
-    <span class="d">O ranking mede todo mundo pela mesma régua: amador e profissional, no mesmo lugar.</span></a>`
-    + FIMP(); }
 
 function pagTrabalhar(){ $("#app").innerHTML =
   TOPO("quando já há patrimônio","Pôr o patrimônio para trabalhar",
@@ -16114,11 +15666,7 @@ const HUBS = {
       ["Como o dinheiro cresce","","#/crescer"],
       ["Corrigir não é crescer","","#/corrigir"]] },
 
-  "edu-carteira": { olho:"artigos · montar a carteira", tit:"Montar a<br>sua carteira",
-    itens:[["Uma conta que ninguém faz","","#/porque"],
-      ["Como se monta uma carteira","","#/carteira-como"],
-      ["A carteira 60/40","","#/sessenta"],
-      ["Os grandes acumuladores","","#/grandes"]] },
+  "edu-carteira": { olho:"educacional · bolsa de valores", tit:"Noções de aplicação<br>em bolsa de valores", sub:"quinze aulas, do preço à carteira", itens:[["Por que os preços se movem","","#/curso-precos"], ["Análise fundamentalista","","#/curso-fundamentos"], ["Análise gráfica","","#/curso-grafica"], ["Risco por operação: o três para um","","#/curso-risco"], ["Montar a operação","","#/curso-operacao"], ["Operar no dia","","#/curso-dia"], ["Opções: o alicerce","","#/curso-opcoes"], ["A Fórmula Mágica","","#/curso-formula"], ["SEPA e VCP","","#/curso-sepa"], ["Proteger a carteira com opções","","#/curso-protecao"], ["O mercado a termo","","#/curso-termo"], ["Alavancagem","","#/curso-alavancagem"], ["Estratégias de portfólio","","#/curso-portfolio"], ["O que cada método faz bem, e onde falha","","#/curso-metodos"], ["As carteiras","","#/curso-carteiras"]] },
 
   "edu-patrimonio": { olho:"artigos · já há patrimônio", tit:"Quando já há<br>patrimônio",
     itens:[["Quanto custa o dinheiro","","#/credito"],
@@ -16334,8 +15882,6 @@ const PAI = {
   "fale-conosco":"inicio",
   "aprender":"edu-comecar", "dividas":"edu-comecar", "crescer":"edu-comecar",
   "corrigir":"edu-comecar",
-  "porque":"edu-carteira", "carteira-como":"edu-carteira",
-  "sessenta":"edu-carteira", "grandes":"edu-carteira",
   "credito":"edu-patrimonio", "casa":"edu-patrimonio", "comprar":"edu-patrimonio",
   "escada":"edu-patrimonio", "aplicado":"edu-patrimonio",
   "nao-perder":"edu-patrimonio",
@@ -16666,7 +16212,7 @@ function rotear(){
   if(h==="#/curso-portfolio") return pagCurso13();
   if(h==="#/curso-metodos") return pagCurso14();
   if(h==="#/curso-carteiras") return pagCurso15();
-  if(h==="#/porque")          return telaAprender();
+  
   if(h==="#/corrigir")        return pagReal();
   if(h==="#/renda-fixa")      return pagRendaFixa();
   if(h==="#/renda-variavel")  return pagRendaVar();
@@ -16678,9 +16224,9 @@ function rotear(){
   if(h==="#/consorcio")       return pagConsorcioBase();
   if(h==="#/seguro-vida")     return pagSeguro();
   if(h==="#/dividas")         return pagDividas();
-  if(h==="#/carteira-como")   return pagCarteiraComo();
-  if(h==="#/sessenta")        return pagSessenta();
-  if(h==="#/grandes")         return pagGrandes();
+  
+  
+  
   if(h==="#/casa")            return pagCasa();
   if(h==="#/nao-perder")      return pagSucessaoNova();
   if(h==="#/crescer")         return telaCrescerNova();
