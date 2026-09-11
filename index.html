@@ -990,8 +990,10 @@ button.lig:hover{color:var(--tinta);border-bottom-color:var(--tinta)}
 /* o auto-fit acima ja resolve as larguras intermediarias */
 @media(max-width:620px){.colunas{grid-template-columns:1fr}}
 
+/* Com cinco classes o cartao estreitou; menos folga lateral devolve
+   uns 8px de largura para o nome da carteira. */
 .coluna{background:var(--p2);border:1px solid var(--linha);border-radius:4px;
-  padding:15px 16px;display:flex;flex-direction:column}
+  padding:15px 12px;display:flex;flex-direction:column}
 .coluna h3{font-family:Newsreader,serif;font-size:16px;margin:0 0 2px}
 .coluna .qtd{font-size:10.5px;color:var(--graf);letter-spacing:.06em;text-transform:uppercase}
 
@@ -1441,11 +1443,11 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
 .linhaC.p2 .n{background:#9FB0C4}
 .linhaC.p3 .n{background:#B08155}
 .linhaC .quem{flex:1;min-width:0}
-.linhaC .nome{font-size:13px;color:var(--tinta);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.linhaC .nome{font-size:12.5px;color:var(--tinta);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-.linhaC .autor{font-size:10.5px;color:var(--graf);
+.linhaC .autor{font-size:10px;color:var(--graf);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.linhaC .num{font-family:'IBM Plex Mono';font-size:13px;flex:none}
+.linhaC .num{font-family:'IBM Plex Mono';font-size:12.5px;flex:none}
 .linhaC:hover{background:var(--p3);cursor:pointer}
 .linhaC.p1:hover{background:linear-gradient(180deg,rgba(201,162,39,.18),rgba(201,162,39,.04))}
 .vazio{font-size:11.5px;color:var(--graf);padding:10px 0 2px}
@@ -2077,8 +2079,8 @@ table.aula td.num,table.aula th.num{text-align:right;white-space:nowrap;
             <a href="#/curso-operacao">Montar a operação</a>
             <a href="#/curso-dia">Operar no dia</a>
             <a href="#/curso-opcoes">Opções: o alicerce</a>
-            <a href="#/curso-formula">A Fórmula Mágica</a>
-            <a href="#/curso-sepa">SEPA e VCP</a>
+            <a href="#/curso-formula">A Fórmula Mágica, de Joel Greenblatt</a>
+            <a href="#/curso-sepa">SEPA e VCP, de Mark Minervini</a>
             <a href="#/curso-protecao">Proteger a carteira com opções</a>
             <a href="#/curso-termo">O mercado a termo</a>
             <a href="#/curso-alavancagem">Alavancagem</a>
@@ -9519,8 +9521,8 @@ const TOPICOS_AP = [
     ["#/curso-operacao","Montar a operação","Três preços antes de entrar: onde compra, onde sai errado e onde sai certo."],
     ["#/curso-dia","Operar no dia","A Fórmula 1 do mercado. Papel quente, fluxo, agressão e passivo."],
     ["#/curso-opcoes","Opções: o alicerce","Direito e obrigação, prêmio e vencimento. O alicerce de tudo que vem depois."],
-    ["#/curso-formula","A Fórmula Mágica","Duas contas, um ranking, uma carteira. E a versão quantitativa moderna."],
-    ["#/curso-sepa","SEPA e VCP","Oito critérios de tendência, o VCP e a gestão de risco, com os números."],
+    ["#/curso-formula","A Fórmula Mágica, de Joel Greenblatt","Duas contas, um ranking, uma carteira. E a versão quantitativa moderna."],
+    ["#/curso-sepa","SEPA e VCP, de Mark Minervini","Oito critérios de tendência, o VCP e a gestão de risco, com os números."],
     ["#/curso-protecao","Proteger a carteira com opções","Onze montagens: o que cada uma protege, quanto custa e o que tira em troca."],
     ["#/curso-termo","O mercado a termo","Comprar hoje e pagar depois. Obrigação, não direito."],
     ["#/curso-alavancagem","Alavancagem","O que quebra na bolsa. Basta encostar uma vez no limite."],
@@ -10799,7 +10801,7 @@ function pagCurso7(){ $("#app").innerHTML = TOPO("noções de aplicação em bol
     opções muito fora do dinheiro custam mais do que a fórmula diria — <b>o
     mercado cobra pelo susto que o modelo não prevê</b>.</p>` + FIMP(); }
 function pagCurso8(){ $("#app").innerHTML = TOPO("noções de aplicação em bolsa",
-  `A Fórmula Mágica`,
+  `A Fórmula Mágica, de Joel Greenblatt`,
   `Duas contas, um ranking, uma carteira rebalanceada. Comprar empresa boa a preço baixo sem opinar sobre nenhuma delas — e é das estratégias quantitativas mais consistentes que existem.`) + `
 <h2><span style="color:var(--graf);font-weight:400">8.1</span> As duas contas</h2>
   <p><b>ROIC — retorno sobre o capital investido.</b> Lucro operacional dividido
@@ -10958,7 +10960,7 @@ function pagCurso8(){ $("#app").innerHTML = TOPO("noções de aplicação em bol
       quantos nomes sobram antes de adotar todos de uma vez.</b></p>
   </div>` + FIMP(); }
 function pagCurso9(){ $("#app").innerHTML = TOPO("noções de aplicação em bolsa",
-  `SEPA e VCP`,
+  `SEPA e VCP, de Mark Minervini`,
   `O oposto da Fórmula Mágica: poucas posições, prazo curto, stop apertado e uma exigência antes de tudo — o papel já tem que estar subindo. Método de ponto de entrada específico, com critérios numéricos.`) + `
 <div class="caso">
     <p>O método não é sobre acertar. É sobre perder: <b>errar pequeno, muitas
@@ -15711,7 +15713,7 @@ const HUBS = {
       ["Como o dinheiro cresce","","#/crescer"],
       ["Corrigir não é crescer","","#/corrigir"]] },
 
-  "edu-carteira": { olho:"educacional · bolsa de valores", tit:"Noções de aplicação<br>em bolsa de valores", sub:"quinze aulas, do preço à carteira", itens:[["Por que os preços se movem","","#/curso-precos"], ["Análise fundamentalista","","#/curso-fundamentos"], ["Análise gráfica","","#/curso-grafica"], ["Risco por operação: o três para um","","#/curso-risco"], ["Montar a operação","","#/curso-operacao"], ["Operar no dia","","#/curso-dia"], ["Opções: o alicerce","","#/curso-opcoes"], ["A Fórmula Mágica","","#/curso-formula"], ["SEPA e VCP","","#/curso-sepa"], ["Proteger a carteira com opções","","#/curso-protecao"], ["O mercado a termo","","#/curso-termo"], ["Alavancagem","","#/curso-alavancagem"], ["Estratégias de portfólio","","#/curso-portfolio"], ["O que cada método faz bem, e onde falha","","#/curso-metodos"], ["As carteiras","","#/curso-carteiras"]] },
+  "edu-carteira": { olho:"educacional · bolsa de valores", tit:"Noções de aplicação<br>em bolsa de valores", sub:"quinze aulas, do preço à carteira", itens:[["Por que os preços se movem","","#/curso-precos"], ["Análise fundamentalista","","#/curso-fundamentos"], ["Análise gráfica","","#/curso-grafica"], ["Risco por operação: o três para um","","#/curso-risco"], ["Montar a operação","","#/curso-operacao"], ["Operar no dia","","#/curso-dia"], ["Opções: o alicerce","","#/curso-opcoes"], ["A Fórmula Mágica, de Joel Greenblatt","","#/curso-formula"], ["SEPA e VCP, de Mark Minervini","","#/curso-sepa"], ["Proteger a carteira com opções","","#/curso-protecao"], ["O mercado a termo","","#/curso-termo"], ["Alavancagem","","#/curso-alavancagem"], ["Estratégias de portfólio","","#/curso-portfolio"], ["O que cada método faz bem, e onde falha","","#/curso-metodos"], ["As carteiras","","#/curso-carteiras"]] },
 
   "edu-patrimonio": { olho:"artigos · já há patrimônio", tit:"Quando já há<br>patrimônio",
     itens:[["Quanto custa o dinheiro","","#/credito"],
