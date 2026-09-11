@@ -316,7 +316,10 @@ header .dir a:hover{color:var(--ouro2)}
 .subAb{font-size:12.5px;color:var(--graf);margin:0 0 14px;line-height:1.55}
 .subAb b{color:var(--t2);font-weight:500}
 
-.classes{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+/* Com cinco classes, duas colunas fixas deixavam a ultima sozinha. auto-fit
+   poe tres quando cabe e duas quando nao cabe. */
+.classes{display:grid;grid-template-columns:repeat(auto-fit,minmax(216px,1fr));
+  gap:12px}
 @media(max-width:620px){.classes{grid-template-columns:1fr}}
 .cls{background:var(--p2);border:1px solid var(--linha);border-radius:5px;padding:17px 18px;
   cursor:pointer;transition:border-color .14s,background .14s;position:relative}
@@ -979,8 +982,12 @@ button.lig:hover{color:var(--tinta);border-bottom-color:var(--tinta)}
 
 .pos{font-family:'IBM Plex Mono';font-size:12px;color:var(--graf);letter-spacing:.02em}
 
-.colunas{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:16px}
-@media(max-width:1000px){.colunas{grid-template-columns:repeat(2,1fr)}}
+/* Eram quatro classes e a grade era fixa em 4. Com a quinta, a ultima caia
+   sozinha numa segunda linha ocupando um quarto da largura. auto-fit acomoda
+   5, 4, 3 ou 2 conforme couber, sem deixar orfa. */
+.colunas{display:grid;grid-template-columns:repeat(auto-fit,minmax(178px,1fr));
+  gap:14px;margin-top:16px}
+/* o auto-fit acima ja resolve as larguras intermediarias */
 @media(max-width:620px){.colunas{grid-template-columns:1fr}}
 
 .coluna{background:var(--p2);border:1px solid var(--linha);border-radius:4px;
@@ -2231,6 +2238,10 @@ const CLASSE = {
     regra:"Compra e venda ao mesmo tempo. A soma vai até 200%, a diferença até 100%." },
   vendida:           { nome:"Vendida",
     regra:"Só venda a descoberto, até 100% do patrimônio." },
+  /* Mesma regra da Comprada, universo diferente: só BDR. O ranking separa
+     sozinho, porque agrupar() percorre as chaves de CLASSE. */
+  bdr:               { nome:"Carteira BDR",
+    regra:"Só compra, exatamente 10 BDRs somando 100%. Não deixa caixa." },
 };
 
 const ehVendida = c => c && (c.classe === "vendida"
@@ -2544,6 +2555,20 @@ function pendenciasClasse(k, pesos){
     if(n!==10) f.push(`${n} ${n===1?"papel":"papéis"} — Comprada exige exatamente 10`);
     if(Math.round(bruta)!==100)
       f.push(`soma ${Math.round(bruta)}% — Comprada não deixa caixa: tem que somar 100%`);
+  }
+  if(k==="bdr"){
+    if(temV) f.push("Carteira BDR não aceita venda");
+    if(n!==10)
+      f.push(`${n} ${n===1?"BDR":"BDRs"} — Carteira BDR exige exatamente 10`);
+    if(Math.round(bruta)!==100)
+      f.push(`soma ${Math.round(bruta)}% — Carteira BDR não deixa caixa: tem que somar 100%`);
+    /* So da para cobrar o tipo depois que o universo chegou; sem o mapa, o
+       resto da validacao continua valendo. */
+    if(TIPOS_UNIV){
+      const fora = Object.keys(pesos).filter(a => TIPOS_UNIV[a] && TIPOS_UNIV[a] !== "bdr");
+      if(fora.length)
+        f.push(`${fora.join(", ")} ${fora.length>1?"não são BDR":"não é BDR"}`);
+    }
   }
   if(k==="sessenta_quarenta"){
     if(temV) f.push("60/40 não aceita venda");
@@ -3692,6 +3717,7 @@ async function telaPublicar(){
       sessenta_quarenta: Array.from({length:4},  ()=>["",25,"C"]),
       long_short:        [["",50,"C"],["",50,"C"],["",50,"V"]],
       vendida:           [["",50,"V"],["",50,"V"]],
+      bdr:               Array.from({length:10}, ()=>["",10,"C"]),
     }[CLASSE_ATUAL];
     $("#campoRF").style.display = CLASSE_ATUAL === "sessenta_quarenta" ? "block" : "none";
     const P = t => `<p style="font-size:12.5px;color:var(--t2);margin:9px 0 0">${t}</p>`;
@@ -3711,6 +3737,11 @@ async function telaPublicar(){
           + "vale na declaração: depois disso o peso anda com o mercado e a soma vendida "
           + "cresce nos dias em que a carteira perde."),
     };
+    /* O mapa de tipos so e buscado quando a Carteira BDR e escolhida — sao
+       mais de mil linhas de universo e nao vale pedir em toda publicacao. */
+    if(CLASSE_ATUAL === "bdr" && !TIPOS_UNIV){
+      tiposDoUniverso().then(m => { TIPOS_UNIV = m; resumoGrade(); });
+    }
     if(vazia && molde) ligarGrade(molde, CLASSE_ATUAL);
     else aplicarLados();
     resumoGrade();
@@ -5025,6 +5056,7 @@ function telaNovaSenha(){
    em mil. Buscar de uma vez trazia a lista truncada: quem ficasse de fora caía
    no `|| "acao"` e aparecia na tela de ações. Aqui vem em páginas, e só o que
    não é ação — o resto é ação por omissão.                                   */
+let TIPOS_UNIV = null;   /* mapa ativo -> tipo, usado para validar a Carteira BDR */
 async function tiposDoUniverso(){
   const mapa = {}; const passo = 900;
   for(let de = 0; ; de += passo){
@@ -11861,7 +11893,7 @@ function pagCurso14(){ $("#app").innerHTML = TOPO("noções de aplicação em bo
     abandonado rende zero.</p>` + FIMP(); }
 function pagCurso15(){ $("#app").innerHTML = TOPO("noções de aplicação em bolsa",
   `As carteiras`,
-  `Quatro classes, quatro objetivos. Cada uma tem regra própria de composição, e é a regra que define o que aquela carteira está medindo.`) + `
+  `Cinco classes, cinco objetivos. Cada uma tem regra própria de composição, e é a regra que define o que aquela carteira está medindo.`) + `
 <p>Não existe classe certa nem errada. Existe a classe que corresponde ao que
     você quer provar — e, uma vez escolhida, ela não muda: <b>classe e disciplina
     de rebalanceamento são definidas na criação e ficam fixas</b>.</p>
@@ -11942,7 +11974,20 @@ function pagCurso15(){ $("#app").innerHTML = TOPO("noções de aplicação em bo
     papel ir a zero, e a perda não tem teto, porque não há limite para o quanto
     um papel pode subir.</p>
 
-  <h2><span style="color:var(--graf);font-weight:400">15.5</span> O rebalanceamento</h2>
+  <h2><span style="color:var(--graf);font-weight:400">15.5</span> Carteira BDR</h2>
+  <p><b>Só compra, exatamente 10 BDRs somando 100%. Não deixa caixa.</b></p>
+  <p>É a Comprada com outro universo. As regras são idênticas — dez papéis, peso
+    igual, sem caixa e sem venda —, mas os papéis são BDRs: recibos negociados
+    aqui que representam ações de empresas de fora.</p>
+  <p>O que muda é o que está sendo medido. Na Comprada, a seleção é feita dentro
+    da bolsa brasileira; aqui, dentro do mercado americano. E há um detalhe que
+    pesa: <b>o BDR é cotado em real, então o resultado carrega o câmbio junto</b>.
+    Um acerto na escolha pode ser anulado pelo dólar, e um erro pode ser salvo
+    por ele.</p>
+  <p>Por isso as duas não competem no mesmo bloco do ranking, mesmo tendo a mesma
+    regra.</p>
+
+  <h2><span style="color:var(--graf);font-weight:400">15.6</span> O rebalanceamento</h2>
   <p>Os pesos que você declarou não ficam parados. O papel que sobe passa a
     ocupar uma fatia maior da carteira, e o que cai passa a ocupar menos — sem
     que você tenha feito nada.</p>
@@ -11969,7 +12014,7 @@ function pagCurso15(){ $("#app").innerHTML = TOPO("noções de aplicação em bo
     saiu do lugar. E as disciplinas por prazo são as mais previsíveis, mas
     rebalanceiam mesmo quando não havia nada para corrigir.</p>
 
-  <h2><span style="color:var(--graf);font-weight:400">15.6</span> Por que as regras são fixas</h2>
+  <h2><span style="color:var(--graf);font-weight:400">15.7</span> Por que as regras são fixas</h2>
   <p>Classe e disciplina não podem ser alteradas depois que a carteira existe. A
     razão é de comparação: <b>uma carteira que muda de regra no meio do caminho
     deixa de significar alguma coisa</b>.</p>
