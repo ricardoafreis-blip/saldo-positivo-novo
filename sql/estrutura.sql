@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict U5E7jE7fsJ4geF0VXzvQaOruX0TRBIdNMrDv0bfQFH5Gvjla4Nja63Lz44LUEVW
+\restrict kQ6UQGwIkwJQDpiqpGaDdxs1ovOmWPfjFYoncJb9pjHl0dNvjb7a1YRGPeDOUHn
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.11 (Ubuntu 17.11-1.pgdg24.04+2)
@@ -3278,6 +3278,7 @@ CREATE FUNCTION public.valida_classe(cid bigint, quando date) RETURNS void
     AS $$
 declare
   cl text; n int; bruta real; liq real; pos int; neg int;
+  nao_bdr text;
 begin
   select classe into cl from carteira where id = cid;
   if cl is null then return; end if;
@@ -3293,6 +3294,24 @@ begin
     if n <> 10 then raise exception 'Comprada exige exatamente 10 papéis (está com %).', n; end if;
     if abs(bruta - 100) > 0.51 then
       raise exception 'Comprada não deixa caixa: a soma tem que dar 100 por cento (está em %).', round(bruta); end if;
+
+  elsif cl = 'bdr' then
+    -- Mesmas três regras da Comprada, mais a que define a classe: todo
+    -- papel tem que ser BDR. O tipo mora no universo, não na posição.
+    if neg > 0 then raise exception 'esta carteira só compra: tire os pesos negativos.'; end if;
+    if n <> 10 then raise exception 'Carteira BDR exige exatamente 10 papéis (está com %).', n; end if;
+    if abs(bruta - 100) > 0.51 then
+      raise exception 'Carteira BDR não deixa caixa: a soma tem que dar 100 por cento (está em %).', round(bruta); end if;
+    -- left join de propósito: papel que nem está no universo também não
+    -- serve, e o coalesce faz ele cair aqui em vez de sumir no join.
+    select string_agg(p.ativo, ', ' order by p.ativo) into nao_bdr
+      from posicao p
+      left join universo u on u.ativo = p.ativo
+     where p.carteira_id = cid and p.valida_de = quando
+       and coalesce(u.tipo, '') <> 'bdr';
+    if nao_bdr is not null then
+      raise exception 'Carteira BDR só aceita BDR: % não %.',
+        nao_bdr, case when position(',' in nao_bdr) > 0 then 'são' else 'é' end; end if;
 
   elsif cl = 'sessenta_quarenta' then
     if neg > 0 then raise exception 'esta carteira só compra: tire os pesos negativos.'; end if;
@@ -3478,7 +3497,7 @@ CREATE TABLE public.carteira (
     banda_pct real DEFAULT 5 NOT NULL,
     encerrada_em date,
     CONSTRAINT carteira_banda_valida CHECK (((banda_pct > (0)::double precision) AND (banda_pct <= (100)::double precision))),
-    CONSTRAINT carteira_classe_valida CHECK (((classe IS NULL) OR (classe = ANY (ARRAY['all_in'::text, 'diversificada'::text, 'sessenta_quarenta'::text, 'long_short'::text, 'vendida'::text])))),
+    CONSTRAINT carteira_classe_valida CHECK (((classe IS NULL) OR (classe = ANY (ARRAY['diversificada'::text, 'sessenta_quarenta'::text, 'long_short'::text, 'vendida'::text, 'bdr'::text])))),
     CONSTRAINT carteira_rebalancear_valido CHECK ((rebalancear = ANY (ARRAY['nunca'::text, 'semanal'::text, 'mensal'::text, 'anual'::text, 'banda'::text])))
 );
 
@@ -7148,5 +7167,5 @@ CREATE POLICY voto_por ON public.voto FOR INSERT TO authenticated WITH CHECK (((
 -- PostgreSQL database dump complete
 --
 
-\unrestrict U5E7jE7fsJ4geF0VXzvQaOruX0TRBIdNMrDv0bfQFH5Gvjla4Nja63Lz44LUEVW
+\unrestrict kQ6UQGwIkwJQDpiqpGaDdxs1ovOmWPfjFYoncJb9pjHl0dNvjb7a1YRGPeDOUHn
 
