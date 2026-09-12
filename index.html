@@ -982,17 +982,12 @@ button.lig:hover{color:var(--tinta);border-bottom-color:var(--tinta)}
 
 .pos{font-family:'IBM Plex Mono';font-size:12px;color:var(--graf);letter-spacing:.02em}
 
-/* Cinco classes dentro do .w de 1060px davam 188px por cartao e o nome da
-   carteira nao cabia. Em tela larga a grade sai do contentor de leitura e
-   vai ate 1320px — a mesma largura que o cabecalho ja usa —, o que devolve
-   uns 250px por cartao. Abaixo disso, tres colunas em duas linhas: e melhor
-   quebrar do que espremer. */
-.colunas{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:16px}
-@media(min-width:1120px){
-  .colunas{grid-template-columns:repeat(5,1fr);
-    width:min(1320px, calc(100vw - 52px));
-    margin-left:50%;transform:translateX(-50%)}
-}
+/* Cinco colunas no espaco de quatro: o cartao encolheu e o nome da carteira
+   nao cabia mais numa linha ao lado dos pontos. A saida nao foi alargar a
+   grade — esta tela tem menu lateral e sair do contentor empurra tudo para
+   fora — e sim deixar o nome ocupar duas linhas quando precisar. */
+.colunas{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-top:16px}
+@media(max-width:1000px){.colunas{grid-template-columns:repeat(3,1fr)}}
 /* o auto-fit acima ja resolve as larguras intermediarias */
 @media(max-width:620px){.colunas{grid-template-columns:1fr}}
 
@@ -1424,7 +1419,7 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
   .portas .q{font-size:14.5px}
 }
 
-.linhaC{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid var(--linha);
+.linhaC{display:flex;align-items:flex-start;gap:9px;padding:9px 0;border-bottom:1px solid var(--linha);
   transition:background .14s}
 
 /* ── hierarquia por posição ───────────────────────────────────────
@@ -1447,7 +1442,8 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
 .linhaC.p2 .n{background:#9FB0C4}
 .linhaC.p3 .n{background:#B08155}
 .linhaC .quem{flex:1;min-width:0}
-.linhaC .nome{font-size:13px;color:var(--tinta);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.linhaC .nome{font-size:13px;color:var(--tinta);line-height:1.25;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 
 .linhaC .autor{font-size:10.5px;color:var(--graf);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
