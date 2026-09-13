@@ -1659,13 +1659,23 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
 .hubEsc .d{font-size:11.5px;color:var(--graf);display:block;margin-top:1px}
 .hubEsc .seta{margin-left:auto;color:var(--graf);flex:none}
 .hubEsc:hover{border-color:var(--linha2)}
-.voltarCx{display:none;margin:0 0 12px}
+/* Era só o voltar, encostado à esquerda. Agora a caixa tem duas pontas: o
+   voltar sobe um nível, o próximo anda na sequência do Aprender. */
+.voltarCx{display:none;margin:0 0 12px;align-items:center;justify-content:space-between;gap:10px}
+.voltarCx .vazio{flex:1}
+.proxBt{display:inline-flex;align-items:center;gap:7px;max-width:62%;
+  border:1px solid var(--linha2);border-radius:99px;padding:7px 11px 7px 14px;
+  font-size:12.5px;color:var(--t2);background:var(--p2);cursor:pointer;
+  font-family:inherit;text-decoration:none}
+.proxBt:hover{border-color:var(--ouro2);color:var(--ouro2)}
+.proxBt b{font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.proxBt i{font-style:normal;font-size:15px;line-height:1;flex:none}
 .voltarBt{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--linha2);
   border-radius:99px;padding:7px 14px 7px 11px;font-size:12.5px;color:var(--t2);
   background:var(--p2);cursor:pointer;font-family:inherit}
 .voltarBt:hover{border-color:var(--ouro2);color:var(--ouro2)}
 .voltarBt i{font-style:normal;font-size:15px;line-height:1}
-@media(max-width:820px){ .voltarCx{display:block} }
+@media(max-width:820px){ .voltarCx{display:flex} }
 .hubPlacar{border:1px solid var(--linha2);border-radius:13px;background:var(--p2);
   padding:13px;text-align:center;margin:0 0 14px;max-width:100%}
 .hubPlacar .n{display:flex;align-items:baseline;justify-content:center;gap:11px}
@@ -4238,7 +4248,7 @@ async function telaCarteira(id){
 
   const bs = $("#btSino");
   if(bs) bs.onclick = async()=>{
-    if(!podeSeguir){ location.hash = "#/assinar"; return rotear(); }
+    if(!podeSeguir){ location.hash = "#/entrar"; return rotear(); }
     bs.disabled = true;
     const { error } = await sb.rpc("seguir", { cid:Number(id), valor:!sigo });
     if(error){ bs.disabled = false;
@@ -4282,18 +4292,6 @@ async function telaIndicar(){
       <td class="d mono" style="font-size:11px;color:var(--graf)">${(f.criado_em||"").slice(0,10)}</td>
       <td class="d">${f.assinante?'<span class="tag al">assinante</span>':""}</td></tr>`).join("")}
     </tbody></table>`}
-  </div>`;
-}
-
-function telaAssinar(){
-  app().innerHTML = `
-  <div style="max-width:460px;margin:46px auto;text-align:center">
-    <h1 style="font-size:29px;margin-bottom:9px">Está tudo aberto</h1>
-    <p style="color:var(--t2);margin-bottom:20px">
-      Não há assinatura por enquanto. Todas as carteiras — papéis, pesos e
-      anotações — aparecem para quem tem conta.</p>
-    ${eu ? '<a href="#/" class="bt cheio">Ver o ranking</a>'
-         : '<a href="#/entrar?novo=1" class="bt cheio">Criar conta grátis</a>'}
   </div>`;
 }
 
@@ -4640,6 +4638,14 @@ async function telaConta(soCarteiras){
   <div class="card" id="meusCerts"><p style="margin:0;color:var(--t2);font-size:13px">
     apurando…</p></div>
 
+  <h2 style="font-size:19px;margin:32px 0 12px">Sair</h2>
+  <div class="card" style="max-width:560px">
+    <p style="font-size:12.5px;color:var(--t2);margin:0 0 12px">
+      Encerra a sessão neste aparelho. Sua conta e suas carteiras continuam
+      como estão — é só entrar de novo quando quiser.</p>
+    <button class="bt" id="btSairConta">Sair desta conta</button>
+  </div>
+
   <h2 style="font-size:19px;margin:32px 0 12px">Encerrar conta</h2>
   <div class="card" style="max-width:560px;border-color:rgba(242,104,95,.3)">
     <p style="font-size:12.5px;color:var(--t2);margin:0 0 12px">
@@ -4738,6 +4744,8 @@ async function telaConta(soCarteiras){
     $("#erro").innerHTML = error ? aviso(error.message,true) : aviso("Senha trocada.");
     $("#s0").value=$("#s1").value=$("#s2").value="";
   };
+  $("#btSairConta").onclick = () => { location.hash = "#/sair"; rotear(); };
+
   $("#btEncerrar").onclick = async () => {
     if(!confirm("Encerrar sua conta?\n\nEla sai do site imediatamente e suas "
       + "carteiras deixam de aparecer. Você não vai mais conseguir entrar.\n\n"
@@ -15843,7 +15851,7 @@ const HUBS = {
       ["Trocar a senha","","#/senha"],
       ["Meu certificado","o que você concluiu","#/certificado"],
       ["Indicar o site","seu link de convite","#/indicar"],
-      ["Assinar","","#/assinar"]] },
+      ["Sair","encerrar a sessão neste aparelho","#/sair"]] },
 
   "menu": { olho:"menu", tit:"Tudo, de<br>uma vez",
     sub:"Para quem já sabe onde quer chegar.",
@@ -15956,7 +15964,7 @@ const PAI = {
   "ind-quem":"indicacoes", "ind-produtos":"indicacoes", "ind-proteger":"indicacoes",
   "servicos":"indicacoes", "sucessao":"ind-proteger", "clube":"ind-produtos",
   "minhas":"eu", "conta":"eu", "senha":"eu", "certificado":"eu",
-  "indicar":"eu", "assinar":"eu",
+  "indicar":"eu",
   "tutorial":"educacional",
   "fale-conosco":"inicio",
   "aprender":"edu-comecar", "dividas":"edu-comecar", "crescer":"edu-comecar",
@@ -15984,6 +15992,62 @@ const ROTULO = {
   "ranking":"Ranking", "placar":"Placar", "times":"Ranking de equipes",
   "minhas":"Minhas carteiras", "duelo":"Duelo", "admin":"Admin",
 };
+/* A sequência do "próximo" não é inventada: é a ordem dos irmãos da página.
+   Cada tela pertence a alguma lista — os itens de um hub, os tópicos de um
+   grupo do Aprender, os links de um grupo do menu. O próximo é o item
+   seguinte dessa lista. Quando a página é a última, ou não está em lista
+   nenhuma, o botão simplesmente não aparece.                              */
+let LISTAS = null;
+function listasDoSite(){
+  if(LISTAS) return LISTAS;
+  LISTAS = [];
+  /* guarda o href inteiro, com a query: dois itens do mesmo hub podem
+     apontar para a mesma tela com filtros diferentes — "Em alta" e "Em
+     baixa" sao ambos #/screening. Cortar a query fundia os dois. */
+  const limpa = h => String(h||"").trim();
+  try{
+    /* hubs: itens = [titulo, subtitulo, href] */
+    Object.values(HUBS).forEach(h => {
+      const l = (h.itens||[]).map(it => [limpa(it[2]), it[0]]).filter(x => x[0]);
+      if(l.length > 1) LISTAS.push(l);
+    });
+  }catch(e){}
+  try{
+    /* índice do Aprender: itens = [href, titulo, subtitulo] */
+    TOPICOS_AP.forEach(([, itens]) => {
+      const l = itens.map(it => [limpa(it[0]), it[1]]).filter(x => x[0]);
+      if(l.length > 1) LISTAS.push(l);
+    });
+  }catch(e){}
+  try{
+    /* grupos do menu do cabeçalho: pega o que não estiver nos dois acima */
+    document.querySelectorAll("header nav .painel").forEach(pn => {
+      const l = [...pn.querySelectorAll("a")]
+        .map(a => [limpa(a.getAttribute("href")), a.textContent.trim()])
+        .filter(x => x[0] && x[0].startsWith("#/"));
+      if(l.length > 1) LISTAS.push(l);
+    });
+  }catch(e){}
+  return LISTAS;
+}
+function proximoDe(rota){
+  /* primeiro pelo endereço exato, com query e tudo */
+  for(const l of listasDoSite()){
+    const i = l.findIndex(([h]) => h === rota);
+    if(i >= 0 && i < l.length - 1) return l[i+1];
+  }
+  /* depois só pelo caminho, e apenas onde ele aparece uma vez: se a lista
+     tem a mesma tela em dois filtros, não dá para saber qual é a atual. */
+  const so = rota.split("?")[0];
+  for(const l of listasDoSite()){
+    const iguais = l.filter(([h]) => h.split("?")[0] === so);
+    if(iguais.length !== 1) continue;
+    const i = l.findIndex(([h]) => h.split("?")[0] === so);
+    if(i >= 0 && i < l.length - 1) return l[i+1];
+  }
+  return null;
+}
+
 function pintarVoltar(){
   const cx = document.getElementById("voltarCx");
   if(!cx) return;
@@ -15995,15 +16059,28 @@ function pintarVoltar(){
   const pai = nome === ""
     ? (bruto.includes("?") ? "individual" : null)
     : (Object.hasOwn(PAI, nome) ? PAI[nome] : null);
+  /* esquerda: subir um nível */
+  let esq = "", acao = null;
   if(pai){
-    cx.innerHTML = `<button type="button" class="voltarBt"><i>&lsaquo;</i>${
+    esq = `<button type="button" class="voltarBt"><i>&lsaquo;</i>${
       ROTULO[pai] || "Voltar"}</button>`;
-    cx.firstChild.onclick = () => { location.hash = "#/" + pai; };
+    acao = () => { location.hash = "#/" + pai; };
   } else if(history.length > 1 && nome && nome !== "inicio"){
-    cx.innerHTML = `<button type="button" class="voltarBt"><i>&lsaquo;</i>Voltar</button>`;
-    cx.firstChild.onclick = () => history.back();
-  } else {
-    cx.innerHTML = "";
+    esq = `<button type="button" class="voltarBt"><i>&lsaquo;</i>Voltar</button>`;
+    acao = () => history.back();
+  }
+
+  /* direita: andar na sequência do Aprender */
+  const aqui = bruto.split("?")[0];
+  const prox = proximoDe(bruto);
+  const dir = prox
+    ? `<a class="proxBt" href="${prox[0]}"><b>${esc(prox[1])}</b><i>&rsaquo;</i></a>`
+    : "";
+
+  cx.innerHTML = esq || dir ? (esq || '<span class="vazio"></span>') + dir : "";
+  if(acao && esq){
+    const b = cx.querySelector(".voltarBt");
+    if(b) b.onclick = acao;
   }
 }
 
@@ -16214,6 +16291,17 @@ function marcarBarra(){
     a.classList.toggle("aqui", a.dataset.aba === aba));
 }
 
+/* Sair só existia no menu suspenso do cabeçalho, que no celular nem aparece.
+   Virou rota para poder entrar no hub da conta como qualquer outro item. */
+async function pagSair(){
+  $("#app").innerHTML = `<div class="carreg">saindo…</div>`;
+  try{ await sb.auth.signOut(); }catch(e){}
+  eu = null;
+  window.__jaEntrou = false;
+  location.hash = "#/";
+  rotear();
+}
+
 function rotear(){
   marcarBarra();
   clearInterval(window.__timerRank);
@@ -16292,6 +16380,7 @@ function rotear(){
   if(h==="#/publicar")        return telaPublicar();
   if(h==="#/duelo")           return telaDuelo();
   if(h==="#/abertura")        return telaAbertura();
+  if(h==="#/sair")            return pagSair();
   if(h==="#/aprender")        return telaIndiceAprender();
   if(h==="#/curso-precos") return pagCurso1();
   if(h==="#/curso-fundamentos") return pagCurso2();
@@ -16343,7 +16432,6 @@ function rotear(){
   if(h==="#/tiro-curto" || h==="#/apostar") return telaTiroCurto();
   if(h==="#/placar")          return telaPlacar();
   if(h==="#/indicar")         return telaIndicar();
-  if(h==="#/assinar")         return telaAssinar();
   if(h==="#/admin")           return telaAdmin();
   if(h==="#/servicos")        return telaServicos();
   if(h==="#/sucessao")        return telaSucessao();
