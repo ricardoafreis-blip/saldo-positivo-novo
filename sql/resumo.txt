@@ -21,7 +21,7 @@ faixa_volume | 5
 fechamento | 3896
 fila_email | 13
 flow_state | 0
-identities | 8
+identities | 9
 instances | 0
 intraday_pessoa | 6
 intraday_sequencia | 1
@@ -35,7 +35,7 @@ messages_2026_09_12 | 0
 messages_2026_09_13 | 0
 messages_2026_09_14 | 0
 messages_2026_09_15 | 0
-mfa_amr_claims | 11
+mfa_amr_claims | 12
 mfa_challenges | 0
 mfa_factors | 0
 migrations | 68
@@ -51,13 +51,13 @@ oscilacao | 230966
 oscilacao_foto | 499
 papel_fila | 238
 parametro | 1
-perfil | 7
+perfil | 8
 peso_atual | 600
 peso_atual_backup | 46
 posicao | 840
 rebalanceamento | 580
 referencia | 11
-refresh_tokens | 51
+refresh_tokens | 52
 regra | 80
 resumo | 84
 retorno_dia | 3248
@@ -73,7 +73,7 @@ schema_migrations | 77
 secrets | 0
 seguidor | 1
 seguindo | 0
-sessions | 11
+sessions | 12
 sso_domains | 0
 sso_providers | 0
 subscription | 0
@@ -86,7 +86,7 @@ time_inscricao | 1
 time_membro | 5
 time_msg | 3
 universo | 504
-users | 8
+users | 9
 vector_indexes | 0
 voto | 34
 webauthn_challenges | 0
