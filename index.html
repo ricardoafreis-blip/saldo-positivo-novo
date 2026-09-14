@@ -16001,16 +16001,29 @@ let LISTAS = null;
 function listasDoSite(){
   if(LISTAS) return LISTAS;
   LISTAS = [];
-  /* guarda o href inteiro, com a query: dois itens do mesmo hub podem
-     apontar para a mesma tela com filtros diferentes — "Em alta" e "Em
-     baixa" sao ambos #/screening. Cortar a query fundia os dois. */
   const limpa = h => String(h||"").trim();
   try{
-    /* hubs: itens = [titulo, subtitulo, href] */
-    Object.values(HUBS).forEach(h => {
-      const l = (h.itens||[]).map(it => [limpa(it[2]), it[0]]).filter(x => x[0]);
-      if(l.length > 1) LISTAS.push(l);
-    });
+    /* A navegação do cabeçalho tem duas formas: os paineis que abrem e as
+       colunas do bloco de competições. As duas valem, e é delas que sai a
+       ordem natural — Screening seguido de Screening BDR, por exemplo. */
+    document.querySelectorAll("header nav .painel, header nav .trio > div")
+      .forEach(pn => {
+        /* Um painel traz vários grupos no mesmo bloco, separados por um
+           título. Cada título começa uma lista nova — assim o último item
+           de um grupo não empurra para o primeiro do grupo seguinte, que
+           costuma ser outro assunto. */
+        let atual = [];
+        const fecha = () => { if(atual.length > 1) LISTAS.push(atual); atual = []; };
+        [...pn.children].forEach(el => {
+          if(el.classList.contains("sub") || el.classList.contains("rams")
+             || el.classList.contains("risco")){ fecha(); return; }
+          if(el.tagName === "A"){
+            const h = limpa(el.getAttribute("href"));
+            if(h && h.startsWith("#/")) atual.push([h, el.textContent.trim()]);
+          }
+        });
+        fecha();
+      });
   }catch(e){}
   try{
     /* índice do Aprender: itens = [href, titulo, subtitulo] */
@@ -16020,11 +16033,9 @@ function listasDoSite(){
     });
   }catch(e){}
   try{
-    /* grupos do menu do cabeçalho: pega o que não estiver nos dois acima */
-    document.querySelectorAll("header nav .painel").forEach(pn => {
-      const l = [...pn.querySelectorAll("a")]
-        .map(a => [limpa(a.getAttribute("href")), a.textContent.trim()])
-        .filter(x => x[0] && x[0].startsWith("#/"));
+    /* hubs: itens = [titulo, subtitulo, href] */
+    Object.values(HUBS).forEach(h => {
+      const l = (h.itens||[]).map(it => [limpa(it[2]), it[0]]).filter(x => x[0]);
       if(l.length > 1) LISTAS.push(l);
     });
   }catch(e){}
@@ -16063,7 +16074,7 @@ function pintarVoltar(){
   let esq = "", acao = null;
   if(pai){
     esq = `<button type="button" class="voltarBt"><i>&lsaquo;</i>${
-      ROTULO[pai] || "Voltar"}</button>`;
+      "Voltar"}</button>`;
     acao = () => { location.hash = "#/" + pai; };
   } else if(history.length > 1 && nome && nome !== "inicio"){
     esq = `<button type="button" class="voltarBt"><i>&lsaquo;</i>Voltar</button>`;
@@ -16074,7 +16085,7 @@ function pintarVoltar(){
   const aqui = bruto.split("?")[0];
   const prox = proximoDe(bruto);
   const dir = prox
-    ? `<a class="proxBt" href="${prox[0]}"><b>${esc(prox[1])}</b><i>&rsaquo;</i></a>`
+    ? `<a class="proxBt" href="${prox[0]}"><b>Próximo</b><i>&rsaquo;</i></a>`
     : "";
 
   cx.innerHTML = esq || dir ? (esq || '<span class="vazio"></span>') + dir : "";
