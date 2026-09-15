@@ -1659,13 +1659,23 @@ text.eixo{font-family:'IBM Plex Mono',monospace;font-size:9.5px;
 .hubEsc .d{font-size:11.5px;color:var(--graf);display:block;margin-top:1px}
 .hubEsc .seta{margin-left:auto;color:var(--graf);flex:none}
 .hubEsc:hover{border-color:var(--linha2)}
-.voltarCx{display:none;margin:0 0 12px}
+/* Era só o voltar, encostado à esquerda. Agora a caixa tem duas pontas: o
+   voltar sobe um nível, o próximo anda na sequência do Aprender. */
+.voltarCx{display:none;margin:0 0 12px;align-items:center;justify-content:space-between;gap:10px}
+.voltarCx .vazio{flex:1}
+.proxBt{display:inline-flex;align-items:center;gap:7px;max-width:62%;
+  border:1px solid var(--linha2);border-radius:99px;padding:7px 11px 7px 14px;
+  font-size:12.5px;color:var(--t2);background:var(--p2);cursor:pointer;
+  font-family:inherit;text-decoration:none}
+.proxBt:hover{border-color:var(--ouro2);color:var(--ouro2)}
+.proxBt b{font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.proxBt i{font-style:normal;font-size:15px;line-height:1;flex:none}
 .voltarBt{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--linha2);
   border-radius:99px;padding:7px 14px 7px 11px;font-size:12.5px;color:var(--t2);
   background:var(--p2);cursor:pointer;font-family:inherit}
 .voltarBt:hover{border-color:var(--ouro2);color:var(--ouro2)}
 .voltarBt i{font-style:normal;font-size:15px;line-height:1}
-@media(max-width:820px){ .voltarCx{display:block} }
+@media(max-width:820px){ .voltarCx{display:flex} }
 .hubPlacar{border:1px solid var(--linha2);border-radius:13px;background:var(--p2);
   padding:13px;text-align:center;margin:0 0 14px;max-width:100%}
 .hubPlacar .n{display:flex;align-items:baseline;justify-content:center;gap:11px}
@@ -4238,7 +4248,7 @@ async function telaCarteira(id){
 
   const bs = $("#btSino");
   if(bs) bs.onclick = async()=>{
-    if(!podeSeguir){ location.hash = "#/assinar"; return rotear(); }
+    if(!podeSeguir){ location.hash = "#/entrar"; return rotear(); }
     bs.disabled = true;
     const { error } = await sb.rpc("seguir", { cid:Number(id), valor:!sigo });
     if(error){ bs.disabled = false;
@@ -4282,18 +4292,6 @@ async function telaIndicar(){
       <td class="d mono" style="font-size:11px;color:var(--graf)">${(f.criado_em||"").slice(0,10)}</td>
       <td class="d">${f.assinante?'<span class="tag al">assinante</span>':""}</td></tr>`).join("")}
     </tbody></table>`}
-  </div>`;
-}
-
-function telaAssinar(){
-  app().innerHTML = `
-  <div style="max-width:460px;margin:46px auto;text-align:center">
-    <h1 style="font-size:29px;margin-bottom:9px">Está tudo aberto</h1>
-    <p style="color:var(--t2);margin-bottom:20px">
-      Não há assinatura por enquanto. Todas as carteiras — papéis, pesos e
-      anotações — aparecem para quem tem conta.</p>
-    ${eu ? '<a href="#/" class="bt cheio">Ver o ranking</a>'
-         : '<a href="#/entrar?novo=1" class="bt cheio">Criar conta grátis</a>'}
   </div>`;
 }
 
@@ -4364,7 +4362,7 @@ async function telaAdmin(){
       ele não chega preço e o dia fica pendente.</p>
   </div>
 
-  <details class="card" style="margin-bottom:16px" open>
+  <details class="card" style="margin-bottom:16px">
     <summary style="cursor:pointer;font-size:15px;font-weight:600">
       Carteiras <span style="color:var(--graf);font-weight:400">· ${(cts||[]).length}</span></summary>
     <div style="margin:12px 0 10px">
@@ -4381,7 +4379,7 @@ async function telaAdmin(){
   <details class="card">
     <summary style="cursor:pointer;font-size:15px;font-weight:600">
       Contas <span style="color:var(--graf);font-weight:400">· ${(us||[]).length}</span></summary>
-    <table style="margin-top:12px"><thead><tr><th>Apelido</th><th>Contato</th><th class="d">Assinatura</th><th class="d">Ações</th></tr></thead><tbody>
+    <table style="margin-top:12px"><thead><tr><th>Apelido</th><th>Contato</th><th class="d">Ações</th></tr></thead><tbody>
     ${(us||[]).map(x=>`<tr style="${x.bloqueado?"opacity:.45":""}">
       <td><b>${esc(x.apelido)}</b>${x.admin?' <span class="tag al">admin</span>':""}
         ${x.bloqueado?' <span class="tag">bloqueada</span>':""}
@@ -4390,28 +4388,14 @@ async function telaAdmin(){
         ${dadosDe[x.id]?.nome?`<div style="color:var(--t2)">${esc(dadosDe[x.id].nome)}</div>`:""}
         ${dadosDe[x.id]?.tel?`<div style="color:var(--graf);font-family:'IBM Plex Mono',monospace;font-size:11px">${
           esc(dadosDe[x.id].tel)}</div>`:""}</td>
-      <td class="d">${(() => {
-        const a = assin[x.id];
-        const venc = a?.vence_em;
-        const dias = venc ? Math.round((Date.parse(venc+"T12:00:00Z") - Date.now())/86400000) : null;
-        return `<button class="bt ${x.assinante?"lacre":""}" data-uid="${x.id}"
-          data-ass="${x.assinante?1:0}" style="padding:4px 11px;font-size:12px">
-          ${x.assinante?"assinante":"grátis"}</button>
-        ${venc ? `<div style="font-size:10.5px;margin-top:3px;color:${
-            dias!=null && dias < 0 ? "var(--baixa)"
-          : dias!=null && dias <= 7 ? "var(--ouro2)" : "var(--graf)"}">
-          ${dias!=null && dias < 0 ? "venceu em " + dataBR(venc)
-            : "até " + dataBR(venc) + (dias<=7?` · ${dias} ${dias===1?"dia":"dias"}`:"")}</div>` : ""}
-        ${a?.pagamentos ? `<div style="font-size:10.5px;color:var(--graf)">
-          ${a.pagamentos} ${a.pagamentos===1?"pagamento":"pagamentos"} ·
-          R$ ${n2(a.total_pago,0)}</div>` : ""}`;
-      })()}</td>
+      
       <td class="d">
-        <button class="bt ac-mes" data-ape="${esc(x.apelido)}"
-          style="padding:4px 10px;font-size:12px;border-color:var(--lacre);color:var(--ouro2)"
-          title="lança 30 dias de assinatura">+30d</button>
+        
         <button class="bt ac-ape" data-uid="${x.id}" data-ape="${esc(x.apelido)}"
           style="padding:4px 10px;font-size:12px;margin-left:5px">apelido</button>
+        <button class="bt ac-edt" data-uid="${x.id}"
+          data-ident="${esc(x.identidade||"")}"
+          style="padding:4px 10px;font-size:12px;margin-left:5px">editar</button>
         ${x.id!==eu.id?`<button class="bt ac-blo" data-uid="${x.id}" data-blo="${x.bloqueado?1:0}"
           style="padding:4px 10px;font-size:12px;margin-left:5px">${x.bloqueado?"liberar":"bloquear"}</button>
         <button class="bt ac-del" data-uid="${x.id}" data-ape="${esc(x.apelido)}"
@@ -4424,7 +4408,10 @@ async function telaAdmin(){
   const chamar = async (fn, args, msg) => {
     const { error } = await sb.rpc(fn, args);
     if(error) return log("falhou: "+error.message);
-    log(msg); telaAdmin();
+    /* redesenha primeiro: telaAdmin() refaz a tela inteira e apagava a
+       mensagem antes de dar tempo de ler. */
+    await telaAdmin();
+    log(msg);
   };
 
   document.querySelectorAll("[data-uid]").forEach(b=>{
@@ -4439,16 +4426,16 @@ async function telaAdmin(){
     };
   });
 
-  document.querySelectorAll(".ac-mes").forEach(b=> b.onclick = async()=>{
-    const v = prompt(`Quanto ${b.dataset.ape} pagou? (em reais, 0 para cortesia)`, "19");
+
+  /* O único campo de cadastro que a tabela perfil guarda é a identidade —
+     nome e telefone ficaram nos metadados e nem vêm na consulta. O apelido
+     tem botão próprio porque é público e passa pela regra de apelido livre. */
+  document.querySelectorAll(".ac-edt").forEach(b=> b.onclick = ()=>{
+    const v = prompt("Identidade:", b.dataset.ident);
     if(v === null) return;
-    b.disabled = true;
-    const { data, error } = await sb.rpc("dar_assinatura",
-      { p_apelido: b.dataset.ape, p_dias: 30,
-        p_valor: Number(String(v).replace(",",".")) || 0,
-        p_meio: Number(v) ? "pix" : "cortesia" });
-    if(error){ b.disabled=false; return log("falhou: "+error.message); }
-    log(data); telaAdmin();
+    chamar("admin_editar_conta",
+      { quem: b.dataset.uid, nova_identidade: v.trim() },
+      "Cadastro atualizado.");
   });
 
   document.querySelectorAll(".ac-ape").forEach(b=> b.onclick = ()=>{
@@ -4483,12 +4470,15 @@ async function telaAdmin(){
     <td class="d">
       <button class="bt ac-ren" data-cid="${c.id}" data-nome="${esc(c.nome)}"
         style="padding:4px 10px;font-size:12px">renomear</button>
-      ${c.ativa?`<button class="bt ac-del" data-cid="${c.id}" data-nome="${esc(c.nome)}"
+      ${c.ativa?`<button class="bt ac-cdel" data-cid="${c.id}" data-nome="${esc(c.nome)}"
         style="padding:4px 10px;font-size:12px;margin-left:5px;border-color:var(--baixa);color:var(--baixa)">apagar</button>`:""}
     </td></tr>`;
 
   const ligarCart = () => {
-    document.querySelectorAll(".ac-del").forEach(b=> b.onclick = ()=>{
+    /* ac-cdel, e não ac-del: os dois botões usavam a mesma classe, e este
+       laço rodava depois — sobrescrevia o clique do excluir conta, que
+       passava a chamar apagar carteira com um id que não existe. */
+    document.querySelectorAll(".ac-cdel").forEach(b=> b.onclick = ()=>{
       if(!confirm(`Apagar "${b.dataset.nome}"? Ela sai do ranking. O histórico fica guardado.`)) return;
       chamar("admin_apagar_carteira", { cid:Number(b.dataset.cid) }, "Carteira apagada.");
     });
@@ -4640,6 +4630,14 @@ async function telaConta(soCarteiras){
   <div class="card" id="meusCerts"><p style="margin:0;color:var(--t2);font-size:13px">
     apurando…</p></div>
 
+  <h2 style="font-size:19px;margin:32px 0 12px">Sair</h2>
+  <div class="card" style="max-width:560px">
+    <p style="font-size:12.5px;color:var(--t2);margin:0 0 12px">
+      Encerra a sessão neste aparelho. Sua conta e suas carteiras continuam
+      como estão — é só entrar de novo quando quiser.</p>
+    <button class="bt" id="btSairConta">Sair desta conta</button>
+  </div>
+
   <h2 style="font-size:19px;margin:32px 0 12px">Encerrar conta</h2>
   <div class="card" style="max-width:560px;border-color:rgba(242,104,95,.3)">
     <p style="font-size:12.5px;color:var(--t2);margin:0 0 12px">
@@ -4738,6 +4736,11 @@ async function telaConta(soCarteiras){
     $("#erro").innerHTML = error ? aviso(error.message,true) : aviso("Senha trocada.");
     $("#s0").value=$("#s1").value=$("#s2").value="";
   };
+  /* só troca o endereço: chamar rotear() aqui fazia a saída rodar duas
+     vezes — uma pelo clique e outra pelo hashchange — e a segunda desfazia
+     a marca do portão que a primeira tinha zerado. */
+  $("#btSairConta").onclick = () => { location.hash = "#/sair"; };
+
   $("#btEncerrar").onclick = async () => {
     if(!confirm("Encerrar sua conta?\n\nEla sai do site imediatamente e suas "
       + "carteiras deixam de aparecer. Você não vai mais conseguir entrar.\n\n"
@@ -15843,7 +15846,7 @@ const HUBS = {
       ["Trocar a senha","","#/senha"],
       ["Meu certificado","o que você concluiu","#/certificado"],
       ["Indicar o site","seu link de convite","#/indicar"],
-      ["Assinar","","#/assinar"]] },
+      ["Sair","encerrar a sessão neste aparelho","#/sair"]] },
 
   "menu": { olho:"menu", tit:"Tudo, de<br>uma vez",
     sub:"Para quem já sabe onde quer chegar.",
@@ -15869,6 +15872,15 @@ function telaHub(id){
   const acoes = (h.acoes||[]).map(([t,r,forte]) =>
     `<a href="${r}" class="bt${forte?" lacre":""}" style="display:block;width:100%;
       padding:13px;text-align:center;margin-bottom:9px">${t}</a>`).join("");
+  /* Administração e Pedidos de contato só existiam no menu suspenso do
+     cabeçalho, que é de desktop. No celular o administrador recebia a
+     notificação de um pedido e não tinha por onde chegar na tela depois.
+     Entram no fim do hub Menu, e só para quem é admin. */
+  if(id === "menu" && eu && eu.admin){
+    h.itens = (h.itens||[]).filter(x => x[2] !== "#/admin" && x[2] !== "#/leads")
+      .concat([["Administração","o painel do site","#/admin"],
+               ["Pedidos de contato","quem pediu para falar com você","#/leads"]]);
+  }
   const itens = (h.itens||[]).map(([t,d,r]) =>
     `<a class="hubEsc" href="${r}"><span><b>${t}</b>${
       d ? `<span class="d">${d}</span>` : ""}</span>
@@ -15956,7 +15968,7 @@ const PAI = {
   "ind-quem":"indicacoes", "ind-produtos":"indicacoes", "ind-proteger":"indicacoes",
   "servicos":"indicacoes", "sucessao":"ind-proteger", "clube":"ind-produtos",
   "minhas":"eu", "conta":"eu", "senha":"eu", "certificado":"eu",
-  "indicar":"eu", "assinar":"eu",
+  "indicar":"eu",
   "tutorial":"educacional",
   "fale-conosco":"inicio",
   "aprender":"edu-comecar", "dividas":"edu-comecar", "crescer":"edu-comecar",
@@ -15984,6 +15996,73 @@ const ROTULO = {
   "ranking":"Ranking", "placar":"Placar", "times":"Ranking de equipes",
   "minhas":"Minhas carteiras", "duelo":"Duelo", "admin":"Admin",
 };
+/* A sequência do "próximo" não é inventada: é a ordem dos irmãos da página.
+   Cada tela pertence a alguma lista — os itens de um hub, os tópicos de um
+   grupo do Aprender, os links de um grupo do menu. O próximo é o item
+   seguinte dessa lista. Quando a página é a última, ou não está em lista
+   nenhuma, o botão simplesmente não aparece.                              */
+let LISTAS = null;
+function listasDoSite(){
+  if(LISTAS) return LISTAS;
+  LISTAS = [];
+  const limpa = h => String(h||"").trim();
+  try{
+    /* A navegação do cabeçalho tem duas formas: os paineis que abrem e as
+       colunas do bloco de competições. As duas valem, e é delas que sai a
+       ordem natural — Screening seguido de Screening BDR, por exemplo. */
+    document.querySelectorAll("header nav .painel, header nav .trio > div")
+      .forEach(pn => {
+        /* Um painel traz vários grupos no mesmo bloco, separados por um
+           título. Cada título começa uma lista nova — assim o último item
+           de um grupo não empurra para o primeiro do grupo seguinte, que
+           costuma ser outro assunto. */
+        let atual = [];
+        const fecha = () => { if(atual.length > 1) LISTAS.push(atual); atual = []; };
+        [...pn.children].forEach(el => {
+          if(el.classList.contains("sub") || el.classList.contains("rams")
+             || el.classList.contains("risco")){ fecha(); return; }
+          if(el.tagName === "A"){
+            const h = limpa(el.getAttribute("href"));
+            if(h && h.startsWith("#/")) atual.push([h, el.textContent.trim()]);
+          }
+        });
+        fecha();
+      });
+  }catch(e){}
+  try{
+    /* índice do Aprender: itens = [href, titulo, subtitulo] */
+    TOPICOS_AP.forEach(([, itens]) => {
+      const l = itens.map(it => [limpa(it[0]), it[1]]).filter(x => x[0]);
+      if(l.length > 1) LISTAS.push(l);
+    });
+  }catch(e){}
+  try{
+    /* hubs: itens = [titulo, subtitulo, href] */
+    Object.values(HUBS).forEach(h => {
+      const l = (h.itens||[]).map(it => [limpa(it[2]), it[0]]).filter(x => x[0]);
+      if(l.length > 1) LISTAS.push(l);
+    });
+  }catch(e){}
+  return LISTAS;
+}
+function proximoDe(rota){
+  /* primeiro pelo endereço exato, com query e tudo */
+  for(const l of listasDoSite()){
+    const i = l.findIndex(([h]) => h === rota);
+    if(i >= 0 && i < l.length - 1) return l[i+1];
+  }
+  /* depois só pelo caminho, e apenas onde ele aparece uma vez: se a lista
+     tem a mesma tela em dois filtros, não dá para saber qual é a atual. */
+  const so = rota.split("?")[0];
+  for(const l of listasDoSite()){
+    const iguais = l.filter(([h]) => h.split("?")[0] === so);
+    if(iguais.length !== 1) continue;
+    const i = l.findIndex(([h]) => h.split("?")[0] === so);
+    if(i >= 0 && i < l.length - 1) return l[i+1];
+  }
+  return null;
+}
+
 function pintarVoltar(){
   const cx = document.getElementById("voltarCx");
   if(!cx) return;
@@ -15995,15 +16074,28 @@ function pintarVoltar(){
   const pai = nome === ""
     ? (bruto.includes("?") ? "individual" : null)
     : (Object.hasOwn(PAI, nome) ? PAI[nome] : null);
+  /* esquerda: subir um nível */
+  let esq = "", acao = null;
   if(pai){
-    cx.innerHTML = `<button type="button" class="voltarBt"><i>&lsaquo;</i>${
-      ROTULO[pai] || "Voltar"}</button>`;
-    cx.firstChild.onclick = () => { location.hash = "#/" + pai; };
+    esq = `<button type="button" class="voltarBt"><i>&lsaquo;</i>${
+      "Voltar"}</button>`;
+    acao = () => { location.hash = "#/" + pai; };
   } else if(history.length > 1 && nome && nome !== "inicio"){
-    cx.innerHTML = `<button type="button" class="voltarBt"><i>&lsaquo;</i>Voltar</button>`;
-    cx.firstChild.onclick = () => history.back();
-  } else {
-    cx.innerHTML = "";
+    esq = `<button type="button" class="voltarBt"><i>&lsaquo;</i>Voltar</button>`;
+    acao = () => history.back();
+  }
+
+  /* direita: andar na sequência do Aprender */
+  const aqui = bruto.split("?")[0];
+  const prox = proximoDe(bruto);
+  const dir = prox
+    ? `<a class="proxBt" href="${prox[0]}"><b>Próximo</b><i>&rsaquo;</i></a>`
+    : "";
+
+  cx.innerHTML = esq || dir ? (esq || '<span class="vazio"></span>') + dir : "";
+  if(acao && esq){
+    const b = cx.querySelector(".voltarBt");
+    if(b) b.onclick = acao;
   }
 }
 
@@ -16159,23 +16251,51 @@ function pintarCaixaSino(){
       .in("id", ids);
     await carregarNotif(); pintarCaixaSino();
   };
+  /* .select() depois do delete devolve as linhas que sairam. Sem isso, um
+     comando que nao alcanca nenhuma linha volta sem erro e sem efeito — e a
+     tela fica igual, sem explicacao. */
   cx.querySelectorAll(".xN").forEach(b => b.onclick = async ev => {
     ev.stopPropagation();
     b.disabled = true;
-    const { error } = await sb.from("notificacao").delete()
-      .eq("id", Number(b.dataset.del));
-    if(error){ b.disabled = false; return; }
+    const { data, error } = await sb.from("notificacao").delete()
+      .eq("id", Number(b.dataset.del)).select("id");
+    if(error || !(data||[]).length){
+      b.disabled = false;
+      avisoSino(error ? error.message : "o banco não apagou esta linha");
+      return;
+    }
     await carregarNotif(); pintarCaixaSino();
   });
   cx.querySelectorAll(".item").forEach(b => b.onclick = async () => {
     const id = Number(b.dataset.id), r = b.dataset.rota;
-    await sb.from("notificacao").update({ vista_em:new Date().toISOString() })
-      .eq("id", id);
+    const { data, error } = await sb.from("notificacao")
+      .update({ vista_em:new Date().toISOString() })
+      .eq("id", id).select("id");
+    if(error || !(data||[]).length){
+      avisoSino(error ? error.message : "o banco não marcou esta como lida");
+      return;                      /* fica aberta: senão o aviso some junto */
+    }
     cx.hidden = true;
     await carregarNotif();
     if(r){ location.hash = r; rotear(); }
   });
 }
+/* Mostra o motivo dentro da propria caixa. Erro de banco que some sem dizer
+   nada e o pior tipo de erro: a pessoa acha que o site travou.            */
+function avisoSino(txt){
+  const cx = document.getElementById("caixaSino");
+  if(!cx) return;
+  let a = cx.querySelector(".avisoN");
+  if(!a){
+    a = document.createElement("div");
+    a.className = "avisoN";
+    a.style.cssText = "padding:9px 11px;font-size:11.5px;color:var(--baixa);"
+      + "border-top:1px solid var(--linha)";
+    cx.appendChild(a);
+  }
+  a.textContent = txt;
+}
+
 function ligarSino(){
   const b = document.getElementById("btSinoTopo");
   const cx = document.getElementById("caixaSino");
@@ -16212,6 +16332,22 @@ function marcarBarra(){
   else if(h.startsWith("#/ranking") || h.startsWith("#/carteira")) aba = "ranking";
   b.querySelectorAll("a").forEach(a =>
     a.classList.toggle("aqui", a.dataset.aba === aba));
+}
+
+/* Sair só existia no menu suspenso do cabeçalho, que no celular nem aparece.
+   Virou rota para poder entrar no hub da conta como qualquer outro item. */
+async function pagSair(){
+  if(window.__saindo) return;          /* trava contra chamada dupla */
+  window.__saindo = true;
+  $("#app").innerHTML = `<div class="carreg">saindo…</div>`;
+  try{ await sb.auth.signOut(); }catch(e){}
+  eu = null;
+  /* zera a marca do portão: quem sai volta a ver a tela de entrada, e não
+     o login — é o mesmo que o botão do cabeçalho sempre fez. */
+  window.__jaEntrou = false;
+  window.__saindo = false;
+  location.hash = "#/";
+  rotear();
 }
 
 function rotear(){
@@ -16292,6 +16428,7 @@ function rotear(){
   if(h==="#/publicar")        return telaPublicar();
   if(h==="#/duelo")           return telaDuelo();
   if(h==="#/abertura")        return telaAbertura();
+  if(h==="#/sair")            return pagSair();
   if(h==="#/aprender")        return telaIndiceAprender();
   if(h==="#/curso-precos") return pagCurso1();
   if(h==="#/curso-fundamentos") return pagCurso2();
@@ -16343,7 +16480,6 @@ function rotear(){
   if(h==="#/tiro-curto" || h==="#/apostar") return telaTiroCurto();
   if(h==="#/placar")          return telaPlacar();
   if(h==="#/indicar")         return telaIndicar();
-  if(h==="#/assinar")         return telaAssinar();
   if(h==="#/admin")           return telaAdmin();
   if(h==="#/servicos")        return telaServicos();
   if(h==="#/sucessao")        return telaSucessao();
