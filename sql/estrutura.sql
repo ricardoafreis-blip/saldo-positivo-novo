@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict PeL6vbt1fBv10rtjFgcskiN3qcHi4RRXum7oUwTlraSNJhv6I9y39Tbxh875ekT
+\restrict PbGvMcTWeCU2Z6xY8oXvoZsX4aCpHMhqhsltHAQpBRuZY4pfaI9PVwYnTrysUeb
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.11 (Ubuntu 17.11-1.pgdg24.04+2)
@@ -274,6 +274,63 @@ begin
       from perfil p
       left join auth.users u on u.id = p.id
      order by p.criado_em desc;
+end $$;
+
+
+--
+-- Name: admin_editar_conta(uuid, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.admin_editar_conta(quem uuid, nova_identidade text) RETURNS text
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+declare ape text;
+begin
+  if not sou_admin() then
+    raise exception 'só administrador pode editar cadastro';
+  end if;
+
+  select apelido into ape from perfil where id = quem;
+  if ape is null then
+    raise exception 'conta não encontrada';
+  end if;
+
+  update perfil
+     set identidade = nullif(btrim(nova_identidade), '')
+   where id = quem;
+
+  return 'cadastro de ' || ape || ' atualizado';
+end $$;
+
+
+--
+-- Name: admin_editar_conta(uuid, text, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.admin_editar_conta(quem uuid, novo_nome text, novo_tel text) RETURNS text
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+declare ape text;
+begin
+  if not sou_admin() then
+    raise exception 'só administrador pode editar cadastro';
+  end if;
+
+  select apelido into ape from perfil where id = quem;
+  if ape is null then
+    raise exception 'conta não encontrada';
+  end if;
+
+  /* Campo vazio não apaga o que já existe: quem quis limpar, limpa no
+     banco. Evita zerar um telefone por engano ao passar pelo prompt. */
+  update perfil
+     set nome_completo = coalesce(nullif(btrim(novo_nome), ''), nome_completo),
+         telefone      = coalesce(nullif(btrim(novo_tel),  ''), telefone)
+   where id = quem;
+
+  return 'cadastro de ' || ape || ' atualizado';
 end $$;
 
 
@@ -2172,6 +2229,29 @@ begin
          rotulo || coalesce(' — ' || new.nome, ''), '#/leads'
     from perfil p
    where p.admin = true;
+  return new;
+end $$;
+
+
+--
+-- Name: notif_membro(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.notif_membro() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+begin
+  begin
+    insert into notificacao (usuario_id, tipo, texto, rota)
+    select p.id, 'membro',
+           'Novo membro: ' || coalesce(new.apelido, 'sem apelido'), '#/admin'
+      from perfil p
+     where p.admin = true and p.id <> new.id;
+  exception when others then
+    -- avisar é secundário: se falhar, a conta nasce do mesmo jeito
+    null;
+  end;
   return new;
 end $$;
 
@@ -4144,7 +4224,7 @@ CREATE TABLE public.notificacao (
     rota text,
     criada_em timestamp with time zone DEFAULT now() NOT NULL,
     vista_em timestamp with time zone,
-    CONSTRAINT notificacao_tipo_check CHECK ((tipo = ANY (ARRAY['mensagem'::text, 'carteira'::text, 'duelo'::text, 'lead'::text])))
+    CONSTRAINT notificacao_tipo_check CHECK ((tipo = ANY (ARRAY['mensagem'::text, 'carteira'::text, 'duelo'::text, 'lead'::text, 'membro'::text])))
 );
 
 
@@ -5746,6 +5826,13 @@ CREATE TRIGGER tg_notif_lead AFTER INSERT ON public.lead FOR EACH ROW EXECUTE FU
 
 
 --
+-- Name: perfil tg_notif_membro; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER tg_notif_membro AFTER INSERT ON public.perfil FOR EACH ROW EXECUTE FUNCTION public.notif_membro();
+
+
+--
 -- Name: time_msg tg_notif_msg; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -7167,5 +7254,5 @@ CREATE POLICY voto_por ON public.voto FOR INSERT TO authenticated WITH CHECK (((
 -- PostgreSQL database dump complete
 --
 
-\unrestrict PeL6vbt1fBv10rtjFgcskiN3qcHi4RRXum7oUwTlraSNJhv6I9y39Tbxh875ekT
+\unrestrict PbGvMcTWeCU2Z6xY8oXvoZsX4aCpHMhqhsltHAQpBRuZY4pfaI9PVwYnTrysUeb
 
