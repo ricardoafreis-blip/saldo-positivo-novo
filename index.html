@@ -2048,7 +2048,10 @@ table.aula td.num,table.aula th.num{text-align:right;white-space:nowrap;
     background:var(--p2);border-top:1px solid var(--linha);
     /* A folga de baixo tem que passar da barra de gestos do aparelho: com
        8px o rotulo ficava cortado pela metade no Android. */
-    padding:7px 3px calc(16px + env(safe-area-inset-bottom));
+    /* max(): em alguns aparelhos a area segura vem zero durante a rolagem,
+       e a barra encolhia junto. Assim a folga nunca cai abaixo de 16px. */
+    padding:7px 3px max(16px, calc(10px + env(safe-area-inset-bottom)));
+    min-height:58px;box-sizing:border-box;
     backdrop-filter:saturate(120%) blur(6px)}
   .barraApp a{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;
     gap:3px;padding:6px 1px;color:var(--graf);text-decoration:none;font-size:9.5px;
@@ -2070,11 +2073,11 @@ table.aula td.num,table.aula th.num{text-align:right;white-space:nowrap;
   margin-bottom:9px;overflow:hidden}
 .grupoAp > summary{cursor:pointer;list-style:none;display:flex;align-items:center;
   justify-content:space-between;gap:10px;padding:15px 16px;
-  font-family:Newsreader,serif;font-size:19px;color:var(--tinta)}
+  font-family:Newsreader,serif;font-size:19px;color:var(--ouro2)}
 .grupoAp > summary::-webkit-details-marker{display:none}
-.grupoAp > summary em{font-style:normal;font-size:12px;color:var(--graf);
-  font-family:'IBM Plex Mono';flex:none}
-.grupoAp > summary::after{content:"\203A";color:var(--graf);font-size:19px;
+.grupoAp > summary em{font-style:normal;font-size:12px;color:var(--ouro2);
+  opacity:.6;font-family:'IBM Plex Mono';flex:none}
+.grupoAp > summary::after{content:"\203A";color:var(--ouro2);font-size:19px;
   line-height:1;transform:rotate(90deg);transition:transform .15s}
 .grupoAp[open] > summary::after{transform:rotate(-90deg)}
 .grupoAp[open] > summary{border-bottom:1px solid var(--linha)}
@@ -3522,7 +3525,10 @@ function telaEntrar(){
      apagado para a abertura aparecer. Sem isso o convidado cria a conta e
      some no ranking em vez de cair no time que o chamou.                     */
   const de = q.get("de") ? decodeURIComponent(q.get("de")) : "";
-  const paraOnde = (de && de.startsWith("#/")) ? de : (pegarDestino() || "");
+  let paraOnde = (de && de.startsWith("#/")) ? de : (pegarDestino() || "");
+  /* voltar para sair ou para a própria entrada é um laço: o login levaria
+     de volta ao lugar que expulsa a pessoa. */
+  if(paraOnde.startsWith("#/sair") || paraOnde.startsWith("#/entrar")) paraOnde = "";
   /* convite de time: o código vira a indicação, para o capitão aparecer como
      quem trouxe a pessoa. */
   if(!ref && paraOnde.includes("cod=")){
@@ -16382,6 +16388,7 @@ function marcarBarra(){
    Virou rota para poder entrar no hub da conta como qualquer outro item. */
 async function pagSair(){
   if(window.__saindo) return;          /* trava contra chamada dupla */
+  if(!eu){ location.hash = "#/"; return; }   /* já está fora: nada a fazer */
   window.__saindo = true;
   $("#app").innerHTML = `<div class="carreg">saindo…</div>`;
   try{ await sb.auth.signOut(); }catch(e){}
@@ -16429,7 +16436,11 @@ function rotear(){
   // Quem CHEGA vê a mensagem — inclusive se a aba tinha outra rota guardada.
   // O login só aparece depois de um clique, e guarda o destino.
   if(!eu){
-    const LIVRE = ["#/entrar","#/senha","#/nova-senha","#/termos"];
+    /* #/sair entra aqui de propósito. Sem isso, quem tocasse em sair já
+   deslogado caía na guarda, que salvava "#/sair" como destino — e depois
+   do login o site levava de volta para lá, deslogava de novo e devolvia
+   a pessoa para a tela de entrada. */
+  const LIVRE = ["#/entrar","#/senha","#/nova-senha","#/termos","#/sair"];
     if(!window.__jaEntrou){
       window.__jaEntrou = true;
       // quem chega vê a mensagem, sempre — mesmo se a aba tinha #/entrar
