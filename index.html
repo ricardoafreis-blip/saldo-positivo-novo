@@ -2052,7 +2052,8 @@ table.aula td.num,table.aula th.num{text-align:right;white-space:nowrap;
        e a barra encolhia junto. Assim a folga nunca cai abaixo de 16px. */
     padding:7px 3px max(16px, calc(10px + env(safe-area-inset-bottom)));
     min-height:58px;box-sizing:border-box;
-    backdrop-filter:saturate(120%) blur(6px)}
+    backdrop-filter:saturate(120%) blur(6px);
+    will-change:transform}
   .barraApp a{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;
     gap:3px;padding:6px 1px;color:var(--graf);text-decoration:none;font-size:9.5px;
     letter-spacing:.01em}
@@ -16370,6 +16371,24 @@ function ligarSino(){
 
 /* Marca a aba do rodape conforme a tela. As telas filhas contam para a
    aba do assunto: uma carteira e Ranking, uma aula e Aprender. */
+/* O navegador esconde a barra de endereço ao rolar e muda a altura da área
+   visível. Um elemento fixo continua preso à altura antiga e parece subir ou
+   descer. Aqui a barra é colada na área realmente visível a cada mudança. */
+function grudarBarra(){
+  const b = document.getElementById("barraApp");
+  const vv = window.visualViewport;
+  if(!b || !vv) return;
+  const por = () => {
+    const sobra = document.documentElement.clientHeight
+                - (vv.height + vv.offsetTop);
+    b.style.transform = sobra > 0 ? `translateY(${-sobra}px)` : "";
+  };
+  vv.addEventListener("resize", por);
+  vv.addEventListener("scroll", por);
+  window.addEventListener("orientationchange", () => setTimeout(por, 120));
+  por();
+}
+
 function marcarBarra(){
   const b = document.getElementById("barraApp");
   if(!b) return;
@@ -16580,7 +16599,7 @@ addEventListener("hashchange", rotear);
   // desfazendo o scrollTo do rotear. Quem manda na rolagem aqui é o rotear.
   if("scrollRestoration" in history) history.scrollRestoration = "manual";
   if(location.hash.includes("type=recovery")) location.hash = "#/nova-senha";
-  await carregarEu(); pintarNav(); ligarMenuCelular(); rotear();
+  await carregarEu(); pintarNav(); ligarMenuCelular(); grudarBarra(); rotear();
   ligarSino(); carregarNotif();
   sb.auth.onAuthStateChange(async()=>{
     const tinha = !!eu;
