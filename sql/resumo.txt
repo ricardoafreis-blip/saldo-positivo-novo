@@ -2,7 +2,7 @@ tabela | linhas
 aposta | 15
 assinatura | 0
 audit_log_entries | 0
-barra | 233781
+barra | 234279
 buckets | 0
 buckets_analytics | 0
 buckets_vectors | 0
@@ -13,7 +13,7 @@ conta_arquivada | 0
 copa | 19
 copa_jogo | 4
 copa_vaga | 6
-cotacao_hora | 56179
+cotacao_hora | 60283
 cotacao_viva | 514
 custom_oauth_providers | 0
 duelo | 5
@@ -28,7 +28,6 @@ intraday_sequencia | 2
 lead | 3
 lead_nota | 0
 messages | 0
-messages_2026_09_14 | 0
 messages_2026_09_15 | 0
 messages_2026_09_16 | 0
 messages_2026_09_17 | 0
@@ -36,7 +35,7 @@ messages_2026_09_18 | 0
 messages_2026_09_19 | 0
 messages_2026_09_20 | 0
 messages_2026_09_21 | 0
-mfa_amr_claims | 13
+mfa_amr_claims | 14
 mfa_challenges | 0
 mfa_factors | 0
 mfa_recovery_code_sets | 0
@@ -50,7 +49,7 @@ oauth_clients | 0
 oauth_consents | 0
 objects | 0
 one_time_tokens | 0
-oscilacao | 232968
+oscilacao | 233466
 oscilacao_foto | 499
 papel_fila | 238
 parametro | 1
@@ -58,14 +57,14 @@ perfil | 11
 peso_atual | 840
 peso_atual_backup | 46
 posicao | 850
-rebalanceamento | 634
+rebalanceamento | 656
 referencia | 11
-refresh_tokens | 25
+refresh_tokens | 26
 regra | 80
 resumo | 108
-retorno_dia | 3680
+retorno_dia | 3788
 rodada | 114
-rodada_gabarito | 343
+rodada_gabarito | 367
 rodada_papel | 972
 s3_multipart_uploads | 0
 s3_multipart_uploads_parts | 0
@@ -78,15 +77,15 @@ scim_users | 0
 secrets | 0
 seguidor | 1
 seguindo | 0
-sessions | 13
+sessions | 14
 sso_domains | 0
 sso_providers | 0
 subscription | 0
 time_ | 1
-time_carteira_dia | 16
+time_carteira_dia | 17
 time_ciclo_membro | 5
 time_ciclo_resultado | 0
-time_empate | 16
+time_empate | 17
 time_inscricao | 1
 time_membro | 5
 time_msg | 3
@@ -96,4 +95,4 @@ vector_indexes | 0
 voto | 40
 webauthn_challenges | 0
 webauthn_credentials | 0
-(97 rows)
+(96 rows)
