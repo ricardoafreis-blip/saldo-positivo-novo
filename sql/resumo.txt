@@ -28,13 +28,13 @@ intraday_sequencia | 2
 lead | 3
 lead_nota | 0
 messages | 0
-messages_2026_09_15 | 0
-messages_2026_09_16 | 0
 messages_2026_09_17 | 0
 messages_2026_09_18 | 0
 messages_2026_09_19 | 0
 messages_2026_09_20 | 0
 messages_2026_09_21 | 0
+messages_2026_09_22 | 0
+messages_2026_09_23 | 0
 mfa_amr_claims | 14
 mfa_challenges | 0
 mfa_factors | 0
@@ -59,7 +59,7 @@ peso_atual_backup | 46
 posicao | 850
 rebalanceamento | 656
 referencia | 11
-refresh_tokens | 26
+refresh_tokens | 29
 regra | 80
 resumo | 108
 retorno_dia | 3788
