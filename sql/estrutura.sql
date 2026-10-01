@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict uNcTecoJixVfcYOJCRTp4SO76NUiRSj9lL40qozqDaoEDPlSOVmSwUhRqIksmH0
+\restrict urXkFDELHKnmjwd8eXZyf307QvMqXgrRgX1D5BKZDXN9CS5wEMQYKmAf0t2sfYV
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.11 (Ubuntu 17.11-1.pgdg24.04+2)
@@ -7254,5 +7254,5 @@ CREATE POLICY voto_por ON public.voto FOR INSERT TO authenticated WITH CHECK (((
 -- PostgreSQL database dump complete
 --
 
-\unrestrict uNcTecoJixVfcYOJCRTp4SO76NUiRSj9lL40qozqDaoEDPlSOVmSwUhRqIksmH0
+\unrestrict urXkFDELHKnmjwd8eXZyf307QvMqXgrRgX1D5BKZDXN9CS5wEMQYKmAf0t2sfYV
 
