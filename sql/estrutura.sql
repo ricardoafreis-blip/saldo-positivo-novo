@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict bUHMe54qQO3Y5ErzbqVTMg88YGtIcB6xDjaUY2XHj9L5j9CkMyJ4ehEqggnn3zL
+\restrict nv2xV55fHfGEOpTfMhCrgR8je5xgo7oeGLaU91HmSqUwDXSToFIrS1wtzE0S3ch
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.11 (Ubuntu 17.11-1.pgdg24.04+2)
@@ -2424,6 +2424,23 @@ $$;
 
 
 --
+-- Name: posicao_recalcula(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.posicao_recalcula() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+declare c bigint;
+begin
+  for c in select distinct carteira_id from novas loop
+    perform recalcular_exposicao(c);
+  end loop;
+  return null;
+end $$;
+
+
+--
 -- Name: proximo_pregao(date); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -3429,12 +3446,32 @@ CREATE FUNCTION public.vivo() RETURNS jsonb
        and (atualizado_em at time zone 'America/Sao_Paulo')::date
          = (now()         at time zone 'America/Sao_Paulo')::date
   ),
+  -- ⚠️ O peso_atual é a verdade sempre que existe. Carteira recém-estreada
+  -- ainda não tem: quem o monta é o fechar_dia, à noite. Antes disto ela
+  -- passava o primeiro pregão inteiro fora do parcial, como "estreia".
+  -- Na falta dele vale a posição declarada do marco vigente — que é
+  -- exatamente a que o fechamento vai usar, então parcial e fechamento
+  -- contam a mesma história já no primeiro dia.
+  pesos as (
+    select carteira_id, ativo, peso from peso_atual
+    union all
+    select p.carteira_id, p.ativo, sum(p.peso)
+      from posicao p
+      join (select carteira_id, max(valida_de) as m
+              from posicao
+             where valida_de <= (now() at time zone 'America/Sao_Paulo')::date
+             group by carteira_id) u
+        on u.carteira_id = p.carteira_id and p.valida_de = u.m
+     where not exists (select 1 from peso_atual w
+                        where w.carteira_id = p.carteira_id)
+     group by p.carteira_id, p.ativo
+  ),
   parcial as (
     select p.carteira_id,
            sum(p.peso / 100.0 * v.valor) as retorno,
            count(v.valor)                as com_cotacao,
            count(*)                      as papeis
-      from peso_atual p
+      from pesos p
       left join viva v on v.ativo = p.ativo
      group by p.carteira_id
   )
@@ -4574,19 +4611,40 @@ CREATE TABLE public.resumo (
 --
 
 CREATE VIEW public.retorno_parcial AS
- WITH expo AS (
+ WITH pesos AS (
          SELECT peso_atual.carteira_id,
-            COALESCE(sum(peso_atual.peso) FILTER (WHERE (peso_atual.peso > (0)::double precision)), (0)::real) AS l,
-            (- COALESCE(sum(peso_atual.peso) FILTER (WHERE (peso_atual.peso < (0)::double precision)), (0)::real)) AS s
+            peso_atual.ativo,
+            (peso_atual.peso)::double precision AS peso
            FROM public.peso_atual
-          GROUP BY peso_atual.carteira_id
+        UNION ALL
+         SELECT p.carteira_id,
+            p.ativo,
+            (sum(p.peso))::double precision AS sum
+           FROM (public.posicao p
+             JOIN ( SELECT posicao.carteira_id,
+                    max(posicao.valida_de) AS m
+                   FROM public.posicao
+                  WHERE (posicao.valida_de <= public.hoje_br())
+                  GROUP BY posicao.carteira_id) u ON (((u.carteira_id = p.carteira_id) AND (p.valida_de = u.m))))
+          WHERE ((NOT (EXISTS ( SELECT 1
+                   FROM public.peso_atual w
+                  WHERE (w.carteira_id = p.carteira_id)))) AND (EXISTS ( SELECT 1
+                   FROM public.carteira ct
+                  WHERE ((ct.id = p.carteira_id) AND ct.ativa AND (ct.encerrada_em IS NULL)))))
+          GROUP BY p.carteira_id, p.ativo
+        ), expo AS (
+         SELECT pesos.carteira_id,
+            COALESCE(sum(pesos.peso) FILTER (WHERE (pesos.peso > (0)::double precision)), (0)::double precision) AS l,
+            (- COALESCE(sum(pesos.peso) FILTER (WHERE (pesos.peso < (0)::double precision)), (0)::double precision)) AS s
+           FROM pesos
+          GROUP BY pesos.carteira_id
         )
  SELECT pa.carteira_id,
     ((sum(((pa.peso / (100.0)::double precision) * COALESCE(v.valor, (0)::real))) + ((LEAST(((100.0)::double precision - (e.l - e.s)), (100.0)::double precision) / (100.0)::double precision) * public.taxa_rf_dia())))::real AS retorno,
     max(v.atualizado_em) AS atualizado_em,
     count(v.valor) AS com_cotacao,
     count(*) AS papeis
-   FROM ((public.peso_atual pa
+   FROM ((pesos pa
      JOIN expo e ON ((e.carteira_id = pa.carteira_id)))
      LEFT JOIN public.cotacao_viva v ON (((v.ativo = pa.ativo) AND (((v.atualizado_em AT TIME ZONE 'America/Sao_Paulo'::text))::date = public.hoje_br()))))
   GROUP BY pa.carteira_id, e.l, e.s;
@@ -5774,6 +5832,13 @@ CREATE TRIGGER lead_norm BEFORE INSERT OR UPDATE ON public.lead FOR EACH ROW EXE
 --
 
 CREATE TRIGGER perfil_trava BEFORE UPDATE ON public.perfil FOR EACH ROW EXECUTE FUNCTION public.trava_privilegio();
+
+
+--
+-- Name: posicao posicao_exposicao; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER posicao_exposicao AFTER INSERT ON public.posicao REFERENCING NEW TABLE AS novas FOR EACH STATEMENT EXECUTE FUNCTION public.posicao_recalcula();
 
 
 --
@@ -7254,5 +7319,5 @@ CREATE POLICY voto_por ON public.voto FOR INSERT TO authenticated WITH CHECK (((
 -- PostgreSQL database dump complete
 --
 
-\unrestrict bUHMe54qQO3Y5ErzbqVTMg88YGtIcB6xDjaUY2XHj9L5j9CkMyJ4ehEqggnn3zL
+\unrestrict nv2xV55fHfGEOpTfMhCrgR8je5xgo7oeGLaU91HmSqUwDXSToFIrS1wtzE0S3ch
 
