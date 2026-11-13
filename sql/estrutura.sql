@@ -2,10 +2,10 @@
 -- PostgreSQL database dump
 --
 
-\restrict BLCDE04I5diJhYuR7tCOB64mXdEbPjP5lolQrhPReUidKIN6cRqdTIA7fsW1FGh
+\restrict WKwkFB0Ff9EWay7WYZWvsJSjz1kuhmNINAtXEU4p8PQqnjUSiFrs6SSZSo4RZ48
 
 -- Dumped from database version 17.6
--- Dumped by pg_dump version 17.11 (Ubuntu 17.11-1.pgdg26.04+2)
+-- Dumped by pg_dump version 17.12 (Ubuntu 17.12-1.pgdg26.04+1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -7319,5 +7319,5 @@ CREATE POLICY voto_por ON public.voto FOR INSERT TO authenticated WITH CHECK (((
 -- PostgreSQL database dump complete
 --
 
-\unrestrict BLCDE04I5diJhYuR7tCOB64mXdEbPjP5lolQrhPReUidKIN6cRqdTIA7fsW1FGh
+\unrestrict WKwkFB0Ff9EWay7WYZWvsJSjz1kuhmNINAtXEU4p8PQqnjUSiFrs6SSZSo4RZ48
 
