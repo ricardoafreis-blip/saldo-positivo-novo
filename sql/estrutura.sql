@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict rvLgnwFx2vV0JVMqbSzGWzKe732Lnzhpy70JyhvoYWMjVoojDY7r9BsO7TWbdn9
+\restrict NAj6tGYS5qkLcpe5pMFcaO0jFZ1vRFf7YImZbhGo56CLmAC6qq7aJ5qXZvoT3US
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.12 (Ubuntu 17.12-1.pgdg26.04+1)
@@ -48,6 +48,7 @@ declare
   n_ok     int := 0;
   n_clone  int := 0;
   v_clones text := '';
+  v_min    int := 2;   -- elenco mínimo para o time entrar no ciclo
 begin
   for r in
     select i.time_id,
@@ -61,8 +62,8 @@ begin
      group by i.time_id
      order by i.time_id
   loop
-    if r.quantos < 5 then
-      continue;                          -- sem elenco mínimo, não entra
+    if r.quantos < v_min then
+      continue;
     end if;
 
     v_hash := md5(array_to_string(r.carteiras, ','));
@@ -639,6 +640,59 @@ begin
   pts  := pontos(r.tipo, r.retorno);
   return next;
 end $$;
+
+
+--
+-- Name: apurar_ciclo(bigint); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.apurar_ciclo(p_ciclo bigint) RETURNS integer
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+declare n int;
+begin
+  delete from time_ciclo_resultado where ciclo_id = p_ciclo;
+  insert into time_ciclo_resultado
+    (ciclo_id, time_id, dias, acumulado, sharpe, drawdown)
+  select d.ciclo_id, d.time_id, count(*)::int,
+         (max(d.indice) filter (where d.data = ult.ultima)) / 100.0 - 1,
+         -- mesma fórmula da recalcular_resumo (individual), mais o
+         -- encolhimento por ciclo curto, que é exclusivo do time
+         case when count(*) >= 2 and stddev_samp(d.retorno) > 0
+              then (avg(d.retorno) - taxa_rf_dia())
+                   / stddev_samp(d.retorno) * sqrt(252)
+                   * (count(*)::real / (count(*) + 40))
+         end,
+         min(d.indice / greatest(pico.pico, 1) - 1)
+    from time_carteira_dia d
+    join lateral (select max(data) as ultima from time_carteira_dia x
+                   where x.ciclo_id = d.ciclo_id and x.time_id = d.time_id
+                     and x.retorno is not null) ult on true
+    join lateral (select max(y.indice) as pico from time_carteira_dia y
+                   where y.ciclo_id = d.ciclo_id and y.time_id = d.time_id
+                     and y.data <= d.data) pico on true
+   where d.ciclo_id = p_ciclo and d.retorno is not null
+   group by d.ciclo_id, d.time_id, ult.ultima;
+
+  with p as (
+    select time_id,
+           rank() over (order by acumulado desc nulls last) as pa,
+           rank() over (order by sharpe    desc nulls last) as ps,
+           rank() over (order by drawdown  desc nulls last) as pd,
+           count(*) filter (where sharpe is not null) over () as com_sharpe
+      from time_ciclo_resultado where ciclo_id = p_ciclo)
+  update time_ciclo_resultado r
+     set pos_acum = p.pa, pos_sharpe = p.ps, pos_dd = p.pd,
+         pos_geral = p.pa + p.pd + case when p.com_sharpe > 0 then p.ps else 0 end
+    from p where p.time_id = r.time_id and r.ciclo_id = p_ciclo;
+
+  update time_ciclo_resultado set apurado_em = now() where ciclo_id = p_ciclo;
+
+  select count(*) into n from time_ciclo_resultado where ciclo_id = p_ciclo;
+  return n;
+end;
+$$;
 
 
 --
@@ -1382,50 +1436,27 @@ CREATE FUNCTION public.fechar_ciclo(p_ciclo bigint) RETURNS integer
     AS $$
 declare n int;
 begin
-  delete from time_ciclo_resultado where ciclo_id = p_ciclo;
+  -- a apuração mora na apurar_ciclo, que também roda com o ciclo aberto
+  n := apurar_ciclo(p_ciclo);
 
-  insert into time_ciclo_resultado
-    (ciclo_id, time_id, dias, acumulado, sharpe, drawdown)
-  select d.ciclo_id, d.time_id, count(*)::int,
-         (max(d.indice) filter (where d.data = ult.ultima)) / 100.0 - 1,
-         case when count(*) >= 2 and stddev_samp(d.retorno) > 0
-              then ((avg(d.retorno) * 252) - taxa_rf_ano())
-                   / (stddev_samp(d.retorno) * sqrt(252))
-                   * (count(*)::real / (count(*) + 40))
-         end,
-         min(d.indice / greatest(pico.pico, 1) - 1)
-    from time_carteira_dia d
-    join lateral (select max(data) as ultima from time_carteira_dia x
-                   where x.ciclo_id = d.ciclo_id and x.time_id = d.time_id
-                     and x.retorno is not null) ult on true
-    join lateral (select max(y.indice) as pico from time_carteira_dia y
-                   where y.ciclo_id = d.ciclo_id and y.time_id = d.time_id
-                     and y.data <= d.data) pico on true
-   where d.ciclo_id = p_ciclo and d.retorno is not null
-   group by d.ciclo_id, d.time_id, ult.ultima;
+  -- fechar duas vezes não duplica mais conquista de time nem de membro
+  delete from conquista where ciclo_id = p_ciclo and time_id is not null;
 
-  -- posições em cada régua. Quem não tem a régua vai para o fim dela e não
-  -- some da conta: excluir daria vantagem a quem tem menos dado.
-  with p as (
-    select time_id,
-           rank() over (order by acumulado desc nulls last) as pa,
-           rank() over (order by sharpe    desc nulls last) as ps,
-           rank() over (order by drawdown  desc nulls last) as pd,
-           count(*) filter (where sharpe is not null) over () as com_sharpe
-      from time_ciclo_resultado where ciclo_id = p_ciclo)
-  update time_ciclo_resultado r
-     set pos_acum = p.pa, pos_sharpe = p.ps, pos_dd = p.pd,
-         pos_geral = p.pa + p.pd + case when p.com_sharpe > 0 then p.ps else 0 end
-    from p where p.time_id = r.time_id and r.ciclo_id = p_ciclo;
-
+  -- ⚠️ pos_geral é a SOMA das três colocações, não uma colocação. Gravá-la
+  -- direto fazia o único time de um ciclo, primeiro nas três réguas, virar
+  -- "terceiro no geral" (1+1+1=3). E com vários times o filtro `pos <= 3`
+  -- aplicado à soma deixaria o geral quase sempre vazio. Aqui a soma é
+  -- ranqueada antes de virar conquista.
   insert into conquista (time_id, ciclo_id, papel, regua, posicao)
-  select time_id, p_ciclo, 'time', v.regua, v.pos
-    from time_ciclo_resultado r
+  select r.time_id, p_ciclo, 'time', v.regua, v.pos
+    from (select time_id, pos_acum, pos_sharpe, pos_dd,
+                 rank() over (order by pos_geral) as pos_geral_rank
+            from time_ciclo_resultado where ciclo_id = p_ciclo) r
     cross join lateral (values
       ('rentabilidade', r.pos_acum), ('sharpe', r.pos_sharpe),
-      ('queda', r.pos_dd),           ('geral',  r.pos_geral)
+      ('queda', r.pos_dd),           ('geral',  r.pos_geral_rank)
     ) as v(regua, pos)
-   where r.ciclo_id = p_ciclo and v.pos <= 3;
+   where v.pos <= 3;
 
   insert into conquista (usuario_id, time_id, ciclo_id, papel, regua, posicao)
   select m.usuario_id, c.time_id, p_ciclo,
@@ -1437,7 +1468,6 @@ begin
    where c.ciclo_id = p_ciclo and c.papel = 'time' and c.usuario_id is null;
 
   update ciclo set situacao = 'encerrado', encerrado_em = now() where id = p_ciclo;
-  select count(*) into n from time_ciclo_resultado where ciclo_id = p_ciclo;
   return n;
 end;
 $$;
@@ -1915,6 +1945,124 @@ $$;
 
 
 --
+-- Name: melhores(text, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.melhores(p_janela text DEFAULT 'mes'::text, p_escopo text DEFAULT 'individual'::text) RETURNS TABLE(regua text, posicao integer, ref_id bigint, nome text, autor text, valor real, dias integer)
+    LANGUAGE plpgsql STABLE SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+#variable_conflict use_column
+declare
+  v_ref date;
+  v_ini date;
+  v_min int := 5;   -- mínimo de pregões na janela para entrar na régua
+begin
+  if p_escopo not in ('individual', 'time') then
+    raise exception 'escopo inválido: % (use individual ou time)', p_escopo;
+  end if;
+
+  if p_escopo = 'individual' then
+    select max(r.data) into v_ref from retorno_dia r;
+  else
+    select max(t.data) into v_ref from time_carteira_dia t where t.retorno is not null;
+  end if;
+  if v_ref is null then return; end if;
+
+  v_ini := case p_janela
+             when 'semana'    then date_trunc('week',    v_ref)::date
+             when 'mes'       then date_trunc('month',   v_ref)::date
+             when 'trimestre' then date_trunc('quarter', v_ref)::date
+             when 'ano'       then date_trunc('year',    v_ref)::date
+           end;
+  if v_ini is null then
+    raise exception 'janela inválida: % (use semana, mes, trimestre ou ano)', p_janela;
+  end if;
+
+  return query
+  with dia as (
+    select r.carteira_id as ref_id, r.data, r.retorno, r.indice
+      from retorno_dia r
+     where p_escopo = 'individual'
+       and r.data between v_ini and v_ref and r.retorno is not null
+    union all
+    select t.time_id, t.data, t.retorno, t.indice
+      from time_carteira_dia t
+     where p_escopo = 'time'
+       and t.data between v_ini and v_ref and t.retorno is not null
+  ),
+  pico as (
+    select d.ref_id, d.data, d.indice,
+           max(d.indice) over (partition by d.ref_id order by d.data
+                               rows between unbounded preceding and current row) as pico
+      from dia d
+  ),
+  dd as (
+    select pk.ref_id,
+           min(pk.indice / greatest(pk.pico, 0.000001) - 1)::real as drawdown
+      from pico pk group by pk.ref_id
+  ),
+  agg as (
+    select d.ref_id,
+           count(*)::int as dias,
+           ( (array_agg(d.indice order by d.data desc))[1]
+             / nullif((array_agg(d.indice order by d.data))[1]
+                      / (1 + (array_agg(d.retorno order by d.data))[1]), 0)
+             - 1 )::real as acum,
+           case when count(*) >= 2 and stddev_samp(d.retorno) > 0
+                then ((avg(d.retorno) - taxa_rf_dia())
+                      / stddev_samp(d.retorno) * sqrt(252))::real
+           end as sharpe
+      from dia d group by d.ref_id
+  ),
+  nomeado as (
+    select a.ref_id, a.dias, a.acum, a.sharpe, dd.drawdown,
+           case when p_escopo = 'individual' then c.nome else t.nome end as nome,
+           case when p_escopo = 'individual'
+                then case when pf.exibir = 'apelido' then pf.apelido
+                          else coalesce(pf.nome_publico, pf.apelido) end
+                else case when cp.exibir = 'apelido' then cp.apelido
+                          else coalesce(cp.nome_publico, cp.apelido) end
+           end as autor
+      from agg a
+      join dd on dd.ref_id = a.ref_id
+      left join carteira c on p_escopo = 'individual' and c.id = a.ref_id
+      left join perfil  pf on pf.id = c.usuario_id
+      left join time_    t on p_escopo = 'time' and t.id = a.ref_id
+      left join perfil  cp on cp.id = t.capitao
+     where a.dias >= v_min
+       and ( p_escopo = 'time' or (c.ativa and pf.bloqueado is not true) )
+  ),
+  pos as (
+    select n.ref_id, n.dias, n.acum, n.sharpe, n.drawdown, n.nome, n.autor,
+           rank() over (order by n.acum     desc nulls last) as p_acum,
+           rank() over (order by n.sharpe   desc nulls last) as p_sharpe,
+           rank() over (order by n.drawdown desc nulls last) as p_dd
+      from nomeado n
+  ),
+  -- ⚠️ a soma das três colocações é ranqueada antes de virar posição, pelo
+  -- mesmo motivo da fechar_ciclo: 1+1+1=3 não é "terceiro lugar".
+  ger as (
+    select p.ref_id, p.dias, p.acum, p.sharpe, p.drawdown, p.nome, p.autor,
+           p.p_acum, p.p_sharpe, p.p_dd,
+           rank() over (order by p.p_acum + p.p_sharpe + p.p_dd) as p_geral
+      from pos p
+  )
+  select v.regua, v.pos::int, g.ref_id, g.nome, g.autor, v.valor, g.dias
+    from ger g
+    cross join lateral (values
+      ('rentabilidade', g.p_acum,   g.acum),
+      ('sharpe',        g.p_sharpe, g.sharpe),
+      ('queda',         g.p_dd,     g.drawdown),
+      ('geral',         g.p_geral,  (g.p_acum + g.p_sharpe + g.p_dd)::real)
+    ) as v(regua, pos, valor)
+   where v.pos <= 3
+   order by v.regua, v.pos;
+end;
+$$;
+
+
+--
 -- Name: mercado(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1967,7 +2115,7 @@ declare
   v_cands     text[];
   v_auto      text[];
   v_escolha   text[];
-  v_min       int := 5;
+  v_min       int := 2;
   v_membros   int;
   v_teto      int;
 begin
@@ -2796,12 +2944,8 @@ declare
   v_dia   date;
   v_saida text; v_times int; v_intra text; v_duelo int; v_copa text;
   v_agora timestamp := (now() at time zone 'America/Sao_Paulo');
+  r record; v_abriu int := 0; v_fechou int := 0; v_apurou int := 0;
 begin
-  -- O MT5 exporta DURANTE o pregão, então a oscilacao do dia corrente já
-  -- existe desde cedo, com preço intradiário. Sem esta trava, max(data)
-  -- apontava para hoje e o robô da manhã fechava o dia que nem começou —
-  -- e o `jafechou` do fechar_dia impedia qualquer correção depois.
-  -- Só apura o dia corrente depois das 18h; antes disso, o último anterior.
   v_dia := coalesce(d, (
     select max(o.data) from oscilacao o
      where o.data < v_agora::date
@@ -2811,6 +2955,21 @@ begin
   perform set_config('request.jwt.claims',
     json_build_object('sub', (select id from perfil where admin
                               order by criado_em limit 1))::text, true);
+
+  -- ⚠️ ABRE pela abrir_ciclo, não por update: é ela que congela o elenco
+  -- em time_ciclo_membro e recusa time com elenco repetido. Sem o elenco
+  -- congelado, a montar_carteira_time não monta carteira (exige 2
+  -- integrantes) e o ciclo apura zero — foi o que travou o trimestral
+  -- desde 01/10. Vem antes da apuração dos times, que só monta carteira
+  -- para ciclo já aberto.
+  begin
+    for r in select id from ciclo
+              where situacao = 'inscricoes' and inicio <= v_dia loop
+      perform abrir_ciclo(r.id);
+      v_abriu := v_abriu + 1;
+    end loop;
+  exception when others then v_abriu := -1; end;
+
   v_saida := fechar_dia(v_dia);
   begin v_times := fechar_dia_times(v_dia);
   exception when others then v_times := -1; end;
@@ -2822,11 +2981,35 @@ begin
   exception when others then v_copa := 'FALHOU'; end;
   begin v_duelo := encerrar_duelos();
   exception when others then v_duelo := -1; end;
+
+  -- ⚠️ FECHA o ciclo vencido, depois de apurado o último pregão dele.
+  -- A fechar_ciclo marca 'encerrado' no fim, então o laço não repete.
+  begin
+    for r in select id from ciclo
+              where situacao <> 'encerrado' and fim < v_dia loop
+      perform fechar_ciclo(r.id);
+      v_fechou := v_fechou + 1;
+    end loop;
+  exception when others then v_fechou := -1; end;
+
+  -- ⚠️ APURA o que segue aberto, para o ranking parcial existir todo dia
+  -- em time_ciclo_resultado em vez de só aparecer no dia do fechamento.
+  -- Quem acabou de ser encerrado acima já foi apurado dentro da
+  -- fechar_ciclo, e por isso não entra neste laço.
+  begin
+    for r in select id from ciclo where situacao = 'aberto' loop
+      perform apurar_ciclo(r.id);
+      v_apurou := v_apurou + 1;
+    end loop;
+  exception when others then v_apurou := -1; end;
+
   return v_saida
        || case when v_times >= 0 then ' · times: ' || v_times else ' · times: FALHOU' end
        || ' · intraday: ' || coalesce(v_intra, '—')
        || ' · copa: ' || coalesce(v_copa, '—')
-       || case when v_duelo >= 0 then ' · duelos: ' || v_duelo else ' · duelos: FALHOU' end;
+       || case when v_duelo >= 0 then ' · duelos: ' || v_duelo else ' · duelos: FALHOU' end
+       || ' · ciclos: ' || v_abriu || ' aberto(s), ' || v_fechou || ' fechado(s), '
+       || v_apurou || ' apurado(s)';
 end;
 $$;
 
@@ -7319,5 +7502,5 @@ CREATE POLICY voto_por ON public.voto FOR INSERT TO authenticated WITH CHECK (((
 -- PostgreSQL database dump complete
 --
 
-\unrestrict rvLgnwFx2vV0JVMqbSzGWzKe732Lnzhpy70JyhvoYWMjVoojDY7r9BsO7TWbdn9
+\unrestrict NAj6tGYS5qkLcpe5pMFcaO0jFZ1vRFf7YImZbhGo56CLmAC6qq7aJ5qXZvoT3US
 
