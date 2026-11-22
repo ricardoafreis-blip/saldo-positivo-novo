@@ -30,13 +30,13 @@ lead | 2
 lead_nota | 0
 lifecycle_abandoned_artifacts | 0
 messages | 0
-messages_2026_11_18 | 0
 messages_2026_11_19 | 0
 messages_2026_11_20 | 0
 messages_2026_11_21 | 0
 messages_2026_11_22 | 0
 messages_2026_11_23 | 0
 messages_2026_11_24 | 0
+messages_2026_11_25 | 0
 mfa_amr_claims | 33
 mfa_challenges | 0
 mfa_factors | 0
@@ -61,7 +61,7 @@ peso_atual_backup | 46
 posicao | 1158
 rebalanceamento | 1435
 referencia | 11
-refresh_tokens | 412
+refresh_tokens | 436
 regra | 80
 resumo | 119
 retorno_dia | 8645
