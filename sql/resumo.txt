@@ -2,7 +2,7 @@ tabela | linhas
 aposta | 15
 assinatura | 0
 audit_log_entries | 0
-barra | 255430
+barra | 255921
 bucket_lifecycle_states | 0
 buckets | 0
 buckets_analytics | 0
@@ -14,7 +14,7 @@ conta_arquivada | 0
 copa | 64
 copa_jogo | 4
 copa_vaga | 6
-cotacao_hora | 232040
+cotacao_hora | 234605
 cotacao_viva | 515
 custom_oauth_providers | 0
 duelo | 7
@@ -30,13 +30,13 @@ lead | 2
 lead_nota | 0
 lifecycle_abandoned_artifacts | 0
 messages | 0
-messages_2026_11_19 | 0
 messages_2026_11_20 | 0
 messages_2026_11_21 | 0
 messages_2026_11_22 | 0
 messages_2026_11_23 | 0
 messages_2026_11_24 | 0
 messages_2026_11_25 | 0
+messages_2026_11_26 | 0
 mfa_amr_claims | 33
 mfa_challenges | 0
 mfa_factors | 0
@@ -51,7 +51,7 @@ oauth_clients | 0
 oauth_consents | 0
 objects | 0
 one_time_tokens | 0
-oscilacao | 254617
+oscilacao | 255107
 oscilacao_foto | 499
 papel_fila | 238
 parametro | 1
@@ -61,7 +61,7 @@ peso_atual_backup | 46
 posicao | 1158
 rebalanceamento | 1435
 referencia | 11
-refresh_tokens | 436
+refresh_tokens | 464
 regra | 80
 resumo | 119
 retorno_dia | 8645
@@ -72,8 +72,8 @@ s3_multipart_uploads | 0
 s3_multipart_uploads_parts | 0
 saml_providers | 0
 saml_relay_states | 0
-schema_migrations | 84
 schema_migrations | 97
+schema_migrations | 84
 scim_tokens | 0
 scim_users | 0
 secrets | 0
@@ -82,7 +82,7 @@ seguindo | 0
 sessions | 33
 sso_domains | 0
 sso_providers | 0
-subscription | 2
+subscription | 0
 time_ | 2
 time_carteira_dia | 58
 time_ciclo_membro | 7
