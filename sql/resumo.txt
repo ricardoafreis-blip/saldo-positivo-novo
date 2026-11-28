@@ -2,7 +2,7 @@ tabela | linhas
 aposta | 15
 assinatura | 0
 audit_log_entries | 0
-barra | 257860
+barra | 257886
 bucket_lifecycle_states | 0
 buckets | 0
 buckets_analytics | 0
@@ -14,7 +14,7 @@ conta_arquivada | 0
 copa | 69
 copa_jogo | 4
 copa_vaga | 6
-cotacao_hora | 250508
+cotacao_hora | 252560
 cotacao_viva | 515
 custom_oauth_providers | 0
 duelo | 7
@@ -51,7 +51,7 @@ oauth_clients | 0
 oauth_consents | 0
 objects | 0
 one_time_tokens | 0
-oscilacao | 257046
+oscilacao | 257072
 oscilacao_foto | 499
 papel_fila | 238
 parametro | 1
@@ -59,14 +59,14 @@ perfil | 27
 peso_atual | 934
 peso_atual_backup | 46
 posicao | 1158
-rebalanceamento | 1506
+rebalanceamento | 1537
 referencia | 11
 refresh_tokens | 475
 regra | 80
 resumo | 119
-retorno_dia | 9117
+retorno_dia | 9235
 rodada | 414
-rodada_gabarito | 1471
+rodada_gabarito | 1495
 rodada_papel | 3672
 s3_multipart_uploads | 0
 s3_multipart_uploads_parts | 0
@@ -84,10 +84,10 @@ sso_domains | 0
 sso_providers | 0
 subscription | 0
 time_ | 2
-time_carteira_dia | 62
+time_carteira_dia | 63
 time_ciclo_membro | 7
 time_ciclo_resultado | 2
-time_empate | 62
+time_empate | 63
 time_inscricao | 2
 time_membro | 7
 time_msg | 3
